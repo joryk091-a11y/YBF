@@ -1,0 +1,265 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id_users   Int         @id @default(autoincrement())
+  full_name  String      @db.VarChar(100)
+  phone      String      @db.VarChar(20)
+  email      String      @unique @db.VarChar(100)
+  password   String      @db.VarChar(255)
+  created_at DateTime?   @default(now()) @db.Timestamp(0)
+  passengers Passenger[]
+
+  @@map("users")
+}
+
+model Admin {
+  id_admin     Int         @id @default(autoincrement())
+  email        String      @unique @db.VarChar(100)
+  password     String      @db.VarChar(255)
+  role         AdminRole   @default(company)
+  airline_code String?     @db.VarChar(10)
+  last_login   DateTime?   @db.Timestamp(0)
+  created_at   DateTime?   @default(now()) @db.Timestamp(0)
+  flights_logs FlightLog[]
+
+  @@map("admins")
+}
+
+model Baggage {
+  id_baggage          Int                @id @default(autoincrement())
+  booking_id          Int
+  passenger_id        Int
+  weight              Decimal            @db.Decimal(6, 2)
+  base_price          Decimal?           @db.Decimal(10, 2)
+  extra_price         Decimal?           @db.Decimal(10, 2)
+  total_price         Decimal?           @db.Decimal(10, 2)
+  booking             Booking            @relation(fields: [booking_id], references: [id_bookings])
+  passenger           Passenger          @relation(fields: [passenger_id], references: [id_passengers])
+  bookings_passengers BookingPassenger[]
+
+  @@index([booking_id], map: "baggage_booking_id_fkey")
+  @@index([passenger_id], map: "baggage_passenger_id_fkey")
+  @@map("baggage")
+}
+
+model Booking {
+  id_bookings         Int                @id @default(autoincrement())
+  flight_id           Int
+  booking_date        DateTime?          @db.Timestamp(3)
+  total_passengers    Int?
+  base_price          Decimal            @db.Decimal(10, 0)
+  extra_total         Decimal?           @db.Decimal(10, 0)
+  final_price         Decimal            @db.Decimal(10, 0)
+  status              BookingStatus?
+  payment_deadline    DateTime?          @db.Timestamp(3)
+  cancelled_date      DateTime?          @db.Timestamp(3)
+  booking_reference   String             @db.VarChar(20)
+  baggages            Baggage[]
+  flight              Flight             @relation(fields: [flight_id], references: [id_flights])
+  bookings_passengers BookingPassenger[]
+  ground_services     GroundService[]
+  notifications       Notification[]
+  payments            Payment[]
+
+  @@index([flight_id], map: "bookings_flight_id_fkey")
+  @@map("bookings")
+}
+
+model BookingPassenger {
+  id_bookings_passengers Int       @id @default(autoincrement())
+  booking_id             Int
+  passenger_id           Int
+  seat_id                Int?
+  baggage_id             Int?
+  baggage                Baggage?  @relation(fields: [baggage_id], references: [id_baggage])
+  booking                Booking   @relation(fields: [booking_id], references: [id_bookings])
+  passenger              Passenger @relation(fields: [passenger_id], references: [id_passengers])
+  seat                   Seat?     @relation(fields: [seat_id], references: [id_seats])
+
+  @@index([baggage_id], map: "bookings_passengers_baggage_id_fkey")
+  @@index([booking_id], map: "bookings_passengers_booking_id_fkey")
+  @@index([passenger_id], map: "bookings_passengers_passenger_id_fkey")
+  @@index([seat_id], map: "bookings_passengers_seat_id_fkey")
+  @@map("bookings_passengers")
+}
+
+model Flight {
+  id_flights              Int           @id @default(autoincrement())
+  flight_number           String        @db.VarChar(20)
+  airline_code            String?       @db.VarChar(10)
+  airportOrigin_code      String?       @db.VarChar(10)
+  airportDestination_code String?       @db.VarChar(10)
+  departure_time          DateTime      @db.DateTime(0)
+  arrival_time            DateTime      @db.DateTime(0)
+  duration                Int?
+  aircraft_type           String?       @db.VarChar(45)
+  total_seats             Int?
+  available_seats         Int?
+  status                  FlightStatus?
+  price                   Decimal?      @db.Decimal(10, 2)
+  created_at              DateTime?     @db.Timestamp(3)
+  update                  DateTime?     @db.Timestamp(3)
+  bookings                Booking[]
+  flights_logs            FlightLog[]
+  seats                   Seat[]
+
+  @@map("flights")
+}
+
+model FlightLog {
+  id_flights_logs Int             @id @default(autoincrement())
+  admin_id        Int
+  action_type     FlightLogAction
+  flight_id       Int
+  action_details  Json?
+  timestamp       DateTime?       @db.Timestamp(0)
+  admin           Admin           @relation(fields: [admin_id], references: [id_admin])
+  flight          Flight          @relation(fields: [flight_id], references: [id_flights])
+
+  @@index([admin_id], map: "flights_logs_admin_id_fkey")
+  @@index([flight_id], map: "flights_logs_flight_id_fkey")
+  @@map("flights_logs")
+}
+
+model GroundService {
+  id_Ground_services Int       @id @default(autoincrement())
+  booking_id         Int
+  service_name       String    @db.VarChar(50)
+  price              Decimal   @db.Decimal(10, 0)
+  is_active          Boolean?
+  created_at         DateTime? @db.Timestamp(3)
+  booking            Booking   @relation(fields: [booking_id], references: [id_bookings])
+
+  @@index([booking_id], map: "ground_services_booking_id_fkey")
+  @@map("ground_services")
+}
+
+model Notification {
+  id_notifications Int               @id @default(autoincrement())
+  passenger_id     Int
+  booking_id       Int?
+  title            String            @db.VarChar(255)
+  message          String?           @db.VarChar(5000)
+  type             NotificationType?
+  is_read          Int?              @db.TinyInt
+  created_at       DateTime?         @db.Timestamp(0)
+  booking          Booking?          @relation(fields: [booking_id], references: [id_bookings])
+  passenger        Passenger         @relation(fields: [passenger_id], references: [id_passengers])
+
+  @@index([booking_id], map: "notifications_booking_id_fkey")
+  @@index([passenger_id], map: "notifications_passenger_id_fkey")
+  @@map("notifications")
+}
+
+model Passenger {
+  id_passengers       Int                @id @default(autoincrement())
+  name                String             @db.VarChar(100)
+  passport_number     String             @unique @db.VarChar(50)
+  date_of_birth       DateTime?          @db.Date
+  nationality         String?            @db.VarChar(45)
+  gander              Gender
+  user_id             Int?
+  user                User?              @relation(fields: [user_id], references: [id_users])
+  baggages            Baggage[]
+  bookings_passengers BookingPassenger[]
+  notifications       Notification[]
+
+  @@index([user_id], map: "passengers_user_id_fkey")
+  @@map("passengers")
+}
+
+model Payment {
+  id_payments      Int            @id @default(autoincrement())
+  booking_id       Int
+  amount           Decimal        @db.Decimal(10, 2)
+  payment_method   PaymentMethod
+  tansaction_id    String?        @unique @db.VarChar(50)
+  payment_status   PaymentStatus?
+  gateway_response String?        @db.VarChar(10000)
+  payment_date     DateTime?      @db.Timestamp(0)
+  refund_date      DateTime?      @db.Timestamp(0)
+  refund_amount    Decimal?       @db.Decimal(10, 2)
+  booking          Booking        @relation(fields: [booking_id], references: [id_bookings])
+
+  @@index([booking_id], map: "payments_booking_id_fkey")
+  @@map("payments")
+}
+
+model Seat {
+  id_seats            Int                @id @default(autoincrement())
+  flight_id           Int
+  seat_number         String             @unique @db.VarChar(15)
+  seat_class          SeatClass?
+  is_available        Int?               @default(1) @db.TinyInt
+  seat_price          Decimal?           @db.Decimal(10, 2)
+  bookings_passengers BookingPassenger[]
+  flight              Flight             @relation(fields: [flight_id], references: [id_flights])
+
+  @@index([flight_id], map: "seats_flight_id_fkey")
+  @@map("seats")
+}
+
+enum BookingStatus {
+  temporary
+  certain
+  canceled
+}
+
+enum AdminRole {
+  admin
+  company
+}
+
+enum FlightStatus {
+  active
+  cancelled
+  copmleted
+}
+
+enum FlightLogAction {
+  create
+  update
+  delete
+  status_changr
+}
+
+enum NotificationType {
+  booking
+  reminder
+  payment
+  cancellation
+  general
+}
+
+enum Gender {
+  male
+  female
+}
+
+enum PaymentMethod {
+  credit_card
+  debit_card
+  paypal
+  bank_transfer
+  branch_payment
+}
+
+enum PaymentStatus {
+  pending
+  success
+  failed
+  refunded
+}
+
+enum SeatClass {
+  economy
+  business @map(" business")
+  first
+}

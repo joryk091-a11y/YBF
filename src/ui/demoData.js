@@ -1,4 +1,4 @@
-﻿const AIRLINES = [
+const AIRLINES = [
   { code: 'YEM', name: 'اليمنية', office: 'عدن' },
   { code: 'QTB', name: 'القطيبي', office: 'صنعاء' },
   { code: 'SBA', name: 'سبأ', office: 'سيئون' },
@@ -222,9 +222,9 @@ export const createDemoNotifications = () => [
 
 export const createDemoAdminData = () => ({
   users: [
-    { id: 'usr_admin', name: 'مدير النظام', email: 'admin@ybf.test', role: 'admin' },
-    { id: 'usr_employee', name: 'موظف الحجز', email: 'employee@ybf.test', role: 'employee' },
-    { id: 'usr_customer', name: 'عميل تجريبي', email: 'user@ybf.test', role: 'customer' },
+    { id: 'usr_admin', name: 'مدير النظام', email: 'admin@gmail.com', role: 'admin' },
+    { id: 'usr_employee', name: 'موظف الحجز', email: 'employee@gmail.com', role: 'employee' },
+    { id: 'usr_customer', name: 'عميل تجريبي', email: 'user@gmail.com', role: 'customer' },
   ],
   bookings: createDemoMyBookings(),
   payments: [

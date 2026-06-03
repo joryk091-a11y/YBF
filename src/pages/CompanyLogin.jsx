@@ -144,7 +144,7 @@ const CompanyLogin = () => {
                                     onFocus={() => setFocusedField('email')}
                                     onBlur={() => setFocusedField(null)}
                                     className="w-full bg-transparent py-5 pr-12 pl-4 text-base font-bold text-slate-900 placeholder:text-slate-300 outline-none"
-                                    placeholder="example@ybf.com"
+                                    placeholder="example@gmail.com"
                                     required
                                     dir="ltr"
                                 />
@@ -202,7 +202,7 @@ const CompanyLogin = () => {
                     {/* Footer Links */}
                     <div className="mt-10 pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
                         <Link to="/" className="text-sm font-bold text-slate-500 hover:text-blue-600 transition-colors">العودة للرئيسية</Link>
-                        <a href="mailto:support@ybf.com" className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-blue-600 transition-colors">
+                        <a href="mailto:ybf.support@gmail.com" className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-blue-600 transition-colors">
                             <Mail size={16} />
                             الدعم الفني للشركاء
                         </a>

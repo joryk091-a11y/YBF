@@ -14,10 +14,10 @@ const config = {
 };
 
 const admins = [
-  { email: 'admin@ybf.com',    password: 'ADMIN123',    role: 'admin',   airline_code: null },
-  { email: 'yemenia@ybf.com',  password: 'YEMENIA123',  role: 'company', airline_code: 'IY' },
-  { email: 'balqis@ybf.com',   password: 'QUTAIBI456',  role: 'company', airline_code: 'BS' },
-  { email: 'aden@ybf.com',     password: 'SABA789',     role: 'company', airline_code: 'QY' },
+  { email: 'admin@gmail.com',    password: 'ADMIN123',    role: 'admin',   airline_code: null },
+  { email: 'yemenia@gmail.com',  password: 'YEMENIA123',  role: 'company', airline_code: 'IY' },
+  { email: 'balqis@gmail.com',   password: 'QUTAIBI456',  role: 'company', airline_code: 'BS' },
+  { email: 'aden@gmail.com',     password: 'SABA789',     role: 'company', airline_code: 'QY' },
 ];
 
 let connection;

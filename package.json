@@ -4,13 +4,14 @@
     "version": "0.0.0",
     "type": "module",
     "scripts": {
-        "dev": "vite",
+        "dev": "vite --open",
         "build": "vite build",
         "lint": "eslint .",
         "preview": "vite preview",
         "db:init": "prisma migrate dev --name init",
         "db:migrate": "prisma migrate dev",
         "db:studio": "prisma studio",
+        "db:seed": "node seed.js",
         "server": "node server.js"
     },
     "dependencies": {

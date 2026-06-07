@@ -13,6 +13,7 @@ import AdminDashboard from './pages/AdminDashboard.jsx'
 import AdminUsers from './pages/AdminUsers.jsx'
 import SeatsPage from './pages/Seats.jsx'
 import MyBookings from './pages/MyBookings.jsx'
+import AdminLogin from './pages/AdminLogin.jsx'
 
 import { SearchProvider } from './utils/SearchContext.jsx'
 import { ThemeProvider } from './utils/ThemeContext.jsx'
@@ -31,7 +32,7 @@ const AdminProtectedRoute = ({ children }) => {
     const adminToken = localStorage.getItem('adminToken');
     const userRole = localStorage.getItem('userRole');
     if (!adminToken || userRole !== 'admin') {
-        return <Navigate to="/company/login" replace />;
+        return <Navigate to="/admin/login" replace />;
     }
     return children;
 };
@@ -54,6 +55,9 @@ function App() {
         <BrowserRouter>
           <ScrollToTop />
           <Routes>
+            {/* ===== مسار تسجيل دخول المدير (عام) ===== */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+
             {/* ===== مسار تسجيل دخول الشركات (عام) ===== */}
             <Route path="/company/login" element={<CompanyLogin />} />
 
@@ -78,11 +82,7 @@ function App() {
             />
             <Route
               path="/admin/users"
-              element={
-                <AdminProtectedRoute>
-                  <AdminUsers />
-                </AdminProtectedRoute>
-              }
+              element={<Navigate to="/admin/dashboard" state={{ activeTab: 'users' }} replace />}
             />
             <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
 

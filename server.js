@@ -14,7 +14,16 @@ app.use(express.json());
 // Helper to parse DATABASE_URL
 const getDbConfig = () => {
   const url = process.env.DATABASE_URL;
-  if (!url) return null;
+  if (!url) {
+    // Fallback to standard local MySQL (e.g. XAMPP) if DATABASE_URL is not set in environment
+    return {
+      host: '127.0.0.1',
+      user: 'root',
+      password: '',
+      port: 3306,
+      database: 'airlines'
+    };
+  }
   // Format: mysql://user:password@host:port/database
   const regex = /mysql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/;
   const match = url.match(regex);
@@ -135,9 +144,287 @@ app.get('/api/admin/users', async (req, res) => {
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
-    const [rows] = await connection.execute('SELECT id_users, full_name, email, phone, created_at FROM users ORDER BY created_at DESC');
+    const [rows] = await connection.execute('SELECT id_users, full_name, email, phone, password, created_at FROM users ORDER BY created_at DESC');
     res.json({ success: true, users: rows });
   } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+app.post('/api/admin/users', async (req, res) => {
+  const { full_name, email, phone, password } = req.body;
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    
+    // Check if email already exists
+    const [existing] = await connection.execute('SELECT id_users FROM users WHERE email = ?', [email]);
+    if (existing.length > 0) {
+      return res.status(400).json({ success: false, error: 'البريد الإلكتروني مسجل بالفعل' });
+    }
+
+    const [result] = await connection.execute(
+      'INSERT INTO users (full_name, email, phone, password, created_at) VALUES (?, ?, ?, ?, NOW())',
+      [full_name, email, phone, password]
+    );
+
+    res.status(201).json({ success: true, userId: result.insertId });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+app.put('/api/admin/users/:id', async (req, res) => {
+  const { id } = req.params;
+  const { full_name, email, phone, password } = req.body;
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+
+    // Check if email already exists for another user
+    const [existing] = await connection.execute('SELECT id_users FROM users WHERE email = ? AND id_users != ?', [email, id]);
+    if (existing.length > 0) {
+      return res.status(400).json({ success: false, error: 'البريد الإلكتروني مسجل بمستخدم آخر' });
+    }
+
+    if (password) {
+      await connection.execute(
+        'UPDATE users SET full_name = ?, email = ?, phone = ?, password = ? WHERE id_users = ?',
+        [full_name, email, phone, password, id]
+      );
+    } else {
+      await connection.execute(
+        'UPDATE users SET full_name = ?, email = ?, phone = ? WHERE id_users = ?',
+        [full_name, email, phone, id]
+      );
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+app.delete('/api/admin/users/:id', async (req, res) => {
+  const { id } = req.params;
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    await connection.execute('DELETE FROM users WHERE id_users = ?', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+
+// GET Admin Dashboard stats from database
+app.get('/api/admin/dashboard-stats', async (req, res) => {
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+
+    // 1. Total tickets (number of passenger tickets booked)
+    const [[{ totalTickets }]] = await connection.execute('SELECT COALESCE(SUM(total_passengers), 0) as totalTickets FROM bookings');
+
+    // 2. Total revenue (sum of amount of success payments)
+    const [[{ totalRevenue }]] = await connection.execute("SELECT COALESCE(SUM(amount), 0) as totalRevenue FROM payments WHERE payment_status = 'success'");
+
+    // 3. Pending payments (bookings count with 'temporary' status)
+    const [[{ pendingPayments }]] = await connection.execute("SELECT COUNT(*) as pendingPayments FROM bookings WHERE status = 'temporary'");
+
+    // 4. Total users
+    const [[{ totalUsers }]] = await connection.execute('SELECT COUNT(*) as totalUsers FROM users');
+
+    // 5. Recent bookings
+    const [recentBookings] = await connection.execute(`
+      SELECT b.id_bookings, b.booking_reference, b.booking_date, b.total_passengers, b.final_price, b.status, 
+             f.flight_number, f.airline_code, f.airportOrigin_code, f.airportDestination_code, f.departure_time,
+             (SELECT p.name FROM bookings_passengers bp JOIN passengers p ON bp.passenger_id = p.id_passengers WHERE bp.booking_id = b.id_bookings LIMIT 1) as lead_passenger
+      FROM bookings b
+      JOIN flights f ON b.flight_id = f.id_flights
+      ORDER BY b.booking_date DESC
+      LIMIT 10
+    `);
+
+    // 6. Top Destinations and ticket counts (SUM of passengers)
+    const [destinationsStats] = await connection.execute(`
+      SELECT f.airportDestination_code as destination, COALESCE(SUM(b.total_passengers), 0) as count 
+      FROM bookings b
+      JOIN flights f ON b.flight_id = f.id_flights
+      GROUP BY f.airportDestination_code
+      ORDER BY count DESC
+      LIMIT 5
+    `);
+
+    // 7. Monthly Sales and passenger count (last 6 months)
+    const [monthlySales] = await connection.execute(`
+      SELECT DATE_FORMAT(booking_date, '%Y-%m') as month, COALESCE(SUM(final_price), 0) as sales, COALESCE(SUM(total_passengers), 0) as passengers
+      FROM bookings
+      GROUP BY DATE_FORMAT(booking_date, '%Y-%m')
+      ORDER BY month ASC
+      LIMIT 6
+    `);
+
+    // 7b. Daily Sales (last 14 days)
+    const [dailySales] = await connection.execute(`
+      SELECT DATE_FORMAT(booking_date, '%Y-%m-%d') as day, COALESCE(SUM(final_price), 0) as sales, COALESCE(SUM(total_passengers), 0) as passengers
+      FROM bookings
+      WHERE booking_date >= DATE_SUB(NOW(), INTERVAL 14 DAY)
+      GROUP BY DATE_FORMAT(booking_date, '%Y-%m-%d')
+      ORDER BY day ASC
+    `);
+
+    // 8. Airline Share
+    const [airlineStats] = await connection.execute(`
+      SELECT f.airline_code as name, COUNT(b.id_bookings) as value
+      FROM bookings b
+      JOIN flights f ON b.flight_id = f.id_flights
+      GROUP BY f.airline_code
+    `);
+
+    // 9. Class stats
+    const [classStats] = await connection.execute(`
+      SELECT s.seat_class as name, COUNT(bp.id_bookings_passengers) as value
+      FROM bookings_passengers bp
+      JOIN seats s ON bp.seat_id = s.id_seats
+      GROUP BY s.seat_class
+    `);
+
+    // 10. Active passengers
+    const [[{ activePassengers }]] = await connection.execute('SELECT COUNT(*) as activePassengers FROM passengers');
+
+    // 11. Cancellation Rate and Status Mapping
+    const [[{ totalBookings }]] = await connection.execute('SELECT COUNT(*) as totalBookings FROM bookings');
+    const [[{ canceledBookings }]] = await connection.execute("SELECT COUNT(*) as canceledBookings FROM bookings WHERE status = 'canceled'");
+    const cancellationRate = totalBookings > 0 ? Number(((canceledBookings / totalBookings) * 100).toFixed(1)) : 0;
+
+    const [statusStats] = await connection.execute(`
+      SELECT status, COUNT(*) as count, COALESCE(SUM(final_price), 0) as amount 
+      FROM bookings 
+      GROUP BY status
+    `);
+
+    // 12. Aircraft average pricing
+    const [aircraftStats] = await connection.execute(`
+      SELECT aircraft_type as name, COALESCE(AVG(price), 0) as price
+      FROM flights
+      GROUP BY aircraft_type
+      HAVING price > 0
+    `);
+
+    res.json({
+      success: true,
+      stats: {
+        totalTickets: totalTickets || 0,
+        totalRevenue: Number(totalRevenue) || 0,
+        pendingPayments: pendingPayments || 0,
+        totalUsers: totalUsers || 0,
+        activePassengers: activePassengers || 0,
+        recentBookings,
+        destinationsStats,
+        monthlySales,
+        dailySales,
+        airlineStats,
+        cancellationRate,
+        statusStats,
+        classStats: classStats.length > 0 ? classStats : [
+          { name: 'economy', value: totalTickets ? Math.round(totalTickets * 0.7) : 0 },
+          { name: 'business', value: totalTickets ? Math.round(totalTickets * 0.2) : 0 },
+          { name: 'first', value: totalTickets ? Math.round(totalTickets * 0.1) : 0 }
+        ],
+        aircraftStats: aircraftStats.length > 0 ? aircraftStats : [
+          { name: 'Boeing 787', price: 548 },
+          { name: 'Airbus A350', price: 620 }
+        ]
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching dashboard stats:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// GET all bookings for admin
+app.get('/api/admin/bookings', async (req, res) => {
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    const [rows] = await connection.execute(`
+      SELECT b.id_bookings, b.booking_reference, b.booking_date, b.total_passengers, b.base_price, b.extra_total, b.final_price, b.status,
+             f.flight_number, f.airline_code, f.airportOrigin_code, f.airportDestination_code, f.departure_time, f.arrival_time, f.price as flight_price,
+             p.payment_method, p.payment_status, p.tansaction_id, p.payment_date,
+             (SELECT GROUP_CONCAT(name SEPARATOR ', ') FROM bookings_passengers bp JOIN passengers pass ON bp.passenger_id = pass.id_passengers WHERE bp.booking_id = b.id_bookings) as passengers
+      FROM bookings b
+      JOIN flights f ON b.flight_id = f.id_flights
+      LEFT JOIN payments p ON p.booking_id = b.id_bookings
+      ORDER BY b.booking_date DESC
+    `);
+    res.json({ success: true, bookings: rows });
+  } catch (error) {
+    console.error('Error fetching bookings:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// POST update booking and payment status
+app.post('/api/admin/bookings/:id/status', async (req, res) => {
+  const { id } = req.params;
+  const { status, payment_status } = req.body;
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    await connection.beginTransaction();
+
+    if (status) {
+      await connection.execute(
+        'UPDATE bookings SET status = ?, cancelled_date = ? WHERE id_bookings = ?',
+        [status, status === 'canceled' ? new Date() : null, id]
+      );
+    }
+
+    if (payment_status) {
+      const [existingPayment] = await connection.execute(
+        'SELECT id_payments FROM payments WHERE booking_id = ?',
+        [id]
+      );
+
+      if (existingPayment.length > 0) {
+        await connection.execute(
+          'UPDATE payments SET payment_status = ?, payment_date = ? WHERE booking_id = ?',
+          [payment_status, payment_status === 'success' ? new Date() : null, id]
+        );
+      } else {
+        const [[bookingRow]] = await connection.execute(
+          'SELECT final_price FROM bookings WHERE id_bookings = ?',
+          [id]
+        );
+        const finalPrice = bookingRow ? bookingRow.final_price : 0;
+        await connection.execute(
+          'INSERT INTO payments (booking_id, amount, payment_method, payment_status, payment_date, tansaction_id) VALUES (?, ?, ?, ?, NOW(), ?)',
+          [id, finalPrice, 'bank_transfer', payment_status, `ADM-TX-${id}-${Date.now()}`]
+        );
+      }
+    }
+
+    await connection.commit();
+    res.json({ success: true });
+  } catch (error) {
+    if (connection) await connection.rollback();
+    console.error('Error updating booking status:', error);
     res.status(500).json({ success: false, error: error.message });
   } finally {
     if (connection) await connection.end();
@@ -256,10 +543,15 @@ app.get('/api/flights', async (req, res) => {
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
-    const [rows] = await connection.execute(
-      'SELECT * FROM flights WHERE airline_code = ? ORDER BY departure_time DESC',
-      [airlineCode]
-    );
+    let query = 'SELECT * FROM flights';
+    const params = [];
+    if (airlineCode && airlineCode !== 'undefined' && airlineCode !== 'null' && airlineCode.trim() !== '') {
+      query += ' WHERE airline_code = ?';
+      params.push(airlineCode);
+    }
+    query += ' ORDER BY departure_time DESC';
+    
+    const [rows] = await connection.execute(query, params);
     res.json({ success: true, flights: rows });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -571,6 +863,120 @@ app.delete('/api/notifications/:id', async (req, res) => {
 });
 
 
+// --- COMPANY MANAGEMENT ENDPOINTS ---
+
+// Get all companies (admins with role = 'company')
+app.get('/api/admin/companies', async (req, res) => {
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    const [rows] = await connection.execute(
+      "SELECT id_admin, email, password, role, airline_code, last_login, created_at FROM admins WHERE role = 'company' ORDER BY created_at DESC"
+    );
+    res.json({ success: true, companies: rows });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// Create a new company
+app.post('/api/admin/companies', async (req, res) => {
+  const { email, password, airline_code } = req.body;
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    
+    // Check if email already exists
+    const [existing] = await connection.execute('SELECT id_admin FROM admins WHERE email = ?', [email]);
+    if (existing.length > 0) {
+      return res.status(400).json({ success: false, error: 'البريد الإلكتروني مسجل بالفعل' });
+    }
+
+    // Get next auto-increment id
+    const [maxIdRows] = await connection.execute('SELECT COALESCE(MAX(id_admin), 0) + 1 as nextId FROM admins');
+    const nextId = maxIdRows[0].nextId;
+
+    await connection.execute(
+      "INSERT INTO admins (id_admin, email, password, role, airline_code, created_at) VALUES (?, ?, ?, 'company', ?, NOW())",
+      [nextId, email, password, airline_code]
+    );
+
+    res.status(201).json({ success: true, companyId: nextId });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// Update a company
+app.put('/api/admin/companies/:id', async (req, res) => {
+  const { id } = req.params;
+  const { email, password, airline_code } = req.body;
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+
+    // Check if email already exists for another user
+    const [existing] = await connection.execute('SELECT id_admin FROM admins WHERE email = ? AND id_admin != ?', [email, id]);
+    if (existing.length > 0) {
+      return res.status(400).json({ success: false, error: 'البريد الإلكتروني مسجل بمستخدم آخر' });
+    }
+
+    await connection.execute(
+      "UPDATE admins SET email = ?, password = ?, airline_code = ? WHERE id_admin = ? AND role = 'company'",
+      [email, password, airline_code, id]
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// Delete a company
+app.delete('/api/admin/companies/:id', async (req, res) => {
+  const { id } = req.params;
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    await connection.execute("DELETE FROM admins WHERE id_admin = ? AND role = 'company'", [id]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+
+// Seed default admin account
+const seedAdmin = async () => {
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    const [rows] = await connection.execute('SELECT id_admin FROM admins WHERE email = ?', ['admin@gmail.com']);
+    if (rows.length === 0) {
+      const [maxIdRows] = await connection.execute('SELECT COALESCE(MAX(id_admin), 0) + 1 as nextId FROM admins');
+      const nextId = maxIdRows[0].nextId;
+      await connection.execute(
+        'INSERT INTO admins (id_admin, email, password, role, created_at) VALUES (?, ?, ?, ?, NOW())',
+        [nextId, 'admin@gmail.com', 'ADMIN123', 'admin']
+      );
+      console.log('Seeded default admin account (admin@gmail.com) successfully.');
+    }
+  } catch (error) {
+    console.error('Error seeding admin account:', error);
+  } finally {
+    if (connection) await connection.end();
+  }
+};
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
+  seedAdmin();
 });

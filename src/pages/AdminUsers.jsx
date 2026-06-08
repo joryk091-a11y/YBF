@@ -38,17 +38,23 @@ const AdminUsers = () => {
         const token = localStorage.getItem('adminToken');
         const role = localStorage.getItem('userRole');
         if (!token || role !== 'admin') {
-            navigate('/company/login');
+            navigate('/admin/login');
             return;
         }
 
-        fetchUsers();
-        return () => window.removeEventListener('scroll', handleScroll);
+        const timer = setTimeout(() => {
+            fetchUsers();
+        }, 0);
+
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            clearTimeout(timer);
+        };
     }, [navigate]);
 
     const handleLogout = () => {
         localStorage.clear();
-        navigate('/company/login');
+        navigate('/admin/login');
     };
 
     const filteredUsers = users.filter(u => 

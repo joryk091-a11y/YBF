@@ -58,7 +58,8 @@ const CompanyLogin = () => {
             } else {
                 setError(data.error || 'البريد الإلكتروني أو كلمة المرور غير صحيحة.');
             }
-        } catch (err) {
+        } catch (error) {
+            console.error('Company login error:', error);
             setError('تعذر الاتصال بالخادم.');
         } finally {
             setLoading(false);

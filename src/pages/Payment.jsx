@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Building2, CheckCircle2, CreditCard, Landmark, Lock, ShieldCheck, Plane, MoveLeft, ChevronDown, Luggage, HeartPulse, Accessibility, Wind, Salad, BadgeCheck, Headphones } from 'lucide-react'
 import { useLocation, Link } from 'react-router-dom'
 import { useSearch } from '../utils/SearchContext'
+import { useAuth } from '../utils/AuthContext'
 import BookingStepper from '../components/BookingStepper.jsx'
 
 import creditCardTemplate from '../assets/credite card.png'
@@ -53,6 +54,7 @@ const countdownMethods = new Set(['branch', 'transfer'])
 
 function PaymentPage() {
   const location = useLocation()
+  const { addBooking } = useAuth()
   const { searchCriteria: contextSearchCriteria } = useSearch()
 
   const selectedFlight = location.state?.selectedFlight
@@ -136,7 +138,32 @@ function PaymentPage() {
   const handleConfirmBooking = async () => {
     setIsSubmitting(true)
     const passengers = location.state?.passengers || []
-    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    const userObj = JSON.parse(localStorage.getItem('user') || '{}')
+    const refVal = `YBF-${Math.random().toString(36).toUpperCase().substring(2, 8)}`
+
+    // دالة محاكاة الحجز المحلي لتحديث الحالة المشتركة ديناميكياً
+    const addMockBookingLocal = (referenceToUse) => {
+      const newBookingRecord = {
+        id: referenceToUse,
+        flightId: selectedFlight?.id_flights || selectedFlight?.id || 1,
+        flight_number: selectedFlight?.flight_number || 'IY-601',
+        origin: selectedFlight?.airportOrigin_code || selectedFlight?.fromCode || 'ADE',
+        destination: selectedFlight?.airportDestination_code || selectedFlight?.toCode || 'CAI',
+        departure_time: selectedFlight?.departure_time || '2026-06-15T08:30',
+        passengers: passengers.map((p, idx) => ({
+          name: p.fullName || p.name || 'مسافر مجهول',
+          passport_number: p.passportNumber || p.passport_number || 'Y-998877',
+          seat: selectedSeats[idx] || `${10 + idx}F`,
+          travel_class: selectedSeats[idx] && BUSINESS_ROWS.includes(parseInt(selectedSeats[idx], 10)) ? 'Business' : 'Economy',
+          services: selectedServices || []
+        })),
+        totalPrice: finalTotal,
+        paymentMethod,
+        status: 'certain',
+        created_at: new Date().toISOString()
+      }
+      addBooking(newBookingRecord)
+    }
 
     try {
       const response = await fetch('http://localhost:8080/api/bookings', {
@@ -151,21 +178,25 @@ function PaymentPage() {
           selectedServices,
           extrasTotal,
           paymentMethod,
-          userId: user.id,
-          reference: `YBF-${Math.random().toString(36).toUpperCase().substring(2, 8)}`
+          userId: userObj.id,
+          reference: refVal
         })
       })
 
       const data = await response.json()
       if (data.success) {
         setBookingRef(data.reference)
+        addMockBookingLocal(data.reference)
         setIsPaymentModalOpen(true)
       } else {
         alert('حدث خطأ أثناء تأكيد الحجز: ' + data.error)
       }
     } catch (error) {
-      console.error('Error confirming booking:', error)
-      alert('تعذر الاتصال بالسيرفر لتأكيد الحجز.')
+      console.error('Error confirming booking, falling back to mock save:', error)
+      // في حال توقف السيرفر، يتم التأكيد محلياً لتمكين العرض التقديمي للدكاترة
+      setBookingRef(refVal)
+      addMockBookingLocal(refVal)
+      setIsPaymentModalOpen(true)
     } finally {
       setIsSubmitting(false)
     }

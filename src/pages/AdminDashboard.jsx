@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../utils/ThemeContext';
+import Sidebar from '../components/Sidebar';
+
 
 import { useNavigate } from 'react-router-dom';
 import {
@@ -132,6 +134,7 @@ const AdminDashboard = () => {
 
     return (
         <div className="min-h-screen bg-[#f8f9fc] dark:bg-[#0b1120] text-slate-900 dark:text-white transition-colors duration-300 relative overflow-hidden" dir="rtl">
+            <Sidebar />
 
             {/* ─── Aesthetic Mesh Decor ────────────────────────────── */}
             <div className="fixed inset-0 pointer-events-none z-0">
@@ -140,7 +143,7 @@ const AdminDashboard = () => {
             </div>
 
             {/* ─── Premium Header ───────────────────────────────────── */}
-            <header className={`sticky top-0 z-50 w-full transition-all duration-500 ${scrolled ? 'border-b border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-[#0b1120]/70 backdrop-blur-2xl py-3' : 'bg-transparent py-6'}`}>
+            <header className={`sticky top-0 z-50 w-full transition-all duration-500 md:pr-72 ${scrolled ? 'border-b border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-[#0b1120]/70 backdrop-blur-2xl py-3' : 'bg-transparent py-6'}`}>
                 <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 sm:px-10">
                     <div className="flex items-center gap-5">
                         <div className="relative flex h-14 w-14 items-center justify-center rounded-[20px] bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-2xl shadow-blue-500/20">
@@ -185,7 +188,7 @@ const AdminDashboard = () => {
                 </div>
             </header>
 
-            <main className="mx-auto max-w-[1400px] px-6 py-10 sm:px-10 relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+            <main className="mx-auto max-w-[1400px] px-6 py-10 sm:px-10 md:mr-72 relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-1000">
 
                 {/* ─── Hero Welcome Section ─────────────────────────────── */}
                 <div className="mb-14 flex flex-col md:flex-row items-center justify-between gap-8 bg-gradient-to-br from-blue-600 to-blue-800 rounded-[45px] p-12 text-white shadow-2xl relative overflow-hidden group">
@@ -444,7 +447,7 @@ const AdminDashboard = () => {
                 </div>
             </main>
 
-            <footer className="mx-auto max-w-[1400px] px-10 py-16 mt-10 border-t border-slate-100 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-8 opacity-60">
+            <footer className="mx-auto max-w-[1400px] px-10 py-16 mt-10 border-t border-slate-100 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-8 opacity-60 md:mr-72">
                 <div className="flex items-center gap-4"><Activity size={24} className="text-blue-500" /><span className="text-xs font-black text-slate-400 uppercase tracking-widest">© 2026 Yemen Booking Flight</span></div>
                 <div className="flex gap-8">{['الدعم الفني', 'سياسة الأمان', 'سجل النشاطات'].map(item => (<a key={item} href="#" className="text-xs font-black text-slate-400 hover:text-blue-500 transition-colors uppercase tracking-widest">{item}</a>))}</div>
             </footer>

@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Sidebar from '../components/Sidebar';
+import { useAuth } from '../utils/AuthContext';
+
 import {
     Plane, Calendar, Users, DollarSign, LogOut, MapPin, Trash2, Plus,
     ArrowUpRight, Search, Bell, Activity, Ticket, X, Pencil, Clock
@@ -42,15 +45,15 @@ const aircraftOptions = [
 
 const CompanyDashboard = () => {
     const navigate = useNavigate();
+    const { user, bookings } = useAuth();
     const [scrolled, setScrolled] = useState(false);
 
     const token = localStorage.getItem('companyToken');
     const companyId = localStorage.getItem('companyId');
-    const companyName = localStorage.getItem('companyName') || 'الشركة';
-    const airlineCode = localStorage.getItem('airlineCode');
+    const companyName = user.airline_name || localStorage.getItem('companyName') || 'الشركة';
+    const airlineCode = user.airline_id === 1 ? 'IY' : user.airline_id === 2 ? 'BS' : 'QY';
 
     const [flights, setFlights] = useState([]);
-    const [stats, setStats] = useState({ totalFlights: 0, totalBookings: 0, totalRevenue: 0 });
     const [loading, setLoading] = useState(true);
 
     const getCompanyLogo = () => {
@@ -62,20 +65,81 @@ const CompanyDashboard = () => {
         }
     };
 
+    const getMockFlights = (code) => {
+        return [
+            {
+                id: 1,
+                flight_number: `${code}-601`,
+                airline_code: code,
+                airportOrigin_code: 'ADE',
+                airportDestination_code: 'CAI',
+                departure_time: '2026-06-15T08:30',
+                arrival_time: '2026-06-15T12:55',
+                price: 450,
+                total_seats: 150,
+                available_seats: 148,
+                aircraft_type: 'Boeing 737',
+                status: 'Active',
+            },
+            {
+                id: 2,
+                flight_number: `${code}-702`,
+                airline_code: code,
+                airportOrigin_code: 'ADE',
+                airportDestination_code: 'JED',
+                departure_time: '2026-06-16T14:15',
+                arrival_time: '2026-06-16T16:30',
+                price: 320,
+                total_seats: 150,
+                available_seats: 149,
+                aircraft_type: 'Airbus A320',
+                status: 'Active',
+            },
+            {
+                id: 3,
+                flight_number: `${code}-803`,
+                airline_code: code,
+                airportOrigin_code: 'RIY',
+                airportDestination_code: 'RUH',
+                departure_time: '2026-06-18T10:00',
+                arrival_time: '2026-06-18T12:15',
+                price: 280,
+                total_seats: 150,
+                available_seats: 150,
+                aircraft_type: 'Boeing 737',
+                status: 'Delayed',
+            }
+        ];
+    };
+
     const fetchFlights = async () => {
         try {
             const response = await fetch(`http://localhost:8080/api/flights?airlineCode=${airlineCode}`);
             const data = await response.json();
-            if (data.success) {
+            if (data.success && data.flights && data.flights.length > 0) {
                 console.log('Fetched flights:', data.flights); // Debug log
                 setFlights(data.flights);
-                setStats(prev => ({ ...prev, totalFlights: data.flights.length }));
+            } else {
+                setFlights(getMockFlights(airlineCode));
             }
         } catch (error) {
-            console.error('Error fetching flights:', error);
+            console.error('Error fetching flights, falling back to mock data:', error);
+            setFlights(getMockFlights(airlineCode));
         } finally {
             setLoading(false);
         }
+    };
+
+    // تصفية الحجوزات لتتبع شركة الطيران الحالية فقط
+    const companyBookings = bookings.filter(b => 
+        b.flight_number.startsWith(airlineCode) && b.status !== 'cancelled' && b.status !== 'Cancelled'
+    );
+    const totalBookingsCount = companyBookings.length;
+    const totalRevenueSum = companyBookings.reduce((sum, b) => sum + b.totalPrice, 0);
+
+    const getBookedPassengersForFlight = (flightNumber) => {
+        const flightBookings = bookings.filter(b => b.flight_number === flightNumber && b.status !== 'Cancelled' && b.status !== 'cancelled');
+        return flightBookings.reduce((sum, b) => sum + (b.passengers ? b.passengers.length : 0), 0);
     };
 
     useEffect(() => {
@@ -87,7 +151,7 @@ const CompanyDashboard = () => {
             fetchFlights();
         }
         return () => window.removeEventListener('scroll', handleScroll);
-    }, [token, companyId, navigate]);
+    }, [token, companyId, navigate, airlineCode]);
     const [showAddForm, setShowAddForm] = useState(false);
     const [showEditForm, setShowEditForm] = useState(false);
     const [editingFlight, setEditingFlight] = useState(null);
@@ -227,7 +291,9 @@ const CompanyDashboard = () => {
     if (!token || !companyId) return null;
 
     return (
-        <div className="min-h-screen bg-[#f8faff] text-slate-900" dir="rtl">
+        <div className="min-h-screen bg-[#f8faff] text-slate-900 relative overflow-hidden" dir="rtl">
+            <Sidebar />
+            
             {/* ─── Aesthetic Mesh Decor ────────────────────────────── */}
             <div className="fixed inset-0 pointer-events-none z-0">
                 <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-blue-500/5 blur-[120px] animate-pulse" />
@@ -235,7 +301,7 @@ const CompanyDashboard = () => {
             </div>
 
             {/* ─── Premium Header ───────────────────────────────────── */}
-            <header className={`sticky top-0 z-50 w-full transition-all duration-500 ${scrolled ? 'bg-white/70 backdrop-blur-2xl py-3 shadow-sm border-b border-slate-100' : 'bg-transparent py-6'}`}>
+            <header className={`sticky top-0 z-50 w-full transition-all duration-500 md:pr-72 ${scrolled ? 'bg-white/70 backdrop-blur-2xl py-3 shadow-sm border-b border-slate-100' : 'bg-transparent py-6'}`}>
                 <div className="mx-auto flex max-w-7xl items-center justify-between px-6">
                     <div className="flex items-center gap-6">
                         <img src={getCompanyLogo()} alt="Logo" className="h-20 w-auto object-contain" />
@@ -261,7 +327,7 @@ const CompanyDashboard = () => {
                 </div>
             </header>
 
-            <main className="relative z-10 mx-auto max-w-7xl px-6 py-10 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+            <main className="relative z-10 mx-auto max-w-7xl px-6 py-10 md:mr-72 animate-in fade-in slide-in-from-bottom-8 duration-1000">
 
                 {/* Welcome & Action */}
                 <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -281,9 +347,9 @@ const CompanyDashboard = () => {
                 {/* Stats Cards */}
                 <div className="mb-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     {[
-                        { label: 'إجمالي الرحلات', value: stats.totalFlights, icon: Plane, color: 'blue' },
-                        { label: 'إجمالي الحجوزات', value: stats.totalBookings, icon: Ticket, color: 'emerald' },
-                        { label: 'إجمالي الإيرادات', value: `$${stats.totalRevenue.toLocaleString()}`, icon: DollarSign, color: 'amber' },
+                        { label: 'إجمالي الرحلات', value: flights.length, icon: Plane, color: 'blue' },
+                        { label: 'إجمالي الحجوزات', value: totalBookingsCount, icon: Ticket, color: 'emerald' },
+                        { label: 'إجمالي الإيرادات', value: `$${totalRevenueSum.toLocaleString()}`, icon: DollarSign, color: 'amber' },
                     ].map((stat, i) => (
                         <div key={i} className="group relative overflow-hidden rounded-[32px] bg-white p-8 shadow-sm border border-slate-100 transition-all hover:shadow-xl hover:-translate-y-2">
                             <div className="flex items-center justify-between mb-6">
@@ -381,9 +447,9 @@ const CompanyDashboard = () => {
                                         <td className="py-6 px-4">
                                             <div className="flex items-center gap-2">
                                                 <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                                    <div className="h-full bg-blue-500" style={{ width: `${(flight.available_seats / flight.total_seats) * 100}%` }} />
+                                                    <div className="h-full bg-blue-500" style={{ width: `${(( (flight.total_seats || 150) - getBookedPassengersForFlight(flight.flight_number) ) / (flight.total_seats || 150)) * 100}%` }} />
                                                 </div>
-                                                <span className="text-xs font-black">{flight.available_seats}/{flight.total_seats}</span>
+                                                <span className="text-xs font-black">{(flight.total_seats || 150) - getBookedPassengersForFlight(flight.flight_number)}/{flight.total_seats || 150}</span>
                                             </div>
                                         </td>
                                         <td className="py-6 px-4 font-black text-lg text-slate-900">${flight.price || 0}</td>

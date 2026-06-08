@@ -9,13 +9,21 @@ import TravelersPage from './pages/Travelers.jsx'
 import PaymentPage from './pages/Payment.jsx'
 import CompanyLogin from './pages/CompanyLogin.jsx'
 import CompanyDashboard from './pages/CompanyDashboard.jsx'
+import CompanyFlights from './pages/CompanyFlights.jsx'
+import CompanyPassengers from './pages/CompanyPassengers.jsx'
+import CompanyAnalytics from './pages/CompanyAnalytics.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx'
 import AdminUsers from './pages/AdminUsers.jsx'
 import SeatsPage from './pages/Seats.jsx'
 import MyBookings from './pages/MyBookings.jsx'
+import PlaceholderPage from './pages/PlaceholderPage.jsx'
+import { Plane, BarChart3, Database, ClipboardList, HeartPulse } from 'lucide-react'
+
 
 import { SearchProvider } from './utils/SearchContext.jsx'
 import { ThemeProvider } from './utils/ThemeContext.jsx'
+import { AuthProvider } from './utils/AuthContext.jsx'
+import MockAuthPanel from './components/MockAuthPanel.jsx'
 
 // مكون حماية مسار الشركات
 const CompanyProtectedRoute = ({ children }) => {
@@ -50,14 +58,16 @@ const ScrollToTop = () => {
 function App() {
   return (
     <ThemeProvider>
-      <SearchProvider>
-        <BrowserRouter>
-          <ScrollToTop />
-          <Routes>
+      <AuthProvider>
+        <SearchProvider>
+          <BrowserRouter>
+            <ScrollToTop />
+            <MockAuthPanel />
+            <Routes>
             {/* ===== مسار تسجيل دخول الشركات (عام) ===== */}
             <Route path="/company/login" element={<CompanyLogin />} />
 
-            {/* ===== مسار لوحة تحكم الشركات (محمي) ===== */}
+            {/* ===== مسارات لوحة تحكم الشركات (محمية) ===== */}
             <Route
               path="/company/dashboard"
               element={
@@ -66,8 +76,44 @@ function App() {
                 </CompanyProtectedRoute>
               }
             />
+            <Route
+              path="/company/flights"
+              element={
+                <CompanyProtectedRoute>
+                  <CompanyFlights />
+                </CompanyProtectedRoute>
+              }
+            />
+            <Route
+              path="/company/passengers"
+              element={
+                <CompanyProtectedRoute>
+                  <CompanyPassengers />
+                </CompanyProtectedRoute>
+              }
+            />
+            <Route
+              path="/company/analytics"
+              element={
+                <CompanyProtectedRoute>
+                  <CompanyAnalytics />
+                </CompanyProtectedRoute>
+              }
+            />
+            <Route
+              path="/company/services"
+              element={
+                <CompanyProtectedRoute>
+                  <PlaceholderPage
+                    title="الخدمات الطبية والأرضية"
+                    description="تنسيق وتوفير الخدمات الخاصة مثل الكراسي المتحركة أو الخدمات الطبية للركاب."
+                    icon={HeartPulse}
+                  />
+                </CompanyProtectedRoute>
+              }
+            />
 
-            {/* ===== مسار لوحة تحكم المدير (محمي) ===== */}
+            {/* ===== مسارات لوحة تحكم المدير (محمية) ===== */}
             <Route
               path="/admin/dashboard"
               element={
@@ -81,6 +127,42 @@ function App() {
               element={
                 <AdminProtectedRoute>
                   <AdminUsers />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/airlines"
+              element={
+                <AdminProtectedRoute>
+                  <PlaceholderPage
+                    title="إدارة شركات الطيران"
+                    description="هنا يمكنك التحكم بشركاء الطيران وتعديل بياناتهم ونسب التحصيل الحالية."
+                    icon={Plane}
+                  />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/stats"
+              element={
+                <AdminProtectedRoute>
+                  <PlaceholderPage
+                    title="إحصائيات المنصة الإجمالية"
+                    description="تقارير تحليلية شاملة لحركة المبيعات والتذاكر وحركة الركاب اليومية والشهرية."
+                    icon={BarChart3}
+                  />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/logs"
+              element={
+                <AdminProtectedRoute>
+                  <PlaceholderPage
+                    title="سجلات النظام"
+                    description="مراقبة نشاطات النظام وسجلات تشغيل المخدم (Server Logs) وقاعدة البيانات."
+                    icon={Database}
+                  />
                 </AdminProtectedRoute>
               }
             />
@@ -103,7 +185,8 @@ function App() {
           </Routes>
         </BrowserRouter>
       </SearchProvider>
-    </ThemeProvider>
+    </AuthProvider>
+  </ThemeProvider>
   )
 }
 

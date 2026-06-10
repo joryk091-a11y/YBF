@@ -42,13 +42,16 @@ const AdminUsers = () => {
             return;
         }
 
-        const timer = setTimeout(() => {
+        fetchUsers();
+
+        // Polling users list every 20 seconds for live database updates
+        const interval = setInterval(() => {
             fetchUsers();
-        }, 0);
+        }, 20000);
 
         return () => {
             window.removeEventListener('scroll', handleScroll);
-            clearTimeout(timer);
+            clearInterval(interval);
         };
     }, [navigate]);
 

@@ -10,7 +10,7 @@ import {
     Calendar, CheckCircle, Clock, XCircle, Plane, ArrowUpRight, Search, Activity, Layers, BarChart3, MapPin,
     Globe, Bell, Settings, User, MoreHorizontal, ArrowLeft, Filter,
     Moon, Sun, Shield, Wallet, BookOpen, Plus, Trash2, Check, X, CreditCard, ChevronRight, Info,
-    UserCheck, Mail, Phone, Building2
+    UserCheck, Mail, Phone, Building2, Printer
 } from 'lucide-react';
 
 const AdminDashboard = () => {
@@ -71,6 +71,7 @@ const AdminDashboard = () => {
     });
     const [searchQuery, setSearchQuery] = useState('');
     const [loadingList, setLoadingList] = useState(false);
+    const [reportsSubTab, setReportsSubTab] = useState('logs'); // 'logs' or 'pdf_report'
 
     // Flight Form Modal State
     const [isFlightModalOpen, setIsFlightModalOpen] = useState(false);
@@ -281,8 +282,12 @@ const AdminDashboard = () => {
                 fetchDashboardStats();
             } else if (activeTab === 'flights') {
                 fetchFlights();
-            } else if (activeTab === 'wallet' || activeTab === 'reports') {
+            } else if (activeTab === 'wallet') {
                 fetchBookings();
+            } else if (activeTab === 'reports') {
+                fetchBookings();
+                fetchDashboardStats();
+                fetchFlights();
             } else if (activeTab === 'statistics') {
                 fetchDashboardStats();
             } else if (activeTab === 'users') {
@@ -303,6 +308,28 @@ const AdminDashboard = () => {
         }, 0);
         return () => clearTimeout(timer);
     }, [fetchDashboardStats, fetchUsers, fetchCompanies]);
+
+    // Auto-refresh database data every 20 seconds for real-time reporting
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (activeTab === 'dashboard' || activeTab === 'statistics' || activeTab === 'reports') {
+                fetchDashboardStats();
+            }
+            if (activeTab === 'wallet' || activeTab === 'reports') {
+                fetchBookings();
+            }
+            if (activeTab === 'flights' || activeTab === 'reports') {
+                fetchFlights();
+            }
+            if (activeTab === 'users') {
+                fetchUsers();
+            }
+            if (activeTab === 'companies') {
+                fetchCompanies();
+            }
+        }, 20000); // 20 seconds
+        return () => clearInterval(interval);
+    }, [activeTab, fetchDashboardStats, fetchBookings, fetchFlights, fetchUsers, fetchCompanies]);
 
     // Handle Payment/Booking status update
     const handleUpdateBookingStatus = async (id, status, payment_status) => {
@@ -1216,104 +1243,400 @@ const AdminDashboard = () => {
                             {/* ===== VIEW: REPORTS ===== */}
                             {activeTab === 'reports' && (
                                 <div className="space-y-6">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <h3 className="text-lg font-black">التقارير وسجلات الحجوزات</h3>
-                                            <p className="text-xs text-slate-400 font-bold mt-1">مراقبة وفلترة كافة الحجوزات والمبيعات على الموقع</p>
-                                        </div>
+                                    {/* Sub-tab selection */}
+                                    <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl w-fit mb-6 no-print">
                                         <button
-                                            onClick={() => {
-                                                const csvRows = [];
-                                                const headers = ['رقم الحجز', 'المسافرين', 'رقم الرحلة', 'سعر الحجز', 'الحالة', 'تاريخ الحجز'];
-                                                csvRows.push(headers.join(','));
-                                                bookings.forEach(b => {
-                                                    csvRows.push([
-                                                        b.booking_reference,
-                                                        `"${b.passengers?.replace(/"/g, '""') || ''}"`,
-                                                        b.flight_number,
-                                                        b.final_price,
-                                                        b.status,
-                                                        new Date(b.booking_date).toISOString()
-                                                    ].join(','));
-                                                });
-                                                const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + csvRows.join("\n");
-                                                const encodedUri = encodeURI(csvContent);
-                                                const link = document.createElement("a");
-                                                link.setAttribute("href", encodedUri);
-                                                link.setAttribute("download", `YBF-bookings-report-${new Date().toLocaleDateString()}.csv`);
-                                                document.body.appendChild(link);
-                                                link.click();
-                                                document.body.removeChild(link);
-                                            }}
-                                            className="bg-blue-600 hover:bg-blue-700 text-white font-black py-3 px-6 rounded-2xl text-xs transition-all shadow-md shadow-blue-500/20"
+                                            onClick={() => setReportsSubTab('logs')}
+                                            className={`py-2.5 px-6 rounded-xl text-xs font-black transition-all ${
+                                                reportsSubTab === 'logs'
+                                                    ? 'bg-blue-600 text-white shadow-md'
+                                                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
+                                            }`}
                                         >
-                                            تصدير التقرير المالي (CSV)
+                                            سجلات الحجوزات (تصدير CSV)
+                                        </button>
+                                        <button
+                                            onClick={() => setReportsSubTab('pdf_report')}
+                                            className={`py-2.5 px-6 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
+                                                reportsSubTab === 'pdf_report'
+                                                    ? 'bg-blue-600 text-white shadow-md'
+                                                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
+                                            }`}
+                                        >
+                                            <BookOpen size={16} />
+                                            <span>التقرير الشامل والطباعة (PDF)</span>
                                         </button>
                                     </div>
 
-                                    {/* Bookings Filter List */}
-                                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm p-8">
-                                        {loadingList ? (
-                                            <div className="py-20 text-center text-slate-400">جاري تحميل التقارير...</div>
-                                        ) : (
-                                            <div className="overflow-x-auto">
-                                                <table className="w-full text-right text-xs">
-                                                    <thead>
-                                                        <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-black uppercase">
-                                                            <th className="pb-4 px-4">رقم المرجع</th>
-                                                            <th className="pb-4 px-4">المسافرين</th>
-                                                            <th className="pb-4 px-4">الرحلة</th>
-                                                            <th className="pb-4 px-4">السعر</th>
-                                                            <th className="pb-4 px-4">حالة الحجز</th>
-                                                            <th className="pb-4 px-4">حالة الدفع</th>
-                                                            <th className="pb-4 px-4">تاريخ المعاملة</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
-                                                        {filteredBookings.length > 0 ? (
-                                                            filteredBookings.map((booking) => (
-                                                                <tr key={booking.id_bookings} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                                                                    <td className="py-4 px-4 font-black">#{booking.booking_reference}</td>
-                                                                    <td className="py-4 px-4 font-bold text-slate-800 dark:text-white max-w-xs truncate">{booking.passengers}</td>
-                                                                    <td className="py-4 px-4 font-bold text-slate-500">{booking.flight_number}</td>
-                                                                    <td className="py-4 px-4 font-black text-slate-900 dark:text-white">${Number(booking.final_price).toLocaleString()}</td>
-                                                                    <td className="py-4 px-4">
-                                                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black ${
-                                                                            booking.status === 'certain'
-                                                                                ? 'bg-emerald-500/10 text-emerald-600'
-                                                                                : booking.status === 'temporary'
-                                                                                ? 'bg-amber-500/10 text-amber-600'
-                                                                                : 'bg-rose-500/10 text-rose-600'
-                                                                        }`}>
-                                                                            {booking.status === 'certain' ? 'مؤكد' : booking.status === 'temporary' ? 'معلق' : 'ملغي'}
-                                                                        </span>
-                                                                    </td>
-                                                                    <td className="py-4 px-4">
-                                                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black ${
-                                                                            booking.payment_status === 'success'
-                                                                                ? 'bg-emerald-500/10 text-emerald-600'
-                                                                                : booking.payment_status === 'pending' || !booking.payment_status
-                                                                                ? 'bg-amber-500/10 text-amber-600'
-                                                                                : 'bg-rose-500/10 text-rose-600'
-                                                                        }`}>
-                                                                            {booking.payment_status === 'success' ? 'ناجح' : 'قيد الانتظار'}
-                                                                        </span>
-                                                                    </td>
-                                                                    <td className="py-4 px-4 font-medium text-slate-400">
-                                                                        {new Date(booking.booking_date).toLocaleString('ar-EG', { dateStyle: 'short' })}
-                                                                    </td>
-                                                                </tr>
-                                                            ))
-                                                        ) : (
-                                                            <tr>
-                                                                <td colSpan="7" className="py-12 text-center text-slate-400 font-bold">لا توجد سجلات مطابقة للبحث</td>
-                                                            </tr>
-                                                        )}
-                                                    </tbody>
-                                                </table>
+                                    {reportsSubTab === 'logs' && (
+                                        <div className="space-y-6">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <h3 className="text-lg font-black">التقارير وسجلات الحجوزات</h3>
+                                                    <p className="text-xs text-slate-400 font-bold mt-1">مراقبة وفلترة كافة الحجوزات والمبيعات على الموقع</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => {
+                                                        const csvRows = [];
+                                                        const headers = ['رقم الحجز', 'المسافرين', 'رقم الرحلة', 'سعر الحجز', 'الحالة', 'تاريخ الحجز'];
+                                                        csvRows.push(headers.join(','));
+                                                        bookings.forEach(b => {
+                                                            csvRows.push([
+                                                                b.booking_reference,
+                                                                `"${b.passengers?.replace(/"/g, '""') || ''}"`,
+                                                                b.flight_number,
+                                                                b.final_price,
+                                                                b.status,
+                                                                new Date(b.booking_date).toISOString()
+                                                            ].join(','));
+                                                        });
+                                                        const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + csvRows.join("\n");
+                                                        const encodedUri = encodeURI(csvContent);
+                                                        const link = document.createElement("a");
+                                                        link.setAttribute("href", encodedUri);
+                                                        link.setAttribute("download", `YBF-bookings-report-${new Date().toLocaleDateString()}.csv`);
+                                                        document.body.appendChild(link);
+                                                        link.click();
+                                                        document.body.removeChild(link);
+                                                    }}
+                                                    className="bg-blue-600 hover:bg-blue-700 text-white font-black py-3 px-6 rounded-2xl text-xs transition-all shadow-md shadow-blue-500/20"
+                                                >
+                                                    تصدير التقرير المالي (CSV)
+                                                </button>
                                             </div>
-                                        )}
-                                    </div>
+
+                                            {/* Bookings Filter List */}
+                                            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm p-8">
+                                                {loadingList ? (
+                                                    <div className="py-20 text-center text-slate-400">جاري تحميل التقارير...</div>
+                                                ) : (
+                                                    <div className="overflow-x-auto">
+                                                        <table className="w-full text-right text-xs">
+                                                            <thead>
+                                                                <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-black uppercase">
+                                                                    <th className="pb-4 px-4">رقم المرجع</th>
+                                                                    <th className="pb-4 px-4">المسافرين</th>
+                                                                    <th className="pb-4 px-4">الرحلة</th>
+                                                                    <th className="pb-4 px-4">السعر</th>
+                                                                    <th className="pb-4 px-4">حالة الحجز</th>
+                                                                    <th className="pb-4 px-4">حالة الدفع</th>
+                                                                    <th className="pb-4 px-4">تاريخ المعاملة</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
+                                                                {filteredBookings.length > 0 ? (
+                                                                    filteredBookings.map((booking) => (
+                                                                        <tr key={booking.id_bookings} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                                                                            <td className="py-4 px-4 font-black">#{booking.booking_reference}</td>
+                                                                            <td className="py-4 px-4 font-bold text-slate-800 dark:text-white max-w-xs truncate">{booking.passengers}</td>
+                                                                            <td className="py-4 px-4 font-bold text-slate-500">{booking.flight_number}</td>
+                                                                            <td className="py-4 px-4 font-black text-slate-900 dark:text-white">${Number(booking.final_price).toLocaleString()}</td>
+                                                                            <td className="py-4 px-4">
+                                                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black ${
+                                                                                    booking.status === 'certain'
+                                                                                        ? 'bg-emerald-500/10 text-emerald-600'
+                                                                                        : booking.status === 'temporary'
+                                                                                        ? 'bg-amber-500/10 text-amber-600'
+                                                                                        : 'bg-rose-500/10 text-rose-600'
+                                                                                }`}>
+                                                                                    {booking.status === 'certain' ? 'مؤكد' : booking.status === 'temporary' ? 'معلق' : 'ملغي'}
+                                                                                </span>
+                                                                            </td>
+                                                                            <td className="py-4 px-4">
+                                                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black ${
+                                                                                    booking.payment_status === 'success'
+                                                                                        ? 'bg-emerald-500/10 text-emerald-600'
+                                                                                        : booking.payment_status === 'pending' || !booking.payment_status
+                                                                                        ? 'bg-amber-500/10 text-amber-600'
+                                                                                        : 'bg-rose-500/10 text-rose-600'
+                                                                                }`}>
+                                                                                    {booking.payment_status === 'success' ? 'ناجح' : 'قيد الانتظار'}
+                                                                                </span>
+                                                                            </td>
+                                                                            <td className="py-4 px-4 font-medium text-slate-400">
+                                                                                {new Date(booking.booking_date).toLocaleString('ar-EG', { dateStyle: 'short' })}
+                                                                            </td>
+                                                                        </tr>
+                                                                    ))
+                                                                ) : (
+                                                                    <tr>
+                                                                        <td colSpan="7" className="py-12 text-center text-slate-400 font-bold">لا توجد سجلات مطابقة للبحث</td>
+                                                                    </tr>
+                                                                )}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {reportsSubTab === 'pdf_report' && (
+                                        <div className="space-y-6">
+                                            <style dangerouslySetInnerHTML={{__html: `
+                                                @media print {
+                                                    body, html {
+                                                        background: #ffffff !important;
+                                                        color: #0f172a !important;
+                                                        font-family: 'Inter', 'Outfit', sans-serif !important;
+                                                    }
+                                                    aside, header, nav, .no-print, button, input {
+                                                        display: none !important;
+                                                    }
+                                                    main {
+                                                        padding: 0 !important;
+                                                        margin: 0 !important;
+                                                        background: transparent !important;
+                                                        overflow: visible !important;
+                                                        width: 100% !important;
+                                                    }
+                                                    .print-report-container {
+                                                        display: block !important;
+                                                        width: 100% !important;
+                                                        margin: 0 !important;
+                                                        padding: 0 !important;
+                                                        background: #ffffff !important;
+                                                        color: #0f172a !important;
+                                                        direction: rtl !important;
+                                                    }
+                                                    .print-card {
+                                                        border: 1px solid #e2e8f0 !important;
+                                                        background: #ffffff !important;
+                                                        box-shadow: none !important;
+                                                    }
+                                                    .page-break {
+                                                        page-break-before: always;
+                                                    }
+                                                }
+                                            `}} />
+                                            
+                                            {/* Controls (no-print) */}
+                                            <div className="flex items-center justify-between no-print mb-6">
+                                                <div>
+                                                    <h3 className="text-lg font-black text-slate-800 dark:text-slate-100">معاينة التقرير الشامل للطباعة (PDF)</h3>
+                                                    <p className="text-xs text-slate-400 font-bold mt-1">توليد تقرير رسمي للأداء والأنشطة المالية والتشغيلية</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => window.print()}
+                                                    className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black py-3 px-6 rounded-2xl text-xs transition-all shadow-md shadow-emerald-500/20"
+                                                >
+                                                    <Printer size={16} />
+                                                    <span>طباعة وحفظ كـ PDF</span>
+                                                </button>
+                                            </div>
+
+                                            {/* Report Printable Document */}
+                                            <div className="print-report-container bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 md:p-12 shadow-sm space-y-10">
+                                                {/* Report Header */}
+                                                <div className="border-b border-slate-200 dark:border-slate-800 pb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                                                    <div className="space-y-2">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="h-10 w-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-black text-lg shadow-md shadow-blue-500/20">
+                                                                YBF
+                                                            </div>
+                                                            <h2 className="text-2xl font-black text-slate-900 dark:text-white">تقرير أداء نظام حجز الرحلات اليمني (YBF)</h2>
+                                                        </div>
+                                                        <p className="text-xs text-slate-400 font-bold">وثيقة رسمية تلخص أداء المنصة التشغيلي والمالي مأخوذة مباشرة من قاعدة البيانات</p>
+                                                    </div>
+                                                    <div className="text-right text-xs text-slate-500 dark:text-slate-400 font-bold space-y-1 bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                                        <div>تاريخ التقرير: <span className="text-slate-900 dark:text-white font-black">{new Date().toLocaleString('ar-YE', { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
+                                                        <div>المسؤول المصدر: <span className="text-slate-900 dark:text-white font-black">{adminEmail}</span></div>
+                                                        <div>حالة النظام: <span className="text-emerald-500 font-black">متصل بقاعدة البيانات</span></div>
+                                                    </div>
+                                                </div>
+
+                                                {/* KPIs Cards */}
+                                                <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
+                                                    {/* 1. Revenue */}
+                                                    <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">إجمالي المبيعات المؤكدة</p>
+                                                        <h4 className="text-3xl font-black text-emerald-500">${stats.totalRevenue.toLocaleString()}</h4>
+                                                        <p className="text-[11px] font-bold text-slate-500">
+                                                            يعادل: <strong className="text-slate-700 dark:text-slate-350">{(stats.totalRevenue * Number(exchangeRate)).toLocaleString()} ريال يمني</strong>
+                                                        </p>
+                                                    </div>
+
+                                                    {/* 2. Tickets */}
+                                                    <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">التذاكر المباعة والمصدرة</p>
+                                                        <h4 className="text-3xl font-black text-blue-500">{stats.totalTickets.toLocaleString()} تذكرة</h4>
+                                                        <p className="text-[11px] font-bold text-slate-500">
+                                                            المسافرين المسجلين: <strong className="text-slate-700 dark:text-slate-350">{stats.activePassengers.toLocaleString()} مسافر</strong>
+                                                        </p>
+                                                    </div>
+
+                                                    {/* 3. Estimated profit */}
+                                                    <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">صافي الأرباح المقدرة (عمولة {markupRate}%)</p>
+                                                        <h4 className="text-3xl font-black text-indigo-500">${(stats.totalRevenue * (Number(markupRate) / 100)).toLocaleString()}</h4>
+                                                        <p className="text-[11px] font-bold text-slate-500">
+                                                            يعادل: <strong className="text-slate-700 dark:text-slate-350">{Math.round((stats.totalRevenue * (Number(markupRate) / 100)) * Number(exchangeRate)).toLocaleString()} ريال يمني</strong>
+                                                        </p>
+                                                    </div>
+
+                                                    {/* 4. Exchange rate */}
+                                                    <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">سعر الصرف المعتمد</p>
+                                                        <h4 className="text-2xl font-black text-slate-800 dark:text-white">{exchangeRate} ر.ي / $</h4>
+                                                        <p className="text-[11px] font-bold text-slate-500">معدل التحويل النشط للمبيعات</p>
+                                                    </div>
+
+                                                    {/* 5. Cancellation rate */}
+                                                    <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">نسبة إلغاء الحجوزات</p>
+                                                        <h4 className="text-2xl font-black text-rose-500">{stats.cancellationRate}%</h4>
+                                                        <p className="text-[11px] font-bold text-slate-500">تحديث فوري من قاعدة البيانات</p>
+                                                    </div>
+
+                                                    {/* 6. Active Companies */}
+                                                    <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">شركات الطيران النشطة</p>
+                                                        <h4 className="text-2xl font-black text-violet-500">{companiesList.length} شركات طيران</h4>
+                                                        <p className="text-[11px] font-bold text-slate-500">المستخدمين المسجلين: {usersList.length} مستخدم</p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Destinations & Airline share row */}
+                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                                    {/* 1. Top Destinations */}
+                                                    <div className="print-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 p-6 rounded-2xl space-y-4">
+                                                        <h3 className="text-sm font-black border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center gap-2 text-slate-800 dark:text-white">
+                                                            <MapPin size={16} className="text-blue-500" />
+                                                            <span>الوجهات الأكثر طلباً وسفراً</span>
+                                                        </h3>
+                                                        <div className="space-y-3">
+                                                            {stats.destinationsStats.length > 0 ? (
+                                                                stats.destinationsStats.slice(0, 5).map((dest, idx) => (
+                                                                    <div key={idx} className="flex items-center justify-between text-xs font-bold border-b border-slate-50 dark:border-slate-800/50 pb-2">
+                                                                        <span className="text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                                                                            <span className="text-slate-400 text-[10px]">#{idx+1}</span>
+                                                                            <span>{getDestinationName(dest.destination)}</span>
+                                                                        </span>
+                                                                        <span className="text-blue-600 font-black">{dest.count} تذكرة محجوزة</span>
+                                                                    </div>
+                                                                ))
+                                                            ) : (
+                                                                <p className="text-xs text-slate-400 font-bold py-2">لا توجد إحصائيات كافية للوجهات.</p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* 2. Airline Share */}
+                                                    <div className="print-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 p-6 rounded-2xl space-y-4">
+                                                        <h3 className="text-sm font-black border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center gap-2 text-slate-800 dark:text-white">
+                                                            <Plane size={16} className="text-blue-500" />
+                                                            <span>توزيع الحجوزات حسب شركات الطيران</span>
+                                                        </h3>
+                                                        <div className="space-y-3">
+                                                            {stats.airlineStats.length > 0 ? (
+                                                                stats.airlineStats.map((item, idx) => (
+                                                                    <div key={idx} className="flex items-center justify-between text-xs font-bold border-b border-slate-50 dark:border-slate-800/50 pb-2">
+                                                                        <span className="text-slate-700 dark:text-slate-200">
+                                                                            {getAirlineName(item.name)}
+                                                                        </span>
+                                                                        <span className="text-slate-800 dark:text-white font-black">{item.value} حجز</span>
+                                                                    </div>
+                                                                ))
+                                                            ) : (
+                                                                <p className="text-xs text-slate-400 font-bold py-2">لا تتوفر بيانات لشركات الطيران.</p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Recent Bookings Table */}
+                                                <div className="print-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 p-6 rounded-2xl space-y-4">
+                                                    <h3 className="text-sm font-black border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center gap-2 text-slate-800 dark:text-white">
+                                                        <Ticket size={16} className="text-blue-500" />
+                                                        <span>سجل آخر الحجوزات المستلمة والمؤكدة في النظام</span>
+                                                    </h3>
+                                                    <div className="overflow-x-auto">
+                                                        <table className="w-full text-right text-xs">
+                                                            <thead>
+                                                                <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-black">
+                                                                    <th className="pb-3 px-2">رقم المرجع</th>
+                                                                    <th className="pb-3 px-2">الراكب الرئيسي</th>
+                                                                    <th className="pb-3 px-2">الرحلة</th>
+                                                                    <th className="pb-3 px-2">المبلغ الكلي</th>
+                                                                    <th className="pb-3 px-2">تاريخ المعاملة</th>
+                                                                    <th className="pb-3 px-2">الحالة</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
+                                                                {stats.recentBookings.slice(0, 5).map((booking) => (
+                                                                    <tr key={booking.id_bookings} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                                                                        <td className="py-3 px-2 font-black text-blue-600">#{booking.booking_reference}</td>
+                                                                        <td className="py-3 px-2 font-bold text-slate-850 dark:text-white">{booking.lead_passenger || 'غير محدد'}</td>
+                                                                        <td className="py-3 px-2 font-bold text-slate-500">{booking.flight_number}</td>
+                                                                        <td className="py-3 px-2 font-black text-slate-900 dark:text-white">${Number(booking.final_price).toLocaleString()}</td>
+                                                                        <td className="py-3 px-2 font-bold text-slate-400">{new Date(booking.booking_date).toLocaleDateString('ar-YE')}</td>
+                                                                        <td className="py-3 px-2 font-bold">
+                                                                            <span className={`px-2 py-0.5 rounded text-[10px] ${
+                                                                                booking.status === 'certain'
+                                                                                    ? 'bg-emerald-500/10 text-emerald-600'
+                                                                                    : booking.status === 'temporary'
+                                                                                    ? 'bg-amber-500/10 text-amber-600'
+                                                                                    : 'bg-rose-500/10 text-rose-600'
+                                                                            }`}>
+                                                                                {booking.status === 'certain' ? 'مؤكد' : booking.status === 'temporary' ? 'معلق' : 'ملغي'}
+                                                                            </span>
+                                                                        </td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+
+                                                {/* Recent Flights Table */}
+                                                <div className="print-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 p-6 rounded-2xl space-y-4 page-break-inside-avoid">
+                                                    <h3 className="text-sm font-black border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center gap-2 text-slate-800 dark:text-white">
+                                                        <Plane size={16} className="text-blue-500" />
+                                                        <span>سجل آخر الرحلات الجوية النشطة والمضافة</span>
+                                                    </h3>
+                                                    <div className="overflow-x-auto">
+                                                        <table className="w-full text-right text-xs">
+                                                            <thead>
+                                                                <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-black">
+                                                                    <th className="pb-3 px-2">رقم الرحلة</th>
+                                                                    <th className="pb-3 px-2">الشركة</th>
+                                                                    <th className="pb-3 px-2">الوجهة (من ➔ إلى)</th>
+                                                                    <th className="pb-3 px-2">تاريخ الإقلاع</th>
+                                                                    <th className="pb-3 px-2">السعر</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
+                                                                {flights.slice(0, 5).map((flight) => (
+                                                                    <tr key={flight.id_flights} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                                                                        <td className="py-3 px-2 font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                                                                            <Plane size={12} className="text-blue-500" />
+                                                                            {flight.flight_number}
+                                                                        </td>
+                                                                        <td className="py-3 px-2 font-bold text-slate-500">{getAirlineName(flight.airline_code)}</td>
+                                                                        <td className="py-3 px-2 font-bold text-slate-800 dark:text-slate-100">
+                                                                            <span>{flight.airportOrigin_code}</span>
+                                                                            <span className="mx-1.5 text-slate-300">➔</span>
+                                                                            <span>{flight.airportDestination_code}</span>
+                                                                        </td>
+                                                                        <td className="py-3 px-2 font-bold text-slate-400">
+                                                                            {new Date(flight.departure_time).toLocaleString('ar-YE', { dateStyle: 'short', timeStyle: 'short' })}
+                                                                        </td>
+                                                                        <td className="py-3 px-2 font-black text-blue-600 dark:text-blue-400">${Number(flight.price || 0).toLocaleString()}</td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+
+                                                {/* Footer Signatures */}
+                                                <div className="pt-8 border-t border-slate-200 dark:border-slate-800 flex justify-between text-[11px] font-bold text-slate-500">
+                                                    <div>توقيع المسؤول المصدر: ___________________</div>
+                                                    <div>ختم الإدارة المالية: ___________________</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 

@@ -776,7 +776,7 @@ const AdminDashboard = () => {
                                                 <h3 className="text-lg font-black">تحليل وحركة المبيعات</h3>
                                                 <p className="text-xs text-slate-400 font-bold mt-1">تتبع نمو المبيعات وحجم التذاكر المباعة بناءً على قاعدة البيانات</p>
                                             </div>
-                                            <div className="flex bg-slate-100 dark:bg-slate-850 p-1.5 rounded-xl self-start">
+                                            <div className="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-xl self-start">
                                                 <button
                                                     onClick={() => setSalesChartPeriod('daily')}
                                                     className={`py-1.5 px-4 rounded-lg text-xs font-black transition-all ${
@@ -1046,7 +1046,7 @@ const AdminDashboard = () => {
                                                             {getDestinationName(stats.destinationsStats[0]?.destination).split(' ')[0]}
                                                         </div>
                                                         <p className="text-xs text-slate-400 font-bold leading-relaxed">
-                                                            تتصدر هذه الوجهة قائمة الحجوزات بعدد <strong className="text-slate-850 dark:text-white">{stats.destinationsStats[0]?.count} تذكرة محجوزة</strong> فعلياً، مما يمثل أعلى نسبة تشغيل لخطوط النقل الجوي حالياً.
+                                                            تتصدر هذه الوجهة قائمة الحجوزات بعدد <strong className="text-slate-700 dark:text-white">{stats.destinationsStats[0]?.count} تذكرة محجوزة</strong> فعلياً، مما يمثل أعلى نسبة تشغيل لخطوط النقل الجوي حالياً.
                                                         </p>
                                                     </div>
                                                 ) : (
@@ -1499,7 +1499,7 @@ const AdminDashboard = () => {
                                                 {/* Destinations & Airline share row */}
                                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                                     {/* 1. Top Destinations */}
-                                                    <div className="print-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 p-6 rounded-2xl space-y-4">
+                                                    <div className="print-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl space-y-4">
                                                         <h3 className="text-sm font-black border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center gap-2 text-slate-800 dark:text-white">
                                                             <MapPin size={16} className="text-blue-500" />
                                                             <span>الوجهات الأكثر طلباً وسفراً</span>
@@ -1522,7 +1522,7 @@ const AdminDashboard = () => {
                                                     </div>
 
                                                     {/* 2. Airline Share */}
-                                                    <div className="print-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 p-6 rounded-2xl space-y-4">
+                                                    <div className="print-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl space-y-4">
                                                         <h3 className="text-sm font-black border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center gap-2 text-slate-800 dark:text-white">
                                                             <Plane size={16} className="text-blue-500" />
                                                             <span>توزيع الحجوزات حسب شركات الطيران</span>
@@ -1545,7 +1545,7 @@ const AdminDashboard = () => {
                                                 </div>
 
                                                 {/* Recent Bookings Table */}
-                                                <div className="print-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 p-6 rounded-2xl space-y-4">
+                                                <div className="print-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl space-y-4">
                                                     <h3 className="text-sm font-black border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center gap-2 text-slate-800 dark:text-white">
                                                         <Ticket size={16} className="text-blue-500" />
                                                         <span>سجل آخر الحجوزات المستلمة والمؤكدة في النظام</span>
@@ -1566,7 +1566,7 @@ const AdminDashboard = () => {
                                                                 {stats.recentBookings.slice(0, 5).map((booking) => (
                                                                     <tr key={booking.id_bookings} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
                                                                         <td className="py-3 px-2 font-black text-blue-600">#{booking.booking_reference}</td>
-                                                                        <td className="py-3 px-2 font-bold text-slate-850 dark:text-white">{booking.lead_passenger || 'غير محدد'}</td>
+                                                                        <td className="py-3 px-2 font-bold text-slate-700 dark:text-white">{booking.lead_passenger || 'غير محدد'}</td>
                                                                         <td className="py-3 px-2 font-bold text-slate-500">{booking.flight_number}</td>
                                                                         <td className="py-3 px-2 font-black text-slate-900 dark:text-white">${Number(booking.final_price).toLocaleString()}</td>
                                                                         <td className="py-3 px-2 font-bold text-slate-400">{new Date(booking.booking_date).toLocaleDateString('ar-YE')}</td>
@@ -1589,7 +1589,7 @@ const AdminDashboard = () => {
                                                 </div>
 
                                                 {/* Recent Flights Table */}
-                                                <div className="print-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 p-6 rounded-2xl space-y-4 page-break-inside-avoid">
+                                                <div className="print-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl space-y-4 page-break-inside-avoid">
                                                     <h3 className="text-sm font-black border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center gap-2 text-slate-800 dark:text-white">
                                                         <Plane size={16} className="text-blue-500" />
                                                         <span>سجل آخر الرحلات الجوية النشطة والمضافة</span>

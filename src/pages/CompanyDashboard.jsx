@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import { useAuth } from '../utils/AuthContext';
+import { useTheme } from '../utils/ThemeContext';
 
 import {
     Plane, Calendar, Users, DollarSign, LogOut, MapPin, Trash2, Plus,
-    ArrowUpRight, Search, Bell, Activity, Ticket, X, Pencil, Clock
+    ArrowUpRight, Search, Bell, Activity, Ticket, X, Pencil, Clock,
+    Sun, Moon
 } from 'lucide-react';
 import logo from '../assets/logo.png';
 import yemeniaLogo from '../assets/Y.png';
@@ -46,6 +48,7 @@ const aircraftOptions = [
 const CompanyDashboard = () => {
     const navigate = useNavigate();
     const { user, bookings } = useAuth();
+    const { isDarkMode, toggleDarkMode } = useTheme();
     const [scrolled, setScrolled] = useState(false);
 
     const token = localStorage.getItem('companyToken');
@@ -291,34 +294,44 @@ const CompanyDashboard = () => {
     if (!token || !companyId) return null;
 
     return (
-        <div className="min-h-screen bg-[#f8faff] text-slate-900 relative overflow-hidden" dir="rtl">
+        <div className="min-h-screen bg-[#f8faff] dark:bg-[#080d19] text-slate-900 dark:text-slate-100 transition-colors duration-300 relative overflow-hidden" dir="rtl">
             <Sidebar />
             
             {/* ─── Aesthetic Mesh Decor ────────────────────────────── */}
             <div className="fixed inset-0 pointer-events-none z-0">
-                <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-blue-500/5 blur-[120px] animate-pulse" />
-                <div className="absolute bottom-[-10%] right-[-10%] h-[600px] w-[600px] rounded-full bg-indigo-500/5 blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
+                <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-blue-500/5 dark:bg-blue-500/10 blur-[120px] transition-all" />
+                <div className="absolute bottom-[-10%] right-[-10%] h-[600px] w-[600px] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-[120px] transition-all" />
             </div>
 
             {/* ─── Premium Header ───────────────────────────────────── */}
-            <header className={`sticky top-0 z-50 w-full transition-all duration-500 md:pr-72 ${scrolled ? 'bg-white/70 backdrop-blur-2xl py-3 shadow-sm border-b border-slate-100' : 'bg-transparent py-6'}`}>
+            <header className={`sticky top-0 z-50 w-full transition-all duration-500 md:pr-72 ${scrolled ? 'bg-white/70 dark:bg-slate-950/70 backdrop-blur-2xl py-3 shadow-sm border-b border-slate-100 dark:border-slate-800/50' : 'bg-transparent py-6'}`}>
                 <div className="mx-auto flex max-w-7xl items-center justify-between px-6">
                     <div className="flex items-center gap-6">
-                        <img src={getCompanyLogo()} alt="Logo" className="h-20 w-auto object-contain" />
+                        <div className="h-12 w-12 rounded-xl bg-white dark:bg-slate-900 p-1 flex items-center justify-center border border-slate-200/20 dark:border-white/5 shadow-sm">
+                            <img src={getCompanyLogo()} alt="Logo" className="h-full w-auto object-contain" />
+                        </div>
                         <div>
-                            <h1 className="text-xl font-black tracking-tight">{companyName}</h1>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">لوحة تحكم الشركاء</p>
+                            <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">{companyName}</h1>
+                            <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">لوحة تحكم الشركاء</p>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <button className="h-10 w-10 flex items-center justify-center rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-blue-600 transition-all shadow-sm">
+                        {/* زر تبديل المظهر الداكن/الفاتح */}
+                        <button 
+                            onClick={toggleDarkMode}
+                            className="h-10 w-10 flex items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all shadow-sm"
+                            title={isDarkMode ? "الوضع الفاتح" : "الوضع الداكن"}
+                        >
+                            {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+                        </button>
+                        <button className="h-10 w-10 flex items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all shadow-sm">
                             <Bell size={18} />
                         </button>
-                        <div className="h-8 w-px bg-slate-200 mx-2 hidden sm:block" />
+                        <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-2 hidden sm:block" />
                         <button
                             onClick={handleLogout}
-                            className="group flex h-10 items-center gap-2 rounded-xl bg-red-50 px-4 text-xs font-black text-red-600 transition-all hover:bg-red-500 hover:text-white shadow-sm"
+                            className="group flex h-10 items-center gap-2 rounded-xl bg-red-50 dark:bg-red-500/5 px-4 text-xs font-black text-red-600 transition-all hover:bg-red-600 hover:text-white shadow-sm"
                         >
                             <LogOut size={18} />
                             <span className="hidden sm:inline">تسجيل الخروج</span>
@@ -332,12 +345,12 @@ const CompanyDashboard = () => {
                 {/* Welcome & Action */}
                 <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>
-                        <h2 className="text-3xl font-black tracking-tight text-slate-900 mb-2">أهلاً بك، {companyName} 👋</h2>
-                        <p className="text-slate-500 font-bold">إليك نظرة سريعة على أداء رحلاتك وحجوزاتك اليوم.</p>
+                        <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white mb-2">أهلاً بك، {companyName} 👋</h2>
+                        <p className="text-slate-500 dark:text-slate-400 font-bold">إليك نظرة سريعة على أداء رحلاتك وحجوزاتك اليوم.</p>
                     </div>
                     <button
                         onClick={() => setShowAddForm(true)}
-                        className="flex h-14 items-center gap-3 rounded-2xl bg-blue-600 px-8 text-sm font-black text-white shadow-xl shadow-blue-600/25 transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-600/35 active:translate-y-0"
+                        className="flex h-14 items-center gap-3 rounded-2xl bg-blue-600 text-white font-black px-8 text-sm shadow-xl shadow-blue-600/25 transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-600/35 active:translate-y-0"
                     >
                         <Plus size={20} />
                         إضافة رحلة جديدة
@@ -351,83 +364,83 @@ const CompanyDashboard = () => {
                         { label: 'إجمالي الحجوزات', value: totalBookingsCount, icon: Ticket, color: 'emerald' },
                         { label: 'إجمالي الإيرادات', value: `$${totalRevenueSum.toLocaleString()}`, icon: DollarSign, color: 'amber' },
                     ].map((stat, i) => (
-                        <div key={i} className="group relative overflow-hidden rounded-[32px] bg-white p-8 shadow-sm border border-slate-100 transition-all hover:shadow-xl hover:-translate-y-2">
+                        <div key={i} className="group relative overflow-hidden rounded-[32px] bg-white dark:bg-slate-900/60 p-8 shadow-sm border border-slate-100 dark:border-slate-800/50 backdrop-blur-md transition-all hover:shadow-xl hover:-translate-y-2">
                             <div className="flex items-center justify-between mb-6">
-                                <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-50 text-slate-600 transition-all group-hover:bg-blue-600 group-hover:text-white`}>
+                                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-50 dark:bg-slate-800/50 text-slate-650 dark:text-slate-350 transition-all group-hover:bg-blue-600 group-hover:text-white">
                                     <stat.icon size={28} />
                                 </div>
-                                <div className="text-emerald-500 bg-emerald-50 px-3 py-1 rounded-full text-[10px] font-black tracking-widest">+12%</div>
+                                <div className="text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1 rounded-full text-[10px] font-black tracking-widest">+12%</div>
                             </div>
-                            <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">{stat.label}</p>
-                            <h3 className="text-3xl font-black tracking-tight">{stat.value}</h3>
+                            <p className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">{stat.label}</p>
+                            <h3 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">{stat.value}</h3>
                         </div>
                     ))}
                 </div>
 
                 {/* Flights Section */}
-                <div className="rounded-[40px] bg-white border border-slate-100 p-8 shadow-sm">
+                <div className="rounded-[40px] bg-white dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/50 p-8 shadow-sm backdrop-blur-md">
                     <div className="mb-8 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                            <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400">
                                 <Activity size={20} />
                             </div>
-                            <h3 className="text-xl font-black">الرحلات النشطة</h3>
+                            <h3 className="text-xl font-black text-slate-900 dark:text-white">الرحلات النشطة</h3>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="relative">
                                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                                <input type="text" placeholder="بحث..." className="bg-slate-50 border border-slate-100 rounded-xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:border-blue-500 transition-all w-40 sm:w-64" />
+                                <input type="text" placeholder="بحث..." className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:border-blue-500 dark:focus:border-blue-400 dark:text-white transition-all w-40 sm:w-64" />
                             </div>
                         </div>
                     </div>
 
                     <div className="overflow-x-auto">
-                        <table className="w-full text-right">
-                            <thead>
-                                <tr className="border-b border-slate-50">
-                                    <th className="pb-4 text-[11px] font-black text-slate-400 uppercase tracking-widest px-4">الرحلة</th>
-                                    <th className="pb-4 text-[11px] font-black text-slate-400 uppercase tracking-widest px-4">الشركة</th>
-                                    <th className="pb-4 text-[11px] font-black text-slate-400 uppercase tracking-widest px-4">المسار</th>
-                                    <th className="pb-4 text-[11px] font-black text-slate-400 uppercase tracking-widest px-4">الطائرة</th>
-                                    <th className="pb-4 text-[11px] font-black text-slate-400 uppercase tracking-widest px-4">المواعيد (إقلاع/وصول)</th>
-                                    <th className="pb-4 text-[11px] font-black text-slate-400 uppercase tracking-widest px-4">المدة</th>
-                                    <th className="pb-4 text-[11px] font-black text-slate-400 uppercase tracking-widest px-4">المقاعد</th>
-                                    <th className="pb-4 text-[11px] font-black text-slate-400 uppercase tracking-widest px-4">السعر</th>
-                                    <th className="pb-4 text-[11px] font-black text-slate-400 uppercase tracking-widest px-4">تاريخ الإضافة</th>
-                                    <th className="pb-4 text-[11px] font-black text-slate-400 uppercase tracking-widest px-4"></th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-50">
+                        <table className="w-full text-right border-collapse">
+                          <thead>
+                            <tr className="border-b border-slate-200/60 dark:border-slate-800/60 text-slate-400 dark:text-slate-500 text-[11px] font-black uppercase tracking-widest">
+                              <th className="pb-4 px-4 font-black">الرحلة</th>
+                              <th className="pb-4 px-4 font-black">الشركة</th>
+                              <th className="pb-4 px-4 font-black">المسار</th>
+                              <th className="pb-4 px-4 font-black">الطائرة</th>
+                              <th className="pb-4 px-4 font-black">المواعيد (إقلاع/وصول)</th>
+                              <th className="pb-4 px-4 font-black">المدة</th>
+                              <th className="pb-4 px-4 font-black">المقاعد</th>
+                              <th className="pb-4 px-4 font-black">السعر</th>
+                              <th className="pb-4 px-4 font-black">تاريخ الإضافة</th>
+                              <th className="pb-4 px-4 font-black"></th>
+                            </tr>
+                          </thead>
+                            <tbody className="divide-y divide-slate-100/60 dark:divide-slate-800/40 text-xs font-bold text-slate-700 dark:text-slate-300">
                                 {flights.map((flight) => (
-                                    <tr key={flight.id_flights || flight.id} className="group hover:bg-slate-50/50 transition-colors">
-                                        <td className="py-6 px-4 font-black text-blue-600">{flight.flight_number}</td>
+                                    <tr key={flight.id_flights || flight.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
+                                        <td className="py-6 px-4 font-black text-blue-600 dark:text-blue-400">{flight.flight_number}</td>
                                         <td className="py-6 px-4">
-                                            <span className="inline-flex items-center rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-black text-slate-600">
+                                            <span className="inline-flex items-center rounded-lg bg-slate-105 dark:bg-slate-800 px-2.5 py-1 text-xs font-black text-slate-600 dark:text-slate-400 border border-slate-200/20 dark:border-white/5">
                                                 {flight.airline_code}
                                             </span>
                                         </td>
                                         <td className="py-6 px-4">
-                                            <div className="flex items-center gap-3 font-bold text-sm">
-                                                <span className="text-slate-900">{flight.airportOrigin_code}</span>
-                                                <ArrowUpRight size={14} className="text-slate-300" />
-                                                <span className="text-slate-900">{flight.airportDestination_code}</span>
+                                            <div className="flex items-center gap-3 font-bold text-sm text-slate-900 dark:text-white">
+                                                <span>{flight.airportOrigin_code}</span>
+                                                <ArrowUpRight size={14} className="text-slate-300 dark:text-slate-600" />
+                                                <span>{flight.airportDestination_code}</span>
                                             </div>
                                         </td>
-                                        <td className="py-6 px-4 text-xs font-bold text-slate-500">{flight.aircraft_type || 'N/A'}</td>
+                                        <td className="py-6 px-4 text-xs font-bold text-slate-500 dark:text-slate-400">{flight.aircraft_type || 'N/A'}</td>
                                         <td className="py-6 px-4">
                                             <div className="flex flex-col gap-1">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-[10px] font-black text-blue-600 uppercase">DEP:</span>
-                                                    <span className="text-xs font-bold text-slate-700">{new Date(flight.departure_time).toLocaleString('ar-EG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                                                    <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase">DEP:</span>
+                                                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{new Date(flight.departure_time).toLocaleString('ar-EG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-[10px] font-black text-emerald-600 uppercase">ARR:</span>
-                                                    <span className="text-xs font-bold text-slate-700">{new Date(flight.arrival_time).toLocaleString('ar-EG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                                                    <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase">ARR:</span>
+                                                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{new Date(flight.arrival_time).toLocaleString('ar-EG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="py-6 px-4">
-                                            <div className="flex items-center gap-2 text-xs font-black text-slate-600">
+                                            <div className="flex items-center gap-2 text-xs font-black text-slate-600 dark:text-slate-400">
                                                 <Clock size={14} className="text-blue-500" />
                                                 <span>
                                                     {flight.duration && Number(flight.duration) > 0 ? (
@@ -446,27 +459,27 @@ const CompanyDashboard = () => {
                                         </td>
                                         <td className="py-6 px-4">
                                             <div className="flex items-center gap-2">
-                                                <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                <div className="w-16 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                                                     <div className="h-full bg-blue-500" style={{ width: `${(( (flight.total_seats || 150) - getBookedPassengersForFlight(flight.flight_number) ) / (flight.total_seats || 150)) * 100}%` }} />
                                                 </div>
                                                 <span className="text-xs font-black">{(flight.total_seats || 150) - getBookedPassengersForFlight(flight.flight_number)}/{flight.total_seats || 150}</span>
                                             </div>
                                         </td>
-                                        <td className="py-6 px-4 font-black text-lg text-slate-900">${flight.price || 0}</td>
+                                        <td className="py-6 px-4 font-black text-lg text-slate-900 dark:text-white">${flight.price || 0}</td>
                                         <td className="py-6 px-4">
                                             <div className="flex flex-col">
                                                 {flight.created_at ? (
                                                     <div className="flex flex-col">
                                                         {isNaN(new Date(flight.created_at).getTime()) ? (
-                                                            <span className="text-[10px] font-bold text-red-400">{String(flight.created_at)}</span>
+                                                            <span className="text-[10px] font-bold text-red-450">{String(flight.created_at)}</span>
                                                         ) : (
                                                             <>
-                                                                <span className="text-xs font-black text-slate-700">
+                                                                <span className="text-xs font-black text-slate-700 dark:text-slate-300">
                                                                     {new Date(flight.created_at).toLocaleDateString('ar-EG', {
                                                                         year: 'numeric', month: 'numeric', day: 'numeric'
                                                                     })}
                                                                 </span>
-                                                                <span className="text-[10px] font-bold text-slate-400">
+                                                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
                                                                     {new Date(flight.created_at).toLocaleTimeString('ar-EG', {
                                                                         hour: '2-digit', minute: '2-digit'
                                                                     })}
@@ -475,7 +488,7 @@ const CompanyDashboard = () => {
                                                         )}
                                                     </div>
                                                 ) : (
-                                                    <span className="text-xs font-bold text-slate-300 italic">غير متوفر</span>
+                                                    <span className="text-xs font-bold text-slate-300 dark:text-slate-600 italic">غير متوفر</span>
                                                 )}
                                             </div>
                                         </td>
@@ -483,13 +496,13 @@ const CompanyDashboard = () => {
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={() => openEditModal(flight)}
-                                                    className="h-10 w-10 flex items-center justify-center rounded-xl text-slate-300 hover:bg-blue-50 hover:text-blue-600 transition-all"
+                                                    className="h-10 w-10 flex items-center justify-center rounded-xl text-slate-300 dark:text-slate-600 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 transition-all"
                                                 >
                                                     <Pencil size={18} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteFlight(flight.id_flights || flight.id)}
-                                                    className="h-10 w-10 flex items-center justify-center rounded-xl text-slate-300 hover:bg-red-50 hover:text-red-600 transition-all"
+                                                    className="h-10 w-10 flex items-center justify-center rounded-xl text-slate-300 dark:text-slate-600 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 transition-all"
                                                 >
                                                     <Trash2 size={18} />
                                                 </button>
@@ -499,8 +512,8 @@ const CompanyDashboard = () => {
                                 ))}
                                 {flights.length === 0 && (
                                     <tr>
-                                        <td colSpan="6" className="py-20 text-center">
-                                            <div className="flex flex-col items-center gap-3 opacity-20">
+                                        <td colSpan="10" className="py-20 text-center">
+                                            <div className="flex flex-col items-center gap-3 opacity-20 dark:opacity-40">
                                                 <Plane size={48} />
                                                 <p className="font-black">لا توجد رحلات حالياً</p>
                                             </div>
@@ -515,24 +528,24 @@ const CompanyDashboard = () => {
 
             {/* ─── Add Flight Modal ─────────────────────────────────── */}
             {showAddForm && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-md bg-slate-900/40 animate-in fade-in duration-300">
-                    <div className="w-full max-w-2xl bg-white rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-                        <div className="flex items-center justify-between p-8 border-b border-slate-50">
-                            <h3 className="text-2xl font-black">إضافة رحلة جديدة</h3>
-                            <button onClick={() => setShowAddForm(false)} className="h-10 w-10 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-slate-900 transition-colors">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-md bg-slate-900/40 dark:bg-slate-950/60 animate-in fade-in duration-300">
+                    <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-[40px] shadow-2xl border border-slate-100 dark:border-slate-800/60 overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="flex items-center justify-between p-8 border-b border-slate-50 dark:border-slate-800/60">
+                            <h3 className="text-2xl font-black text-slate-900 dark:text-white">إضافة رحلة جديدة</h3>
+                            <button onClick={() => setShowAddForm(false)} className="h-10 w-10 flex items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
                                 <X size={20} />
                             </button>
                         </div>
                         <form onSubmit={handleAddFlight} className="p-8">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">رقم الرحلة</label>
-                                    <input type="text" placeholder="مثلاً: YF101" className="w-full h-14 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 transition-all" required value={newFlight.flightNumber} onChange={e => setNewFlight({ ...newFlight, flightNumber: e.target.value })} />
+                                    <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-550 tracking-widest mr-1">رقم الرحلة</label>
+                                    <input type="text" placeholder="مثلاً: YF101" className="w-full h-14 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 dark:focus:border-blue-400 dark:text-white transition-all" required value={newFlight.flightNumber} onChange={e => setNewFlight({ ...newFlight, flightNumber: e.target.value })} />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">نوع الطائرة</label>
+                                    <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-550 tracking-widest mr-1">نوع الطائرة</label>
                                     <select
-                                        className="w-full h-14 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 transition-all appearance-none"
+                                        className="w-full h-14 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 dark:focus:border-blue-400 dark:text-white transition-all appearance-none"
                                         required
                                         value={newFlight.aircraftType}
                                         onChange={e => setNewFlight({ ...newFlight, aircraftType: e.target.value })}
@@ -544,9 +557,9 @@ const CompanyDashboard = () => {
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">كود مطار الإقلاع (Origin)</label>
+                                    <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-550 tracking-widest mr-1">كود مطار الإقلاع (Origin)</label>
                                     <select
-                                        className="w-full h-14 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 transition-all appearance-none"
+                                        className="w-full h-14 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 dark:focus:border-blue-400 dark:text-white transition-all appearance-none"
                                         required
                                         value={newFlight.originCode}
                                         onChange={e => setNewFlight({ ...newFlight, originCode: e.target.value })}
@@ -558,9 +571,9 @@ const CompanyDashboard = () => {
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">كود مطار الوصول (Destination)</label>
+                                    <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-550 tracking-widest mr-1">كود مطار الوصول (Destination)</label>
                                     <select
-                                        className="w-full h-14 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 transition-all appearance-none"
+                                        className="w-full h-14 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 dark:focus:border-blue-400 dark:text-white transition-all appearance-none"
                                         required
                                         value={newFlight.destinationCode}
                                         onChange={e => setNewFlight({ ...newFlight, destinationCode: e.target.value })}
@@ -572,24 +585,24 @@ const CompanyDashboard = () => {
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">وقت الإقلاع</label>
-                                    <input type="datetime-local" className="w-full h-14 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 transition-all" required value={newFlight.departureDate} onChange={e => setNewFlight({ ...newFlight, departureDate: e.target.value })} />
+                                    <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-550 tracking-widest mr-1">وقت الإقلاع</label>
+                                    <input type="datetime-local" className="w-full h-14 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 dark:focus:border-blue-400 dark:text-white transition-all" required value={newFlight.departureDate} onChange={e => setNewFlight({ ...newFlight, departureDate: e.target.value })} />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">وقت الوصول المتوقع</label>
-                                    <input type="datetime-local" className="w-full h-14 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 transition-all" required value={newFlight.arrivalDate} onChange={e => setNewFlight({ ...newFlight, arrivalDate: e.target.value })} />
+                                    <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-550 tracking-widest mr-1">وقت الوصول المتوقع</label>
+                                    <input type="datetime-local" className="w-full h-14 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 dark:focus:border-blue-400 dark:text-white transition-all" required value={newFlight.arrivalDate} onChange={e => setNewFlight({ ...newFlight, arrivalDate: e.target.value })} />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">سعر التذكرة ($)</label>
-                                    <input type="number" min="0" placeholder="0.00" className="w-full h-14 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 transition-all" required value={newFlight.price} onChange={e => setNewFlight({ ...newFlight, price: e.target.value })} />
+                                    <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-550 tracking-widest mr-1">سعر التذكرة ($)</label>
+                                    <input type="number" min="0" placeholder="0.00" className="w-full h-14 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 dark:focus:border-blue-400 dark:text-white transition-all" required value={newFlight.price} onChange={e => setNewFlight({ ...newFlight, price: e.target.value })} />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">سعة الطائرة (مقعد)</label>
-                                    <input type="number" min="0" placeholder="150" className="w-full h-14 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 transition-all" required value={newFlight.totalSeats} onChange={e => setNewFlight({ ...newFlight, totalSeats: e.target.value })} />
+                                    <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-550 tracking-widest mr-1">سعة الطائرة (مقعد)</label>
+                                    <input type="number" min="0" placeholder="150" className="w-full h-14 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 dark:focus:border-blue-400 dark:text-white transition-all" required value={newFlight.totalSeats} onChange={e => setNewFlight({ ...newFlight, totalSeats: e.target.value })} />
                                 </div>
                             </div>
                             <div className="mt-10 flex gap-4">
-                                <button type="button" onClick={() => setShowAddForm(false)} className="flex-1 h-14 rounded-2xl bg-slate-50 text-slate-600 font-black text-sm hover:bg-slate-100 transition-all">إلغاء</button>
+                                <button type="button" onClick={() => setShowAddForm(false)} className="flex-1 h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-350 font-black text-sm hover:bg-slate-105 dark:hover:bg-slate-700 transition-all">إلغاء</button>
                                 <button type="submit" className="flex-[2] h-14 rounded-2xl bg-blue-600 text-white font-black text-sm shadow-xl shadow-blue-600/25 hover:shadow-2xl transition-all">حفظ ونشر الرحلة</button>
                             </div>
                         </form>
@@ -598,24 +611,24 @@ const CompanyDashboard = () => {
             )}
             {/* ─── Edit Flight Modal ─────────────────────────────────── */}
             {showEditForm && editingFlight && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-md bg-slate-900/40 animate-in fade-in duration-300" dir="rtl">
-                    <div className="w-full max-w-2xl bg-white rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-                        <div className="flex items-center justify-between p-8 border-b border-slate-50">
-                            <h3 className="text-2xl font-black">تعديل الرحلة</h3>
-                            <button onClick={() => setShowEditForm(false)} className="h-10 w-10 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-slate-900 transition-colors">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-md bg-slate-900/40 dark:bg-slate-950/60 animate-in fade-in duration-300" dir="rtl">
+                    <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-[40px] shadow-2xl border border-slate-100 dark:border-slate-800/60 overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="flex items-center justify-between p-8 border-b border-slate-50 dark:border-slate-800/60">
+                            <h3 className="text-2xl font-black text-slate-900 dark:text-white">تعديل الرحلة</h3>
+                            <button onClick={() => setShowEditForm(false)} className="h-10 w-10 flex items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
                                 <X size={20} />
                             </button>
                         </div>
                         <form onSubmit={handleEditFlight} className="p-8">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">رقم الرحلة</label>
-                                    <input type="text" className="w-full h-14 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 transition-all" required value={editingFlight.flight_number} onChange={e => setEditingFlight({ ...editingFlight, flight_number: e.target.value })} />
+                                    <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-550 tracking-widest mr-1">رقم الرحلة</label>
+                                    <input type="text" className="w-full h-14 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 dark:focus:border-blue-400 dark:text-white transition-all" required value={editingFlight.flight_number} onChange={e => setEditingFlight({ ...editingFlight, flight_number: e.target.value })} />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">نوع الطائرة</label>
+                                    <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-550 tracking-widest mr-1">نوع الطائرة</label>
                                     <select
-                                        className="w-full h-14 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 transition-all appearance-none"
+                                        className="w-full h-14 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 dark:focus:border-blue-400 dark:text-white transition-all appearance-none"
                                         required
                                         value={editingFlight.aircraft_type}
                                         onChange={e => setEditingFlight({ ...editingFlight, aircraft_type: e.target.value })}
@@ -626,9 +639,9 @@ const CompanyDashboard = () => {
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">كود مطار الإقلاع</label>
+                                    <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-550 tracking-widest mr-1">كود مطار الإقلاع</label>
                                     <select
-                                        className="w-full h-14 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 transition-all appearance-none"
+                                        className="w-full h-14 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 dark:focus:border-blue-400 dark:text-white transition-all appearance-none"
                                         required
                                         value={editingFlight.airportOrigin_code}
                                         onChange={e => setEditingFlight({ ...editingFlight, airportOrigin_code: e.target.value })}
@@ -639,9 +652,9 @@ const CompanyDashboard = () => {
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">كود مطار الوصول</label>
+                                    <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-550 tracking-widest mr-1">كود مطار الوصول</label>
                                     <select
-                                        className="w-full h-14 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 transition-all appearance-none"
+                                        className="w-full h-14 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 dark:focus:border-blue-400 dark:text-white transition-all appearance-none"
                                         required
                                         value={editingFlight.airportDestination_code}
                                         onChange={e => setEditingFlight({ ...editingFlight, airportDestination_code: e.target.value })}
@@ -652,24 +665,24 @@ const CompanyDashboard = () => {
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">وقت الإقلاع</label>
-                                    <input type="datetime-local" className="w-full h-14 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 transition-all" required value={editingFlight.departure_time} onChange={e => setEditingFlight({ ...editingFlight, departure_time: e.target.value })} />
+                                    <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-550 tracking-widest mr-1">وقت الإقلاع</label>
+                                    <input type="datetime-local" className="w-full h-14 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 dark:focus:border-blue-400 dark:text-white transition-all" required value={editingFlight.departure_time} onChange={e => setEditingFlight({ ...editingFlight, departure_time: e.target.value })} />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">وقت الوصول</label>
-                                    <input type="datetime-local" className="w-full h-14 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 transition-all" required value={editingFlight.arrival_time} onChange={e => setEditingFlight({ ...editingFlight, arrival_time: e.target.value })} />
+                                    <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-550 tracking-widest mr-1">وقت الوصول</label>
+                                    <input type="datetime-local" className="w-full h-14 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 dark:focus:border-blue-400 dark:text-white transition-all" required value={editingFlight.arrival_time} onChange={e => setEditingFlight({ ...editingFlight, arrival_time: e.target.value })} />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">السعر ($)</label>
-                                    <input type="number" min="0" className="w-full h-14 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 transition-all" required value={editingFlight.price} onChange={e => setEditingFlight({ ...editingFlight, price: e.target.value })} />
+                                    <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-550 tracking-widest mr-1">السعر ($)</label>
+                                    <input type="number" min="0" className="w-full h-14 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 dark:focus:border-blue-400 dark:text-white transition-all" required value={editingFlight.price} onChange={e => setEditingFlight({ ...editingFlight, price: e.target.value })} />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">السعة الإجمالية</label>
-                                    <input type="number" min="0" className="w-full h-14 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 transition-all" required value={editingFlight.total_seats} onChange={e => setEditingFlight({ ...editingFlight, total_seats: e.target.value })} />
+                                    <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-550 tracking-widest mr-1">السعة الإجمالية</label>
+                                    <input type="number" min="0" className="w-full h-14 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl px-4 text-sm font-bold outline-none focus:border-blue-500 dark:focus:border-blue-400 dark:text-white transition-all" required value={editingFlight.total_seats} onChange={e => setEditingFlight({ ...editingFlight, total_seats: e.target.value })} />
                                 </div>
                             </div>
                             <div className="mt-10 flex gap-4">
-                                <button type="button" onClick={() => setShowEditForm(false)} className="flex-1 h-14 rounded-2xl bg-slate-50 text-slate-600 font-black text-sm hover:bg-slate-100 transition-all">إلغاء</button>
+                                <button type="button" onClick={() => setShowEditForm(false)} className="flex-1 h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-350 font-black text-sm hover:bg-slate-105 dark:hover:bg-slate-700 transition-all">إلغاء</button>
                                 <button type="submit" className="flex-[2] h-14 rounded-2xl bg-blue-600 text-white font-black text-sm shadow-xl shadow-blue-600/25 hover:shadow-2xl transition-all">تحديث البيانات</button>
                             </div>
                         </form>

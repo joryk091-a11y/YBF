@@ -7,8 +7,6 @@ const defaultNavItems = [
   { label: 'الرئيسية', href: '/' },
   { label: 'الوجهات', href: '#hero' },
   { label: 'حجوزاتي', href: '/my-bookings' },
-  { label: 'الشركات', href: '/company/login' },
-  { label: 'الإدارة', href: '/admin/login' },
   { label: 'تواصل معنا', href: '#footer' },
 ]
 

@@ -4,19 +4,44 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   // كائن حالة المستخدم الوهمي مع الحقول المطلوبة
+  // كائن حالة المستخدم مع الحقول المطلوبة (الافتراضي هو مستخدم عادي)
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('ybf_mock_user');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to parse mock user state:', e);
+    // 1. التحقق من حالة تسجيل الدخول الفعلي الحقيقي أولاً لمنع مسح جلسة المسؤولين الحقيقيين عند التحديث
+    const currentRole = localStorage.getItem('userRole');
+    if (currentRole === 'admin') {
+      return {
+        role: 'super_admin',
+        airline_name: 'Yemenia',
+        airline_id: 1,
+      };
+    } else if (currentRole === 'company') {
+      const companyName = localStorage.getItem('companyName') || 'Yemenia';
+      const companyId = parseInt(localStorage.getItem('companyId') || '1', 10);
+      return {
+        role: 'company_admin',
+        airline_name: companyName,
+        airline_id: companyId,
+      };
+    }
+
+    // 2. التحقق من حالة المطور المخزنة (فقط في حال تفعيل وضع debug)
+    const debugActive = localStorage.getItem('ybf_debug') === 'true';
+    if (debugActive) {
+      const saved = localStorage.getItem('ybf_mock_user');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Failed to parse mock user state:', e);
+        }
       }
     }
+
+    // 3. الوضع الافتراضي لزائر الموقع العادي (بدون صلاحيات)
     return {
-      role: 'super_admin', // 'super_admin' أو 'company_admin'
-      airline_name: 'Yemenia',
-      airline_id: 1,
+      role: 'user',
+      airline_name: null,
+      airline_id: null,
     };
   });
 
@@ -70,14 +95,15 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('ybf_mock_bookings', JSON.stringify(bookings));
   }, [bookings]);
 
-  // مزامنة حالة المستخدم مع الذاكرة المحلية (localStorage) لتفادي فقدانها عند تحديث الصفحة
+  // مزامنة حالة المستخدم مع الذاكرة المحلية (localStorage) لتأمين المسارات وحمايتها
   useEffect(() => {
     localStorage.setItem('ybf_mock_user', JSON.stringify(user));
 
-    // مزامنة القيم مع المتغيرات التقليدية المستخدمة حالياً في لوحات التحكم وحماية المسارات
     if (user.role === 'super_admin') {
       localStorage.setItem('userRole', 'admin');
-      localStorage.setItem('adminToken', 'mock-admin-token-value');
+      if (!localStorage.getItem('adminToken')) {
+        localStorage.setItem('adminToken', 'mock-admin-token-value');
+      }
       
       // مسح قيم الشركة لتجنب التداخل
       localStorage.removeItem('companyToken');
@@ -86,13 +112,23 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('airlineCode');
     } else if (user.role === 'company_admin') {
       localStorage.setItem('userRole', 'company');
-      localStorage.setItem('companyToken', 'mock-company-token-value');
-      localStorage.setItem('companyId', String(user.airline_id));
-      localStorage.setItem('companyName', user.airline_name);
+      if (!localStorage.getItem('companyToken')) {
+        localStorage.setItem('companyToken', 'mock-company-token-value');
+      }
+      localStorage.setItem('companyId', String(user.airline_id || 1));
+      localStorage.setItem('companyName', user.airline_name || 'Yemenia');
       localStorage.setItem('airlineCode', user.airline_id === 1 ? 'IY' : user.airline_id === 2 ? 'BS' : 'QY');
       
       // مسح قيم المدير لتجنب التداخل
       localStorage.removeItem('adminToken');
+    } else {
+      // للمستخدم العادي: مسح كافة قيم لوحة التحكم والإدارة لمنع الدخول غير المصرح به
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('companyToken');
+      localStorage.removeItem('companyId');
+      localStorage.removeItem('companyName');
+      localStorage.removeItem('airlineCode');
     }
   }, [user]);
 

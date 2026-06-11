@@ -56,13 +56,30 @@ const ScrollToTop = () => {
 };
 
 function App() {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('debug') === 'true') {
+      localStorage.setItem('ybf_debug', 'true');
+      const newUrl = window.location.pathname + window.location.hash;
+      window.location.replace(newUrl); // إعادة توجيه لتنظيف الرابط وتفعيل الـ localStorage
+    } else if (params.get('debug') === 'false') {
+      localStorage.removeItem('ybf_debug');
+      // عند إلغاء تفعيل وضع التطوير، قم أيضاً بتصفير الحساب الوهمي
+      localStorage.removeItem('ybf_mock_user');
+      const newUrl = window.location.pathname + window.location.hash;
+      window.location.replace(newUrl);
+    }
+  }, []);
+
+  const showMockAuth = localStorage.getItem('ybf_debug') === 'true';
+
   return (
     <ThemeProvider>
       <AuthProvider>
         <SearchProvider>
           <BrowserRouter>
             <ScrollToTop />
-            <MockAuthPanel />
+            {showMockAuth && <MockAuthPanel />}
             <Routes>
               {/* ===== مسار تسجيل دخول المدير (عام) ===== */}
               <Route path="/admin/login" element={<AdminLogin />} />

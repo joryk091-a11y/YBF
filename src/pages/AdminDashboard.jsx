@@ -584,7 +584,7 @@ const AdminDashboard = () => {
     }
 
     return (
-        <div className={`min-h-screen font-sans flex text-slate-800 dark:text-slate-100 transition-colors duration-300 ${isDarkMode ? 'dark bg-[#0b1120]' : 'bg-slate-50'}`} dir="rtl">
+        <div className={`h-screen overflow-hidden font-sans flex text-slate-800 dark:text-slate-100 transition-colors duration-300 ${isDarkMode ? 'dark bg-[#0b1120]' : 'bg-slate-50'}`} dir="rtl">
             
             {/* TOAST NOTIFICATION */}
             {notificationMsg && (
@@ -595,21 +595,21 @@ const AdminDashboard = () => {
             )}
 
             {/* ===== 1. SIDEBAR ===== */}
-            <aside className="w-80 bg-slate-900 text-white flex flex-col justify-between shrink-0 z-30 select-none shadow-2xl relative">
+            <aside className="w-80 bg-white text-slate-800 border-l border-slate-200/80 dark:bg-slate-900 dark:text-white dark:border-none flex flex-col justify-between shrink-0 z-30 select-none shadow-2xl relative">
                 {/* Top Profile / Brand */}
                 <div>
-                    <div className="p-8 border-b border-slate-800 flex items-center gap-4">
+                    <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex items-center gap-4">
                         <div className="relative">
                             <div className="h-14 w-14 rounded-full bg-gradient-to-tr from-blue-600 to-sky-400 p-0.5 shadow-md">
-                                <div className="h-full w-full rounded-full bg-slate-950 flex items-center justify-center text-xl font-black text-blue-400">
+                                <div className="h-full w-full rounded-full bg-slate-100 dark:bg-slate-950 flex items-center justify-center text-xl font-black text-blue-500">
                                     {adminInitials}
                                 </div>
                             </div>
-                            <div className="absolute bottom-0 right-0 h-4 w-4 bg-emerald-500 rounded-full border-2 border-slate-900" />
+                            <div className="absolute bottom-0 right-0 h-4 w-4 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900" />
                         </div>
                         <div>
-                            <h4 className="font-black text-sm tracking-wide">مدير النظام</h4>
-                            <p className="text-xs text-slate-400 font-medium">{adminEmail}</p>
+                            <h4 className="font-black text-sm tracking-wide text-slate-800 dark:text-white">مدير النظام</h4>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{adminEmail}</p>
                         </div>
                     </div>
 
@@ -637,10 +637,10 @@ const AdminDashboard = () => {
                                     className={`w-full flex items-center gap-4 py-3.5 px-5 rounded-2xl text-sm font-black transition-all ${
                                         isActive
                                             ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                                            : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white'
                                     }`}
                                 >
-                                    <IconComp size={20} className={isActive ? 'text-white' : 'text-slate-400'} />
+                                    <IconComp size={20} className={isActive ? 'text-white' : 'text-slate-500 dark:text-slate-400'} />
                                     <span>{item.label}</span>
                                 </button>
                             );
@@ -649,16 +649,16 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* Bottom Active Users & Map */}
-                <div className="p-6 border-t border-slate-800">
-                    <p className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">المستخدمين النشطين</p>
+                <div className="p-6 border-t border-slate-100 dark:border-slate-800">
+                    <p className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">المستخدمين النشطين</p>
                     <div className="flex items-center gap-2 mb-6">
                         <div className="flex -space-x-2 space-x-reverse">
-                            <div className="h-8 w-8 rounded-full border-2 border-slate-900 bg-blue-500 flex items-center justify-center text-[10px] font-bold">أ</div>
-                            <div className="h-8 w-8 rounded-full border-2 border-slate-900 bg-sky-500 flex items-center justify-center text-[10px] font-bold">س</div>
-                            <div className="h-8 w-8 rounded-full border-2 border-slate-900 bg-indigo-500 flex items-center justify-center text-[10px] font-bold">م</div>
-                            <div className="h-8 w-8 rounded-full border-2 border-slate-900 bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-400">+{usersList.length}</div>
+                            <div className="h-8 w-8 rounded-full border-2 border-white dark:border-slate-900 bg-blue-500 flex items-center justify-center text-[10px] font-bold">أ</div>
+                            <div className="h-8 w-8 rounded-full border-2 border-white dark:border-slate-900 bg-sky-500 flex items-center justify-center text-[10px] font-bold">س</div>
+                            <div className="h-8 w-8 rounded-full border-2 border-white dark:border-slate-900 bg-indigo-500 flex items-center justify-center text-[10px] font-bold">م</div>
+                            <div className="h-8 w-8 rounded-full border-2 border-white dark:border-slate-900 bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500 dark:text-slate-400">+{usersList.length}</div>
                         </div>
-                        <span className="text-xs font-bold text-slate-400">من مستخدمي الموقع</span>
+                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">من مستخدمي الموقع</span>
                     </div>
 
                     {/* Stylized Outline Map */}

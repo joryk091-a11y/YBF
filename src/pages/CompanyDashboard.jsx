@@ -171,7 +171,7 @@ const CompanyDashboard = () => {
 
     const handleLogout = () => {
         localStorage.clear();
-        navigate('/company/login');
+        navigate('/');
     };
 
     const handleAddFlight = async (e) => {

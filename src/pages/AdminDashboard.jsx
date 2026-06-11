@@ -522,7 +522,7 @@ const AdminDashboard = () => {
         localStorage.removeItem('adminToken');
         localStorage.removeItem('userRole');
         localStorage.removeItem('adminEmail');
-        navigate('/company/login');
+        navigate('/');
     };
 
     // Get airline badge/name

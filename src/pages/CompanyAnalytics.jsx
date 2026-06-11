@@ -1,291 +1,366 @@
 import React from 'react';
 import { useAuth } from '../utils/AuthContext';
+import { useTheme } from '../utils/ThemeContext';
 import Sidebar from '../components/Sidebar';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  AreaChart, Area, ResponsiveContainer, PieChart, Pie, Cell
+  ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts';
 import {
-  TrendingUp,
   DollarSign,
   Ticket,
   Users,
-  BarChart3,
-  MapPin,
-  Calendar,
-  Activity
+  Plane,
+  TrendingUp,
+  ArrowUpRight,
+  CheckCircle2,
+  Activity,
+  ArrowRightLeft
 } from 'lucide-react';
 
+// استيراد الشعارات ديناميكياً
+import logo from '../assets/logo.png';
+import yemeniaLogo from '../assets/Y.png';
+import balqisLogo from '../assets/B.png';
+import adenLogo from '../assets/F.png';
+
 export default function CompanyAnalytics() {
-  const { user, bookings } = useAuth();
+  const { user } = useAuth();
+  const { isDarkMode } = useTheme();
 
-  // تصفية الحجوزات لتتبع شركة الطيران الحالية فقط
-  const airlineCode = user.airline_id === 1 ? 'IY' : user.airline_id === 2 ? 'BS' : 'QY';
-  
-  const companyBookings = bookings.filter(b => 
-    b.flight_number.startsWith(airlineCode) && b.status !== 'cancelled'
-  );
-
-  // 1. حساب مؤشرات الأداء (KPIs) ديناميكياً
-  const totalBookings = companyBookings.length;
-  const totalRevenue = companyBookings.reduce((sum, b) => sum + b.totalPrice, 0);
-  const totalPassengers = companyBookings.reduce((sum, b) => sum + (b.passengers ? b.passengers.length : 0), 0);
-  const averageTicketPrice = totalPassengers > 0 ? Math.round(totalRevenue / totalPassengers) : 0;
-
-  // 2. معالجة بيانات "الوجهات الأكثر طلباً" ديناميكياً
-  const destCounts = {};
-  companyBookings.forEach(b => {
-    const dest = b.destination;
-    const paxCount = b.passengers ? b.passengers.length : 0;
-    destCounts[dest] = (destCounts[dest] || 0) + paxCount;
-  });
-
-  // خريطة أسماء المدن العربية
-  const cityNames = {
-    CAI: 'القاهرة',
-    JED: 'جدة',
-    RUH: 'الرياض',
-    KWI: 'الكويت',
-    AMM: 'عمان',
-    ADE: 'عدن',
-    RIY: 'المكلا',
-    GXF: 'سيئون'
+  // الحصول على شعار شركة الطيران النشطة
+  const getCompanyLogo = () => {
+    if (!user || user.role === 'super_admin') {
+      return logo;
+    }
+    switch (user.airline_id) {
+      case 1:
+        return yemeniaLogo;
+      case 2:
+        return balqisLogo;
+      case 3:
+        return adenLogo;
+      default:
+        return logo;
+    }
   };
 
-  const destinationsData = Object.keys(destCounts).map(code => ({
-    name: cityNames[code] || code,
-    passengers: destCounts[code]
-  })).sort((a, b) => b.passengers - a.passengers);
-
-  // 3. معالجة الإيرادات الكلية حسب اليوم لآخر أسبوع
-  const daysOfWeek = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-  const dailyRev = {};
-  
-  // تهيئة الأيام بقيم صفرية لكي لا يظهر المخطط فارغاً
-  daysOfWeek.forEach(day => {
-    dailyRev[day] = 0;
-  });
-
-  // إضافة قيم الحجوزات الفعلية
-  companyBookings.forEach(b => {
-    const dayName = new Date(b.created_at).toLocaleDateString('ar-EG', { weekday: 'long' });
-    if (dailyRev[dayName] !== undefined) {
-      dailyRev[dayName] += b.totalPrice;
-    } else {
-      dailyRev[dayName] = b.totalPrice;
-    }
-  });
-
-  const revenueTrendData = Object.keys(dailyRev).map(day => ({
-    day,
-    revenue: dailyRev[day]
-  }));
-
-  // 4. توزيع درجات السفر للمسافرين
-  let businessCount = 0;
-  let economyCount = 0;
-  companyBookings.forEach(b => {
-    if (b.passengers) {
-      b.passengers.forEach(p => {
-        if (p.travel_class === 'Business') businessCount++;
-        else economyCount++;
-      });
-    }
-  });
-
-  const classDistributionData = [
-    { name: 'درجة الأعمال', value: businessCount || 2, color: '#f59e0b' },
-    { name: 'الدرجة السياحية', value: economyCount || 5, color: '#3b82f6' }
+  // 1. بيانات بطاقات الأداء (KPI Cards)
+  // بطاقة 1: الإيرادات مع مخطط Sparkline
+  const revenueSparklineData = [
+    { pv: 980000 },
+    { pv: 1050000 },
+    { pv: 1020000 },
+    { pv: 1150000 },
+    { pv: 1100000 },
+    { pv: 1200000 },
+    { pv: 1234567.89 }
   ];
 
+  // 2. بيانات مخطط الوجهات DESTINATIONS DEMAND (BOOKINGS)
+  const destinationsData = [
+    { name: 'Aden', bookings: 1200 },
+    { name: 'Sanaa', bookings: 1100 },
+    { name: 'Cairo', bookings: 950 },
+    { name: 'Jeddah', bookings: 800 },
+    { name: 'Seiyun', bookings: 450 },
+  ];
+
+  // 3. بيانات الخدمات الخاصة SPECIAL SERVICES BREAKDOWN
+  const servicesData = [
+    { name: 'Wheelchair', value: 220, color: '#3b82f6' }, // Blue
+    { name: 'Oxygen', value: 130, color: '#06b6d4' },    // Cyan
+    { name: 'Medical Escort', value: 110, color: '#8b5cf6' }, // Purple
+    { name: 'Unaccompanied Minor', value: 83, color: '#ec4899' }, // Pink
+  ];
+  const totalServicesRequests = 543;
+
+  // 4. بيانات جدول الحجوزات عالية القيمة RECENT HIGH-VALUE BOOKINGS
+  const highValueBookings = [
+    { id: 'BK-9021', route: 'Sanaa - Cairo', passenger: 'Ali Mansour', total: '$1,850.00', status: 'Confirmed', badgeColor: 'green' },
+    { id: 'BK-8743', route: 'Aden - Jeddah', passenger: 'Sarah Ahmed', total: '$1,450.00', status: 'Confirmed', badgeColor: 'green' },
+    { id: 'BK-8610', route: 'Seiyun - Cairo', passenger: 'Fatima Salem', total: '$2,100.00', status: 'Confirmed', badgeColor: 'purple' }
+  ];
+
+  // ألوان وتنسيقات Recharts بناءً على وضع الثيم (Light / Dark)
+  const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+  const labelColor = isDarkMode ? '#94a3b8' : '#64748b';
+  const tooltipBg = isDarkMode ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)';
+  const tooltipBorder = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+
   return (
-    <div className="flex min-h-screen bg-[#f8f9fc] dark:bg-[#0b1120] text-slate-900 dark:text-white transition-colors duration-300 relative overflow-hidden" dir="rtl">
-      {/* ─── Aesthetic Mesh Decor ────────────────────────────── */}
+    <div className="flex min-h-screen bg-[#f8f9fc] dark:bg-[#080d19] text-slate-900 dark:text-slate-100 transition-colors duration-300 relative overflow-hidden" dir="rtl">
+      {/* تأثيرات التوهج الشبكي (Mesh Gradients) */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-[-20%] left-[-10%] h-[800px] w-[800px] rounded-full bg-blue-500/5 blur-[150px]" />
-        <div className="absolute bottom-[-20%] right-[-10%] h-[800px] w-[800px] rounded-full bg-purple-500/5 blur-[150px]" />
+        <div className="absolute top-[-20%] left-[-10%] h-[800px] w-[800px] rounded-full bg-blue-500/5 dark:bg-blue-500/10 blur-[120px] transition-all duration-300" />
+        <div className="absolute bottom-[-20%] right-[-10%] h-[800px] w-[800px] rounded-full bg-purple-500/5 dark:bg-purple-500/10 blur-[120px] transition-all duration-300" />
       </div>
 
       {/* القائمة الجانبية */}
       <Sidebar />
 
       {/* المحتوى الرئيسي */}
-      <main className="flex-1 mr-72 p-10 relative z-10 min-h-screen">
+      <main className="flex-1 mr-72 p-8 relative z-10 min-h-screen">
         
-        {/* العناوين والترحيب */}
-        <div className="mb-10">
-          <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-3 py-1 rounded-full uppercase tracking-wider mb-2 inline-block">
-            التحليلات ومخططات الأداء
-          </span>
-          <h1 className="text-3xl font-black tracking-tight">الإحصائيات والتحليلات البيانية</h1>
-          <p className="text-slate-400 dark:text-slate-500 text-xs font-bold mt-1">
-            متابعة فورية للمبيعات وحجوزات المسافرين وتوزيع وجهات السفر لرحلات {user.airline_name}.
-          </p>
+        {/* الترويسة (Dashboard Header) */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+          {/* اليمين: عنوان وتفاصيل الصفحة */}
+          <div>
+            <h1 className="text-3xl font-black tracking-tight bg-gradient-to-r from-slate-950 via-slate-800 to-slate-600 dark:from-white dark:via-slate-200 dark:to-slate-400 bg-clip-text text-transparent">
+              تحليلات شركة الطيران
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 text-xs font-bold mt-1">
+              لوحة مراقبة الأداء التفاعلية وحركة الركاب لرحلات {user.airline_name}
+            </p>
+          </div>
+
+          {/* اليسار: شعار شركة الطيران ونص الترويسة */}
+          <div className="flex items-center gap-3 bg-white/60 dark:bg-slate-900/40 border border-slate-200/50 dark:border-white/10 px-4 py-2.5 rounded-2xl backdrop-blur-xl shadow-lg transition-all">
+            <div className="h-8 w-8 rounded-lg bg-slate-50 dark:bg-slate-950 p-1 flex items-center justify-center border border-slate-200/20 dark:border-white/5 shadow-inner">
+              <img src={getCompanyLogo()} alt="Airline Logo" className="h-full w-full object-contain" />
+            </div>
+            <span className="text-xs font-black tracking-widest text-slate-700 dark:text-slate-200 uppercase">
+              COMPANY ANALYTICS DASHBOARD
+            </span>
+          </div>
         </div>
 
-        {/* 1. بطاقات الأداء (KPI Cards) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          {/* إجمالي الإيرادات */}
-          <div className="group relative overflow-hidden rounded-[32px] bg-white dark:bg-slate-900 p-6 shadow-sm border border-slate-200/40 dark:border-slate-800/40 backdrop-blur-xl transition-all hover:shadow-xl hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+        {/* الصف العلوي (4 بطاقات KPI) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          
+          {/* بطاقة 1: Total Revenue */}
+          <div className="group relative overflow-hidden rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-200/50 dark:border-white/10 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:border-emerald-500/30 dark:hover:border-emerald-500/20">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
                 <DollarSign size={22} />
               </div>
-              <span className="text-[10px] font-black text-green-500 bg-green-500/10 px-2 py-0.5 rounded-full">+18.5%</span>
+              {/* مخطط اتجاه مصغر متوهج */}
+              <div className="h-8 w-24 opacity-80 group-hover:opacity-100 transition-opacity">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={revenueSparklineData}>
+                    <Area type="monotone" dataKey="pv" stroke="#10b981" strokeWidth={2} fill="none" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-            <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase mb-1">إجمالي إيرادات المبيعات</p>
-            <h3 className="text-2xl font-black tracking-tight">${totalRevenue.toLocaleString()}</h3>
+            <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">TOTAL REVENUE</p>
+            <h3 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">$1,234,567.89</h3>
+            <div className="flex items-center gap-1.5 mt-2 text-emerald-600 dark:text-emerald-400 text-xs font-black">
+              <TrendingUp size={14} className="animate-pulse" />
+              <span>+15.3% this month</span>
+            </div>
           </div>
 
-          {/* إجمالي الحجوزات */}
-          <div className="group relative overflow-hidden rounded-[32px] bg-white dark:bg-slate-900 p-6 shadow-sm border border-slate-200/40 dark:border-slate-800/40 backdrop-blur-xl transition-all hover:shadow-xl hover:-translate-y-1">
+          {/* بطاقة 2: Active Bookings */}
+          <div className="group relative overflow-hidden rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-200/50 dark:border-white/10 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:border-blue-500/30 dark:hover:border-blue-500/20">
             <div className="flex items-center justify-between mb-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
                 <Ticket size={22} />
               </div>
-              <span className="text-[10px] font-black text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded-full">+8.2%</span>
             </div>
-            <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase mb-1">عدد الحجوزات المؤكدة</p>
-            <h3 className="text-2xl font-black tracking-tight">{totalBookings} حجز</h3>
+            <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">ACTIVE BOOKINGS</p>
+            <h3 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">3,456</h3>
+            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-2">
+              Current: <span className="text-slate-800 dark:text-white font-extrabold">2,100</span>, Upcoming: <span className="text-slate-800 dark:text-white font-extrabold">1,356</span>
+            </p>
           </div>
 
-          {/* عدد المسافرين */}
-          <div className="group relative overflow-hidden rounded-[32px] bg-white dark:bg-slate-900 p-6 shadow-sm border border-slate-200/40 dark:border-slate-800/40 backdrop-blur-xl transition-all hover:shadow-xl hover:-translate-y-1">
+          {/* بطاقة 3: Available Flights */}
+          <div className="group relative overflow-hidden rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-200/50 dark:border-white/10 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:border-cyan-500/30 dark:hover:border-cyan-500/20">
             <div className="flex items-center justify-between mb-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+                <Plane size={22} className="rotate-90" />
+              </div>
+            </div>
+            <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">AVAILABLE FLIGHTS</p>
+            <h3 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">120</h3>
+            {/* شريط تقدم متوهج */}
+            <div className="w-full bg-slate-200 dark:bg-white/10 rounded-full h-1.5 mt-4 overflow-hidden">
+              <div className="bg-gradient-to-r from-cyan-400 to-blue-500 h-1.5 rounded-full shadow-[0_0_8px_rgba(6,182,212,0.8)]" style={{ width: '75%' }}></div>
+            </div>
+          </div>
+
+          {/* بطاقة 4: Total Passengers */}
+          <div className="group relative overflow-hidden rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-200/50 dark:border-white/10 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:border-purple-500/30 dark:hover:border-purple-500/20">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
                 <Users size={22} />
               </div>
-              <span className="text-[10px] font-black text-purple-500 bg-purple-500/10 px-2 py-0.5 rounded-full">+14.2%</span>
             </div>
-            <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase mb-1">إجمالي ركاب الرحلات</p>
-            <h3 className="text-2xl font-black tracking-tight">{totalPassengers} مسافر</h3>
-          </div>
-
-          {/* متوسط سعر التذكرة */}
-          <div className="group relative overflow-hidden rounded-[32px] bg-white dark:bg-slate-900 p-6 shadow-sm border border-slate-200/40 dark:border-slate-800/40 backdrop-blur-xl transition-all hover:shadow-xl hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                <Activity size={22} />
-              </div>
-              <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">معدل ثابت</span>
+            <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">TOTAL PASSENGERS</p>
+            <h3 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">25,789</h3>
+            <div className="flex items-center gap-1 mt-2 text-purple-600 dark:text-purple-400 text-xs font-black">
+              <ArrowUpRight size={14} />
+              <span>+5.1% this week</span>
             </div>
-            <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase mb-1">متوسط قيمة التذكرة</p>
-            <h3 className="text-2xl font-black tracking-tight">${averageTicketPrice}</h3>
           </div>
         </div>
 
-        {/* 2. المخططات البيانية (Charts Grid) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+        {/* الصف الأوسط (تقسيم 2-Column Layout) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
           
-          {/* مخطط الإيرادات الأسبوعية */}
-          <div className="group rounded-[40px] border border-slate-200/60 dark:border-slate-800/60 bg-white/80 dark:bg-slate-900/80 p-8 shadow-sm hover:shadow-xl transition-all backdrop-blur-xl">
-            <h3 className="flex items-center gap-3 text-lg font-black mb-8">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
-                <Calendar size={18} />
-              </div>
-              معدل إيرادات الشركة الأسبوعي
+          {/* اليسار: DESTINATIONS DEMAND (BOOKINGS) - حاوية أعرض */}
+          <div className="lg:col-span-2 group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-8 border border-slate-200/50 dark:border-white/10 backdrop-blur-xl shadow-xl transition-all hover:shadow-2xl">
+            <h3 className="text-xs font-black tracking-widest text-slate-400 dark:text-slate-500 mb-6 uppercase">
+              DESTINATIONS DEMAND (BOOKINGS)
             </h3>
-            <div className="h-[300px] w-full">
+            <div className="h-[320px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={revenueTrendData}>
+                <BarChart data={destinationsData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <defs>
-                    <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.8} />
+                      <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.2} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" opacity={0.5} />
-                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 900, fill: '#94a3b8' }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 900, fill: '#94a3b8' }} />
-                  <Tooltip />
-                  <Area type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={4} fill="url(#revenueGrad)" name="الإيرادات ($)" />
-                </AreaChart>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
+                  <XAxis 
+                    dataKey="name" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 11, fontWeight: 900, fill: labelColor }} 
+                    dy={10} 
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 11, fontWeight: 900, fill: labelColor }} 
+                    dx={-10} 
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: tooltipBg, 
+                      borderColor: tooltipBorder, 
+                      borderRadius: '16px', 
+                      boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
+                      color: isDarkMode ? '#fff' : '#0f172a'
+                    }}
+                    cursor={{ fill: isDarkMode ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.01)' }}
+                  />
+                  <Bar 
+                    dataKey="bookings" 
+                    fill="url(#barGradient)" 
+                    radius={[8, 8, 0, 0]} 
+                    barSize={45} 
+                    name="Bookings"
+                  />
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          {/* مخطط الوجهات الأكثر طلباً */}
-          <div className="group rounded-[40px] border border-slate-200/60 dark:border-slate-800/60 bg-white/80 dark:bg-slate-900/80 p-8 shadow-sm hover:shadow-xl transition-all backdrop-blur-xl">
-            <h3 className="flex items-center gap-3 text-lg font-black mb-8">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
-                <MapPin size={18} />
-              </div>
-              أكثر الوجهات طلباً (حسب عدد الركاب)
-            </h3>
-            <div className="h-[300px] w-full">
-              {destinationsData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={destinationsData}>
-                    <defs>
-                      <linearGradient id="barBlue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#3b82f6" stopOpacity={1} />
-                        <stop offset="100%" stopColor="#1e3a8a" stopOpacity={0.8} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" opacity={0.5} />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 900, fill: '#94a3b8' }} dy={10} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 900, fill: '#94a3b8' }} />
-                    <Tooltip />
-                    <Bar dataKey="passengers" fill="url(#barBlue)" radius={[10, 10, 0, 0]} barSize={40} name="المسافرين" />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex h-full items-center justify-center text-slate-400 font-bold">
-                  لا توجد حجوزات نشطة كافية حالياً
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* مخطط دائري لتوزيع فئات درجات السفر */}
-          <div className="group rounded-[40px] border border-slate-200/60 dark:border-slate-800/60 bg-white/80 dark:bg-slate-900/80 p-8 shadow-sm hover:shadow-xl transition-all backdrop-blur-xl lg:col-span-2">
-            <h3 className="flex items-center gap-3 text-lg font-black mb-8">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10 text-purple-500">
-                <BarChart3 size={18} />
-              </div>
-              توزيع فئات درجات سفر الركاب
-            </h3>
-            <div className="flex flex-col md:flex-row items-center justify-around gap-6">
-              <div className="h-[260px] w-64 relative">
+          {/* اليمين: SPECIAL SERVICES BREAKDOWN - حاوية أضيق */}
+          <div className="group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-8 border border-slate-200/50 dark:border-white/10 backdrop-blur-xl shadow-xl transition-all hover:shadow-2xl flex flex-col justify-between">
+            <div>
+              <h3 className="text-xs font-black tracking-widest text-slate-400 dark:text-slate-500 mb-6 uppercase">
+                SPECIAL SERVICES BREAKDOWN
+              </h3>
+              <div className="h-[200px] w-full relative flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={classDistributionData}
+                      data={servicesData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={70}
-                      outerRadius={95}
+                      innerRadius={65}
+                      outerRadius={85}
                       paddingAngle={5}
                       dataKey="value"
                       stroke="none"
                     >
-                      {classDistributionData.map((entry, index) => (
+                      {servicesData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: tooltipBg, 
+                        borderColor: tooltipBorder, 
+                        borderRadius: '16px', 
+                        boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
+                        color: isDarkMode ? '#fff' : '#0f172a'
+                      }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
+                {/* إجمالي الإحصاء في المنتصف */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-[10px] font-black text-slate-400 uppercase">الركاب</span>
-                  <span className="text-3xl font-black text-slate-900 dark:text-white mt-0.5">{totalPassengers}</span>
+                  <span className="text-xl font-black text-slate-800 dark:text-white">{totalServicesRequests}</span>
+                  <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-tight">Total Requests</span>
                 </div>
               </div>
+            </div>
 
-              <div className="space-y-4 w-60">
-                {classDistributionData.map(item => (
-                  <div key={item.name} className="flex items-center justify-between border-b border-slate-50 dark:border-slate-800/40 pb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="h-3.5 w-3.5 rounded-full" style={{ backgroundColor: item.color }} />
-                      <span className="text-xs font-black text-slate-700 dark:text-slate-300">{item.name}</span>
-                    </div>
-                    <span className="text-xs font-black">{item.value} مسافر</span>
+            {/* وسيلة الإيضاح المخصصة */}
+            <div className="space-y-2.5 mt-4">
+              {servicesData.map(item => (
+                <div key={item.name} className="flex items-center justify-between border-b border-slate-200/30 dark:border-slate-800/40 pb-2 last:border-0 last:pb-0">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.2)]" style={{ backgroundColor: item.color }} />
+                    <span className="text-xs font-black text-slate-700 dark:text-slate-300">{item.name}</span>
                   </div>
-                ))}
-              </div>
+                  <span className="text-xs font-extrabold text-slate-900 dark:text-white">
+                    {item.value} <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">({Math.round(item.value / totalServicesRequests * 100)}%)</span>
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
+        </div>
 
+        {/* الصف السفلي (جدول الحجوزات) */}
+        <div className="group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-8 border border-slate-200/50 dark:border-white/10 backdrop-blur-xl shadow-xl transition-all hover:shadow-2xl">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xs font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase">
+              RECENT HIGH-VALUE BOOKINGS
+            </h3>
+            <span className="text-[10px] font-black bg-blue-500/10 text-blue-600 dark:text-blue-400 px-3 py-1 rounded-full uppercase tracking-wider">
+              Realtime Updates
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-right border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200/60 dark:border-slate-800/60 text-slate-400 dark:text-slate-500 text-xs font-black uppercase">
+                  <th className="pb-4 font-black">Booking ID</th>
+                  <th className="pb-4 font-black">Route</th>
+                  <th className="pb-4 font-black">Passenger Name</th>
+                  <th className="pb-4 font-black">Total</th>
+                  <th className="pb-4 font-black text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200/40 dark:divide-slate-800/40 text-xs font-bold text-slate-700 dark:text-slate-300">
+                {highValueBookings.map((booking, idx) => (
+                  <tr key={idx} className="hover:bg-slate-100/30 dark:hover:bg-slate-800/20 transition-all group/row">
+                    <td className="py-4 font-extrabold text-blue-600 dark:text-blue-400">{booking.id}</td>
+                    <td className="py-4">
+                      <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                        <span>{booking.route.split(' - ')[0]}</span>
+                        <ArrowRightLeft size={12} className="text-slate-400 group-hover/row:scale-x-110 transition-transform" />
+                        <span>{booking.route.split(' - ')[1]}</span>
+                      </div>
+                    </td>
+                    <td className="py-4 text-slate-800 dark:text-white font-extrabold">{booking.passenger}</td>
+                    <td className="py-4 text-slate-900 dark:text-white font-extrabold text-sm">{booking.total}</td>
+                    <td className="py-4 text-center">
+                      {booking.badgeColor === 'green' ? (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]">
+                          <CheckCircle2 size={12} />
+                          {booking.status}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 shadow-[0_0_10px_rgba(168,85,247,0.1)]">
+                          <CheckCircle2 size={12} />
+                          {booking.status}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
       </main>

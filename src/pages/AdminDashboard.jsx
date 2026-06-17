@@ -283,8 +283,6 @@ const AdminDashboard = () => {
                 fetchDashboardStats();
             } else if (activeTab === 'flights') {
                 fetchFlights();
-            } else if (activeTab === 'wallet') {
-                fetchBookings();
             } else if (activeTab === 'reports') {
                 fetchBookings();
                 fetchDashboardStats();
@@ -316,7 +314,7 @@ const AdminDashboard = () => {
             if (activeTab === 'dashboard' || activeTab === 'statistics' || activeTab === 'reports') {
                 fetchDashboardStats();
             }
-            if (activeTab === 'wallet' || activeTab === 'reports') {
+            if (activeTab === 'reports') {
                 fetchBookings();
             }
             if (activeTab === 'flights' || activeTab === 'reports') {
@@ -621,7 +619,6 @@ const AdminDashboard = () => {
                             { id: 'flights', label: 'إدارة الرحلات', icon: Plane },
                             { id: 'users', label: 'إدارة المستخدمين', icon: Users },
                             { id: 'companies', label: 'إدارة الشركات', icon: Building2 },
-                            { id: 'wallet', label: 'المحفظة والتحصيل', icon: Wallet },
                             { id: 'reports', label: 'التقارير المالية', icon: BookOpen },
                             { id: 'statistics', label: 'الإحصائيات المتقدمة', icon: BarChart3 },
                             { id: 'settings', label: 'إعدادات النظام', icon: Settings },
@@ -690,7 +687,6 @@ const AdminDashboard = () => {
                             {activeTab === 'flights' && 'إدارة وإضافة الرحلات'}
                             {activeTab === 'users' && 'إدارة مستخدمي النظام'}
                             {activeTab === 'companies' && 'إدارة شركات الطيران'}
-                            {activeTab === 'wallet' && 'تأكيد الحسابات والتحصيلات'}
                             {activeTab === 'reports' && 'تقارير حركة الطيران والمبيعات'}
                             {activeTab === 'statistics' && 'تحليلات الأداء المتقدمة'}
                             {activeTab === 'settings' && 'إعدادات النظام والعمولة'}
@@ -1200,97 +1196,7 @@ const AdminDashboard = () => {
                                 </div>
                             )}
 
-                            {/* ======================================================== */}
-                            {/* ===== VIEW: WALLET ===== */}
-                            {activeTab === 'wallet' && (
-                                <div className="space-y-6">
-                                    <div>
-                                        <h3 className="text-lg font-black">المحفظة وتأكيد دفع التذاكر</h3>
-                                        <p className="text-xs text-slate-400 font-bold mt-1">تأكيد المبالغ المستلمة من الحوالات وتنشيط حجز المسافرين</p>
-                                    </div>
 
-                                    {/* Quick Summary Numbers */}
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">إجمالي المبيعات المؤكدة</p>
-                                            <h4 className="text-3xl font-black text-emerald-500 mt-2">${stats.totalRevenue.toLocaleString()}</h4>
-                                        </div>
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">حجوزات بانتظار الدفع</p>
-                                            <h4 className="text-3xl font-black text-amber-500 mt-2">{bookings.filter(b => b.status === 'temporary').length}</h4>
-                                        </div>
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">المستردات والملغيات</p>
-                                            <h4 className="text-3xl font-black text-rose-500 mt-2">${bookings.filter(b => b.status === 'canceled').reduce((acc, c) => acc + Number(c.final_price), 0).toLocaleString()}</h4>
-                                        </div>
-                                    </div>
-
-                                    {/* Pending Payments Table */}
-                                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm p-8">
-                                        <h4 className="text-sm font-black mb-6">الحوالات وطلبات الدفع المعلقة</h4>
-                                        {loadingList ? (
-                                            <div className="py-20 text-center text-slate-400">جاري تحميل البيانات...</div>
-                                        ) : (
-                                            <div className="overflow-x-auto">
-                                                <table className="w-full text-right text-xs">
-                                                    <thead>
-                                                        <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-black uppercase">
-                                                            <th className="pb-4 px-4">رقم المرجع</th>
-                                                            <th className="pb-4 px-4">الركاب</th>
-                                                            <th className="pb-4 px-4">الرحلة</th>
-                                                            <th className="pb-4 px-4">طريقة الدفع</th>
-                                                            <th className="pb-4 px-4">المبلغ الكلي</th>
-                                                            <th className="pb-4 px-4">تاريخ الحجز</th>
-                                                            <th className="pb-4 px-4 text-left">القرار</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
-                                                        {filteredBookings.filter(b => b.status === 'temporary').length > 0 ? (
-                                                            filteredBookings.filter(b => b.status === 'temporary').map((booking) => (
-                                                                <tr key={booking.id_bookings} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                                                                    <td className="py-5 px-4 font-black text-blue-600 dark:text-blue-400">#{booking.booking_reference}</td>
-                                                                    <td className="py-5 px-4 font-bold text-slate-800 dark:text-white max-w-xs truncate">{booking.passengers}</td>
-                                                                    <td className="py-5 px-4 font-bold text-slate-500">{booking.flight_number}</td>
-                                                                    <td className="py-5 px-4 font-bold text-slate-600 dark:text-slate-300">
-                                                                        <span className="flex items-center gap-1.5">
-                                                                            <CreditCard size={14} className="text-slate-400" />
-                                                                            {booking.payment_method === 'bank_transfer' ? 'حوالة مصرفية / صراف' : booking.payment_method}
-                                                                        </span>
-                                                                    </td>
-                                                                    <td className="py-5 px-4 font-black text-slate-900 dark:text-white">${Number(booking.final_price).toLocaleString()}</td>
-                                                                    <td className="py-5 px-4 font-medium text-slate-400">{new Date(booking.booking_date).toLocaleDateString('ar-EG')}</td>
-                                                                    <td className="py-5 px-4 text-left">
-                                                                        <div className="flex items-center justify-end gap-2">
-                                                                            <button
-                                                                                onClick={() => handleUpdateBookingStatus(booking.id_bookings, 'certain', 'success')}
-                                                                                className="h-8 px-4 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 font-bold flex items-center gap-1 transition-all"
-                                                                            >
-                                                                                <Check size={14} />
-                                                                                <span>تأكيد الدفع</span>
-                                                                            </button>
-                                                                            <button
-                                                                                onClick={() => handleUpdateBookingStatus(booking.id_bookings, 'canceled', 'failed')}
-                                                                                className="h-8 px-3 rounded-lg bg-rose-50 dark:bg-rose-950/20 text-rose-600 hover:bg-rose-600 hover:text-white transition-all flex items-center gap-1"
-                                                                            >
-                                                                                <X size={14} />
-                                                                                <span>إلغاء</span>
-                                                                            </button>
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                            ))
-                                                        ) : (
-                                                            <tr>
-                                                                <td colSpan="7" className="py-12 text-center text-slate-400 font-bold">لا توجد طلبات دفع معلقة حالياً</td>
-                                                            </tr>
-                                                        )}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
 
                             {/* ======================================================== */}
                             {/* ===== VIEW: REPORTS ===== */}

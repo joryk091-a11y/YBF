@@ -229,16 +229,28 @@ app.delete('/api/admin/users/:id', async (req, res) => {
 
 // GET Admin Dashboard stats from database
 app.get('/api/admin/dashboard-stats', async (req, res) => {
-  const { period } = req.query; // 'current_month' or 'all'
-  const isCurrentMonth = period !== 'all'; // Default to current_month
+  const { period } = req.query; // 'current_month' or 'current_year'
+  const isCurrentMonth = period === 'current_month';
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    // شروط تصفية التواريخ للشهر الحالي
-    const dateFilterBookings = isCurrentMonth ? "WHERE DATE_FORMAT(booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')" : "";
-    const dateFilterPayments = isCurrentMonth ? "AND DATE_FORMAT(payment_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')" : "";
-    const dateFilterBookingsAnd = isCurrentMonth ? "AND DATE_FORMAT(booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')" : "";
+    // شروط تصفية التواريخ للشهر الحالي أو السنة الحالية
+    const dateFilterBookings = isCurrentMonth 
+      ? "WHERE DATE_FORMAT(booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')" 
+      : "WHERE DATE_FORMAT(booking_date, '%Y') = DATE_FORMAT(NOW(), '%Y')";
+      
+    const dateFilterPayments = isCurrentMonth 
+      ? "AND DATE_FORMAT(payment_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')" 
+      : "AND DATE_FORMAT(payment_date, '%Y') = DATE_FORMAT(NOW(), '%Y')";
+      
+    const dateFilterBookingsAnd = isCurrentMonth 
+      ? "AND DATE_FORMAT(booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')" 
+      : "AND DATE_FORMAT(booking_date, '%Y') = DATE_FORMAT(NOW(), '%Y')";
+
+    const dateFilterBookingsWhereAlias = isCurrentMonth
+      ? "WHERE DATE_FORMAT(b.booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')"
+      : "WHERE DATE_FORMAT(b.booking_date, '%Y') = DATE_FORMAT(NOW(), '%Y')";
 
     // 1. Total tickets (number of passenger tickets booked)
     const [[{ totalTickets }]] = await connection.execute(
@@ -274,7 +286,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       SELECT f.airportDestination_code as destination, COALESCE(SUM(b.total_passengers), 0) as count 
       FROM bookings b
       JOIN flights f ON b.flight_id = f.id_flights
-      ${isCurrentMonth ? `WHERE DATE_FORMAT(b.booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')` : ""}
+      ${dateFilterBookingsWhereAlias}
       GROUP BY f.airportDestination_code
       ORDER BY count DESC
       LIMIT 5
@@ -303,7 +315,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       SELECT f.airline_code as name, COUNT(b.id_bookings) as value
       FROM bookings b
       JOIN flights f ON b.flight_id = f.id_flights
-      ${isCurrentMonth ? `WHERE DATE_FORMAT(b.booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')` : ""}
+      ${dateFilterBookingsWhereAlias}
       GROUP BY f.airline_code
     `);
 
@@ -313,15 +325,13 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       FROM bookings_passengers bp
       JOIN seats s ON bp.seat_id = s.id_seats
       JOIN bookings b ON bp.booking_id = b.id_bookings
-      ${isCurrentMonth ? `WHERE DATE_FORMAT(b.booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')` : ""}
+      ${dateFilterBookingsWhereAlias}
       GROUP BY s.seat_class
     `);
 
     // 10. Active passengers
     const [[{ activePassengers }]] = await connection.execute(
-      isCurrentMonth 
-        ? `SELECT COUNT(DISTINCT bp.passenger_id) as activePassengers FROM bookings_passengers bp JOIN bookings b ON bp.booking_id = b.id_bookings WHERE DATE_FORMAT(b.booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')`
-        : 'SELECT COUNT(*) as activePassengers FROM passengers'
+      `SELECT COUNT(DISTINCT bp.passenger_id) as activePassengers FROM bookings_passengers bp JOIN bookings b ON bp.booking_id = b.id_bookings ${dateFilterBookingsWhereAlias}`
     );
 
     // 11. Cancellation Rate and Status Mapping
@@ -334,7 +344,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
     const [statusStats] = await connection.execute(`
       SELECT status, COUNT(*) as count, COALESCE(SUM(final_price), 0) as amount 
       FROM bookings 
-      ${isCurrentMonth ? `WHERE DATE_FORMAT(booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')` : ""}
+      ${dateFilterBookings}
       GROUP BY status
     `);
 

@@ -72,6 +72,8 @@ const AdminDashboard = () => {
     });
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedFlightDate, setSelectedFlightDate] = useState('');
+    const [selectedLogsDate, setSelectedLogsDate] = useState('');
+    const [selectedReportDate, setSelectedReportDate] = useState('');
     const [loadingList, setLoadingList] = useState(false);
     const [reportsSubTab, setReportsSubTab] = useState('logs'); // 'logs' or 'pdf_report'
 
@@ -98,7 +100,10 @@ const AdminDashboard = () => {
         if (!token || role !== 'admin') return;
         setLoading(true);
         try {
-            const res = await fetch(`http://localhost:8080/api/admin/dashboard-stats?period=${statsPeriod}`);
+            const url = selectedReportDate
+                ? `http://localhost:8080/api/admin/dashboard-stats?date=${selectedReportDate}`
+                : `http://localhost:8080/api/admin/dashboard-stats?period=${statsPeriod}`;
+            const res = await fetch(url);
             const data = await res.json();
             if (data.success) {
                 setStats(data.stats);
@@ -108,7 +113,7 @@ const AdminDashboard = () => {
         } finally {
             setLoading(false);
         }
-    }, [token, role, statsPeriod]);
+    }, [token, role, statsPeriod, selectedReportDate]);
 
     // Fetch Flights
     const fetchFlights = useCallback(async () => {
@@ -135,7 +140,10 @@ const AdminDashboard = () => {
         if (!token || role !== 'admin') return;
         setLoadingList(true);
         try {
-            const res = await fetch('http://localhost:8080/api/admin/bookings');
+            const url = selectedLogsDate
+                ? `http://localhost:8080/api/admin/bookings?date=${selectedLogsDate}`
+                : 'http://localhost:8080/api/admin/bookings';
+            const res = await fetch(url);
             const data = await res.json();
             if (data.success) {
                 setBookings(data.bookings);
@@ -145,7 +153,7 @@ const AdminDashboard = () => {
         } finally {
             setLoadingList(false);
         }
-    }, [token, role]);
+    }, [token, role, selectedLogsDate]);
 
     // Fetch Users
     const fetchUsers = useCallback(async () => {
@@ -1191,6 +1199,31 @@ const AdminDashboard = () => {
                                                 </button>
                                             </div>
 
+                                            {/* Date Filter */}
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm no-print mb-6">
+                                                <div className="flex items-center gap-4 flex-wrap w-full">
+                                                    <div className="flex flex-col gap-1.5 w-full md:w-auto">
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">تصفية سجل الحجز حسب تاريخ معين</label>
+                                                        <div className="flex items-center gap-2">
+                                                            <input
+                                                                type="date"
+                                                                value={selectedLogsDate}
+                                                                onChange={(e) => setSelectedLogsDate(e.target.value)}
+                                                                className="bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-blue-500 rounded-xl py-2.5 px-4 text-xs font-bold outline-none transition-all dark:text-white"
+                                                            />
+                                                            {selectedLogsDate && (
+                                                                <button
+                                                                    onClick={() => setSelectedLogsDate('')}
+                                                                    className="py-2.5 px-4 rounded-xl text-xs font-black bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-all border border-slate-200/60 dark:border-slate-700/60"
+                                                                >
+                                                                    عرض كل التواريخ
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
                                             {/* Bookings Filter List */}
                                             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm p-8">
                                                 {loadingList ? (
@@ -1311,6 +1344,31 @@ const AdminDashboard = () => {
                                                 </button>
                                             </div>
 
+                                            {/* Date Filter (no-print) */}
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm no-print mb-6">
+                                                <div className="flex items-center gap-4 flex-wrap w-full">
+                                                    <div className="flex flex-col gap-1.5 w-full md:w-auto">
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">تصفية التقرير حسب تاريخ محدد</label>
+                                                        <div className="flex items-center gap-2">
+                                                            <input
+                                                                type="date"
+                                                                value={selectedReportDate}
+                                                                onChange={(e) => setSelectedReportDate(e.target.value)}
+                                                                className="bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-blue-500 rounded-xl py-2.5 px-4 text-xs font-bold outline-none transition-all dark:text-white"
+                                                            />
+                                                            {selectedReportDate && (
+                                                                <button
+                                                                    onClick={() => setSelectedReportDate('')}
+                                                                    className="py-2.5 px-4 rounded-xl text-xs font-black bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-all border border-slate-200/60 dark:border-slate-700/60"
+                                                                >
+                                                                    عرض تقرير الفترة المحددة ({statsPeriod === 'current_month' ? 'الشهر الحالي' : 'السنة الحالية'})
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
                                             {/* Report Printable Document */}
                                             <div className="print-report-container bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 md:p-12 shadow-sm space-y-10">
                                                 {/* Report Header */}
@@ -1326,7 +1384,7 @@ const AdminDashboard = () => {
                                                     </div>
                                                     <div className="text-right text-xs text-slate-500 dark:text-slate-400 font-bold space-y-1 bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
                                                         <div>تاريخ التقرير: <span className="text-slate-900 dark:text-white font-black">{new Date().toLocaleString('ar-YE', { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
-                                                        <div>الفترة الزمنية للتقرير: <span className="text-blue-650 dark:text-blue-350 font-black">{statsPeriod === 'current_month' ? 'الشهر الحالي' : 'السنة الحالية'}</span></div>
+                                                        <div>الفترة الزمنية للتقرير: <span className="text-blue-650 dark:text-blue-350 font-black">{selectedReportDate ? `يوم ${new Date(selectedReportDate).toLocaleDateString('ar-YE', { dateStyle: 'long' })}` : (statsPeriod === 'current_month' ? 'الشهر الحالي' : 'السنة الحالية')}</span></div>
                                                         <div>المسؤول المصدر: <span className="text-slate-900 dark:text-white font-black">{adminEmail}</span></div>
                                                         <div>حالة النظام: <span className="text-emerald-500 font-black">متصل بقاعدة البيانات</span></div>
                                                     </div>
@@ -1336,7 +1394,7 @@ const AdminDashboard = () => {
                                                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
                                                     {/* 1. Revenue */}
                                                     <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{statsPeriod === 'current_month' ? 'إيرادات الشهر الحالي' : 'إيرادات السنة الحالية'}</p>
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedReportDate ? 'إيرادات اليوم المحدد' : (statsPeriod === 'current_month' ? 'إيرادات الشهر الحالي' : 'إيرادات السنة الحالية')}</p>
                                                         <h4 className="text-3xl font-black text-emerald-500">${stats.totalRevenue.toLocaleString()}</h4>
                                                         <p className="text-[11px] font-bold text-slate-500">
                                                             يعادل: <strong className="text-slate-700 dark:text-slate-350">{(stats.totalRevenue * Number(exchangeRate)).toLocaleString()} ريال يمني</strong>
@@ -1345,16 +1403,16 @@ const AdminDashboard = () => {
 
                                                     {/* 2. Tickets */}
                                                     <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{statsPeriod === 'current_month' ? 'تذاكر الشهر الحالي' : 'تذاكر السنة الحالية'}</p>
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedReportDate ? 'تذاكر اليوم المحدد' : (statsPeriod === 'current_month' ? 'تذاكر الشهر الحالي' : 'تذاكر السنة الحالية')}</p>
                                                         <h4 className="text-3xl font-black text-blue-500">{stats.totalTickets.toLocaleString()} تذكرة</h4>
                                                         <p className="text-[11px] font-bold text-slate-500">
-                                                            {statsPeriod === 'current_month' ? 'الركاب النشطين بالفترة:' : 'الركاب النشطين بالسنة:'} <strong className="text-slate-700 dark:text-slate-350">{stats.activePassengers.toLocaleString()} مسافر</strong>
+                                                            {selectedReportDate ? 'الركاب النشطين باليوم:' : (statsPeriod === 'current_month' ? 'الركاب النشطين بالفترة:' : 'الركاب النشطين بالسنة:')} <strong className="text-slate-700 dark:text-slate-350">{stats.activePassengers.toLocaleString()} مسافر</strong>
                                                         </p>
                                                     </div>
 
                                                     {/* 3. Estimated profit */}
                                                     <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{statsPeriod === 'current_month' ? `أرباح الشهر الحالي (عمولة ${markupRate}%)` : `أرباح السنة الحالية (عمولة ${markupRate}%)`}</p>
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedReportDate ? `أرباح اليوم المحدد (عمولة ${markupRate}%)` : (statsPeriod === 'current_month' ? `أرباح الشهر الحالي (عمولة ${markupRate}%)` : `أرباح السنة الحالية (عمولة ${markupRate}%)`)}</p>
                                                         <h4 className="text-3xl font-black text-indigo-500">${(stats.totalRevenue * (Number(markupRate) / 100)).toLocaleString()}</h4>
                                                         <p className="text-[11px] font-bold text-slate-500">
                                                             يعادل: <strong className="text-slate-700 dark:text-slate-350">{Math.round((stats.totalRevenue * (Number(markupRate) / 100)) * Number(exchangeRate)).toLocaleString()} ريال يمني</strong>
@@ -1370,7 +1428,7 @@ const AdminDashboard = () => {
 
                                                     {/* 5. Cancellation rate */}
                                                     <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{statsPeriod === 'current_month' ? 'نسبة إلغاء حجوزات الشهر' : 'نسبة إلغاء حجوزات السنة'}</p>
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedReportDate ? 'نسبة إلغاء حجوزات اليوم' : (statsPeriod === 'current_month' ? 'نسبة إلغاء حجوزات الشهر' : 'نسبة إلغاء حجوزات السنة')}</p>
                                                         <h4 className="text-2xl font-black text-rose-500">{stats.cancellationRate}%</h4>
                                                         <p className="text-[11px] font-bold text-slate-500">تحديث فوري من قاعدة البيانات</p>
                                                     </div>

@@ -229,28 +229,42 @@ app.delete('/api/admin/users/:id', async (req, res) => {
 
 // GET Admin Dashboard stats from database
 app.get('/api/admin/dashboard-stats', async (req, res) => {
-  const { period } = req.query; // 'current_month' or 'current_year'
+  const { period, date } = req.query; // 'current_month', 'current_year' or YYYY-MM-DD
   const isCurrentMonth = period === 'current_month';
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  const isCustomDate = date && dateRegex.test(date);
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    // شروط تصفية التواريخ للشهر الحالي أو السنة الحالية
-    const dateFilterBookings = isCurrentMonth 
-      ? "WHERE DATE_FORMAT(booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')" 
-      : "WHERE DATE_FORMAT(booking_date, '%Y') = DATE_FORMAT(NOW(), '%Y')";
-      
-    const dateFilterPayments = isCurrentMonth 
-      ? "AND DATE_FORMAT(payment_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')" 
-      : "AND DATE_FORMAT(payment_date, '%Y') = DATE_FORMAT(NOW(), '%Y')";
-      
-    const dateFilterBookingsAnd = isCurrentMonth 
-      ? "AND DATE_FORMAT(booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')" 
-      : "AND DATE_FORMAT(booking_date, '%Y') = DATE_FORMAT(NOW(), '%Y')";
+    // شروط تصفية التواريخ للشهر الحالي أو السنة الحالية أو تاريخ محدد
+    let dateFilterBookings;
+    let dateFilterPayments;
+    let dateFilterBookingsAnd;
+    let dateFilterBookingsWhereAlias;
 
-    const dateFilterBookingsWhereAlias = isCurrentMonth
-      ? "WHERE DATE_FORMAT(b.booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')"
-      : "WHERE DATE_FORMAT(b.booking_date, '%Y') = DATE_FORMAT(NOW(), '%Y')";
+    if (isCustomDate) {
+      dateFilterBookings = `WHERE DATE(booking_date) = '${date}'`;
+      dateFilterPayments = `AND DATE(payment_date) = '${date}'`;
+      dateFilterBookingsAnd = `AND DATE(booking_date) = '${date}'`;
+      dateFilterBookingsWhereAlias = `WHERE DATE(b.booking_date) = '${date}'`;
+    } else {
+      dateFilterBookings = isCurrentMonth 
+        ? "WHERE DATE_FORMAT(booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')" 
+        : "WHERE DATE_FORMAT(booking_date, '%Y') = DATE_FORMAT(NOW(), '%Y')";
+        
+      dateFilterPayments = isCurrentMonth 
+        ? "AND DATE_FORMAT(payment_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')" 
+        : "AND DATE_FORMAT(payment_date, '%Y') = DATE_FORMAT(NOW(), '%Y')";
+        
+      dateFilterBookingsAnd = isCurrentMonth 
+        ? "AND DATE_FORMAT(booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')" 
+        : "AND DATE_FORMAT(booking_date, '%Y') = DATE_FORMAT(NOW(), '%Y')";
+
+      dateFilterBookingsWhereAlias = isCurrentMonth
+        ? "WHERE DATE_FORMAT(b.booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')"
+        : "WHERE DATE_FORMAT(b.booking_date, '%Y') = DATE_FORMAT(NOW(), '%Y')";
+    }
 
     // 1. Total tickets (number of passenger tickets booked)
     const [[{ totalTickets }]] = await connection.execute(
@@ -392,10 +406,11 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
 
 // GET all bookings for admin
 app.get('/api/admin/bookings', async (req, res) => {
+  const { date } = req.query;
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
-    const [rows] = await connection.execute(`
+    let query = `
       SELECT b.id_bookings, b.booking_reference, b.booking_date, b.total_passengers, b.base_price, b.extra_total, b.final_price, b.status,
              f.flight_number, f.airline_code, f.airportOrigin_code, f.airportDestination_code, f.departure_time, f.arrival_time, f.price as flight_price,
              p.payment_method, p.payment_status, p.tansaction_id, p.payment_date,
@@ -403,8 +418,16 @@ app.get('/api/admin/bookings', async (req, res) => {
       FROM bookings b
       JOIN flights f ON b.flight_id = f.id_flights
       LEFT JOIN payments p ON p.booking_id = b.id_bookings
-      ORDER BY b.booking_date DESC
-    `);
+    `;
+    const params = [];
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (date && dateRegex.test(date)) {
+      query += ` WHERE DATE(b.booking_date) = ?`;
+      params.push(date);
+    }
+    query += ` ORDER BY b.booking_date DESC`;
+
+    const [rows] = await connection.execute(query, params);
     res.json({ success: true, bookings: rows });
   } catch (error) {
     console.error('Error fetching bookings:', error);

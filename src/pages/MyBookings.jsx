@@ -7,7 +7,7 @@ import logoF from '../assets/F.png';
 import {
     Plane, Ticket, CheckCircle, XCircle, Clock,
     ChevronDown, Search, PackageX, LogIn, Users,
-    Hash, CalendarDays, Banknote, CreditCard, BadgeCheck, Calendar, Download, MapPin
+    Hash, CalendarDays, Banknote, CreditCard, BadgeCheck, Calendar, Download, MapPin, Trash2
 } from 'lucide-react';
 
 const statusConfig = {
@@ -381,33 +381,16 @@ function BookingGroup({ booking }) {
         }
     })();
     const [showProofModal, setShowProofModal] = useState(false);
-    const [isCanceling, setIsCanceling] = useState(false);
+    const localCancelRequest = localStorage.getItem(`cancel_request_${booking.booking_reference}`) === 'pending';
 
-    const handleCancelBooking = async (e) => {
+    const handleCancelBooking = (e) => {
         e.stopPropagation();
-        const confirmCancel = window.confirm("هل أنت متأكد من رغبتك في طلب إلغاء هذا الحجز؟ لا يمكن التراجع عن هذا الإجراء.");
+        const confirmCancel = window.confirm("هل أنت متأكد من رغبتك في إرسال طلب إلغاء هذا الحجز؟");
         if (!confirmCancel) return;
 
-        setIsCanceling(true);
-        try {
-            const r = await fetch('http://localhost:8080/api/bookings/cancel', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ bookingId: booking.id_bookings })
-            });
-            const d = await r.json();
-            if (d.success) {
-                alert('تم تقديم طلب إلغاء الرحلة بنجاح.');
-                window.location.reload();
-            } else {
-                alert('حدث خطأ أثناء إلغاء الحجز: ' + d.error);
-            }
-        } catch (error) {
-            console.error('Error canceling booking:', error);
-            alert('فشل الاتصال بالسيرفر لإرسال طلب إلغاء الحجز.');
-        } finally {
-            setIsCanceling(false);
-        }
+        localStorage.setItem(`cancel_request_${booking.booking_reference}`, 'pending');
+        alert("تم إرسال طلب إلغاء الرحلة بنجاح. وهو قيد المراجعة الآن.");
+        window.location.reload();
     };
 
     const loadPassengers = async () => {
@@ -463,6 +446,23 @@ function BookingGroup({ booking }) {
                         <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">السعر</p>
                         <p className="text-xs font-black text-slate-700">${Number(booking.final_price).toLocaleString()}</p>
                     </div>
+
+                    {localCancelRequest ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-black bg-orange-500/10 text-orange-700 border border-orange-200/50">
+                            <Clock size={12} />
+                            <span>بانتظار الإلغاء</span>
+                        </span>
+                    ) : (
+                        booking.status !== 'cancelled' && (
+                            <button
+                                onClick={handleCancelBooking}
+                                title="طلب إلغاء الحجز"
+                                className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600 transition-all duration-200 cursor-pointer"
+                            >
+                                <Trash2 size={15} />
+                            </button>
+                        )
+                    )}
 
                     <span className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-black ${status.bg} ${status.text}`}>
                         <StatusIcon size={12} />
@@ -542,20 +542,6 @@ function BookingGroup({ booking }) {
                             </div>
                         </div>
                     )}
-                </div>
-            )}
-
-            {/* Action Bar when expanded */}
-            {expanded && booking.status !== 'cancelled' && (
-                <div className="bg-slate-50/50 px-5 py-3.5 border-t border-slate-100 flex items-center justify-end">
-                    <button
-                        onClick={handleCancelBooking}
-                        disabled={isCanceling}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-black text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200/50 rounded-xl transition-all cursor-pointer disabled:opacity-50"
-                    >
-                        <XCircle size={14} />
-                        <span>{isCanceling ? 'جاري طلب الإلغاء...' : 'طلب إلغاء الرحلة'}</span>
-                    </button>
                 </div>
             )}
         </div>

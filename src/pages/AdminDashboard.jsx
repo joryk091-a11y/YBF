@@ -330,28 +330,7 @@ const AdminDashboard = () => {
         return () => clearInterval(interval);
     }, [activeTab, fetchDashboardStats, fetchBookings, fetchFlights, fetchUsers, fetchCompanies]);
 
-    // Handle Payment/Booking status update
-    const handleUpdateBookingStatus = async (id, status, payment_status) => {
-        try {
-            const res = await fetch(`http://localhost:8080/api/admin/bookings/${id}/status`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status, payment_status })
-            });
-            const data = await res.json();
-            if (data.success) {
-                showToast(payment_status === 'success' ? 'تم تأكيد الدفع وتفعيل الحجز بنجاح!' : 'تم تعديل حالة الحجز.');
-                // Refresh list
-                fetchBookings();
-                fetchDashboardStats();
-            } else {
-                showToast('حدث خطأ أثناء التحديث.');
-            }
-        } catch (error) {
-            console.error(error);
-            showToast('خطأ في الاتصال بالخادم.');
-        }
-    };
+
 
     // Delete Flight
     const handleDeleteFlight = async (id) => {

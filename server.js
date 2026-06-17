@@ -573,15 +573,19 @@ app.get('/api/booking-passengers/:bookingId', async (req, res) => {
 
 // Get all flights for a specific airline/company
 app.get('/api/flights', async (req, res) => {
-  const { airlineCode } = req.query;
+  const { airlineCode, date } = req.query;
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
-    let query = 'SELECT * FROM flights';
+    let query = 'SELECT * FROM flights WHERE 1=1';
     const params = [];
     if (airlineCode && airlineCode !== 'undefined' && airlineCode !== 'null' && airlineCode.trim() !== '') {
-      query += ' WHERE airline_code = ?';
+      query += ' AND airline_code = ?';
       params.push(airlineCode);
+    }
+    if (date && date !== 'undefined' && date !== 'null' && date.trim() !== '') {
+      query += ' AND DATE(departure_time) = ?';
+      params.push(date);
     }
     query += ' ORDER BY departure_time DESC';
     

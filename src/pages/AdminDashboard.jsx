@@ -71,6 +71,7 @@ const AdminDashboard = () => {
         password: ''
     });
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedFlightDate, setSelectedFlightDate] = useState('');
     const [loadingList, setLoadingList] = useState(false);
     const [reportsSubTab, setReportsSubTab] = useState('logs'); // 'logs' or 'pdf_report'
 
@@ -127,7 +128,10 @@ const AdminDashboard = () => {
         if (!token || role !== 'admin') return;
         setLoadingList(true);
         try {
-            const res = await fetch('http://localhost:8080/api/flights');
+            const url = selectedFlightDate 
+                ? `http://localhost:8080/api/flights?date=${selectedFlightDate}` 
+                : 'http://localhost:8080/api/flights';
+            const res = await fetch(url);
             const data = await res.json();
             if (data.success) {
                 setFlights(data.flights);
@@ -137,7 +141,7 @@ const AdminDashboard = () => {
         } finally {
             setLoadingList(false);
         }
-    }, [token, role]);
+    }, [token, role, selectedFlightDate]);
 
     // Fetch Bookings
     const fetchBookings = useCallback(async () => {
@@ -1101,9 +1105,35 @@ const AdminDashboard = () => {
                                             <h3 className="text-lg font-black">جميع الرحلات الجوية</h3>
                                             <p className="text-xs text-slate-400 font-bold mt-1">تصفح وإضافة وتعديل رحلات شركات الطيران</p>
                                         </div>
+                                    </div>
+
+                                    {/* Date Filter & Actions */}
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm">
+                                        <div className="flex items-center gap-4 flex-wrap">
+                                            <div className="flex flex-col gap-1.5">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">تصفية حسب تاريخ الرحلة</label>
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="date"
+                                                        value={selectedFlightDate}
+                                                        onChange={(e) => setSelectedFlightDate(e.target.value)}
+                                                        className="bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-blue-500 rounded-xl py-2.5 px-4 text-xs font-bold outline-none transition-all dark:text-white"
+                                                    />
+                                                    {selectedFlightDate && (
+                                                        <button
+                                                            onClick={() => setSelectedFlightDate('')}
+                                                            className="py-2.5 px-4 rounded-xl text-xs font-black bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-all border border-slate-200/60 dark:border-slate-700/60"
+                                                        >
+                                                            عرض كل التواريخ
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
                                         <button
                                             onClick={() => setIsFlightModalOpen(true)}
-                                            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-black py-3 px-6 rounded-2xl text-xs transition-all shadow-md shadow-blue-500/20"
+                                            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-black py-3 px-6 rounded-2xl text-xs transition-all shadow-md shadow-blue-500/20 self-end md:self-center"
                                         >
                                             <Plus size={16} />
                                             <span>إضافة رحلة جديدة</span>

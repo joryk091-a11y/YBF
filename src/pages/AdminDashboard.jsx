@@ -30,6 +30,7 @@ const AdminDashboard = () => {
     });
     const [loading, setLoading] = useState(true);
     const [salesChartPeriod, setSalesChartPeriod] = useState('monthly'); // 'daily' or 'monthly'
+    const [statsPeriod, setStatsPeriod] = useState('current_month'); // 'current_month' or 'all'
     const [stats, setStats] = useState({
         totalTickets: 0,
         totalRevenue: 0,

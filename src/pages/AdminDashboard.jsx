@@ -75,20 +75,7 @@ const AdminDashboard = () => {
     const [loadingList, setLoadingList] = useState(false);
     const [reportsSubTab, setReportsSubTab] = useState('logs'); // 'logs' or 'pdf_report'
 
-    // Flight Form Modal State
-    const [isFlightModalOpen, setIsFlightModalOpen] = useState(false);
-    const [flightForm, setFlightForm] = useState({
-        flight_number: '',
-        airline_code: 'IY', // Yemenia default
-        airportOrigin_code: '',
-        airportDestination_code: '',
-        departure_time: '',
-        arrival_time: '',
-        aircraft_type: 'Boeing 787',
-        total_seats: '150',
-        available_seats: '150',
-        price: ''
-    });
+
 
     // Settings State (backed by localStorage)
     const [markupRate, setMarkupRate] = useState(() => localStorage.getItem('adminMarkupRate') || '5');
@@ -336,25 +323,7 @@ const AdminDashboard = () => {
 
 
 
-    // Delete Flight
-    const handleDeleteFlight = async (id) => {
-        if (!window.confirm('هل أنت متأكد من حذف هذه الرحلة؟ لا يمكن التراجع عن هذا الإجراء.')) return;
-        try {
-            const res = await fetch(`http://localhost:8080/api/flights/${id}`, {
-                method: 'DELETE'
-            });
-            const data = await res.json();
-            if (data.success) {
-                showToast('تم حذف الرحلة بنجاح.');
-                fetchFlights();
-            } else {
-                showToast('خطأ في حذف الرحلة.');
-            }
-        } catch (error) {
-            console.error(error);
-            showToast('خطأ في الاتصال بالخادم.');
-        }
-    };
+
 
     // Create new user
     const handleCreateUser = async (e) => {
@@ -448,40 +417,7 @@ const AdminDashboard = () => {
         }
     };
 
-    // Add New Flight Form Submit
-    const handleAddFlightSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const res = await fetch('http://localhost:8080/api/flights', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(flightForm)
-            });
-            const data = await res.json();
-            if (data.success) {
-                showToast('تم إضافة الرحلة بنجاح!');
-                setIsFlightModalOpen(false);
-                setFlightForm({
-                    flight_number: '',
-                    airline_code: 'IY',
-                    airportOrigin_code: '',
-                    airportDestination_code: '',
-                    departure_time: '',
-                    arrival_time: '',
-                    aircraft_type: 'Boeing 787',
-                    total_seats: '150',
-                    available_seats: '150',
-                    price: ''
-                });
-                fetchFlights();
-            } else {
-                showToast('حدث خطأ أثناء إضافة الرحلة.');
-            }
-        } catch (error) {
-            console.error(error);
-            showToast('فشل الاتصال بالخادم.');
-        }
-    };
+
 
     // Save Settings
     const handleSaveSettings = (e) => {
@@ -1103,14 +1039,14 @@ const AdminDashboard = () => {
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <h3 className="text-lg font-black">جميع الرحلات الجوية</h3>
-                                            <p className="text-xs text-slate-400 font-bold mt-1">تصفح وإضافة وتعديل رحلات شركات الطيران</p>
+                                            <p className="text-xs text-slate-400 font-bold mt-1">تصفح واستعراض رحلات شركات الطيران المتوفرة</p>
                                         </div>
                                     </div>
 
-                                    {/* Date Filter & Actions */}
+                                    {/* Date Filter */}
                                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm">
-                                        <div className="flex items-center gap-4 flex-wrap">
-                                            <div className="flex flex-col gap-1.5">
+                                        <div className="flex items-center gap-4 flex-wrap w-full">
+                                            <div className="flex flex-col gap-1.5 w-full md:w-auto">
                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">تصفية حسب تاريخ الرحلة</label>
                                                 <div className="flex items-center gap-2">
                                                     <input
@@ -1130,14 +1066,6 @@ const AdminDashboard = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                        
-                                        <button
-                                            onClick={() => setIsFlightModalOpen(true)}
-                                            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-black py-3 px-6 rounded-2xl text-xs transition-all shadow-md shadow-blue-500/20 self-end md:self-center"
-                                        >
-                                            <Plus size={16} />
-                                            <span>إضافة رحلة جديدة</span>
-                                        </button>
                                     </div>
 
                                     {/* Flights Table */}
@@ -1156,7 +1084,6 @@ const AdminDashboard = () => {
                                                             <th className="pb-4 px-4">الطائرة</th>
                                                             <th className="pb-4 px-4 text-center">المقاعد المتاحة</th>
                                                             <th className="pb-4 px-4">سعر التذكرة</th>
-                                                            <th className="pb-4 px-4 text-left">إجراءات</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
@@ -1181,20 +1108,11 @@ const AdminDashboard = () => {
                                                                         {flight.available_seats} / {flight.total_seats}
                                                                     </td>
                                                                     <td className="py-5 px-4 font-black text-blue-600 dark:text-blue-400">${Number(flight.price || 0).toLocaleString()}</td>
-                                                                    <td className="py-5 px-4 text-left">
-                                                                        <button
-                                                                            onClick={() => handleDeleteFlight(flight.id_flights)}
-                                                                            className="h-8 w-8 rounded-lg bg-rose-50 dark:bg-rose-950/20 text-rose-600 hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center"
-                                                                            title="حذف الرحلة"
-                                                                        >
-                                                                            <Trash2 size={14} />
-                                                                        </button>
-                                                                    </td>
                                                                 </tr>
                                                             ))
                                                         ) : (
                                                             <tr>
-                                                                <td colSpan="8" className="py-12 text-center text-slate-400 font-bold">لا توجد رحلات مطابقة للبحث</td>
+                                                                <td colSpan="7" className="py-12 text-center text-slate-400 font-bold">لا توجد رحلات مطابقة للبحث</td>
                                                             </tr>
                                                         )}
                                                     </tbody>
@@ -2164,148 +2082,7 @@ const AdminDashboard = () => {
                 </div>
             </main>
 
-            {/* ===== FLIGHT MODAL (ADD FLIGHT FORM) ===== */}
-            {isFlightModalOpen && (
-                <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-fade-in select-none">
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-xl w-full p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
-                        <div className="flex items-center justify-between mb-6">
-                            <h4 className="text-base font-black">إضافة رحلة جديدة للجدول</h4>
-                            <button
-                                onClick={() => setIsFlightModalOpen(false)}
-                                className="h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition-all"
-                            >
-                                <X size={16} />
-                            </button>
-                        </div>
 
-                        <form onSubmit={handleAddFlightSubmit} className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400">رقم الرحلة</label>
-                                    <input
-                                        type="text"
-                                        placeholder="مثال: IY642"
-                                        value={flightForm.flight_number}
-                                        onChange={(e) => setFlightForm({ ...flightForm, flight_number: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400">شركة الطيران</label>
-                                    <select
-                                        value={flightForm.airline_code}
-                                        onChange={(e) => setFlightForm({ ...flightForm, airline_code: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
-                                    >
-                                        <option value="IY">الخطوط اليمنية (IY)</option>
-                                        <option value="QA">القطرية (QA)</option>
-                                        <option value="EK">الإماراتية (EK)</option>
-                                        <option value="WY">العمانية (WY)</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400">مطار المغادرة (رمز الكود)</label>
-                                    <input
-                                        type="text"
-                                        placeholder="مثال: ADE"
-                                        value={flightForm.airportOrigin_code}
-                                        onChange={(e) => setFlightForm({ ...flightForm, airportOrigin_code: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400">مطار الوصول (رمز الكود)</label>
-                                    <input
-                                        type="text"
-                                        placeholder="مثال: CAI"
-                                        value={flightForm.airportDestination_code}
-                                        onChange={(e) => setFlightForm({ ...flightForm, airportDestination_code: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400">تاريخ ووقت الإقلاع</label>
-                                    <input
-                                        type="datetime-local"
-                                        value={flightForm.departure_time}
-                                        onChange={(e) => setFlightForm({ ...flightForm, departure_time: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400">تاريخ ووقت الوصول</label>
-                                    <input
-                                        type="datetime-local"
-                                        value={flightForm.arrival_time}
-                                        onChange={(e) => setFlightForm({ ...flightForm, arrival_time: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400">طراز الطائرة</label>
-                                    <input
-                                        type="text"
-                                        value={flightForm.aircraft_type}
-                                        onChange={(e) => setFlightForm({ ...flightForm, aircraft_type: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400">المقاعد الكلية</label>
-                                    <input
-                                        type="number"
-                                        value={flightForm.total_seats}
-                                        onChange={(e) => setFlightForm({ ...flightForm, total_seats: e.target.value, available_seats: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400">سعر التذكرة ($)</label>
-                                    <input
-                                        type="number"
-                                        placeholder="السعر بالدولار"
-                                        value={flightForm.price}
-                                        onChange={(e) => setFlightForm({ ...flightForm, price: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="pt-4 flex justify-end gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsFlightModalOpen(false)}
-                                    className="py-2.5 px-5 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 text-xs font-bold"
-                                >
-                                    إلغاء
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="py-2.5 px-6 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-xs font-black shadow-md shadow-blue-500/10"
-                                >
-                                    حفظ وإدراج
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
 
             {/* ===== COMPANY MODAL (ADD/EDIT COMPANY FORM) ===== */}
             {isCompanyModalOpen && (

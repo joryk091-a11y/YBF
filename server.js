@@ -1040,6 +1040,25 @@ const seedAdmin = async () => {
   }
 };
 
+// Cancel a booking
+app.post('/api/bookings/cancel', async (req, res) => {
+  const { bookingId } = req.body;
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    await connection.execute(
+      "UPDATE bookings SET status = 'cancelled' WHERE id_bookings = ?",
+      [bookingId]
+    );
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error canceling booking:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
   seedAdmin();

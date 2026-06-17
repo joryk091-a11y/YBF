@@ -381,6 +381,34 @@ function BookingGroup({ booking }) {
         }
     })();
     const [showProofModal, setShowProofModal] = useState(false);
+    const [isCanceling, setIsCanceling] = useState(false);
+
+    const handleCancelBooking = async (e) => {
+        e.stopPropagation();
+        const confirmCancel = window.confirm("هل أنت متأكد من رغبتك في طلب إلغاء هذا الحجز؟ لا يمكن التراجع عن هذا الإجراء.");
+        if (!confirmCancel) return;
+
+        setIsCanceling(true);
+        try {
+            const r = await fetch('http://localhost:8080/api/bookings/cancel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bookingId: booking.id_bookings })
+            });
+            const d = await r.json();
+            if (d.success) {
+                alert('تم تقديم طلب إلغاء الرحلة بنجاح.');
+                window.location.reload();
+            } else {
+                alert('حدث خطأ أثناء إلغاء الحجز: ' + d.error);
+            }
+        } catch (error) {
+            console.error('Error canceling booking:', error);
+            alert('فشل الاتصال بالسيرفر لإرسال طلب إلغاء الحجز.');
+        } finally {
+            setIsCanceling(false);
+        }
+    };
 
     const loadPassengers = async () => {
         if (passengers.length > 0) { setExpanded(v => !v); return; }
@@ -514,6 +542,20 @@ function BookingGroup({ booking }) {
                             </div>
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* Action Bar when expanded */}
+            {expanded && booking.status !== 'cancelled' && (
+                <div className="bg-slate-50/50 px-5 py-3.5 border-t border-slate-100 flex items-center justify-end">
+                    <button
+                        onClick={handleCancelBooking}
+                        disabled={isCanceling}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-black text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200/50 rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                    >
+                        <XCircle size={14} />
+                        <span>{isCanceling ? 'جاري طلب الإلغاء...' : 'طلب إلغاء الرحلة'}</span>
+                    </button>
                 </div>
             )}
         </div>

@@ -17,6 +17,7 @@ import AdminUsers from './pages/AdminUsers.jsx'
 import SeatsPage from './pages/Seats.jsx'
 import MyBookings from './pages/MyBookings.jsx'
 import PlaceholderPage from './pages/PlaceholderPage.jsx'
+import TermsPage from './pages/Terms.jsx'
 import { Plane, BarChart3, Database, ClipboardList, HeartPulse } from 'lucide-react'
 import AdminLogin from './pages/AdminLogin.jsx'
 
@@ -191,6 +192,7 @@ function App() {
               <Route path="/travelers" element={<TravelersPage />} />
               <Route path="/payment" element={<PaymentPage />} />
               <Route path="/my-bookings" element={<MyBookings />} />
+              <Route path="/terms" element={<TermsPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/home" element={<Navigate to="/" replace />} />

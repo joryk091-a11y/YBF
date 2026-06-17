@@ -5,8 +5,9 @@ import defaultLogo from '../assets/logo.png'
 
 const defaultNavItems = [
   { label: 'الرئيسية', href: '/' },
-  { label: 'الوجهات', href: '#hero' },
+  { label: 'الوجهات', href: '/search' },
   { label: 'حجوزاتي', href: '/my-bookings' },
+  { label: 'الشروط والأحكام', href: '/terms' },
   { label: 'تواصل معنا', href: '#footer' },
 ]
 
@@ -275,6 +276,7 @@ function Navbar({
                   ) : (
                     <Link
                       to={item.href}
+                      state={item.label === 'الوجهات' ? { showAll: true } : undefined}
                       className="group relative inline-flex select-none py-1 text-sm font-semibold text-white/85 transition-all duration-300 hover:text-[#b4d3f8] focus:outline-none"
                     >
                       {item.label}
@@ -324,7 +326,7 @@ function Navbar({
                     setUser(null)
                     navigate('/')
                   }}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors"
                   title="تسجيل الخروج"
                 >
                   <LogOut size={18} />
@@ -411,6 +413,7 @@ function Navbar({
                 ) : (
                   <Link
                     to={item.href}
+                    state={item.label === 'الوجهات' ? { showAll: true } : undefined}
                     onClick={() => setIsMenuOpen(false)}
                     className="block rounded-lg px-3 py-2 text-sm font-semibold text-white/90 transition duration-300 hover:bg-[#b4d3f8]/12 focus:outline-none"
                   >

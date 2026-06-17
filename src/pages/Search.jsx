@@ -49,7 +49,10 @@ function SearchPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { searchCriteria: contextSearchCriteria } = useSearch()
-  const searchCriteria = { ...contextSearchCriteria, ...location.state?.searchCriteria }
+  const isShowAll = location.state?.showAll
+  const searchCriteria = isShowAll
+    ? { fromCity: '', toCity: '', travelDate: '', passengerCount: 1 }
+    : { ...contextSearchCriteria, ...location.state?.searchCriteria }
 
   const [flights, setFlights] = useState([])
   const [loading, setLoading] = useState(true)
@@ -194,7 +197,18 @@ function SearchPage() {
 
       <section className="mx-auto mt-8 w-full max-w-[1380px] px-4 sm:px-6">
         {/* Sleek Search Summary Bar - Redesigned for Premium Look */}
-        {searchCriteria ? (
+        {isShowAll ? (
+          <div className="mb-10 overflow-hidden rounded-[40px] border border-white/40 bg-gradient-to-r from-[#4974f9]/10 to-indigo-500/10 p-8 shadow-[0_32px_64px_rgba(0,0,0,0.04)] backdrop-blur-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 animate-in fade-in slide-in-from-top-5 duration-500" dir="rtl">
+            <div>
+              <h2 className="text-2xl font-black text-slate-900">جميع الوجهات والرحلات المتاحة</h2>
+              <p className="text-xs font-semibold text-slate-500 mt-2">تصفح وقارن بين جميع الخطوط الجوية والرحلات المجدولة حالياً</p>
+            </div>
+            <Link to="/" className="relative flex h-11 items-center justify-center overflow-hidden rounded-2xl bg-slate-900 px-8 text-xs font-black text-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-slate-800 active:scale-95 group/search shrink-0">
+              <span className="relative z-10">بحث مخصص</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover/search:translate-x-[100%] transition-transform duration-1000" />
+            </Link>
+          </div>
+        ) : searchCriteria ? (
           <div className="mb-10 overflow-hidden rounded-[40px] border border-white/40 bg-white/70 shadow-[0_32px_64px_rgba(0,0,0,0.06)] backdrop-blur-3xl" dir="rtl">
             <div className="grid divide-y divide-slate-200/40 sm:grid-cols-4 sm:divide-x sm:divide-y-0 sm:divide-x-reverse">
               {/* Departure */}

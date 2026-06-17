@@ -183,7 +183,7 @@ function HeroSearchPanel() {
                 type="button"
                 onClick={() => setPassengerCount(Math.max(1, passengerCount - 1))}
                 aria-label="تقليل عدد المسافرين"
-                className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-50 text-slate-400 transition-all hover:bg-slate-100 hover:text-[#d9312b] active:scale-90"
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-50 text-slate-400 transition-all hover:bg-slate-100 hover:text-[#4974f9] active:scale-90"
               >
                 <Minus className="h-3.5 w-3.5" />
               </button>
@@ -220,7 +220,7 @@ function HeroSearchPanel() {
                         type="button"
                         onClick={() => deleteSegment(index)}
                         aria-label={`حذف الرحلة رقم ${index + 1}`}
-                        className="absolute left-3 top-3 z-20 inline-flex items-center justify-center text-slate-400 transition hover:text-[#d9312b]"
+                        className="absolute left-3 top-3 z-20 inline-flex items-center justify-center text-slate-400 transition hover:text-[#4974f9]"
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -364,7 +364,7 @@ function HeroSearchPanel() {
         <button
           type="button"
           onClick={goToSearch}
-          className="mt-6 h-14 w-full rounded-2xl bg-[#d9312b] text-base font-black text-white shadow-xl shadow-[#d9312b]/30 transition-all hover:-translate-y-0.5 hover:bg-[#c52b26] hover:shadow-2xl hover:shadow-[#d9312b]/40 active:translate-y-[1px]"
+          className="mt-6 h-14 w-full rounded-2xl bg-[#4974f9] text-base font-black text-white shadow-xl shadow-[#4974f9]/30 transition-all hover:-translate-y-0.5 hover:bg-[#355ecb] hover:shadow-2xl hover:shadow-[#4974f9]/40 active:translate-y-[1px]"
         >
           ابحث عن أفضل الرحلات الآن
         </button>

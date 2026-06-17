@@ -39,6 +39,15 @@ const getDbConfig = () => {
   return url; // Return as string if regex fails, mysql2 might handle it
 };
 
+// ─── RESTful Auth Aliases ──────────────────────────────────────────────────
+// Allow both legacy paths and new /api/auth/* paths
+
+const authAliasHandler = (originalPath) => async (req, res, next) => {
+  req.url = originalPath;
+  next();
+};
+
+// ─── Passengers ─────────────────────────────────────────────────────────────
 app.post('/api/passengers', async (req, res) => {
   const { passengers, userId } = req.body;
   let connection;
@@ -82,24 +91,23 @@ app.post('/api/passengers', async (req, res) => {
 
 // --- NEW USER ACCOUNT ENDPOINTS ---
 
-app.post('/api/register', async (req, res) => {
+// POST /api/auth/register — RESTful alias
+app.post('/api/auth/register', async (req, res, next) => { req.url = '/api/register'; return registerHandler(req, res); });
+
+async function registerHandler(req, res) {
   const { fullName, email, phone, password } = req.body;
   console.log('Register Request:', { fullName, email, phone });
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
-
-    // Check if email exists
     const [existing] = await connection.execute('SELECT id_users FROM users WHERE email = ?', [email]);
     if (existing.length > 0) {
       return res.status(400).json({ success: false, error: 'البريد الإلكتروني مسجل بالفعل' });
     }
-
     const [result] = await connection.execute(
       'INSERT INTO users (full_name, email, phone, password, created_at) VALUES (?, ?, ?, ?, NOW())',
-      [fullName, email, phone, password] // In a real app, hash the password!
+      [fullName, email, phone, password]
     );
-
     res.status(201).json({ success: true, userId: result.insertId });
   } catch (error) {
     console.error('Register Error:', error);
@@ -107,9 +115,14 @@ app.post('/api/register', async (req, res) => {
   } finally {
     if (connection) await connection.end();
   }
-});
+}
 
-app.post('/api/login', async (req, res) => {
+app.post('/api/register', registerHandler);
+
+// POST /api/auth/login — RESTful alias
+app.post('/api/auth/login', async (req, res) => loginHandler(req, res));
+
+async function loginHandler(req, res) {
   const { email, password } = req.body;
   console.log('Login Request:', { email });
   let connection;
@@ -119,16 +132,11 @@ app.post('/api/login', async (req, res) => {
       'SELECT * FROM users WHERE email = ? AND password = ?',
       [email, password]
     );
-
     if (rows.length > 0) {
       const user = rows[0];
       res.json({
         success: true,
-        user: {
-          id: user.id_users,
-          fullName: user.full_name,
-          email: user.email
-        }
+        user: { id: user.id_users, fullName: user.full_name, email: user.email }
       });
     } else {
       res.status(401).json({ success: false, error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' });
@@ -138,7 +146,9 @@ app.post('/api/login', async (req, res) => {
   } finally {
     if (connection) await connection.end();
   }
-});
+}
+
+app.post('/api/login', loginHandler);
 
 app.get('/api/admin/users', async (req, res) => {
   let connection;
@@ -437,8 +447,9 @@ app.get('/api/admin/bookings', async (req, res) => {
   }
 });
 
-// POST update booking and payment status
-app.post('/api/admin/bookings/:id/status', async (req, res) => {
+// PATCH /api/admin/bookings/:id/status — RESTful
+// POST kept as alias for backward compatibility
+async function updateBookingStatusHandler(req, res) {
   const { id } = req.params;
   const { status, payment_status } = req.body;
   let connection;
@@ -486,9 +497,15 @@ app.post('/api/admin/bookings/:id/status', async (req, res) => {
   } finally {
     if (connection) await connection.end();
   }
-});
+}
 
-app.post('/api/company-login', async (req, res) => {
+app.patch('/api/admin/bookings/:id/status', updateBookingStatusHandler);
+app.post('/api/admin/bookings/:id/status', updateBookingStatusHandler);
+
+// POST /api/auth/company/login — RESTful alias
+app.post('/api/auth/company/login', async (req, res) => companyLoginHandler(req, res));
+
+async function companyLoginHandler(req, res) {
   const { email, password } = req.body;
   console.log('Company Login Request:', { email });
   let connection;
@@ -498,11 +515,9 @@ app.post('/api/company-login', async (req, res) => {
       'SELECT * FROM admins WHERE email = ? AND password = ?',
       [email, password]
     );
-
     if (rows.length > 0) {
       const admin = rows[0];
       await connection.execute('UPDATE admins SET last_login = NOW() WHERE id_admin = ?', [admin.id_admin]);
-
       res.json({
         success: true,
         role: admin.role,
@@ -518,12 +533,15 @@ app.post('/api/company-login', async (req, res) => {
   } finally {
     if (connection) await connection.end();
   }
-});
+}
+
+app.post('/api/company-login', companyLoginHandler);
 
 
-// Get all bookings for a logged-in user
-app.get('/api/my-bookings/:userId', async (req, res) => {
-  const { userId } = req.params;
+// GET /api/bookings?userId= — RESTful route
+// GET /api/my-bookings/:userId — legacy route (kept for compatibility)
+async function getUserBookingsHandler(req, res) {
+  const userId = req.params.userId || req.query.userId;
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
@@ -561,11 +579,15 @@ app.get('/api/my-bookings/:userId', async (req, res) => {
   } finally {
     if (connection) await connection.end();
   }
-});
+}
 
-// Get all passengers for a specific booking (for individual boarding passes)
-app.get('/api/booking-passengers/:bookingId', async (req, res) => {
-  const { bookingId } = req.params;
+app.get('/api/bookings', getUserBookingsHandler);
+app.get('/api/my-bookings/:userId', getUserBookingsHandler);
+
+// GET /api/bookings/:id/passengers — RESTful route
+// GET /api/booking-passengers/:bookingId — legacy route
+async function getBookingPassengersHandler(req, res) {
+  const bookingId = req.params.id || req.params.bookingId;
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
@@ -589,7 +611,10 @@ app.get('/api/booking-passengers/:bookingId', async (req, res) => {
   } finally {
     if (connection) await connection.end();
   }
-});
+}
+
+app.get('/api/bookings/:id/passengers', getBookingPassengersHandler);
+app.get('/api/booking-passengers/:bookingId', getBookingPassengersHandler);
 
 
 // --- NEW FLIGHT MANAGEMENT ENDPOINTS ---
@@ -653,8 +678,11 @@ app.delete('/api/flights/:id', async (req, res) => {
     if (connection) await connection.end();
   }
 });
-// Search flights
-app.get('/api/search-flights', async (req, res) => {
+// GET /api/flights/search — RESTful route
+// GET /api/search-flights — legacy route
+app.get('/api/flights/search', async (req, res) => { return searchFlightsHandler(req, res); });
+app.get('/api/search-flights', async (req, res) => { return searchFlightsHandler(req, res); });
+async function searchFlightsHandler(req, res) {
   let { from, to, date } = req.query;
   let connection;
 
@@ -706,10 +734,10 @@ app.get('/api/search-flights', async (req, res) => {
   } finally {
     if (connection) await connection.end();
   }
-});
+}
 
-// Update flight
-app.post('/api/flights/:id', async (req, res) => {
+// PUT /api/flights/:id — RESTful (replaces legacy POST)
+app.put('/api/flights/:id', async (req, res) => {
   const f = req.body;
   const { id } = req.params;
   let connection;
@@ -822,29 +850,6 @@ app.post('/api/bookings', async (req, res) => {
       'INSERT INTO payments (booking_id, amount, payment_method, payment_status, payment_date) VALUES (?, ?, ?, ?, NOW())',
       [bookingId, totalPrice, paymentMethod, paymentStatus]
     );
-
-    // 6. Create booking notification linked to user_id and passenger_id
-    if (userId) {
-      const firstPassport = passengers[0]?.passportNumber || passengers[0]?.passport_number;
-      let notifPassengerId = null;
-      if (firstPassport) {
-        const [pRow] = await connection.execute(
-          'SELECT id_passengers FROM passengers WHERE passport_number = ?', [firstPassport]
-        );
-        if (pRow.length > 0) notifPassengerId = pRow[0].id_passengers;
-      }
-      await connection.execute(
-        `INSERT INTO notifications (passenger_id, user_id, booking_id, title, message, type, is_read, created_at)
-         VALUES (?, ?, ?, ?, ?, 'booking', 0, NOW())`,
-        [
-          notifPassengerId,
-          userId,
-          bookingId,
-          'تم تأكيد حجزك بنجاح! ✈️',
-          `تم إنشاء الحجز برقم مرجعي ${reference}. يسعدنا خدمتك في رحلتك القادمة.`
-        ]
-      );
-    }
 
     await connection.commit();
     res.json({ success: true, bookingId, reference });
@@ -1040,9 +1045,10 @@ const seedAdmin = async () => {
   }
 };
 
-// Cancel a booking
-app.post('/api/bookings/cancel', async (req, res) => {
-  const { bookingId } = req.body;
+// PATCH /api/bookings/:id/cancel — RESTful route
+// POST /api/bookings/cancel — legacy route (kept for compatibility)
+async function cancelBookingHandler(req, res) {
+  const bookingId = req.params.id || req.body.bookingId;
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
@@ -1057,7 +1063,10 @@ app.post('/api/bookings/cancel', async (req, res) => {
   } finally {
     if (connection) await connection.end();
   }
-});
+}
+
+app.patch('/api/bookings/:id/cancel', cancelBookingHandler);
+app.post('/api/bookings/cancel', cancelBookingHandler);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

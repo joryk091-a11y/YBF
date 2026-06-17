@@ -239,7 +239,6 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
     const dateFilterBookings = isCurrentMonth ? "WHERE DATE_FORMAT(booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')" : "";
     const dateFilterPayments = isCurrentMonth ? "AND DATE_FORMAT(payment_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')" : "";
     const dateFilterBookingsAnd = isCurrentMonth ? "AND DATE_FORMAT(booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')" : "";
-    const dateFilterBookingsAndAlias = isCurrentMonth ? "AND DATE_FORMAT(b.booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')" : "";
 
     // 1. Total tickets (number of passenger tickets booked)
     const [[{ totalTickets }]] = await connection.execute(

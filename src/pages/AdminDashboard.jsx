@@ -110,7 +110,7 @@ const AdminDashboard = () => {
         if (!token || role !== 'admin') return;
         setLoading(true);
         try {
-            const res = await fetch('http://localhost:8080/api/admin/dashboard-stats');
+            const res = await fetch(`http://localhost:8080/api/admin/dashboard-stats?period=${statsPeriod}`);
             const data = await res.json();
             if (data.success) {
                 setStats(data.stats);
@@ -120,7 +120,7 @@ const AdminDashboard = () => {
         } finally {
             setLoading(false);
         }
-    }, [token, role]);
+    }, [token, role, statsPeriod]);
 
     // Fetch Flights
     const fetchFlights = useCallback(async () => {
@@ -750,13 +750,65 @@ const AdminDashboard = () => {
                             {activeTab === 'dashboard' && (
                                 <div className="space-y-10">
                                     
+                                    {/* Dashboard Subheader with Stats Period Toggle */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200/60 pb-5 dark:border-slate-800/60">
+                                        <div>
+                                            <h3 className="text-lg font-black">مؤشرات الأداء</h3>
+                                            <p className="text-xs text-slate-400 font-bold mt-1">
+                                                {statsPeriod === 'current_month' ? 'عرض إحصائيات حركة الطيران والمبيعات للشهر الحالي' : 'عرض إحصائيات حركة الطيران والمبيعات التراكمية (كل الأوقات)'}
+                                            </p>
+                                        </div>
+                                        <div className="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-xl self-start">
+                                            <button
+                                                onClick={() => setStatsPeriod('current_month')}
+                                                className={`py-1.5 px-4 rounded-lg text-xs font-black transition-all ${
+                                                    statsPeriod === 'current_month'
+                                                        ? 'bg-blue-600 text-white shadow-md'
+                                                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
+                                                }`}
+                                            >
+                                                الشهر الحالي
+                                            </button>
+                                            <button
+                                                onClick={() => setStatsPeriod('all')}
+                                                className={`py-1.5 px-4 rounded-lg text-xs font-black transition-all ${
+                                                    statsPeriod === 'all'
+                                                        ? 'bg-blue-600 text-white shadow-md'
+                                                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
+                                                }`}
+                                            >
+                                                كل الأوقات
+                                            </button>
+                                        </div>
+                                    </div>
+
                                     {/* 1. Summary Cards (المؤشرات الرئيسية) */}
                                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                                         {[
-                                            { label: 'إجمالي التذاكر المحجوزة', value: stats.totalTickets.toLocaleString(), icon: Ticket, color: 'text-blue-600 bg-blue-500/10' },
-                                            { label: 'إجمالي الإيرادات الفعلي', value: `$${stats.totalRevenue.toLocaleString()}`, icon: DollarSign, color: 'text-emerald-600 bg-emerald-500/10' },
-                                            { label: 'نسبة إلغاء الحجوزات', value: `${stats.cancellationRate}%`, icon: XCircle, color: stats.cancellationRate > 15 ? 'text-rose-600 bg-rose-500/10' : 'text-amber-500 bg-amber-500/10' },
-                                            { label: 'المسافرين المسجلين', value: stats.activePassengers.toLocaleString(), icon: Users, color: 'text-violet-600 bg-violet-500/10' }
+                                            { 
+                                                label: statsPeriod === 'current_month' ? 'تذاكر الشهر الحالي' : 'إجمالي التذاكر المحجوزة', 
+                                                value: stats.totalTickets.toLocaleString(), 
+                                                icon: Ticket, 
+                                                color: 'text-blue-600 bg-blue-500/10' 
+                                            },
+                                            { 
+                                                label: statsPeriod === 'current_month' ? 'إيرادات الشهر الحالي' : 'إجمالي الإيرادات الفعلي', 
+                                                value: `$${stats.totalRevenue.toLocaleString()}`, 
+                                                icon: DollarSign, 
+                                                color: 'text-emerald-600 bg-emerald-500/10' 
+                                            },
+                                            { 
+                                                label: statsPeriod === 'current_month' ? 'نسبة إلغاء حجوزات الشهر' : 'نسبة إلغاء الحجوزات', 
+                                                value: `${stats.cancellationRate}%`, 
+                                                icon: XCircle, 
+                                                color: stats.cancellationRate > 15 ? 'text-rose-600 bg-rose-500/10' : 'text-amber-500 bg-amber-500/10' 
+                                            },
+                                            { 
+                                                label: statsPeriod === 'current_month' ? 'الركاب النشطين بالفترة' : 'المسافرين المسجلين', 
+                                                value: stats.activePassengers.toLocaleString(), 
+                                                icon: Users, 
+                                                color: 'text-violet-600 bg-violet-500/10' 
+                                            }
                                         ].map((stat, i) => (
                                             <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-6 shadow-sm flex items-center justify-between">
                                                 <div>

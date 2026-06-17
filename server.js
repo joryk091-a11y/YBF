@@ -229,18 +229,32 @@ app.delete('/api/admin/users/:id', async (req, res) => {
 
 // GET Admin Dashboard stats from database
 app.get('/api/admin/dashboard-stats', async (req, res) => {
+  const { period } = req.query; // 'current_month' or 'all'
+  const isCurrentMonth = period !== 'all'; // Default to current_month
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
 
+    // شروط تصفية التواريخ للشهر الحالي
+    const dateFilterBookings = isCurrentMonth ? "WHERE DATE_FORMAT(booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')" : "";
+    const dateFilterPayments = isCurrentMonth ? "AND DATE_FORMAT(payment_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')" : "";
+    const dateFilterBookingsAnd = isCurrentMonth ? "AND DATE_FORMAT(booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')" : "";
+    const dateFilterBookingsAndAlias = isCurrentMonth ? "AND DATE_FORMAT(b.booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')" : "";
+
     // 1. Total tickets (number of passenger tickets booked)
-    const [[{ totalTickets }]] = await connection.execute('SELECT COALESCE(SUM(total_passengers), 0) as totalTickets FROM bookings');
+    const [[{ totalTickets }]] = await connection.execute(
+      `SELECT COALESCE(SUM(total_passengers), 0) as totalTickets FROM bookings ${dateFilterBookings}`
+    );
 
     // 2. Total revenue (sum of amount of success payments)
-    const [[{ totalRevenue }]] = await connection.execute("SELECT COALESCE(SUM(amount), 0) as totalRevenue FROM payments WHERE payment_status = 'success'");
+    const [[{ totalRevenue }]] = await connection.execute(
+      `SELECT COALESCE(SUM(amount), 0) as totalRevenue FROM payments WHERE payment_status = 'success' ${dateFilterPayments}`
+    );
 
     // 3. Pending payments (bookings count with 'temporary' status)
-    const [[{ pendingPayments }]] = await connection.execute("SELECT COUNT(*) as pendingPayments FROM bookings WHERE status = 'temporary'");
+    const [[{ pendingPayments }]] = await connection.execute(
+      `SELECT COUNT(*) as pendingPayments FROM bookings WHERE status = 'temporary' ${dateFilterBookingsAnd}`
+    );
 
     // 4. Total users
     const [[{ totalUsers }]] = await connection.execute('SELECT COUNT(*) as totalUsers FROM users');
@@ -261,6 +275,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       SELECT f.airportDestination_code as destination, COALESCE(SUM(b.total_passengers), 0) as count 
       FROM bookings b
       JOIN flights f ON b.flight_id = f.id_flights
+      ${isCurrentMonth ? `WHERE DATE_FORMAT(b.booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')` : ""}
       GROUP BY f.airportDestination_code
       ORDER BY count DESC
       LIMIT 5
@@ -289,6 +304,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       SELECT f.airline_code as name, COUNT(b.id_bookings) as value
       FROM bookings b
       JOIN flights f ON b.flight_id = f.id_flights
+      ${isCurrentMonth ? `WHERE DATE_FORMAT(b.booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')` : ""}
       GROUP BY f.airline_code
     `);
 
@@ -297,20 +313,29 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       SELECT s.seat_class as name, COUNT(bp.id_bookings_passengers) as value
       FROM bookings_passengers bp
       JOIN seats s ON bp.seat_id = s.id_seats
+      JOIN bookings b ON bp.booking_id = b.id_bookings
+      ${isCurrentMonth ? `WHERE DATE_FORMAT(b.booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')` : ""}
       GROUP BY s.seat_class
     `);
 
     // 10. Active passengers
-    const [[{ activePassengers }]] = await connection.execute('SELECT COUNT(*) as activePassengers FROM passengers');
+    const [[{ activePassengers }]] = await connection.execute(
+      isCurrentMonth 
+        ? `SELECT COUNT(DISTINCT bp.passenger_id) as activePassengers FROM bookings_passengers bp JOIN bookings b ON bp.booking_id = b.id_bookings WHERE DATE_FORMAT(b.booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')`
+        : 'SELECT COUNT(*) as activePassengers FROM passengers'
+    );
 
     // 11. Cancellation Rate and Status Mapping
-    const [[{ totalBookings }]] = await connection.execute('SELECT COUNT(*) as totalBookings FROM bookings');
-    const [[{ canceledBookings }]] = await connection.execute("SELECT COUNT(*) as canceledBookings FROM bookings WHERE status = 'canceled'");
+    const [[{ totalBookings }]] = await connection.execute(`SELECT COUNT(*) as totalBookings FROM bookings ${dateFilterBookings}`);
+    const [[{ canceledBookings }]] = await connection.execute(
+      `SELECT COUNT(*) as canceledBookings FROM bookings WHERE status = 'canceled' ${dateFilterBookingsAnd}`
+    );
     const cancellationRate = totalBookings > 0 ? Number(((canceledBookings / totalBookings) * 100).toFixed(1)) : 0;
 
     const [statusStats] = await connection.execute(`
       SELECT status, COUNT(*) as count, COALESCE(SUM(final_price), 0) as amount 
       FROM bookings 
+      ${isCurrentMonth ? `WHERE DATE_FORMAT(booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')` : ""}
       GROUP BY status
     `);
 

@@ -1440,6 +1440,7 @@ const AdminDashboard = () => {
                                                     </div>
                                                     <div className="text-right text-xs text-slate-500 dark:text-slate-400 font-bold space-y-1 bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
                                                         <div>تاريخ التقرير: <span className="text-slate-900 dark:text-white font-black">{new Date().toLocaleString('ar-YE', { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
+                                                        <div>الفترة الزمنية للتقرير: <span className="text-blue-650 dark:text-blue-350 font-black">{statsPeriod === 'current_month' ? 'الشهر الحالي' : 'كل الأوقات (تراكمي)'}</span></div>
                                                         <div>المسؤول المصدر: <span className="text-slate-900 dark:text-white font-black">{adminEmail}</span></div>
                                                         <div>حالة النظام: <span className="text-emerald-500 font-black">متصل بقاعدة البيانات</span></div>
                                                     </div>
@@ -1449,7 +1450,7 @@ const AdminDashboard = () => {
                                                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
                                                     {/* 1. Revenue */}
                                                     <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">إجمالي المبيعات المؤكدة</p>
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{statsPeriod === 'current_month' ? 'إيرادات الشهر الحالي' : 'إجمالي المبيعات المؤكدة'}</p>
                                                         <h4 className="text-3xl font-black text-emerald-500">${stats.totalRevenue.toLocaleString()}</h4>
                                                         <p className="text-[11px] font-bold text-slate-500">
                                                             يعادل: <strong className="text-slate-700 dark:text-slate-350">{(stats.totalRevenue * Number(exchangeRate)).toLocaleString()} ريال يمني</strong>
@@ -1458,16 +1459,16 @@ const AdminDashboard = () => {
 
                                                     {/* 2. Tickets */}
                                                     <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">التذاكر المباعة والمصدرة</p>
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{statsPeriod === 'current_month' ? 'تذاكر الشهر الحالي' : 'التذاكر المباعة والمصدرة'}</p>
                                                         <h4 className="text-3xl font-black text-blue-500">{stats.totalTickets.toLocaleString()} تذكرة</h4>
                                                         <p className="text-[11px] font-bold text-slate-500">
-                                                            المسافرين المسجلين: <strong className="text-slate-700 dark:text-slate-350">{stats.activePassengers.toLocaleString()} مسافر</strong>
+                                                            {statsPeriod === 'current_month' ? 'الركاب النشطين بالفترة:' : 'المسافرين المسجلين:'} <strong className="text-slate-700 dark:text-slate-350">{stats.activePassengers.toLocaleString()} مسافر</strong>
                                                         </p>
                                                     </div>
 
                                                     {/* 3. Estimated profit */}
                                                     <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">صافي الأرباح المقدرة (عمولة {markupRate}%)</p>
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{statsPeriod === 'current_month' ? `أرباح الشهر الحالي (عمولة ${markupRate}%)` : `صافي الأرباح المقدرة (عمولة ${markupRate}%)`}</p>
                                                         <h4 className="text-3xl font-black text-indigo-500">${(stats.totalRevenue * (Number(markupRate) / 100)).toLocaleString()}</h4>
                                                         <p className="text-[11px] font-bold text-slate-500">
                                                             يعادل: <strong className="text-slate-700 dark:text-slate-350">{Math.round((stats.totalRevenue * (Number(markupRate) / 100)) * Number(exchangeRate)).toLocaleString()} ريال يمني</strong>
@@ -1483,7 +1484,7 @@ const AdminDashboard = () => {
 
                                                     {/* 5. Cancellation rate */}
                                                     <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">نسبة إلغاء الحجوزات</p>
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{statsPeriod === 'current_month' ? 'نسبة إلغاء حجوزات الشهر' : 'نسبة إلغاء الحجوزات'}</p>
                                                         <h4 className="text-2xl font-black text-rose-500">{stats.cancellationRate}%</h4>
                                                         <p className="text-[11px] font-bold text-slate-500">تحديث فوري من قاعدة البيانات</p>
                                                     </div>

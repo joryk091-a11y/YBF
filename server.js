@@ -748,6 +748,9 @@ app.post('/api/bookings', async (req, res) => {
   };
   const paymentMethod = methodMap[rawMethod] || 'credit_card';
 
+  const bookingStatus = (rawMethod === 'branch' || rawMethod === 'transfer') ? 'temporary' : 'certain';
+  const paymentStatus = (rawMethod === 'branch' || rawMethod === 'transfer') ? 'pending' : 'success';
+
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
@@ -756,7 +759,7 @@ app.post('/api/bookings', async (req, res) => {
     // 1. Create the booking record
     const [bookingResult] = await connection.execute(
       'INSERT INTO bookings (flight_id, booking_date, total_passengers, base_price, extra_total, final_price, status, booking_reference) VALUES (?, NOW(), ?, ?, ?, ?, ?, ?)',
-      [flightId, passengers.length, basePrice || (totalPrice / passengers.length), extrasTotal || 0, totalPrice, 'certain', reference]
+      [flightId, passengers.length, basePrice || (totalPrice / passengers.length), extrasTotal || 0, totalPrice, bookingStatus, reference]
     );
     const bookingId = bookingResult.insertId;
 
@@ -817,7 +820,7 @@ app.post('/api/bookings', async (req, res) => {
     // 5. Create payment record
     await connection.execute(
       'INSERT INTO payments (booking_id, amount, payment_method, payment_status, payment_date) VALUES (?, ?, ?, ?, NOW())',
-      [bookingId, totalPrice, paymentMethod, 'success']
+      [bookingId, totalPrice, paymentMethod, paymentStatus]
     );
 
     // 6. Create booking notification linked to user_id and passenger_id

@@ -23,7 +23,6 @@ import AdminLogin from './pages/AdminLogin.jsx'
 import { SearchProvider } from './utils/SearchContext.jsx'
 import { ThemeProvider } from './utils/ThemeContext.jsx'
 import { AuthProvider } from './utils/AuthContext.jsx'
-import MockAuthPanel from './components/MockAuthPanel.jsx'
 
 // مكون حماية مسار الشركات
 const CompanyProtectedRoute = ({ children }) => {
@@ -79,7 +78,7 @@ function App() {
         <SearchProvider>
           <BrowserRouter>
             <ScrollToTop />
-            {showMockAuth && <MockAuthPanel />}
+
             <Routes>
               {/* ===== مسار تسجيل دخول المدير (عام) ===== */}
               <Route path="/admin/login" element={<AdminLogin />} />

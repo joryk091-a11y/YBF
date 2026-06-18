@@ -3,8 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Lock, Mail, Eye, EyeOff, ShieldAlert, ArrowLeft, Shield, CheckCircle } from 'lucide-react';
 
 const AdminLogin = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [email, setEmail] = useState('admin@gmail.com');
+    const [password, setPassword] = useState('ADMIN123');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);

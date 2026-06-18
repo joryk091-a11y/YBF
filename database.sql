@@ -35,8 +35,7 @@ CREATE TABLE `companies` (
 LOCK TABLES `companies` WRITE;
 /*!40000 ALTER TABLE `companies` DISABLE KEYS */;
 INSERT INTO `companies` (`id_company`, `company_name`, `airline_code`) VALUES 
-(1, 'اليمنية', 'IY'),
-(2, 'القطيبي', 'DH');
+(1, 'اليمنية', 'IY');
 /*!40000 ALTER TABLE `companies` ENABLE KEYS */;
 UNLOCK TABLES;
 

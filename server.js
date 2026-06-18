@@ -1031,12 +1031,21 @@ app.put('/api/admin/companies/:id', async (req, res) => {
     }
 
     // 2. Update admin account
-    await connection.execute(
-      `UPDATE admins 
-       SET email = ?, password = ?, airline_code = ?, employee_id = ?, department = ? 
-       WHERE id_admin = ? AND role = 'company'`,
-      [email, password, airline_code || null, employee_id || null, department || null, id]
-    );
+    if (password && password.trim() !== '') {
+      await connection.execute(
+        `UPDATE admins 
+         SET email = ?, password = ?, airline_code = ?, employee_id = ?, department = ? 
+         WHERE id_admin = ? AND role = 'company'`,
+        [email, password, airline_code || null, employee_id || null, department || null, id]
+      );
+    } else {
+      await connection.execute(
+        `UPDATE admins 
+         SET email = ?, airline_code = ?, employee_id = ?, department = ? 
+         WHERE id_admin = ? AND role = 'company'`,
+        [email, airline_code || null, employee_id || null, department || null, id]
+      );
+    }
 
     res.json({ success: true });
   } catch (error) {

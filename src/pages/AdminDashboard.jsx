@@ -301,8 +301,6 @@ const AdminDashboard = () => {
                 fetchBookings();
                 fetchDashboardStats();
                 fetchFlights();
-            } else if (activeTab === 'statistics') {
-                fetchDashboardStats();
             } else if (activeTab === 'users') {
                 fetchUsers();
             } else if (activeTab === 'companies') {
@@ -325,7 +323,7 @@ const AdminDashboard = () => {
     // Auto-refresh database data every 20 seconds for real-time reporting
     useEffect(() => {
         const interval = setInterval(() => {
-            if (activeTab === 'dashboard' || activeTab === 'statistics' || activeTab === 'reports') {
+            if (activeTab === 'dashboard' || activeTab === 'reports') {
                 fetchDashboardStats();
             }
             if (activeTab === 'reports') {
@@ -563,7 +561,6 @@ const AdminDashboard = () => {
                             { id: 'users', label: 'إدارة المستخدمين', icon: Users },
                             { id: 'companies', label: 'إدارة الشركات', icon: Building2 },
                             { id: 'reports', label: 'التقارير المالية', icon: BookOpen },
-                            { id: 'statistics', label: 'الإحصائيات المتقدمة', icon: BarChart3 },
                             { id: 'settings', label: 'إعدادات النظام', icon: Settings },
                         ].map((item) => {
                             const IconComp = item.icon;
@@ -631,7 +628,6 @@ const AdminDashboard = () => {
                             {activeTab === 'users' && 'إدارة مستخدمي النظام'}
                             {activeTab === 'companies' && 'إدارة شركات الطيران'}
                             {activeTab === 'reports' && 'تقارير حركة الطيران والمبيعات'}
-                            {activeTab === 'statistics' && 'تحليلات الأداء المتقدمة'}
                             {activeTab === 'settings' && 'إعدادات النظام والعمولة'}
                         </h2>
                     </div>
@@ -1601,216 +1597,7 @@ const AdminDashboard = () => {
                                 </div>
                             )}
 
-                            {/* ======================================================== */}
-                            {/* ===== VIEW: STATISTICS ===== */}
-                            {activeTab === 'statistics' && (
-                                <div className="space-y-8">
-                                    <div>
-                                        <h3 className="text-lg font-black">التحليلات والمبيعات المتقدمة</h3>
-                                        <p className="text-xs text-slate-400 font-bold mt-1">تحليل مفصل للوجهات والدرجات وحصص المبيعات بناءً على قاعدة البيانات</p>
-                                    </div>
 
-                                    {/* Stats KPI Cards */}
-                                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                                        {[
-                                            { label: statsPeriod === 'current_month' ? 'تذاكر الشهر الحالي' : 'تذاكر السنة الحالية', value: stats.totalTickets.toLocaleString(), icon: Ticket, color: 'text-blue-600 bg-blue-500/10' },
-                                            { label: statsPeriod === 'current_month' ? 'إيرادات الشهر الحالي' : 'إيرادات السنة الحالية', value: `$${stats.totalRevenue.toLocaleString()}`, icon: DollarSign, color: 'text-emerald-600 bg-emerald-500/10' },
-                                            { label: statsPeriod === 'current_month' ? 'نسبة إلغاء حجوزات الشهر' : 'نسبة إلغاء حجوزات السنة', value: `${stats.cancellationRate}%`, icon: XCircle, color: stats.cancellationRate > 15 ? 'text-rose-600 bg-rose-500/10' : 'text-amber-500 bg-amber-500/10' },
-                                            { label: statsPeriod === 'current_month' ? 'الركاب النشطين بالفترة' : 'الركاب النشطين بالسنة', value: stats.activePassengers.toLocaleString(), icon: Users, color: 'text-violet-600 bg-violet-500/10' }
-                                        ].map((stat, i) => (
-                                            <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-6 shadow-sm flex items-center justify-between">
-                                                <div>
-                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
-                                                    <h4 className="text-2xl font-black mt-2 tracking-tight">{stat.value}</h4>
-                                                </div>
-                                                <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${stat.color}`}>
-                                                    <stat.icon size={24} />
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                        
-                                        {/* Chart 1: Destinations */}
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
-                                            <h4 className="text-sm font-black mb-6">الوجهات الأكثر طلباً</h4>
-                                            <div className="h-64 w-full">
-                                                <ResponsiveContainer width="100%" height="100%">
-                                                    <BarChart data={stats.destinationsStats.length > 0 ? stats.destinationsStats.map(item => ({ ...item, destination: getDestinationName(item.destination).split(' ')[0] })) : [
-                                                        { destination: 'القاهرة', count: 45 },
-                                                        { destination: 'دبي', count: 38 },
-                                                        { destination: 'الرياض', count: 52 },
-                                                        { destination: 'جدة', count: 30 },
-                                                        { destination: 'عمان', count: 25 }
-                                                    ]} layout="vertical">
-                                                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" opacity={0.3} />
-                                                        <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold' }} />
-                                                        <YAxis type="category" dataKey="destination" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold' }} />
-                                                        <Tooltip />
-                                                        <Bar dataKey="count" fill="#3b82f6" radius={[0, 8, 8, 0]} barSize={20} name="عدد الحجوزات" />
-                                                    </BarChart>
-                                                </ResponsiveContainer>
-                                            </div>
-                                        </div>
-
-                                        {/* Chart 2: Seat Classes */}
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm flex flex-col justify-between">
-                                            <h4 className="text-sm font-black mb-6">توزيع فئات درجات السفر</h4>
-                                            <div className="h-56 w-full relative flex items-center justify-center">
-                                                <ResponsiveContainer width="100%" height="100%">
-                                                    <PieChart>
-                                                        <Pie
-                                                            data={stats.classStats.length > 0 ? stats.classStats.map(c => ({
-                                                                ...c,
-                                                                name: c.name === 'economy' ? 'الدرجة الاقتصادية' : c.name === 'business' ? 'درجة الأعمال' : c.name === 'first' ? 'الدرجة الأولى' : c.name
-                                                            })) : [
-                                                                { name: 'الدرجة الاقتصادية', value: 70 },
-                                                                { name: 'درجة الأعمال', value: 20 },
-                                                                { name: 'الدرجة الأولى', value: 10 }
-                                                            ]}
-                                                            cx="50%"
-                                                            cy="50%"
-                                                            innerRadius={65}
-                                                            outerRadius={85}
-                                                            paddingAngle={5}
-                                                            dataKey="value"
-                                                            stroke="none"
-                                                        >
-                                                            {(stats.classStats.length > 0 ? stats.classStats : [1, 2, 3]).map((entry, index) => (
-                                                                <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
-                                                            ))}
-                                                        </Pie>
-                                                        <Tooltip />
-                                                    </PieChart>
-                                                </ResponsiveContainer>
-                                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">توزيع الحجوزات</span>
-                                                    <span className="text-lg font-black mt-1">
-                                                        {stats.classStats.reduce((acc, curr) => acc + curr.value, 0) || stats.totalTickets}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            {/* Labels list */}
-                                            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 justify-center text-[10px] font-black">
-                                                {(stats.classStats.length > 0 ? stats.classStats : [
-                                                    { name: 'economy', value: 70 },
-                                                    { name: 'business', value: 20 },
-                                                    { name: 'first', value: 10 }
-                                                ]).map((item, idx) => (
-                                                    <div key={idx} className="flex items-center gap-1.5">
-                                                        <div className="h-2 w-2 rounded-full" style={{ backgroundColor: chartColors[idx % chartColors.length] }} />
-                                                        <span className="capitalize text-slate-700 dark:text-slate-200">
-                                                            {item.name === 'economy' && 'الاقتصادية'}
-                                                            {item.name === 'business' && 'الأعمال'}
-                                                            {item.name === 'first' && 'الأولى'}
-                                                            {item.name !== 'economy' && item.name !== 'business' && item.name !== 'first' && item.name}
-                                                        </span>
-                                                        <span className="text-slate-400">({item.value} حجز)</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        {/* Chart 3: Monthly Sales performance */}
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
-                                            <h4 className="text-sm font-black mb-6">حركة المبيعات والإيرادات الشهرية</h4>
-                                            <div className="h-64 w-full">
-                                                <ResponsiveContainer width="100%" height="100%">
-                                                    <AreaChart data={stats.monthlySales.length > 0 ? stats.monthlySales : [
-                                                        { month: '2026-01', sales: 12000 },
-                                                        { month: '2026-02', sales: 19000 },
-                                                        { month: '2026-03', sales: 15000 },
-                                                        { month: '2026-04', sales: 27000 },
-                                                        { month: '2026-05', sales: 22000 },
-                                                        { month: '2026-06', sales: 34000 }
-                                                    ]}>
-                                                        <defs>
-                                                            <linearGradient id="colorSalesStats" x1="0" y1="0" x2="0" y2="1">
-                                                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                                                                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                                                            </linearGradient>
-                                                        </defs>
-                                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" opacity={0.3} />
-                                                        <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold' }} />
-                                                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold' }} />
-                                                        <Tooltip />
-                                                        <Area type="monotone" dataKey="sales" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorSalesStats)" name="المبيعات ($)" />
-                                                    </AreaChart>
-                                                </ResponsiveContainer>
-                                            </div>
-                                        </div>
-
-                                        {/* Chart 4: Airline Share */}
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm flex flex-col justify-between">
-                                            <h4 className="text-sm font-black mb-6">مبيعات شركات الطيران وحصصها</h4>
-                                            <div className="h-56 w-full relative flex items-center justify-center">
-                                                <ResponsiveContainer width="100%" height="100%">
-                                                    <PieChart>
-                                                        <Pie
-                                                            data={stats.airlineStats.length > 0 ? stats.airlineStats.map(item => ({ ...item, name: getAirlineName(item.name).split(' ')[0] })) : [
-                                                                { name: 'الخطوط اليمنية', value: 4 },
-                                                                { name: 'الخطوط القطرية', value: 2 },
-                                                                { name: 'طيران الإمارات', value: 3 }
-                                                            ]}
-                                                            cx="50%"
-                                                            cy="50%"
-                                                            innerRadius={65}
-                                                            outerRadius={85}
-                                                            paddingAngle={5}
-                                                            dataKey="value"
-                                                            stroke="none"
-                                                        >
-                                                            {(stats.airlineStats.length > 0 ? stats.airlineStats : [1, 2, 3]).map((entry, index) => (
-                                                                <Cell key={`cell-${index}`} fill={chartColors[(index + 1) % chartColors.length]} />
-                                                            ))}
-                                                        </Pie>
-                                                        <Tooltip />
-                                                    </PieChart>
-                                                </ResponsiveContainer>
-                                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">إجمالي الحصص</span>
-                                                    <span className="text-lg font-black mt-1">
-                                                        {stats.airlineStats.reduce((acc, curr) => acc + curr.value, 0) || stats.totalTickets}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            {/* Labels list */}
-                                            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 justify-center text-[10px] font-black">
-                                                {stats.airlineStats.map((item, idx) => (
-                                                    <div key={idx} className="flex items-center gap-1.5">
-                                                        <div className="h-2 w-2 rounded-full" style={{ backgroundColor: chartColors[(idx + 1) % chartColors.length] }} />
-                                                        <span className="text-slate-700 dark:text-slate-200">{getAirlineName(item.name)}:</span>
-                                                        <span className="text-slate-400">({item.value} حجز)</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                    </div>
-
-                                    {/* Chart 5: Aircraft Price Averages */}
-                                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
-                                        <h4 className="text-sm font-black mb-6">متوسط أسعار التذاكر لكل طراز طائرة</h4>
-                                        <div className="h-72 w-full">
-                                            <ResponsiveContainer width="100%" height="100%">
-                                                <BarChart data={stats.aircraftStats.length > 0 ? stats.aircraftStats : [
-                                                    { name: 'Boeing 787', price: 548 },
-                                                    { name: 'Airbus A350', price: 620 },
-                                                    { name: 'Boeing 777', price: 480 }
-                                                ]}>
-                                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" opacity={0.3} />
-                                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold' }} />
-                                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold' }} />
-                                                    <Tooltip />
-                                                    <Bar dataKey="price" fill="#6366f1" radius={[8, 8, 0, 0]} barSize={40} name="متوسط السعر ($)" />
-                                                </BarChart>
-                                            </ResponsiveContainer>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            )}
 
                             {/* ======================================================== */}
                             {/* ===== VIEW: SETTINGS ===== */}

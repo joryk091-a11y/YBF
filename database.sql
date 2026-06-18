@@ -16,6 +16,19 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
+-- Table structure for table `companies`
+--
+
+DROP TABLE IF EXISTS `companies`;
+CREATE TABLE `companies` (
+  `id_company` int NOT NULL AUTO_INCREMENT,
+  `company_name` varchar(100) NOT NULL,
+  `airline_code` varchar(10) NOT NULL,
+  PRIMARY KEY (`id_company`),
+  UNIQUE KEY `airline_code_UNIQUE` (`airline_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
 -- Table structure for table `admins`
 --
 
@@ -24,14 +37,18 @@ DROP TABLE IF EXISTS `admins`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `admins` (
   `id_admin` int NOT NULL,
-  `email` varchar(50) NOT NULL,
-  `password` varchar(50) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `role` enum('admin','company') DEFAULT 'company',
+  `airline_code` varchar(10) DEFAULT NULL,
   `employee_id` varchar(50) DEFAULT NULL,
   `department` varchar(45) DEFAULT NULL,
   `last_login` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id_admin`),
-  UNIQUE KEY `employee_id_UNIQUE` (`employee_id`)
+  UNIQUE KEY `employee_id_UNIQUE` (`employee_id`),
+  KEY `airline_code_idx` (`airline_code`),
+  CONSTRAINT `fk_admins_companies` FOREIGN KEY (`airline_code`) REFERENCES `companies` (`airline_code`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -160,7 +177,9 @@ CREATE TABLE `flights` (
   `status` enum('active','cancelled','copmleted') DEFAULT NULL,
   `created_at` timestamp(3) NULL DEFAULT NULL,
   `update` timestamp(3) NULL DEFAULT NULL,
-  PRIMARY KEY (`id_flights`)
+  PRIMARY KEY (`id_flights`),
+  KEY `airline_code_idx` (`airline_code`),
+  CONSTRAINT `fk_flights_companies` FOREIGN KEY (`airline_code`) REFERENCES `companies` (`airline_code`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

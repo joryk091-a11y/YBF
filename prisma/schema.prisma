@@ -28,6 +28,7 @@ model Admin {
   last_login   DateTime?   @db.Timestamp(0)
   created_at   DateTime?   @default(now()) @db.Timestamp(0)
   flights_logs FlightLog[]
+  company      Company?    @relation(fields: [airline_code], references: [airline_code])
 
   @@map("admins")
 }
@@ -109,6 +110,7 @@ model Flight {
   bookings                Booking[]
   flights_logs            FlightLog[]
   seats                   Seat[]
+  company                 Company?      @relation(fields: [airline_code], references: [airline_code])
 
   @@map("flights")
 }
@@ -262,4 +264,14 @@ enum SeatClass {
   economy
   business @map(" business")
   first
+}
+
+model Company {
+  id_company   Int      @id @default(autoincrement())
+  company_name String   @db.VarChar(100)
+  airline_code String   @unique @db.VarChar(10)
+  admins       Admin[]
+  flights      Flight[]
+
+  @@map("companies")
 }

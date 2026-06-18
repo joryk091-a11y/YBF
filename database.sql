@@ -58,6 +58,7 @@ CREATE TABLE `admins` (
 
 LOCK TABLES `admins` WRITE;
 /*!40000 ALTER TABLE `admins` DISABLE KEYS */;
+INSERT INTO `admins` (`id_admin`, `email`, `password`, `role`, `airline_code`, `employee_id`, `department`, `last_login`, `created_at`) VALUES (1, 'admin@gmail.com', 'ADMIN123', 'admin', NULL, '1', 'قسم الادارة', NULL, CURRENT_TIMESTAMP);
 /*!40000 ALTER TABLE `admins` ENABLE KEYS */;
 UNLOCK TABLES;
 

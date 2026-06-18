@@ -56,7 +56,6 @@ CREATE TABLE `admins` (
   `last_login` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id_admin`),
-  UNIQUE KEY `employee_id_UNIQUE` (`employee_id`),
   KEY `airline_code_idx` (`airline_code`),
   CONSTRAINT `fk_admins_companies` FOREIGN KEY (`airline_code`) REFERENCES `companies` (`airline_code`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -68,7 +67,9 @@ CREATE TABLE `admins` (
 
 LOCK TABLES `admins` WRITE;
 /*!40000 ALTER TABLE `admins` DISABLE KEYS */;
-INSERT INTO `admins` (`id_admin`, `email`, `password`, `role`, `airline_code`, `employee_id`, `department`, `last_login`, `created_at`) VALUES (1, 'admin@gmail.com', 'ADMIN123', 'admin', NULL, '1', 'قسم الادارة', NULL, CURRENT_TIMESTAMP);
+INSERT INTO `admins` (`id_admin`, `email`, `password`, `role`, `airline_code`, `employee_id`, `department`, `last_login`, `created_at`) VALUES 
+(1, 'admin@gmail.com', 'ADMIN123', 'admin', NULL, '1', 'قسم الادارة', NULL, CURRENT_TIMESTAMP),
+(2, 'yemenia@gmail.com', 'YEMENIA123', 'company', 'IY', '1', 'قسم اضافة الرحلات', NULL, CURRENT_TIMESTAMP);
 /*!40000 ALTER TABLE `admins` ENABLE KEYS */;
 UNLOCK TABLES;
 

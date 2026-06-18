@@ -57,9 +57,12 @@ const AdminDashboard = () => {
     const [isEditingCompany, setIsEditingCompany] = useState(false);
     const [companyForm, setCompanyForm] = useState({
         id_admin: null,
+        company_name: '',
+        airline_code: '',
         email: '',
         password: '',
-        airline_code: 'IY'
+        employee_id: '',
+        department: ''
     });
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
     const [isEditingUser, setIsEditingUser] = useState(false);
@@ -199,7 +202,10 @@ const AdminDashboard = () => {
                 body: JSON.stringify({
                     email: companyForm.email,
                     password: companyForm.password,
-                    airline_code: companyForm.airline_code
+                    airline_code: companyForm.airline_code,
+                    company_name: companyForm.company_name,
+                    employee_id: companyForm.employee_id,
+                    department: companyForm.department
                 })
             });
             const data = await res.json();
@@ -208,9 +214,12 @@ const AdminDashboard = () => {
                 setIsCompanyModalOpen(false);
                 setCompanyForm({
                     id_admin: null,
+                    company_name: '',
+                    airline_code: '',
                     email: '',
                     password: '',
-                    airline_code: 'IY'
+                    employee_id: '',
+                    department: ''
                 });
                 fetchCompanies();
             } else {
@@ -232,7 +241,10 @@ const AdminDashboard = () => {
                 body: JSON.stringify({
                     email: companyForm.email,
                     password: companyForm.password,
-                    airline_code: companyForm.airline_code
+                    airline_code: companyForm.airline_code,
+                    company_name: companyForm.company_name,
+                    employee_id: companyForm.employee_id,
+                    department: companyForm.department
                 })
             });
             const data = await res.json();
@@ -241,9 +253,12 @@ const AdminDashboard = () => {
                 setIsCompanyModalOpen(false);
                 setCompanyForm({
                     id_admin: null,
+                    company_name: '',
+                    airline_code: '',
                     email: '',
                     password: '',
-                    airline_code: 'IY'
+                    employee_id: '',
+                    department: ''
                 });
                 fetchCompanies();
             } else {
@@ -458,7 +473,8 @@ const AdminDashboard = () => {
             'QA': 'القطرية (QA)',
             'EK': 'الإماراتية (EK)',
             'WY': 'العمانية (WY)',
-            'GF': 'الخليج (GF)'
+            'GF': 'الخليج (GF)',
+            'DH': 'القطيبي (DH)'
         };
         return airlines[code] || code || 'غير معروف';
     };
@@ -2041,9 +2057,12 @@ const AdminDashboard = () => {
                                                     setIsEditingCompany(false);
                                                     setCompanyForm({
                                                         id_admin: null,
+                                                        company_name: '',
+                                                        airline_code: '',
                                                         email: '',
                                                         password: '',
-                                                        airline_code: 'IY'
+                                                        employee_id: '',
+                                                        department: ''
                                                     });
                                                     setIsCompanyModalOpen(true);
                                                 }}
@@ -2159,43 +2178,82 @@ const AdminDashboard = () => {
                         </div>
 
                         <form onSubmit={isEditingCompany ? handleUpdateCompany : handleCreateCompany} className="space-y-4">
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-black text-slate-400">البريد الإلكتروني للشركة</label>
-                                <input
-                                    type="email"
-                                    placeholder="example@airline.com"
-                                    value={companyForm.email}
-                                    onChange={(e) => setCompanyForm({ ...companyForm, email: e.target.value })}
-                                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
-                                    required
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-black text-slate-400">اسم الشركة</label>
+                                    <input
+                                        type="text"
+                                        placeholder="مثال: اليمنية، القطيبي"
+                                        value={companyForm.company_name}
+                                        onChange={(e) => setCompanyForm({ ...companyForm, company_name: e.target.value })}
+                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none text-slate-800 dark:text-slate-100"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-black text-slate-400">رمز الطيران (airline_code)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="مثال: IY, DH"
+                                        value={companyForm.airline_code}
+                                        onChange={(e) => setCompanyForm({ ...companyForm, airline_code: e.target.value.toUpperCase() })}
+                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none text-slate-800 dark:text-slate-100"
+                                        required
+                                    />
+                                </div>
                             </div>
 
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-black text-slate-400">كلمة المرور</label>
-                                <input
-                                    type="password"
-                                    placeholder={isEditingCompany ? 'اتركها فارغة إذا لم تكن تريد تغييرها' : 'كلمة المرور'}
-                                    value={companyForm.password}
-                                    onChange={(e) => setCompanyForm({ ...companyForm, password: e.target.value })}
-                                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
-                                    required={!isEditingCompany}
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-black text-slate-400">البريد الإلكتروني للشركة</label>
+                                    <input
+                                        type="email"
+                                        placeholder="example@gmail.com"
+                                        value={companyForm.email}
+                                        onChange={(e) => setCompanyForm({ ...companyForm, email: e.target.value })}
+                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none text-slate-800 dark:text-slate-100"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-black text-slate-400">كلمة المرور</label>
+                                    <input
+                                        type="password"
+                                        placeholder={isEditingCompany ? 'اتركها فارغة للمحافظة عليها' : 'كلمة المرور'}
+                                        value={companyForm.password}
+                                        onChange={(e) => setCompanyForm({ ...companyForm, password: e.target.value })}
+                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none text-slate-800 dark:text-slate-100"
+                                        required={!isEditingCompany}
+                                    />
+                                </div>
                             </div>
 
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-black text-slate-400">شركة الطيران المرتبطة</label>
-                                <select
-                                    value={companyForm.airline_code}
-                                    onChange={(e) => setCompanyForm({ ...companyForm, airline_code: e.target.value })}
-                                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
-                                >
-                                    <option value="IY">الخطوط اليمنية (IY)</option>
-                                    <option value="QA">الخطوط القطرية (QA)</option>
-                                    <option value="EK">طيران الإمارات (EK)</option>
-                                    <option value="WY">الطيران العماني (WY)</option>
-                                    <option value="GF">طيران الخليج (GF)</option>
-                                </select>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-black text-slate-400">رقم الموظف (employee_id)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="مثال: 1"
+                                        value={companyForm.employee_id}
+                                        onChange={(e) => setCompanyForm({ ...companyForm, employee_id: e.target.value })}
+                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none text-slate-800 dark:text-slate-100"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-black text-slate-400">القسم (department)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="مثال: قسم اضافة الرحلات"
+                                        value={companyForm.department}
+                                        onChange={(e) => setCompanyForm({ ...companyForm, department: e.target.value })}
+                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none text-slate-800 dark:text-slate-100"
+                                        required
+                                    />
+                                </div>
                             </div>
 
                             <div className="pt-4 flex justify-end gap-3">

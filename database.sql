@@ -48,7 +48,7 @@ DROP TABLE IF EXISTS `admins`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `admins` (
-  `id_admin` int NOT NULL,
+  `id_admin` int NOT NULL AUTO_INCREMENT,
   `email` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
   `role` enum('admin','company') DEFAULT 'company',

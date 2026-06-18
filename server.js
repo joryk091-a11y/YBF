@@ -934,13 +934,27 @@ app.delete('/api/notifications/:id', async (req, res) => {
 
 // --- COMPANY MANAGEMENT ENDPOINTS ---
 
-// Get all companies (admins with role = 'company')
+// Get all companies (admins with role = 'company' joined with companies table)
 app.get('/api/admin/companies', async (req, res) => {
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
     const [rows] = await connection.execute(
-      "SELECT id_admin, email, password, role, airline_code, last_login, created_at FROM admins WHERE role = 'company' ORDER BY created_at DESC"
+      `SELECT 
+         a.id_admin, 
+         a.email, 
+         a.password, 
+         a.role, 
+         a.airline_code, 
+         a.employee_id,
+         a.department,
+         a.last_login, 
+         a.created_at,
+         c.company_name
+       FROM admins a
+       LEFT JOIN companies c ON a.airline_code = c.airline_code
+       WHERE a.role = 'company' 
+       ORDER BY a.created_at DESC`
     );
     res.json({ success: true, companies: rows });
   } catch (error) {
@@ -952,7 +966,7 @@ app.get('/api/admin/companies', async (req, res) => {
 
 // Create a new company
 app.post('/api/admin/companies', async (req, res) => {
-  const { email, password, airline_code } = req.body;
+  const { email, password, airline_code, company_name, employee_id, department } = req.body;
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
@@ -963,13 +977,25 @@ app.post('/api/admin/companies', async (req, res) => {
       return res.status(400).json({ success: false, error: 'البريد الإلكتروني مسجل بالفعل' });
     }
 
-    // Get next auto-increment id
+    // 1. Insert or update company in companies table
+    if (airline_code && company_name) {
+      await connection.execute(
+        `INSERT INTO companies (company_name, airline_code) 
+         VALUES (?, ?) 
+         ON DUPLICATE KEY UPDATE company_name = VALUES(company_name)`,
+        [company_name, airline_code]
+      );
+    }
+
+    // 2. Get next auto-increment id
     const [maxIdRows] = await connection.execute('SELECT COALESCE(MAX(id_admin), 0) + 1 as nextId FROM admins');
     const nextId = maxIdRows[0].nextId;
 
+    // 3. Insert admin account
     await connection.execute(
-      "INSERT INTO admins (id_admin, email, password, role, airline_code, created_at) VALUES (?, ?, ?, 'company', ?, NOW())",
-      [nextId, email, password, airline_code]
+      `INSERT INTO admins (id_admin, email, password, role, airline_code, employee_id, department, created_at) 
+       VALUES (?, ?, ?, 'company', ?, ?, ?, NOW())`,
+      [nextId, email, password, airline_code || null, employee_id || null, department || null]
     );
 
     res.status(201).json({ success: true, companyId: nextId });
@@ -983,7 +1009,7 @@ app.post('/api/admin/companies', async (req, res) => {
 // Update a company
 app.put('/api/admin/companies/:id', async (req, res) => {
   const { id } = req.params;
-  const { email, password, airline_code } = req.body;
+  const { email, password, airline_code, company_name, employee_id, department } = req.body;
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
@@ -994,9 +1020,22 @@ app.put('/api/admin/companies/:id', async (req, res) => {
       return res.status(400).json({ success: false, error: 'البريد الإلكتروني مسجل بمستخدم آخر' });
     }
 
+    // 1. Insert or update company if provided
+    if (airline_code && company_name) {
+      await connection.execute(
+        `INSERT INTO companies (company_name, airline_code) 
+         VALUES (?, ?) 
+         ON DUPLICATE KEY UPDATE company_name = VALUES(company_name)`,
+        [company_name, airline_code]
+      );
+    }
+
+    // 2. Update admin account
     await connection.execute(
-      "UPDATE admins SET email = ?, password = ?, airline_code = ? WHERE id_admin = ? AND role = 'company'",
-      [email, password, airline_code, id]
+      `UPDATE admins 
+       SET email = ?, password = ?, airline_code = ?, employee_id = ?, department = ? 
+       WHERE id_admin = ? AND role = 'company'`,
+      [email, password, airline_code || null, employee_id || null, department || null, id]
     );
 
     res.json({ success: true });

@@ -708,23 +708,23 @@ async function searchFlightsHandler(req, res) {
     connection = await mysql.createConnection(getDbConfig());
 
     console.log(`Search Request: from=${fromCode}, to=${toCode}, date=${date}`);
-    let query = 'SELECT * FROM flights WHERE 1=1';
+    let query = 'SELECT f.*, c.company_name AS airline_name FROM flights f LEFT JOIN companies c ON f.airline_code = c.airline_code WHERE 1=1';
     const params = [];
 
     if (fromCode) {
-      query += ' AND airportOrigin_code = ?';
+      query += ' AND f.airportOrigin_code = ?';
       params.push(fromCode);
     }
     if (toCode) {
-      query += ' AND airportDestination_code = ?';
+      query += ' AND f.airportDestination_code = ?';
       params.push(toCode);
     }
     if (date && date !== 'undefined' && date !== 'null' && date.trim() !== '') {
-      query += ' AND DATE(departure_time) = ?';
+      query += ' AND DATE(f.departure_time) = ?';
       params.push(date);
     }
 
-    query += ' ORDER BY departure_time ASC';
+    query += ' ORDER BY f.departure_time ASC';
 
     const [rows] = await connection.execute(query, params);
     res.json({ success: true, flights: rows });

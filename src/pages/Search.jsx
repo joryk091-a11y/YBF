@@ -80,12 +80,12 @@ function SearchPage() {
             const airlineInfo = airlinePanelItems.find(a =>
               (airlineCode === 'IY' || airlineCode === 'YEMENIA') && a.id === 'yemenia' ||
               (airlineCode === 'BS' || airlineCode === 'BALQIS' || airlineCode === 'SB') && a.id === 'balqis' ||
-              (airlineCode === 'QY' || airlineCode === 'ADEN') && a.id === 'aden'
+              (airlineCode === 'QY' || airlineCode === 'ADEN' || airlineCode === 'DH' || airlineCode === 'QTB') && a.id === 'aden'
             ) || { name: 'طيران', logo: logoY, id: 'other' };
 
             // Ensure airlineInfo.id is in selectedAirlines or fallback to yemenia for test
             const flightAirlineId = airlineInfo.id === 'other' ? 'yemenia' : airlineInfo.id;
-            const flightAirlineName = airlineInfo.id === 'other' ? 'طيران' : airlineInfo.name;
+            const flightAirlineName = f.airline_name || (airlineInfo.id === 'other' ? 'طيران' : airlineInfo.name);
             const flightLogo = airlineInfo.id === 'other' ? logoY : airlineInfo.logo;
 
             const dep = new Date(f.departure_time);

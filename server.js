@@ -707,8 +707,23 @@ async function searchFlightsHandler(req, res) {
   try {
     connection = await mysql.createConnection(getDbConfig());
 
+    // 1. Auto-update: Set past active flights to cancelled
+    try {
+      await connection.execute(
+        "UPDATE flights SET status = 'cancelled' WHERE departure_time < NOW() AND status != 'cancelled'"
+      );
+    } catch (updateErr) {
+      console.error('Error auto-cancelling past flights:', updateErr);
+    }
+
     console.log(`Search Request: from=${fromCode}, to=${toCode}, date=${date}`);
-    let query = 'SELECT f.*, c.company_name AS airline_name FROM flights f LEFT JOIN companies c ON f.airline_code = c.airline_code WHERE 1=1';
+    // 2. Fetch only active and future flights
+    let query = `
+      SELECT f.*, c.company_name AS airline_name 
+      FROM flights f 
+      LEFT JOIN companies c ON f.airline_code = c.airline_code 
+      WHERE f.status = 'active' AND f.departure_time >= NOW()
+    `;
     const params = [];
 
     if (fromCode) {

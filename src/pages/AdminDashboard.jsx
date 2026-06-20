@@ -29,6 +29,7 @@ const AdminDashboard = () => {
     });
     const [loading, setLoading] = useState(true);
     const [salesChartPeriod, setSalesChartPeriod] = useState('monthly'); // 'daily' or 'monthly'
+    const [statsPeriod, setStatsPeriod] = useState('current_month'); // 'current_month' or 'current_year'
     const [stats, setStats] = useState({
         totalTickets: 0,
         totalRevenue: 0,
@@ -55,9 +56,12 @@ const AdminDashboard = () => {
     const [isEditingCompany, setIsEditingCompany] = useState(false);
     const [companyForm, setCompanyForm] = useState({
         id_admin: null,
+        company_name: '',
+        airline_code: '',
         email: '',
         password: '',
-        airline_code: 'IY'
+        employee_id: '',
+        department: ''
     });
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
     const [isEditingUser, setIsEditingUser] = useState(false);
@@ -69,23 +73,13 @@ const AdminDashboard = () => {
         password: ''
     });
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedFlightDate, setSelectedFlightDate] = useState('');
+    const [selectedLogsDate, setSelectedLogsDate] = useState('');
+    const [selectedReportDate, setSelectedReportDate] = useState('');
     const [loadingList, setLoadingList] = useState(false);
     const [reportsSubTab, setReportsSubTab] = useState('logs'); // 'logs' or 'pdf_report'
 
-    // Flight Form Modal State
-    const [isFlightModalOpen, setIsFlightModalOpen] = useState(false);
-    const [flightForm, setFlightForm] = useState({
-        flight_number: '',
-        airline_code: 'IY', // Yemenia default
-        airportOrigin_code: '',
-        airportDestination_code: '',
-        departure_time: '',
-        arrival_time: '',
-        aircraft_type: 'Boeing 787',
-        total_seats: '150',
-        available_seats: '150',
-        price: ''
-    });
+
 
     // Settings State (backed by localStorage)
     const [markupRate, setMarkupRate] = useState(() => localStorage.getItem('adminMarkupRate') || '5');
@@ -108,7 +102,10 @@ const AdminDashboard = () => {
         if (!token || role !== 'admin') return;
         setLoading(true);
         try {
-            const res = await fetch('http://localhost:8080/api/admin/dashboard-stats');
+            const url = selectedReportDate
+                ? `http://localhost:8080/api/admin/dashboard-stats?date=${selectedReportDate}`
+                : `http://localhost:8080/api/admin/dashboard-stats?period=${statsPeriod}`;
+            const res = await fetch(url);
             const data = await res.json();
             if (data.success) {
                 setStats(data.stats);
@@ -118,14 +115,17 @@ const AdminDashboard = () => {
         } finally {
             setLoading(false);
         }
-    }, [token, role]);
+    }, [token, role, statsPeriod, selectedReportDate]);
 
     // Fetch Flights
     const fetchFlights = useCallback(async () => {
         if (!token || role !== 'admin') return;
         setLoadingList(true);
         try {
-            const res = await fetch('http://localhost:8080/api/flights');
+            const url = selectedFlightDate 
+                ? `http://localhost:8080/api/flights?date=${selectedFlightDate}` 
+                : 'http://localhost:8080/api/flights';
+            const res = await fetch(url);
             const data = await res.json();
             if (data.success) {
                 setFlights(data.flights);
@@ -135,14 +135,17 @@ const AdminDashboard = () => {
         } finally {
             setLoadingList(false);
         }
-    }, [token, role]);
+    }, [token, role, selectedFlightDate]);
 
     // Fetch Bookings
     const fetchBookings = useCallback(async () => {
         if (!token || role !== 'admin') return;
         setLoadingList(true);
         try {
-            const res = await fetch('http://localhost:8080/api/admin/bookings');
+            const url = selectedLogsDate
+                ? `http://localhost:8080/api/admin/bookings?date=${selectedLogsDate}`
+                : 'http://localhost:8080/api/admin/bookings';
+            const res = await fetch(url);
             const data = await res.json();
             if (data.success) {
                 setBookings(data.bookings);
@@ -152,7 +155,7 @@ const AdminDashboard = () => {
         } finally {
             setLoadingList(false);
         }
-    }, [token, role]);
+    }, [token, role, selectedLogsDate]);
 
     // Fetch Users
     const fetchUsers = useCallback(async () => {
@@ -198,7 +201,10 @@ const AdminDashboard = () => {
                 body: JSON.stringify({
                     email: companyForm.email,
                     password: companyForm.password,
-                    airline_code: companyForm.airline_code
+                    airline_code: companyForm.airline_code,
+                    company_name: companyForm.company_name,
+                    employee_id: companyForm.employee_id,
+                    department: companyForm.department
                 })
             });
             const data = await res.json();
@@ -207,9 +213,12 @@ const AdminDashboard = () => {
                 setIsCompanyModalOpen(false);
                 setCompanyForm({
                     id_admin: null,
+                    company_name: '',
+                    airline_code: '',
                     email: '',
                     password: '',
-                    airline_code: 'IY'
+                    employee_id: '',
+                    department: ''
                 });
                 fetchCompanies();
             } else {
@@ -231,7 +240,10 @@ const AdminDashboard = () => {
                 body: JSON.stringify({
                     email: companyForm.email,
                     password: companyForm.password,
-                    airline_code: companyForm.airline_code
+                    airline_code: companyForm.airline_code,
+                    company_name: companyForm.company_name,
+                    employee_id: companyForm.employee_id,
+                    department: companyForm.department
                 })
             });
             const data = await res.json();
@@ -240,9 +252,12 @@ const AdminDashboard = () => {
                 setIsCompanyModalOpen(false);
                 setCompanyForm({
                     id_admin: null,
+                    company_name: '',
+                    airline_code: '',
                     email: '',
                     password: '',
-                    airline_code: 'IY'
+                    employee_id: '',
+                    department: ''
                 });
                 fetchCompanies();
             } else {
@@ -281,14 +296,10 @@ const AdminDashboard = () => {
                 fetchDashboardStats();
             } else if (activeTab === 'flights') {
                 fetchFlights();
-            } else if (activeTab === 'wallet') {
-                fetchBookings();
             } else if (activeTab === 'reports') {
                 fetchBookings();
                 fetchDashboardStats();
                 fetchFlights();
-            } else if (activeTab === 'statistics') {
-                fetchDashboardStats();
             } else if (activeTab === 'users') {
                 fetchUsers();
             } else if (activeTab === 'companies') {
@@ -311,10 +322,10 @@ const AdminDashboard = () => {
     // Auto-refresh database data every 20 seconds for real-time reporting
     useEffect(() => {
         const interval = setInterval(() => {
-            if (activeTab === 'dashboard' || activeTab === 'statistics' || activeTab === 'reports') {
+            if (activeTab === 'dashboard' || activeTab === 'reports') {
                 fetchDashboardStats();
             }
-            if (activeTab === 'wallet' || activeTab === 'reports') {
+            if (activeTab === 'reports') {
                 fetchBookings();
             }
             if (activeTab === 'flights' || activeTab === 'reports') {
@@ -330,48 +341,9 @@ const AdminDashboard = () => {
         return () => clearInterval(interval);
     }, [activeTab, fetchDashboardStats, fetchBookings, fetchFlights, fetchUsers, fetchCompanies]);
 
-    // Handle Payment/Booking status update
-    const handleUpdateBookingStatus = async (id, status, payment_status) => {
-        try {
-            const res = await fetch(`http://localhost:8080/api/admin/bookings/${id}/status`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status, payment_status })
-            });
-            const data = await res.json();
-            if (data.success) {
-                showToast(payment_status === 'success' ? 'تم تأكيد الدفع وتفعيل الحجز بنجاح!' : 'تم تعديل حالة الحجز.');
-                // Refresh list
-                fetchBookings();
-                fetchDashboardStats();
-            } else {
-                showToast('حدث خطأ أثناء التحديث.');
-            }
-        } catch (error) {
-            console.error(error);
-            showToast('خطأ في الاتصال بالخادم.');
-        }
-    };
 
-    // Delete Flight
-    const handleDeleteFlight = async (id) => {
-        if (!window.confirm('هل أنت متأكد من حذف هذه الرحلة؟ لا يمكن التراجع عن هذا الإجراء.')) return;
-        try {
-            const res = await fetch(`http://localhost:8080/api/flights/${id}`, {
-                method: 'DELETE'
-            });
-            const data = await res.json();
-            if (data.success) {
-                showToast('تم حذف الرحلة بنجاح.');
-                fetchFlights();
-            } else {
-                showToast('خطأ في حذف الرحلة.');
-            }
-        } catch (error) {
-            console.error(error);
-            showToast('خطأ في الاتصال بالخادم.');
-        }
-    };
+
+
 
     // Create new user
     const handleCreateUser = async (e) => {
@@ -465,40 +437,7 @@ const AdminDashboard = () => {
         }
     };
 
-    // Add New Flight Form Submit
-    const handleAddFlightSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const res = await fetch('http://localhost:8080/api/flights', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(flightForm)
-            });
-            const data = await res.json();
-            if (data.success) {
-                showToast('تم إضافة الرحلة بنجاح!');
-                setIsFlightModalOpen(false);
-                setFlightForm({
-                    flight_number: '',
-                    airline_code: 'IY',
-                    airportOrigin_code: '',
-                    airportDestination_code: '',
-                    departure_time: '',
-                    arrival_time: '',
-                    aircraft_type: 'Boeing 787',
-                    total_seats: '150',
-                    available_seats: '150',
-                    price: ''
-                });
-                fetchFlights();
-            } else {
-                showToast('حدث خطأ أثناء إضافة الرحلة.');
-            }
-        } catch (error) {
-            console.error(error);
-            showToast('فشل الاتصال بالخادم.');
-        }
-    };
+
 
     // Save Settings
     const handleSaveSettings = (e) => {
@@ -531,7 +470,8 @@ const AdminDashboard = () => {
             'QA': 'القطرية (QA)',
             'EK': 'الإماراتية (EK)',
             'WY': 'العمانية (WY)',
-            'GF': 'الخليج (GF)'
+            'GF': 'الخليج (GF)',
+            'DH': 'القطيبي (DH)'
         };
         return airlines[code] || code || 'غير معروف';
     };
@@ -619,9 +559,7 @@ const AdminDashboard = () => {
                             { id: 'flights', label: 'إدارة الرحلات', icon: Plane },
                             { id: 'users', label: 'إدارة المستخدمين', icon: Users },
                             { id: 'companies', label: 'إدارة الشركات', icon: Building2 },
-                            { id: 'wallet', label: 'المحفظة والتحصيل', icon: Wallet },
                             { id: 'reports', label: 'التقارير المالية', icon: BookOpen },
-                            { id: 'statistics', label: 'الإحصائيات المتقدمة', icon: BarChart3 },
                             { id: 'settings', label: 'إعدادات النظام', icon: Settings },
                         ].map((item) => {
                             const IconComp = item.icon;
@@ -688,9 +626,7 @@ const AdminDashboard = () => {
                             {activeTab === 'flights' && 'إدارة وإضافة الرحلات'}
                             {activeTab === 'users' && 'إدارة مستخدمي النظام'}
                             {activeTab === 'companies' && 'إدارة شركات الطيران'}
-                            {activeTab === 'wallet' && 'تأكيد الحسابات والتحصيلات'}
                             {activeTab === 'reports' && 'تقارير حركة الطيران والمبيعات'}
-                            {activeTab === 'statistics' && 'تحليلات الأداء المتقدمة'}
                             {activeTab === 'settings' && 'إعدادات النظام والعمولة'}
                         </h2>
                     </div>
@@ -741,15 +677,67 @@ const AdminDashboard = () => {
                             {activeTab === 'dashboard' && (
                                 <div className="space-y-10">
                                     
+                                    {/* Dashboard Subheader with Stats Period Toggle */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200/60 pb-5 dark:border-slate-800/60">
+                                        <div>
+                                            <h3 className="text-lg font-black">مؤشرات الأداء</h3>
+                                            <p className="text-xs text-slate-400 font-bold mt-1">
+                                                {statsPeriod === 'current_month' ? 'عرض إحصائيات حركة الطيران والمبيعات للشهر الحالي' : 'عرض إحصائيات حركة الطيران والمبيعات للسنة الحالية'}
+                                            </p>
+                                        </div>
+                                        <div className="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-xl self-start">
+                                            <button
+                                                onClick={() => setStatsPeriod('current_month')}
+                                                className={`py-1.5 px-4 rounded-lg text-xs font-black transition-all ${
+                                                    statsPeriod === 'current_month'
+                                                        ? 'bg-blue-600 text-white shadow-md'
+                                                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
+                                                }`}
+                                            >
+                                                الشهر الحالي
+                                            </button>
+                                            <button
+                                                onClick={() => setStatsPeriod('current_year')}
+                                                className={`py-1.5 px-4 rounded-lg text-xs font-black transition-all ${
+                                                    statsPeriod === 'current_year'
+                                                        ? 'bg-blue-600 text-white shadow-md'
+                                                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
+                                                }`}
+                                            >
+                                                السنة
+                                            </button>
+                                        </div>
+                                    </div>
+
                                     {/* 1. Summary Cards (المؤشرات الرئيسية) */}
                                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                                         {[
-                                            { label: 'إجمالي التذاكر المحجوزة', value: stats.totalTickets.toLocaleString(), icon: Ticket, color: 'text-blue-600 bg-blue-500/10' },
-                                            { label: 'إجمالي الإيرادات الفعلي', value: `$${stats.totalRevenue.toLocaleString()}`, icon: DollarSign, color: 'text-emerald-600 bg-emerald-500/10' },
-                                            { label: 'نسبة إلغاء الحجوزات', value: `${stats.cancellationRate}%`, icon: XCircle, color: stats.cancellationRate > 15 ? 'text-rose-600 bg-rose-500/10' : 'text-amber-500 bg-amber-500/10' },
-                                            { label: 'المسافرين المسجلين', value: stats.activePassengers.toLocaleString(), icon: Users, color: 'text-violet-600 bg-violet-500/10' }
+                                            { 
+                                                label: statsPeriod === 'current_month' ? 'تذاكر الشهر الحالي' : 'تذاكر السنة الحالية', 
+                                                value: stats.totalTickets.toLocaleString(), 
+                                                icon: Ticket, 
+                                                color: 'text-blue-600 bg-blue-500/10' 
+                                            },
+                                            { 
+                                                label: statsPeriod === 'current_month' ? 'إيرادات الشهر الحالي' : 'إيرادات السنة الحالية', 
+                                                value: `$${stats.totalRevenue.toLocaleString()}`, 
+                                                icon: DollarSign, 
+                                                color: 'text-emerald-600 bg-emerald-500/10' 
+                                            },
+                                            { 
+                                                label: statsPeriod === 'current_month' ? 'نسبة إلغاء حجوزات الشهر' : 'نسبة إلغاء حجوزات السنة', 
+                                                value: `${stats.cancellationRate}%`, 
+                                                icon: XCircle, 
+                                                color: stats.cancellationRate > 15 ? 'text-rose-600 bg-rose-500/10' : 'text-amber-500 bg-amber-500/10' 
+                                            },
+                                            { 
+                                                label: statsPeriod === 'current_month' ? 'الركاب النشطين بالفترة' : 'الركاب النشطين بالسنة', 
+                                                value: stats.activePassengers.toLocaleString(), 
+                                                icon: Users, 
+                                                color: 'text-violet-600 bg-violet-500/10' 
+                                            }
                                         ].map((stat, i) => (
-                                            <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-6 shadow-sm flex items-center justify-between">
+                                            <div key={i} className="bg-white dark:bg-[#0b1120] border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-6 shadow-sm flex items-center justify-between">
                                                 <div>
                                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
                                                     <h4 className="text-2xl font-black mt-2 tracking-tight">{stat.value}</h4>
@@ -1063,15 +1051,33 @@ const AdminDashboard = () => {
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <h3 className="text-lg font-black">جميع الرحلات الجوية</h3>
-                                            <p className="text-xs text-slate-400 font-bold mt-1">تصفح وإضافة وتعديل رحلات شركات الطيران</p>
+                                            <p className="text-xs text-slate-400 font-bold mt-1">تصفح واستعراض رحلات شركات الطيران المتوفرة</p>
                                         </div>
-                                        <button
-                                            onClick={() => setIsFlightModalOpen(true)}
-                                            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-black py-3 px-6 rounded-2xl text-xs transition-all shadow-md shadow-blue-500/20"
-                                        >
-                                            <Plus size={16} />
-                                            <span>إضافة رحلة جديدة</span>
-                                        </button>
+                                    </div>
+
+                                    {/* Date Filter */}
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm">
+                                        <div className="flex items-center gap-4 flex-wrap w-full">
+                                            <div className="flex flex-col gap-1.5 w-full md:w-auto">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">تصفية حسب تاريخ الرحلة</label>
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="date"
+                                                        value={selectedFlightDate}
+                                                        onChange={(e) => setSelectedFlightDate(e.target.value)}
+                                                        className="bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-blue-500 rounded-xl py-2.5 px-4 text-xs font-bold outline-none transition-all dark:text-white"
+                                                    />
+                                                    {selectedFlightDate && (
+                                                        <button
+                                                            onClick={() => setSelectedFlightDate('')}
+                                                            className="py-2.5 px-4 rounded-xl text-xs font-black bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-all border border-slate-200/60 dark:border-slate-700/60"
+                                                        >
+                                                            عرض كل التواريخ
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     {/* Flights Table */}
@@ -1090,7 +1096,6 @@ const AdminDashboard = () => {
                                                             <th className="pb-4 px-4">الطائرة</th>
                                                             <th className="pb-4 px-4 text-center">المقاعد المتاحة</th>
                                                             <th className="pb-4 px-4">سعر التذكرة</th>
-                                                            <th className="pb-4 px-4 text-left">إجراءات</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
@@ -1115,20 +1120,11 @@ const AdminDashboard = () => {
                                                                         {flight.available_seats} / {flight.total_seats}
                                                                     </td>
                                                                     <td className="py-5 px-4 font-black text-blue-600 dark:text-blue-400">${Number(flight.price || 0).toLocaleString()}</td>
-                                                                    <td className="py-5 px-4 text-left">
-                                                                        <button
-                                                                            onClick={() => handleDeleteFlight(flight.id_flights)}
-                                                                            className="h-8 w-8 rounded-lg bg-rose-50 dark:bg-rose-950/20 text-rose-600 hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center"
-                                                                            title="حذف الرحلة"
-                                                                        >
-                                                                            <Trash2 size={14} />
-                                                                        </button>
-                                                                    </td>
                                                                 </tr>
                                                             ))
                                                         ) : (
                                                             <tr>
-                                                                <td colSpan="8" className="py-12 text-center text-slate-400 font-bold">لا توجد رحلات مطابقة للبحث</td>
+                                                                <td colSpan="7" className="py-12 text-center text-slate-400 font-bold">لا توجد رحلات مطابقة للبحث</td>
                                                             </tr>
                                                         )}
                                                     </tbody>
@@ -1139,97 +1135,7 @@ const AdminDashboard = () => {
                                 </div>
                             )}
 
-                            {/* ======================================================== */}
-                            {/* ===== VIEW: WALLET ===== */}
-                            {activeTab === 'wallet' && (
-                                <div className="space-y-6">
-                                    <div>
-                                        <h3 className="text-lg font-black">المحفظة وتأكيد دفع التذاكر</h3>
-                                        <p className="text-xs text-slate-400 font-bold mt-1">تأكيد المبالغ المستلمة من الحوالات وتنشيط حجز المسافرين</p>
-                                    </div>
 
-                                    {/* Quick Summary Numbers */}
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">إجمالي المبيعات المؤكدة</p>
-                                            <h4 className="text-3xl font-black text-emerald-500 mt-2">${stats.totalRevenue.toLocaleString()}</h4>
-                                        </div>
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">حجوزات بانتظار الدفع</p>
-                                            <h4 className="text-3xl font-black text-amber-500 mt-2">{bookings.filter(b => b.status === 'temporary').length}</h4>
-                                        </div>
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">المستردات والملغيات</p>
-                                            <h4 className="text-3xl font-black text-rose-500 mt-2">${bookings.filter(b => b.status === 'canceled').reduce((acc, c) => acc + Number(c.final_price), 0).toLocaleString()}</h4>
-                                        </div>
-                                    </div>
-
-                                    {/* Pending Payments Table */}
-                                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm p-8">
-                                        <h4 className="text-sm font-black mb-6">الحوالات وطلبات الدفع المعلقة</h4>
-                                        {loadingList ? (
-                                            <div className="py-20 text-center text-slate-400">جاري تحميل البيانات...</div>
-                                        ) : (
-                                            <div className="overflow-x-auto">
-                                                <table className="w-full text-right text-xs">
-                                                    <thead>
-                                                        <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-black uppercase">
-                                                            <th className="pb-4 px-4">رقم المرجع</th>
-                                                            <th className="pb-4 px-4">الركاب</th>
-                                                            <th className="pb-4 px-4">الرحلة</th>
-                                                            <th className="pb-4 px-4">طريقة الدفع</th>
-                                                            <th className="pb-4 px-4">المبلغ الكلي</th>
-                                                            <th className="pb-4 px-4">تاريخ الحجز</th>
-                                                            <th className="pb-4 px-4 text-left">القرار</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
-                                                        {filteredBookings.filter(b => b.status === 'temporary').length > 0 ? (
-                                                            filteredBookings.filter(b => b.status === 'temporary').map((booking) => (
-                                                                <tr key={booking.id_bookings} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                                                                    <td className="py-5 px-4 font-black text-blue-600 dark:text-blue-400">#{booking.booking_reference}</td>
-                                                                    <td className="py-5 px-4 font-bold text-slate-800 dark:text-white max-w-xs truncate">{booking.passengers}</td>
-                                                                    <td className="py-5 px-4 font-bold text-slate-500">{booking.flight_number}</td>
-                                                                    <td className="py-5 px-4 font-bold text-slate-600 dark:text-slate-300">
-                                                                        <span className="flex items-center gap-1.5">
-                                                                            <CreditCard size={14} className="text-slate-400" />
-                                                                            {booking.payment_method === 'bank_transfer' ? 'حوالة مصرفية / صراف' : booking.payment_method}
-                                                                        </span>
-                                                                    </td>
-                                                                    <td className="py-5 px-4 font-black text-slate-900 dark:text-white">${Number(booking.final_price).toLocaleString()}</td>
-                                                                    <td className="py-5 px-4 font-medium text-slate-400">{new Date(booking.booking_date).toLocaleDateString('ar-EG')}</td>
-                                                                    <td className="py-5 px-4 text-left">
-                                                                        <div className="flex items-center justify-end gap-2">
-                                                                            <button
-                                                                                onClick={() => handleUpdateBookingStatus(booking.id_bookings, 'certain', 'success')}
-                                                                                className="h-8 px-4 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 font-bold flex items-center gap-1 transition-all"
-                                                                            >
-                                                                                <Check size={14} />
-                                                                                <span>تأكيد الدفع</span>
-                                                                            </button>
-                                                                            <button
-                                                                                onClick={() => handleUpdateBookingStatus(booking.id_bookings, 'canceled', 'failed')}
-                                                                                className="h-8 px-3 rounded-lg bg-rose-50 dark:bg-rose-950/20 text-rose-600 hover:bg-rose-600 hover:text-white transition-all flex items-center gap-1"
-                                                                            >
-                                                                                <X size={14} />
-                                                                                <span>إلغاء</span>
-                                                                            </button>
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                            ))
-                                                        ) : (
-                                                            <tr>
-                                                                <td colSpan="7" className="py-12 text-center text-slate-400 font-bold">لا توجد طلبات دفع معلقة حالياً</td>
-                                                            </tr>
-                                                        )}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
 
                             {/* ======================================================== */}
                             {/* ===== VIEW: REPORTS ===== */}
@@ -1295,6 +1201,31 @@ const AdminDashboard = () => {
                                                 >
                                                     تصدير التقرير المالي (CSV)
                                                 </button>
+                                            </div>
+
+                                            {/* Date Filter */}
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm no-print mb-6">
+                                                <div className="flex items-center gap-4 flex-wrap w-full">
+                                                    <div className="flex flex-col gap-1.5 w-full md:w-auto">
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">تصفية سجل الحجز حسب تاريخ معين</label>
+                                                        <div className="flex items-center gap-2">
+                                                            <input
+                                                                type="date"
+                                                                value={selectedLogsDate}
+                                                                onChange={(e) => setSelectedLogsDate(e.target.value)}
+                                                                className="bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-blue-500 rounded-xl py-2.5 px-4 text-xs font-bold outline-none transition-all dark:text-white"
+                                                            />
+                                                            {selectedLogsDate && (
+                                                                <button
+                                                                    onClick={() => setSelectedLogsDate('')}
+                                                                    className="py-2.5 px-4 rounded-xl text-xs font-black bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-all border border-slate-200/60 dark:border-slate-700/60"
+                                                                >
+                                                                    عرض كل التواريخ
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
 
                                             {/* Bookings Filter List */}
@@ -1417,6 +1348,31 @@ const AdminDashboard = () => {
                                                 </button>
                                             </div>
 
+                                            {/* Date Filter (no-print) */}
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm no-print mb-6">
+                                                <div className="flex items-center gap-4 flex-wrap w-full">
+                                                    <div className="flex flex-col gap-1.5 w-full md:w-auto">
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">تصفية التقرير حسب تاريخ محدد</label>
+                                                        <div className="flex items-center gap-2">
+                                                            <input
+                                                                type="date"
+                                                                value={selectedReportDate}
+                                                                onChange={(e) => setSelectedReportDate(e.target.value)}
+                                                                className="bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-blue-500 rounded-xl py-2.5 px-4 text-xs font-bold outline-none transition-all dark:text-white"
+                                                            />
+                                                            {selectedReportDate && (
+                                                                <button
+                                                                    onClick={() => setSelectedReportDate('')}
+                                                                    className="py-2.5 px-4 rounded-xl text-xs font-black bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-all border border-slate-200/60 dark:border-slate-700/60"
+                                                                >
+                                                                    عرض تقرير الفترة المحددة ({statsPeriod === 'current_month' ? 'الشهر الحالي' : 'السنة الحالية'})
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
                                             {/* Report Printable Document */}
                                             <div className="print-report-container bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 md:p-12 shadow-sm space-y-10">
                                                 {/* Report Header */}
@@ -1432,6 +1388,7 @@ const AdminDashboard = () => {
                                                     </div>
                                                     <div className="text-right text-xs text-slate-500 dark:text-slate-400 font-bold space-y-1 bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
                                                         <div>تاريخ التقرير: <span className="text-slate-900 dark:text-white font-black">{new Date().toLocaleString('ar-YE', { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
+                                                        <div>الفترة الزمنية للتقرير: <span className="text-blue-650 dark:text-blue-350 font-black">{selectedReportDate ? `يوم ${new Date(selectedReportDate).toLocaleDateString('ar-YE', { dateStyle: 'long' })}` : (statsPeriod === 'current_month' ? 'الشهر الحالي' : 'السنة الحالية')}</span></div>
                                                         <div>المسؤول المصدر: <span className="text-slate-900 dark:text-white font-black">{adminEmail}</span></div>
                                                         <div>حالة النظام: <span className="text-emerald-500 font-black">متصل بقاعدة البيانات</span></div>
                                                     </div>
@@ -1441,7 +1398,7 @@ const AdminDashboard = () => {
                                                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
                                                     {/* 1. Revenue */}
                                                     <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">إجمالي المبيعات المؤكدة</p>
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedReportDate ? 'إيرادات اليوم المحدد' : (statsPeriod === 'current_month' ? 'إيرادات الشهر الحالي' : 'إيرادات السنة الحالية')}</p>
                                                         <h4 className="text-3xl font-black text-emerald-500">${stats.totalRevenue.toLocaleString()}</h4>
                                                         <p className="text-[11px] font-bold text-slate-500">
                                                             يعادل: <strong className="text-slate-700 dark:text-slate-350">{(stats.totalRevenue * Number(exchangeRate)).toLocaleString()} ريال يمني</strong>
@@ -1450,16 +1407,16 @@ const AdminDashboard = () => {
 
                                                     {/* 2. Tickets */}
                                                     <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">التذاكر المباعة والمصدرة</p>
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedReportDate ? 'تذاكر اليوم المحدد' : (statsPeriod === 'current_month' ? 'تذاكر الشهر الحالي' : 'تذاكر السنة الحالية')}</p>
                                                         <h4 className="text-3xl font-black text-blue-500">{stats.totalTickets.toLocaleString()} تذكرة</h4>
                                                         <p className="text-[11px] font-bold text-slate-500">
-                                                            المسافرين المسجلين: <strong className="text-slate-700 dark:text-slate-350">{stats.activePassengers.toLocaleString()} مسافر</strong>
+                                                            {selectedReportDate ? 'الركاب النشطين باليوم:' : (statsPeriod === 'current_month' ? 'الركاب النشطين بالفترة:' : 'الركاب النشطين بالسنة:')} <strong className="text-slate-700 dark:text-slate-350">{stats.activePassengers.toLocaleString()} مسافر</strong>
                                                         </p>
                                                     </div>
 
                                                     {/* 3. Estimated profit */}
                                                     <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">صافي الأرباح المقدرة (عمولة {markupRate}%)</p>
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedReportDate ? `أرباح اليوم المحدد (عمولة ${markupRate}%)` : (statsPeriod === 'current_month' ? `أرباح الشهر الحالي (عمولة ${markupRate}%)` : `أرباح السنة الحالية (عمولة ${markupRate}%)`)}</p>
                                                         <h4 className="text-3xl font-black text-indigo-500">${(stats.totalRevenue * (Number(markupRate) / 100)).toLocaleString()}</h4>
                                                         <p className="text-[11px] font-bold text-slate-500">
                                                             يعادل: <strong className="text-slate-700 dark:text-slate-350">{Math.round((stats.totalRevenue * (Number(markupRate) / 100)) * Number(exchangeRate)).toLocaleString()} ريال يمني</strong>
@@ -1475,7 +1432,7 @@ const AdminDashboard = () => {
 
                                                     {/* 5. Cancellation rate */}
                                                     <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">نسبة إلغاء الحجوزات</p>
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedReportDate ? 'نسبة إلغاء حجوزات اليوم' : (statsPeriod === 'current_month' ? 'نسبة إلغاء حجوزات الشهر' : 'نسبة إلغاء حجوزات السنة')}</p>
                                                         <h4 className="text-2xl font-black text-rose-500">{stats.cancellationRate}%</h4>
                                                         <p className="text-[11px] font-bold text-slate-500">تحديث فوري من قاعدة البيانات</p>
                                                     </div>
@@ -1632,216 +1589,7 @@ const AdminDashboard = () => {
                                 </div>
                             )}
 
-                            {/* ======================================================== */}
-                            {/* ===== VIEW: STATISTICS ===== */}
-                            {activeTab === 'statistics' && (
-                                <div className="space-y-8">
-                                    <div>
-                                        <h3 className="text-lg font-black">التحليلات والمبيعات المتقدمة</h3>
-                                        <p className="text-xs text-slate-400 font-bold mt-1">تحليل مفصل للوجهات والدرجات وحصص المبيعات بناءً على قاعدة البيانات</p>
-                                    </div>
 
-                                    {/* Stats KPI Cards */}
-                                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                                        {[
-                                            { label: 'إجمالي التذاكر المباعة', value: stats.totalTickets.toLocaleString(), icon: Ticket, color: 'text-blue-600 bg-blue-500/10' },
-                                            { label: 'إجمالي المبيعات المؤكدة', value: `$${stats.totalRevenue.toLocaleString()}`, icon: DollarSign, color: 'text-emerald-600 bg-emerald-500/10' },
-                                            { label: 'نسبة إلغاء الحجوزات', value: `${stats.cancellationRate}%`, icon: XCircle, color: stats.cancellationRate > 15 ? 'text-rose-600 bg-rose-500/10' : 'text-amber-500 bg-amber-500/10' },
-                                            { label: 'إجمالي الركاب الفعليين', value: stats.activePassengers.toLocaleString(), icon: Users, color: 'text-violet-600 bg-violet-500/10' }
-                                        ].map((stat, i) => (
-                                            <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-6 shadow-sm flex items-center justify-between">
-                                                <div>
-                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
-                                                    <h4 className="text-2xl font-black mt-2 tracking-tight">{stat.value}</h4>
-                                                </div>
-                                                <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${stat.color}`}>
-                                                    <stat.icon size={24} />
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                        
-                                        {/* Chart 1: Destinations */}
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
-                                            <h4 className="text-sm font-black mb-6">الوجهات الأكثر طلباً</h4>
-                                            <div className="h-64 w-full">
-                                                <ResponsiveContainer width="100%" height="100%">
-                                                    <BarChart data={stats.destinationsStats.length > 0 ? stats.destinationsStats.map(item => ({ ...item, destination: getDestinationName(item.destination).split(' ')[0] })) : [
-                                                        { destination: 'القاهرة', count: 45 },
-                                                        { destination: 'دبي', count: 38 },
-                                                        { destination: 'الرياض', count: 52 },
-                                                        { destination: 'جدة', count: 30 },
-                                                        { destination: 'عمان', count: 25 }
-                                                    ]} layout="vertical">
-                                                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" opacity={0.3} />
-                                                        <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold' }} />
-                                                        <YAxis type="category" dataKey="destination" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold' }} />
-                                                        <Tooltip />
-                                                        <Bar dataKey="count" fill="#3b82f6" radius={[0, 8, 8, 0]} barSize={20} name="عدد الحجوزات" />
-                                                    </BarChart>
-                                                </ResponsiveContainer>
-                                            </div>
-                                        </div>
-
-                                        {/* Chart 2: Seat Classes */}
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm flex flex-col justify-between">
-                                            <h4 className="text-sm font-black mb-6">توزيع فئات درجات السفر</h4>
-                                            <div className="h-56 w-full relative flex items-center justify-center">
-                                                <ResponsiveContainer width="100%" height="100%">
-                                                    <PieChart>
-                                                        <Pie
-                                                            data={stats.classStats.length > 0 ? stats.classStats.map(c => ({
-                                                                ...c,
-                                                                name: c.name === 'economy' ? 'الدرجة الاقتصادية' : c.name === 'business' ? 'درجة الأعمال' : c.name === 'first' ? 'الدرجة الأولى' : c.name
-                                                            })) : [
-                                                                { name: 'الدرجة الاقتصادية', value: 70 },
-                                                                { name: 'درجة الأعمال', value: 20 },
-                                                                { name: 'الدرجة الأولى', value: 10 }
-                                                            ]}
-                                                            cx="50%"
-                                                            cy="50%"
-                                                            innerRadius={65}
-                                                            outerRadius={85}
-                                                            paddingAngle={5}
-                                                            dataKey="value"
-                                                            stroke="none"
-                                                        >
-                                                            {(stats.classStats.length > 0 ? stats.classStats : [1, 2, 3]).map((entry, index) => (
-                                                                <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
-                                                            ))}
-                                                        </Pie>
-                                                        <Tooltip />
-                                                    </PieChart>
-                                                </ResponsiveContainer>
-                                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">توزيع الحجوزات</span>
-                                                    <span className="text-lg font-black mt-1">
-                                                        {stats.classStats.reduce((acc, curr) => acc + curr.value, 0) || stats.totalTickets}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            {/* Labels list */}
-                                            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 justify-center text-[10px] font-black">
-                                                {(stats.classStats.length > 0 ? stats.classStats : [
-                                                    { name: 'economy', value: 70 },
-                                                    { name: 'business', value: 20 },
-                                                    { name: 'first', value: 10 }
-                                                ]).map((item, idx) => (
-                                                    <div key={idx} className="flex items-center gap-1.5">
-                                                        <div className="h-2 w-2 rounded-full" style={{ backgroundColor: chartColors[idx % chartColors.length] }} />
-                                                        <span className="capitalize text-slate-700 dark:text-slate-200">
-                                                            {item.name === 'economy' && 'الاقتصادية'}
-                                                            {item.name === 'business' && 'الأعمال'}
-                                                            {item.name === 'first' && 'الأولى'}
-                                                            {item.name !== 'economy' && item.name !== 'business' && item.name !== 'first' && item.name}
-                                                        </span>
-                                                        <span className="text-slate-400">({item.value} حجز)</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        {/* Chart 3: Monthly Sales performance */}
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
-                                            <h4 className="text-sm font-black mb-6">حركة المبيعات والإيرادات الشهرية</h4>
-                                            <div className="h-64 w-full">
-                                                <ResponsiveContainer width="100%" height="100%">
-                                                    <AreaChart data={stats.monthlySales.length > 0 ? stats.monthlySales : [
-                                                        { month: '2026-01', sales: 12000 },
-                                                        { month: '2026-02', sales: 19000 },
-                                                        { month: '2026-03', sales: 15000 },
-                                                        { month: '2026-04', sales: 27000 },
-                                                        { month: '2026-05', sales: 22000 },
-                                                        { month: '2026-06', sales: 34000 }
-                                                    ]}>
-                                                        <defs>
-                                                            <linearGradient id="colorSalesStats" x1="0" y1="0" x2="0" y2="1">
-                                                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                                                                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                                                            </linearGradient>
-                                                        </defs>
-                                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" opacity={0.3} />
-                                                        <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold' }} />
-                                                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold' }} />
-                                                        <Tooltip />
-                                                        <Area type="monotone" dataKey="sales" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorSalesStats)" name="المبيعات ($)" />
-                                                    </AreaChart>
-                                                </ResponsiveContainer>
-                                            </div>
-                                        </div>
-
-                                        {/* Chart 4: Airline Share */}
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm flex flex-col justify-between">
-                                            <h4 className="text-sm font-black mb-6">مبيعات شركات الطيران وحصصها</h4>
-                                            <div className="h-56 w-full relative flex items-center justify-center">
-                                                <ResponsiveContainer width="100%" height="100%">
-                                                    <PieChart>
-                                                        <Pie
-                                                            data={stats.airlineStats.length > 0 ? stats.airlineStats.map(item => ({ ...item, name: getAirlineName(item.name).split(' ')[0] })) : [
-                                                                { name: 'الخطوط اليمنية', value: 4 },
-                                                                { name: 'الخطوط القطرية', value: 2 },
-                                                                { name: 'طيران الإمارات', value: 3 }
-                                                            ]}
-                                                            cx="50%"
-                                                            cy="50%"
-                                                            innerRadius={65}
-                                                            outerRadius={85}
-                                                            paddingAngle={5}
-                                                            dataKey="value"
-                                                            stroke="none"
-                                                        >
-                                                            {(stats.airlineStats.length > 0 ? stats.airlineStats : [1, 2, 3]).map((entry, index) => (
-                                                                <Cell key={`cell-${index}`} fill={chartColors[(index + 1) % chartColors.length]} />
-                                                            ))}
-                                                        </Pie>
-                                                        <Tooltip />
-                                                    </PieChart>
-                                                </ResponsiveContainer>
-                                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">إجمالي الحصص</span>
-                                                    <span className="text-lg font-black mt-1">
-                                                        {stats.airlineStats.reduce((acc, curr) => acc + curr.value, 0) || stats.totalTickets}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            {/* Labels list */}
-                                            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 justify-center text-[10px] font-black">
-                                                {stats.airlineStats.map((item, idx) => (
-                                                    <div key={idx} className="flex items-center gap-1.5">
-                                                        <div className="h-2 w-2 rounded-full" style={{ backgroundColor: chartColors[(idx + 1) % chartColors.length] }} />
-                                                        <span className="text-slate-700 dark:text-slate-200">{getAirlineName(item.name)}:</span>
-                                                        <span className="text-slate-400">({item.value} حجز)</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                    </div>
-
-                                    {/* Chart 5: Aircraft Price Averages */}
-                                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
-                                        <h4 className="text-sm font-black mb-6">متوسط أسعار التذاكر لكل طراز طائرة</h4>
-                                        <div className="h-72 w-full">
-                                            <ResponsiveContainer width="100%" height="100%">
-                                                <BarChart data={stats.aircraftStats.length > 0 ? stats.aircraftStats : [
-                                                    { name: 'Boeing 787', price: 548 },
-                                                    { name: 'Airbus A350', price: 620 },
-                                                    { name: 'Boeing 777', price: 480 }
-                                                ]}>
-                                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" opacity={0.3} />
-                                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold' }} />
-                                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold' }} />
-                                                    <Tooltip />
-                                                    <Bar dataKey="price" fill="#6366f1" radius={[8, 8, 0, 0]} barSize={40} name="متوسط السعر ($)" />
-                                                </BarChart>
-                                            </ResponsiveContainer>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            )}
 
                             {/* ======================================================== */}
                             {/* ===== VIEW: SETTINGS ===== */}
@@ -2088,9 +1836,12 @@ const AdminDashboard = () => {
                                                     setIsEditingCompany(false);
                                                     setCompanyForm({
                                                         id_admin: null,
+                                                        company_name: '',
+                                                        airline_code: '',
                                                         email: '',
                                                         password: '',
-                                                        airline_code: 'IY'
+                                                        employee_id: '',
+                                                        department: ''
                                                     });
                                                     setIsCompanyModalOpen(true);
                                                 }}
@@ -2187,148 +1938,7 @@ const AdminDashboard = () => {
                 </div>
             </main>
 
-            {/* ===== FLIGHT MODAL (ADD FLIGHT FORM) ===== */}
-            {isFlightModalOpen && (
-                <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-fade-in select-none">
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-xl w-full p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
-                        <div className="flex items-center justify-between mb-6">
-                            <h4 className="text-base font-black">إضافة رحلة جديدة للجدول</h4>
-                            <button
-                                onClick={() => setIsFlightModalOpen(false)}
-                                className="h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition-all"
-                            >
-                                <X size={16} />
-                            </button>
-                        </div>
 
-                        <form onSubmit={handleAddFlightSubmit} className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400">رقم الرحلة</label>
-                                    <input
-                                        type="text"
-                                        placeholder="مثال: IY642"
-                                        value={flightForm.flight_number}
-                                        onChange={(e) => setFlightForm({ ...flightForm, flight_number: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400">شركة الطيران</label>
-                                    <select
-                                        value={flightForm.airline_code}
-                                        onChange={(e) => setFlightForm({ ...flightForm, airline_code: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
-                                    >
-                                        <option value="IY">الخطوط اليمنية (IY)</option>
-                                        <option value="QA">القطرية (QA)</option>
-                                        <option value="EK">الإماراتية (EK)</option>
-                                        <option value="WY">العمانية (WY)</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400">مطار المغادرة (رمز الكود)</label>
-                                    <input
-                                        type="text"
-                                        placeholder="مثال: ADE"
-                                        value={flightForm.airportOrigin_code}
-                                        onChange={(e) => setFlightForm({ ...flightForm, airportOrigin_code: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400">مطار الوصول (رمز الكود)</label>
-                                    <input
-                                        type="text"
-                                        placeholder="مثال: CAI"
-                                        value={flightForm.airportDestination_code}
-                                        onChange={(e) => setFlightForm({ ...flightForm, airportDestination_code: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400">تاريخ ووقت الإقلاع</label>
-                                    <input
-                                        type="datetime-local"
-                                        value={flightForm.departure_time}
-                                        onChange={(e) => setFlightForm({ ...flightForm, departure_time: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400">تاريخ ووقت الوصول</label>
-                                    <input
-                                        type="datetime-local"
-                                        value={flightForm.arrival_time}
-                                        onChange={(e) => setFlightForm({ ...flightForm, arrival_time: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400">طراز الطائرة</label>
-                                    <input
-                                        type="text"
-                                        value={flightForm.aircraft_type}
-                                        onChange={(e) => setFlightForm({ ...flightForm, aircraft_type: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400">المقاعد الكلية</label>
-                                    <input
-                                        type="number"
-                                        value={flightForm.total_seats}
-                                        onChange={(e) => setFlightForm({ ...flightForm, total_seats: e.target.value, available_seats: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400">سعر التذكرة ($)</label>
-                                    <input
-                                        type="number"
-                                        placeholder="السعر بالدولار"
-                                        value={flightForm.price}
-                                        onChange={(e) => setFlightForm({ ...flightForm, price: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="pt-4 flex justify-end gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsFlightModalOpen(false)}
-                                    className="py-2.5 px-5 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 text-xs font-bold"
-                                >
-                                    إلغاء
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="py-2.5 px-6 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-xs font-black shadow-md shadow-blue-500/10"
-                                >
-                                    حفظ وإدراج
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
 
             {/* ===== COMPANY MODAL (ADD/EDIT COMPANY FORM) ===== */}
             {isCompanyModalOpen && (
@@ -2347,43 +1957,82 @@ const AdminDashboard = () => {
                         </div>
 
                         <form onSubmit={isEditingCompany ? handleUpdateCompany : handleCreateCompany} className="space-y-4">
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-black text-slate-400">البريد الإلكتروني للشركة</label>
-                                <input
-                                    type="email"
-                                    placeholder="example@airline.com"
-                                    value={companyForm.email}
-                                    onChange={(e) => setCompanyForm({ ...companyForm, email: e.target.value })}
-                                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
-                                    required
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-black text-slate-400">اسم الشركة</label>
+                                    <input
+                                        type="text"
+                                        placeholder="مثال: اليمنية، القطيبي"
+                                        value={companyForm.company_name}
+                                        onChange={(e) => setCompanyForm({ ...companyForm, company_name: e.target.value })}
+                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none text-slate-800 dark:text-slate-100"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-black text-slate-400">رمز الطيران (airline_code)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="مثال: IY, DH"
+                                        value={companyForm.airline_code}
+                                        onChange={(e) => setCompanyForm({ ...companyForm, airline_code: e.target.value.toUpperCase() })}
+                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none text-slate-800 dark:text-slate-100"
+                                        required
+                                    />
+                                </div>
                             </div>
 
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-black text-slate-400">كلمة المرور</label>
-                                <input
-                                    type="password"
-                                    placeholder={isEditingCompany ? 'اتركها فارغة إذا لم تكن تريد تغييرها' : 'كلمة المرور'}
-                                    value={companyForm.password}
-                                    onChange={(e) => setCompanyForm({ ...companyForm, password: e.target.value })}
-                                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
-                                    required={!isEditingCompany}
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-black text-slate-400">البريد الإلكتروني للشركة</label>
+                                    <input
+                                        type="email"
+                                        placeholder="example@gmail.com"
+                                        value={companyForm.email}
+                                        onChange={(e) => setCompanyForm({ ...companyForm, email: e.target.value })}
+                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none text-slate-800 dark:text-slate-100"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-black text-slate-400">كلمة المرور</label>
+                                    <input
+                                        type="password"
+                                        placeholder={isEditingCompany ? 'اتركها فارغة للمحافظة عليها' : 'كلمة المرور'}
+                                        value={companyForm.password}
+                                        onChange={(e) => setCompanyForm({ ...companyForm, password: e.target.value })}
+                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none text-slate-800 dark:text-slate-100"
+                                        required={!isEditingCompany}
+                                    />
+                                </div>
                             </div>
 
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-black text-slate-400">شركة الطيران المرتبطة</label>
-                                <select
-                                    value={companyForm.airline_code}
-                                    onChange={(e) => setCompanyForm({ ...companyForm, airline_code: e.target.value })}
-                                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
-                                >
-                                    <option value="IY">الخطوط اليمنية (IY)</option>
-                                    <option value="QA">الخطوط القطرية (QA)</option>
-                                    <option value="EK">طيران الإمارات (EK)</option>
-                                    <option value="WY">الطيران العماني (WY)</option>
-                                    <option value="GF">طيران الخليج (GF)</option>
-                                </select>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-black text-slate-400">رقم الموظف (employee_id)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="مثال: 1"
+                                        value={companyForm.employee_id}
+                                        onChange={(e) => setCompanyForm({ ...companyForm, employee_id: e.target.value })}
+                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none text-slate-800 dark:text-slate-100"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-black text-slate-400">القسم (department)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="مثال: قسم اضافة الرحلات"
+                                        value={companyForm.department}
+                                        onChange={(e) => setCompanyForm({ ...companyForm, department: e.target.value })}
+                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none text-slate-800 dark:text-slate-100"
+                                        required
+                                    />
+                                </div>
                             </div>
 
                             <div className="pt-4 flex justify-end gap-3">

@@ -7,7 +7,7 @@ import logoF from '../assets/F.png';
 import {
     Plane, Ticket, CheckCircle, XCircle, Clock,
     ChevronDown, Search, PackageX, LogIn, Users,
-    Hash, CalendarDays, Banknote, CreditCard, BadgeCheck, Calendar
+    Hash, CalendarDays, Banknote, CreditCard, BadgeCheck, Calendar, Download, MapPin, Trash2
 } from 'lucide-react';
 
 const statusConfig = {
@@ -24,6 +24,8 @@ const airlineConfig = {
     IY: { name: 'اليمنية للطيران', color: 'from-blue-800 to-indigo-950', logo: logoY },
     BS: { name: 'طيران بلقيس', color: 'from-blue-600 to-blue-900', logo: logoB },
     QY: { name: 'فلاي عدن', color: 'from-sky-500 to-sky-700', logo: logoF },
+    DH: { name: 'طيران القطيبي (عدن)', color: 'from-sky-500 to-sky-700', logo: logoF },
+    QTB: { name: 'طيران القطيبي (عدن)', color: 'from-sky-500 to-sky-700', logo: logoF },
 };
 const airportNamesConfig = {
     ADE: { city: 'عدن', airport: 'مطار عدن الدولي' },
@@ -62,8 +64,103 @@ function BoardingPass({ passenger, booking, index }) {
 
     const qrData = `BOARDING PASS\nPassenger Name: ${passenger.name}\nPassport Number: ${passenger.passport_number}\nBooking Reference: ${booking.booking_reference}\nFlight Number: ${booking.airline_code} ${booking.flight_number}\nRoute: ${originInfo.city} (${originInfo.airport}) -> ${destinationInfo.city} (${destinationInfo.airport})\nDeparture: ${formatDate(booking.departure_time)} ${formatTime(booking.departure_time)}`;
 
+    const [qrCodeUrl, setQrCodeUrl] = useState('');
+
+    useEffect(() => {
+        let isMounted = true;
+        const fetchQr = async () => {
+            try {
+                const url = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}&color=4974f9&bgcolor=ffffff`;
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    if (isMounted) setQrCodeUrl(reader.result);
+                };
+                reader.readAsDataURL(blob);
+            } catch (error) {
+                console.error('Error fetching QR code:', error);
+                if (isMounted) {
+                    setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}&color=4974f9&bgcolor=ffffff`);
+                }
+            }
+        };
+        fetchQr();
+        return () => { isMounted = false; };
+    }, [qrData]);
+
+    const handleDownloadPdf = () => {
+        const ticketElement = document.getElementById(`ticket-${passenger.id_passengers || index}`);
+        if (!ticketElement) return;
+
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = 'none';
+        iframe.style.zIndex = '-1000';
+        document.body.appendChild(iframe);
+
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        
+        let stylesHtml = '';
+        document.querySelectorAll('style, link[rel="stylesheet"]').forEach(el => {
+            stylesHtml += el.outerHTML;
+        });
+
+        doc.write(`
+            <html dir="rtl">
+                <head>
+                    <title>Ticket-${booking.booking_reference}-${passenger.name}</title>
+                    ${stylesHtml}
+                    <style>
+                        body {
+                            margin: 0;
+                            padding: 20px;
+                            background: white;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            min-height: 100vh;
+                            font-family: inherit;
+                        }
+                        * {
+                            -webkit-print-color-adjust: exact !important;
+                            print-color-adjust: exact !important;
+                        }
+                        @page {
+                            size: letter landscape;
+                            margin: 0;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div style="width: 100%; max-width: 900px;">
+                        ${ticketElement.outerHTML}
+                    </div>
+                    <script>
+                        window.onload = () => {
+                            setTimeout(() => {
+                                window.print();
+                                setTimeout(() => {
+                                    window.frameElement.remove();
+                                }, 1000);
+                            }, 500);
+                        };
+                    </script>
+                </body>
+            </html>
+        `);
+        doc.close();
+    };
+
     return (
-        <div className="overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
+        <div 
+            id={`ticket-${passenger.id_passengers || index}`}
+            className="overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-sm hover:shadow-md transition-shadow duration-300"
+        >
             {/* Header strip */}
             <div className={`bg-gradient-to-r ${airline.color} px-5 py-2.5 flex items-center justify-between`} dir="rtl">
                 <div className="flex items-center gap-3 text-white">
@@ -163,11 +260,15 @@ function BoardingPass({ passenger, booking, index }) {
                             title="اضغط لتكبير رمز QR"
                             style={{ animationDuration: '4s' }}
                         >
-                            <img
-                                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrData)}&color=4974f9&bgcolor=ffffff`}
-                                alt="QR Code"
-                                className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-                            />
+                            {qrCodeUrl ? (
+                                <img
+                                    src={qrCodeUrl}
+                                    alt="QR Code"
+                                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                                />
+                            ) : (
+                                <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#4974f9] border-t-transparent" />
+                            )}
                             <div className="absolute inset-0 bg-[#4974f9]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                                 <span className="text-[9px] font-black text-[#4974f9] bg-white px-2 py-1 rounded-xl shadow-md border border-slate-100">تكبير الرمز</span>
                             </div>
@@ -196,6 +297,18 @@ function BoardingPass({ passenger, booking, index }) {
                 ))}
             </div>
 
+            {/* Download PDF button bar */}
+            <div className="bg-slate-50 px-5 py-3.5 flex justify-between items-center border-t border-slate-150" data-html2canvas-ignore="true">
+                <span className="text-[10px] font-bold text-slate-400">تذكرة صعود جاهزة للطباعة أو الحفظ</span>
+                <button
+                    onClick={handleDownloadPdf}
+                    className="flex items-center gap-1.5 px-4.5 py-2 bg-[#4974f9] hover:bg-[#3a5fd4] text-white rounded-xl text-xs font-black shadow-md shadow-[#4974f9]/20 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
+                >
+                    <Download size={14} />
+                    <span>تحميل التذكرة PDF</span>
+                </button>
+            </div>
+
             {/* QR Zoom Modal */}
             {showQrModal && (
                 <div
@@ -222,11 +335,15 @@ function BoardingPass({ passenger, booking, index }) {
 
                         {/* Large QR Image */}
                         <div className="flex flex-col items-center justify-center p-4 border border-dashed border-slate-200 rounded-2xl bg-white shadow-inner">
-                            <img
-                                src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrData)}&color=4974f9&bgcolor=ffffff`}
-                                alt="QR Boarding Pass"
-                                className="w-64 h-64 object-contain"
-                            />
+                            {qrCodeUrl ? (
+                                <img
+                                    src={qrCodeUrl}
+                                    alt="QR Boarding Pass"
+                                    className="w-64 h-64 object-contain"
+                                />
+                            ) : (
+                                <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#4974f9] border-t-transparent" />
+                            )}
                             <p className="text-[10px] font-black text-slate-400 mt-3 text-center leading-relaxed">
                                 يرجى تقديم الرمز للمسح عند بوابة الصعود
                             </p>
@@ -254,6 +371,29 @@ function BookingGroup({ booking }) {
     const status = statusConfig[booking.status] || statusConfig.certain;
     const airline = airlineConfig[booking.airline_code] || { name: booking.airline_code, color: 'from-slate-600 to-slate-800' };
     const StatusIcon = status.icon;
+
+    // Retrieve offline payment proof and branch details
+    const localProof = localStorage.getItem(`payment_proof_${booking.booking_reference}`);
+    const localBranch = (() => {
+        try {
+            const val = localStorage.getItem(`payment_branch_${booking.booking_reference}`);
+            return val ? JSON.parse(val) : null;
+        } catch (e) {
+            return null;
+        }
+    })();
+    const [showProofModal, setShowProofModal] = useState(false);
+    const localCancelRequest = localStorage.getItem(`cancel_request_${booking.booking_reference}`) === 'pending';
+
+    const handleCancelBooking = (e) => {
+        e.stopPropagation();
+        const confirmCancel = window.confirm("هل أنت متأكد من رغبتك في إرسال طلب إلغاء هذا الحجز؟");
+        if (!confirmCancel) return;
+
+        localStorage.setItem(`cancel_request_${booking.booking_reference}`, 'pending');
+        alert("تم إرسال طلب إلغاء الرحلة بنجاح. وهو قيد المراجعة الآن.");
+        window.location.reload();
+    };
 
     const loadPassengers = async () => {
         if (passengers.length > 0) { setExpanded(v => !v); return; }
@@ -309,6 +449,23 @@ function BookingGroup({ booking }) {
                         <p className="text-xs font-black text-slate-700">${Number(booking.final_price).toLocaleString()}</p>
                     </div>
 
+                    {localCancelRequest ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-black bg-orange-500/10 text-orange-700 border border-orange-200/50">
+                            <Clock size={12} />
+                            <span>بانتظار الإلغاء</span>
+                        </span>
+                    ) : (
+                        booking.status !== 'cancelled' && (
+                            <button
+                                onClick={handleCancelBooking}
+                                title="طلب إلغاء الحجز"
+                                className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600 transition-all duration-200 cursor-pointer"
+                            >
+                                <Trash2 size={15} />
+                            </button>
+                        )
+                    )}
+
                     <span className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-black ${status.bg} ${status.text}`}>
                         <StatusIcon size={12} />
                         {status.label}
@@ -333,6 +490,60 @@ function BookingGroup({ booking }) {
                     {passengers.map((pax, idx) => (
                         <BoardingPass key={pax.id_passengers} passenger={pax} booking={booking} index={idx} />
                     ))}
+                </div>
+            )}
+
+            {/* Offline payment details and proof */}
+            {(localBranch || localProof) && (
+                <div className="bg-slate-50/80 px-5 py-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs" dir="rtl">
+                    {localBranch && (
+                        <div className="flex items-center gap-1.5 text-slate-600">
+                            <MapPin size={13} className="text-[#4974f9]" />
+                            <span className="font-bold">مكتب الدفع المختار:</span>
+                            <span className="font-black text-slate-800">{localBranch.name} ({localBranch.city})</span>
+                        </div>
+                    )}
+                    {localProof && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setShowProofModal(true); }}
+                            className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-[11px] font-black border border-emerald-200 transition-all cursor-pointer mr-auto"
+                        >
+                            <CheckCircle size={12} />
+                            <span>عرض إثبات الدفع المرفق</span>
+                        </button>
+                    )}
+
+                    {showProofModal && (
+                        <div
+                            className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm"
+                            onClick={(e) => { e.stopPropagation(); setShowProofModal(false); }}
+                        >
+                            <div
+                                className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white p-6 shadow-2xl border border-slate-100"
+                                onClick={e => e.stopPropagation()}
+                            >
+                                <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-150" dir="rtl">
+                                    <h3 className="text-sm font-black text-slate-900 font-sans">إثبات الدفع المرفق</h3>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setShowProofModal(false); }}
+                                        className="text-slate-400 hover:text-slate-600 cursor-pointer font-black text-sm"
+                                    >
+                                        إغلاق
+                                    </button>
+                                </div>
+                                <div className="flex items-center justify-center p-2 bg-slate-50 rounded-2xl border border-slate-200 shadow-inner">
+                                    <img
+                                        src={localProof}
+                                        alt="إثبات الدفع"
+                                        className="max-h-[350px] w-auto object-contain rounded-xl"
+                                    />
+                                </div>
+                                <div className="mt-4 text-center text-[10px] font-bold text-slate-400">
+                                    رمز الحجز المرجعي: {booking.booking_reference}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

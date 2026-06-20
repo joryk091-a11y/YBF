@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Building2, CheckCircle2, CreditCard, Landmark, Lock, ShieldCheck, Plane, MoveLeft, ChevronDown, Luggage, HeartPulse, Accessibility, Wind, Salad, BadgeCheck, Headphones } from 'lucide-react'
+import { useEffect, useMemo, useState, useRef } from 'react'
+import { Building2, CheckCircle2, CreditCard, Landmark, Lock, ShieldCheck, Plane, MoveLeft, ChevronDown, Luggage, HeartPulse, Accessibility, Wind, Salad, BadgeCheck, Headphones, Camera, Upload, MapPin, Phone, Trash2, AlertCircle, Building, Clock } from 'lucide-react'
 import { useLocation, Link } from 'react-router-dom'
 import { useSearch } from '../utils/SearchContext'
 import { useAuth } from '../utils/AuthContext'
@@ -35,7 +35,7 @@ const paymentMethods = [
   },
   {
     id: 'branch',
-    label: 'الدفع في مكاتبنا',
+    label: 'الدفع في مكاتب شركة الطيران',
     description: 'تأكيد خلال 3 أيام',
     icon: Building2,
     badge: 'متاح',
@@ -49,6 +49,144 @@ const paymentMethods = [
   },
 ]
 
+const BRANCHES = {
+  IY: [
+    { id: 1, city: 'صنعاء', name: 'مكتب اليمنية الرئيسي - الحصبة', address: 'شارع مطار صنعاء الدولي - مبنى اليمنية الرئيسي', phone: '01-250621', hours: '8:00 ص - 8:00 م' },
+    { id: 2, city: 'صنعاء', name: 'فرع اليمنية - الزبيري', address: 'شارع الزبيري - بجوار وزارة النفط والمعادن', phone: '01-207000', hours: '8:00 ص - 4:00 م' },
+    { id: 3, city: 'عدن', name: 'مكتب اليمنية - المعلا', address: 'الشارع الرئيسي - بجوار بنك اليمن والكويت', phone: '02-242630', hours: '8:00 ص - 8:00 م' },
+    { id: 4, city: 'عدن', name: 'فرع اليمنية - خور مكسر', address: 'شارع المطار - أمام ساحة العروض', phone: '02-234567', hours: '8:00 ص - 4:00 م' },
+    { id: 5, city: 'تعز', name: 'فرع اليمنية - شارع جمال', address: 'شارع جمال - أمام مكتب التربية والتعليم', phone: '04-252220', hours: '8:00 ص - 6:00 م' },
+    { id: 6, city: 'المكلا', name: 'فرع اليمنية - الشرج', address: 'الشارع الرئيسي - عمارة باجرش', phone: '05-302550', hours: '8:00 ص - 8:00 م' },
+    { id: 7, city: 'القاهرة', name: 'مكتب اليمنية - الدقي', address: '12 شارع السد العالي - الدقي - الجيزة', phone: '+20-2-3336111', hours: '9:00 ص - 6:00 م' },
+    { id: 8, city: 'جدة', name: 'مكتب اليمنية - البغدادية', address: 'حي البغدادية - شارع الميناء - عمارة باخشب', phone: '+966-12-6422222', hours: '9:00 ص - 7:00 م' }
+  ],
+  MS: [
+    { id: 9, city: 'القاهرة', name: 'مكتب مصر للطيران - التحرير', address: 'ميدان التحرير - وسط البلد', phone: '19677', hours: '8:00 ص - 10:00 م' },
+    { id: 10, city: 'القاهرة', name: 'مكتب مصر للطيران - مصر الجديدة', address: '22 شارع صلاح سالم - مصر الجديدة', phone: '19677', hours: '8:00 ص - 8:00 م' },
+    { id: 11, city: 'عدن', name: 'وكيل مصر للطيران - عدن', address: 'المعلا - الشارع الرئيسي', phone: '02-241112', hours: '8:00 ص - 4:00 م' },
+    { id: 12, city: 'صنعاء', name: 'وكيل مصر للطيران - صنعاء', address: 'شارع حدة - مركز الكميم التجاري', phone: '01-443322', hours: '8:00 ص - 4:00' }
+  ],
+  BS: [
+    { id: 13, city: 'عدن', name: 'مكتب طيران بلقيس - خورمكسر', address: 'شارع المطار - بجوار مبنى المحافظة', phone: '02-277777', hours: '8:00 ص - 6:00 م' },
+    { id: 14, city: 'صنعاء', name: 'مكتب طيران بلقيس - حدة', address: 'شارع حدة - عمارة بلقيس', phone: '01-555555', hours: '8:00 ص - 5:00 م' }
+  ],
+  QY: [
+    { id: 15, city: 'عدن', name: 'مكتب فلاي عدن - المنصورة', address: 'شارع تسعين - أمام سوبر ماركت ظمران', phone: '02-300100', hours: '8:00 ص - 8:00 م' }
+  ],
+  DEFAULT: [
+    { id: 16, city: 'صنعاء', name: 'مكتب YBF الرئيسي - حدة', address: 'شارع حدة - أمام سيتي ماكس التجاري', phone: '01-444555', hours: '8:00 ص - 9:00 م' },
+    { id: 17, city: 'عدن', name: 'مكتب YBF - المنصورة', address: 'الشارع الرئيسي - بجوار جولة كالتكس', phone: '02-333444', hours: '8:00 ص - 9:00 م' },
+    { id: 18, city: 'تعز', name: 'مكتب YBF - شارع جمال', address: 'شارع جمال - برج الحميري الدور الأول', phone: '04-222333', hours: '8:00 ص - 7:00 م' },
+    { id: 19, city: 'المكلا', name: 'مكتب YBF - الشرج', address: 'الشارع الرئيسي - عمارة باجرش', phone: '05-300400', hours: '8:00 ص - 8:00 م' }
+  ]
+}
+
+
+function PaymentProofUpload({
+  paymentProofImage,
+  isCameraActive,
+  cameraError,
+  videoRef,
+  startCamera,
+  stopCamera,
+  capturePhoto,
+  handleFileUpload,
+  setPaymentProofImage,
+  label
+}) {
+  return (
+    <div className="rounded-xl border border-slate-200/60 bg-slate-50/10 p-5">
+      <h4 className="text-xs font-black text-slate-800 mb-3 flex items-center gap-2 justify-start" dir="rtl">
+        <Camera className="h-4 w-4 text-[#4974f9]" />
+        <span>إثبات عملية الدفع ({label})</span>
+      </h4>
+
+      {paymentProofImage ? (
+        <div className="relative rounded-xl border border-slate-200 bg-white p-3 flex flex-col items-center">
+          <img
+            src={paymentProofImage}
+            alt="Payment Proof Preview"
+            className="max-h-[200px] w-auto object-contain rounded-lg shadow-sm"
+          />
+          <div className="mt-3 flex items-center justify-between w-full text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100" dir="rtl">
+            <span className="font-bold text-slate-500">تم إرفاق إثبات الدفع بنجاح</span>
+            <button
+              type="button"
+              onClick={() => setPaymentProofImage(null)}
+              className="text-red-500 hover:text-red-700 font-black flex items-center gap-1 cursor-pointer"
+            >
+              <Trash2 className="h-4 w-4" />
+              <span>إزالة</span>
+            </button>
+          </div>
+        </div>
+      ) : isCameraActive ? (
+        <div className="relative rounded-xl border border-slate-200 bg-black overflow-hidden flex flex-col items-center">
+          <video
+            ref={videoRef}
+            playsInline
+            muted
+            className="w-full max-h-[300px] object-cover"
+          />
+          <div className="absolute bottom-4 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={capturePhoto}
+              className="bg-[#4974f9] text-white font-black px-6 py-2.5 rounded-xl shadow-lg hover:bg-[#3b63db] active:scale-95 transition-all text-xs cursor-pointer"
+            >
+              التقاط الصورة
+            </button>
+            <button
+              type="button"
+              onClick={stopCamera}
+              className="bg-white/95 text-slate-800 font-black px-4 py-2.5 rounded-xl shadow-lg hover:bg-white active:scale-95 transition-all text-xs cursor-pointer"
+            >
+              إلغاء
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {cameraError && (
+            <div className="flex items-center gap-2 text-xs font-bold text-red-600 bg-red-50 p-3 rounded-lg border border-red-100" dir="rtl">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{cameraError}</span>
+            </div>
+          )}
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {/* File Upload Button */}
+            <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 hover:border-[#4974f9] hover:bg-[#4974f9]/5 rounded-xl p-5 cursor-pointer transition-all text-center">
+              <Upload className="h-6 w-6 text-slate-400 mb-2" />
+              <span className="text-xs font-black text-slate-700">تحميل إيصال الدفع</span>
+              <span className="text-[10px] text-slate-400 font-bold mt-1">تصفح ملفات جهازك (PNG, JPG)</span>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+            </label>
+
+            {/* Camera Capture Button */}
+            <button
+              type="button"
+              onClick={startCamera}
+              className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 hover:border-[#4974f9] hover:bg-[#4974f9]/5 rounded-xl p-5 transition-all text-center cursor-pointer"
+            >
+              <Camera className="h-6 w-6 text-slate-400 mb-2" />
+              <span className="text-xs font-black text-slate-700">التقاط صورة إثبات الدفع</span>
+              <span className="text-[10px] text-slate-400 font-bold mt-1">استخدام الكاميرا الخاصة بجهازك</span>
+            </button>
+          </div>
+          <p className="text-[9px] font-bold text-slate-400 leading-relaxed text-right mt-1" dir="rtl">
+            * تصوير إيصال الإيداع أو فاتورة الدفع النقدي يساعد في تسريع مراجعة الطلب وتأكيد مقاعدك مباشرة.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 const countdownMethods = new Set(['branch', 'transfer'])
 
@@ -119,12 +257,82 @@ function PaymentPage() {
   const [secondsLeft, setSecondsLeft] = useState(CARD_COUNTDOWN)
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
 
+  // Branch and Payment Proof states
+  const [selectedBranchCity, setSelectedBranchCity] = useState('الكل')
+  const [selectedBranch, setSelectedBranch] = useState(null)
+  const [paymentProofImage, setPaymentProofImage] = useState(null)
+  const [isCameraActive, setIsCameraActive] = useState(false)
+  const [cameraError, setCameraError] = useState(null)
+  const videoRef = useRef(null)
+
+  const startCamera = async () => {
+    setCameraError(null)
+    setIsCameraActive(true)
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        // Wait for metadata to load to play
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current.play().catch(e => console.error("Video play error:", e))
+        }
+      }
+    } catch (err) {
+      console.error('Error accessing camera:', err)
+      setCameraError('تعذر الوصول إلى الكاميرا. يرجى التحقق من صلاحيات المتصفح.')
+      setIsCameraActive(false)
+    }
+  }
+
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject
+      const tracks = stream.getTracks()
+      tracks.forEach(track => track.stop())
+      videoRef.current.srcObject = null
+    }
+    setIsCameraActive(false)
+  }
+
+  const capturePhoto = () => {
+    if (videoRef.current) {
+      const canvas = document.createElement('canvas')
+      canvas.width = videoRef.current.videoWidth || 640
+      canvas.height = videoRef.current.videoHeight || 480
+      const ctx = canvas.getContext('2d')
+      // Flip canvas context for mirroring if needed, or draw directly
+      ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height)
+      const dataUrl = canvas.toDataURL('image/jpeg')
+      setPaymentProofImage(dataUrl)
+      stopCamera()
+    }
+  }
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setPaymentProofImage(reader.result)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   useEffect(() => {
     const timer = setInterval(() => {
       setSecondsLeft((current) => (current > 0 ? current - 1 : 0))
     }, 1000)
 
-    return () => clearInterval(timer)
+    return () => {
+      clearInterval(timer)
+      // Stop camera if component unmounts
+      if (videoRef.current && videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject
+        const tracks = stream.getTracks()
+        tracks.forEach(track => track.stop())
+      }
+    }
   }, [])
 
   const handlePaymentMethodChange = (methodId) => {
@@ -136,6 +344,11 @@ function PaymentPage() {
   const [bookingRef, setBookingRef] = useState('')
 
   const handleConfirmBooking = async () => {
+    if (paymentMethod === 'branch' && !selectedBranch) {
+      alert('يرجى اختيار الفرع الذي ترغب بالدفع فيه لإتمام عملية الحجز.')
+      return
+    }
+
     setIsSubmitting(true)
     const passengers = location.state?.passengers || []
     const userObj = JSON.parse(localStorage.getItem('user') || '{}')
@@ -159,10 +372,18 @@ function PaymentPage() {
         })),
         totalPrice: finalTotal,
         paymentMethod,
-        status: 'certain',
+        status: (paymentMethod === 'branch' || paymentMethod === 'transfer') ? 'temporary' : 'certain',
         created_at: new Date().toISOString()
       }
       addBooking(newBookingRecord)
+
+      // حفظ إثبات الدفع والفرع المحدد محلياً
+      if (paymentProofImage) {
+        localStorage.setItem(`payment_proof_${referenceToUse}`, paymentProofImage)
+      }
+      if (paymentMethod === 'branch' && selectedBranch) {
+        localStorage.setItem(`payment_branch_${referenceToUse}`, JSON.stringify(selectedBranch))
+      }
     }
 
     try {
@@ -180,7 +401,9 @@ function PaymentPage() {
           paymentMethod,
           userId: userObj.id,
           reference: refVal,
-          selectedSeats
+          selectedSeats,
+          paymentProof: paymentProofImage,
+          selectedBranchId: selectedBranch ? selectedBranch.id : null
         })
       })
 
@@ -432,9 +655,109 @@ function PaymentPage() {
                 </div>
               )}
 
-              {(paymentMethod === 'transfer' || paymentMethod === 'branch') && (
+              {paymentMethod === 'branch' && (
                 <div className="py-2">
-                  <div className="mb-6 flex items-center justify-between rounded-xl bg-emerald-500/5 p-4 border border-emerald-500/10">
+                  <div className="mb-6 flex items-center justify-between rounded-xl bg-emerald-500/5 p-4 border border-emerald-500/10" dir="rtl">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
+                        <CheckCircle2 className="h-4 w-4" />
+                      </div>
+                      <p className="text-xs font-black text-emerald-800">التأكيد خلال 3 أيام (72 ساعة) من تاريخ الحجز</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-xs font-black text-slate-800 mb-3 flex items-center gap-2 justify-start" dir="rtl">
+                        <Building className="h-4 w-4 text-[#4974f9]" />
+                        <span>مواقع المكاتب والفروع المعتمدة للدفع</span>
+                      </h3>
+                      <p className="text-[11px] font-bold text-slate-400 mb-4 text-right">
+                        يمكنك زيارة أحد مكاتب شركة الطيران الناقلة ({selectedFlight?.airline_name || 'اليمنية للطيران'}) المذكورة أدناه للدفع نقداً وتأكيد حجزك.
+                      </p>
+
+                      {/* City Filters */}
+                      <div className="flex flex-wrap gap-2 mb-4 justify-start" dir="rtl">
+                        {['الكل', ...new Set((BRANCHES[selectedFlight?.airline_code || selectedFlight?.airlineCode] || BRANCHES.IY).map(b => b.city))].map(city => (
+                          <button
+                            key={city}
+                            type="button"
+                            onClick={() => setSelectedBranchCity(city)}
+                            className={`px-3.5 py-1.5 text-xs font-black rounded-xl border transition-all duration-200 cursor-pointer ${
+                              selectedBranchCity === city
+                                ? 'bg-[#4974f9] text-white border-[#4974f9] shadow-md shadow-[#4974f9]/20'
+                                : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                            }`}
+                          >
+                            {city}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Branches Grid */}
+                      <div className="grid gap-3 sm:grid-cols-2 max-h-[300px] overflow-y-auto pr-1" dir="rtl">
+                        {(BRANCHES[selectedFlight?.airline_code || selectedFlight?.airlineCode] || BRANCHES.IY)
+                          .filter(b => selectedBranchCity === 'الكل' || b.city === selectedBranchCity).map(branch => {
+                          const isSelected = selectedBranch?.id === branch.id
+                          return (
+                            <button
+                              key={branch.id}
+                              type="button"
+                              onClick={() => setSelectedBranch(branch)}
+                              className={`flex flex-col text-right p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                                isSelected
+                                  ? 'border-[#4974f9] bg-[#4974f9]/5 shadow-sm'
+                                  : 'border-slate-100 bg-slate-50/50 hover:border-slate-200'
+                              }`}
+                            >
+                              <div className="flex items-start justify-between w-full">
+                                <span className="font-black text-xs text-slate-800">{branch.name}</span>
+                                {isSelected && (
+                                  <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-[#4974f9] text-white">
+                                    <CheckCircle2 className="h-3 w-3" />
+                                  </span>
+                                )}
+                              </div>
+                              <div className="mt-2.5 space-y-1.5 w-full">
+                                <p className="text-[10px] text-slate-400 font-bold flex items-center gap-1.5 justify-start">
+                                  <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                  <span className="truncate">{branch.address}</span>
+                                </p>
+                                <p className="text-[10px] text-slate-400 font-bold flex items-center gap-1.5 justify-start">
+                                  <Phone className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                  <span dir="ltr">{branch.phone}</span>
+                                </p>
+                                <p className="text-[10px] text-slate-400 font-bold flex items-center gap-1.5 justify-start">
+                                  <Clock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                  <span>{branch.hours}</span>
+                                </p>
+                              </div>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Shared Payment Proof Component */}
+                    <PaymentProofUpload
+                      paymentProofImage={paymentProofImage}
+                      isCameraActive={isCameraActive}
+                      cameraError={cameraError}
+                      videoRef={videoRef}
+                      startCamera={startCamera}
+                      stopCamera={stopCamera}
+                      capturePhoto={capturePhoto}
+                      handleFileUpload={handleFileUpload}
+                      setPaymentProofImage={setPaymentProofImage}
+                      label="سند أو إيصال الدفع النقدي بالمكتب"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {paymentMethod === 'transfer' && (
+                <div className="py-2">
+                  <div className="mb-6 flex items-center justify-between rounded-xl bg-emerald-500/5 p-4 border border-emerald-500/10" dir="rtl">
                     <div className="flex items-center gap-3">
                       <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
                         <CheckCircle2 className="h-4 w-4" />
@@ -443,27 +766,43 @@ function PaymentPage() {
                     </div>
                   </div>
 
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="rounded-xl border border-slate-200/60 bg-slate-50/20 p-5">
-                      <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400">بيانات الحساب البنكي</h4>
-                      <div className="mt-4 space-y-3">
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="font-bold text-slate-400">البنك والمصرف</span>
-                          <span className="font-black text-slate-800">بنك التضامن الإسلامي</span>
-                        </div>
-                        <div className="border-t border-slate-100 my-2" />
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="font-bold text-slate-400">رقم الحساب</span>
-                          <span className="font-black text-slate-800 tracking-wider" dir="ltr">0012-45678-001</span>
+                  <div className="space-y-6">
+                    <div className="grid gap-4 sm:grid-cols-2" dir="rtl">
+                      <div className="rounded-xl border border-slate-200/60 bg-slate-50/20 p-5 text-right">
+                        <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400">بيانات الحساب البنكي</h4>
+                        <div className="mt-4 space-y-3">
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="font-bold text-slate-400">البنك والمصرف</span>
+                            <span className="font-black text-slate-800">بنك التضامن الإسلامي</span>
+                          </div>
+                          <div className="border-t border-slate-100 my-2" />
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="font-bold text-slate-400">رقم الحساب</span>
+                            <span className="font-black text-slate-800 tracking-wider" dir="ltr">0012-45678-001</span>
+                          </div>
                         </div>
                       </div>
+                      <div className="rounded-xl border border-slate-200/60 bg-slate-50/20 p-5 text-right">
+                        <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400">طريقة التأكيد والخطوات</h4>
+                        <p className="mt-4 text-[11px] font-bold leading-relaxed text-slate-400">
+                          يرجى إرسال صورة إيصال التحويل أو مراجعة أقرب فرع لنا قبل انتهاء مؤقت الـ 72 ساعة لضمان بقاء الحجز وعدم الإلغاء تلقائياً.
+                        </p>
+                      </div>
                     </div>
-                    <div className="rounded-xl border border-slate-200/60 bg-slate-50/20 p-5">
-                      <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400">طريقة التأكيد والخطوات</h4>
-                      <p className="mt-4 text-[11px] font-bold leading-relaxed text-slate-400">
-                        يرجى إرسال صورة إيصال التحويل أو مراجعة أقرب فرع لنا قبل انتهاء مؤقت الـ 72 ساعة لضمان بقاء الحجز وعدم الإلغاء تلقائياً.
-                      </p>
-                    </div>
+
+                    {/* Shared Payment Proof Component */}
+                    <PaymentProofUpload
+                      paymentProofImage={paymentProofImage}
+                      isCameraActive={isCameraActive}
+                      cameraError={cameraError}
+                      videoRef={videoRef}
+                      startCamera={startCamera}
+                      stopCamera={stopCamera}
+                      capturePhoto={capturePhoto}
+                      handleFileUpload={handleFileUpload}
+                      setPaymentProofImage={setPaymentProofImage}
+                      label="صورة أو لقطة شاشة لإيصال التحويل البنكي"
+                    />
                   </div>
                 </div>
               )}

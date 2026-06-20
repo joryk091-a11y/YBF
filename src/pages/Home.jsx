@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Car, Hotel, Plane, Search, Armchair, UserCheck, CreditCard, Shield, Package, Clock, Globe, Award, ShieldCheck } from 'lucide-react'
+import { Car, Hotel, Plane, MapPin, LayoutGrid, ClipboardList, Ticket, Shield, Package, Clock, Globe, Award, ShieldCheck } from 'lucide-react'
 
 import HeroSearchPanel from '../components/HeroSearchPanel.jsx'
 import heroPlane from '../assets/image1.png'
@@ -38,26 +38,30 @@ const steps = [
   {
     title: 'ابحث عن رحلتك',
     description: 'قارن بين مئات الرحلات والأسعار من مختلف شركات الطيران اليمنية والدولية.',
-    icon: Search,
-    color: 'bg-blue-50 text-blue-600',
+    icon: MapPin,
+    color: 'from-blue-500/10 to-indigo-500/5 text-blue-600 border-blue-100',
+    hoverGlow: 'group-hover:shadow-blue-500/20'
   },
   {
     title: 'اختر مقعدك',
     description: 'استعرض مخطط الطائرة الحقيقي واختر مقعدك المفضل بكل سهولة.',
-    icon: Armchair,
-    color: 'bg-amber-50 text-amber-600',
+    icon: LayoutGrid,
+    color: 'from-amber-500/10 to-orange-500/5 text-amber-600 border-amber-100',
+    hoverGlow: 'group-hover:shadow-amber-500/20'
   },
   {
     title: 'أدخل بياناتك',
     description: 'قم بتعبئة بيانات المسافرين وحفظها لحجوزاتك القادمة بشكل أسرع.',
-    icon: UserCheck,
-    color: 'bg-emerald-50 text-emerald-600',
+    icon: ClipboardList,
+    color: 'from-emerald-500/10 to-teal-500/5 text-emerald-600 border-emerald-100',
+    hoverGlow: 'group-hover:shadow-emerald-500/20'
   },
   {
     title: 'احجز واستلم التذكرة',
     description: 'ادفع بأمان عبر وسائل الدفع المتاحة واستلم تذكرتك الإلكترونية فوراً.',
-    icon: CreditCard,
-    color: 'bg-purple-50 text-purple-600',
+    icon: Ticket,
+    color: 'from-purple-500/10 to-indigo-500/5 text-purple-600 border-purple-100',
+    hoverGlow: 'group-hover:shadow-purple-500/20'
   },
 ]
 
@@ -102,7 +106,7 @@ function HomePage() {
             >
               هل أنت مستعد
               <br />
-              <span className="text-[#f93f3b]">للإقلاع؟</span>
+              <span className="text-[#4974f9]">للإقلاع؟</span>
             </h1>
           </div>
         </div>
@@ -138,11 +142,8 @@ function HomePage() {
         {/* Innovative 'Flight Journey' Section */}
         <section id="how-it-works" className="mx-auto mt-40 max-w-7xl px-4 sm:px-6 lg:px-8 relative" dir="rtl">
           <div className="relative mb-24 text-center">
-            <span className="inline-block rounded-full bg-blue-600/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 mb-4">
-              رحلة الحجز
-            </span>
-            <h2 className="text-4xl font-black tracking-tight text-slate-900 sm:text-5xl">خطوات بسيطة.. لرحلة سعيدة</h2>
-            <div className="mx-auto mt-4 h-1.5 w-24 rounded-full bg-gradient-to-r from-blue-600 to-indigo-400" />
+            <h2 className="text-4xl font-black tracking-tight text-slate-900 sm:text-5xl">أربع خطوات بسيطة تفصلك عن إقلاعك القادم</h2>
+            <div className="mx-auto mt-4 h-1.5 w-24 rounded-full bg-gradient-to-r from-[#4974f9] to-indigo-400" />
           </div>
 
           <div className="relative">
@@ -163,23 +164,48 @@ function HomePage() {
               </circle>
             </svg>
 
-            <div className="grid gap-12 lg:grid-cols-4 relative z-10">
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 relative z-10">
               {steps.map((step, index) => (
                 <div
                   key={index}
-                  className={`group relative flex flex-col items-center text-center transition-all duration-500 hover:scale-105 ${index % 2 === 0 ? 'lg:-translate-y-8' : 'lg:translate-y-8'
-                    }`}
+                  className="group relative flex flex-col transition-all duration-500"
                 >
-                  <div className={`relative mb-8 flex h-24 w-24 items-center justify-center rounded-[2rem] border-4 border-white shadow-2xl transition-all duration-500 group-hover:rotate-[15deg] group-hover:shadow-blue-600/20 ${step.color}`}>
-                    <div className="absolute inset-0 rounded-[2rem] opacity-20 bg-current" />
-                    <step.icon className="h-10 w-10 relative z-10" />
-                    <div className="absolute -right-2 -top-2 flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-sm font-black text-white shadow-lg">
-                      {index + 1}
+                  {/* Step Card Container */}
+                  <div className="relative flex flex-col h-full rounded-[2.5rem] bg-gradient-to-b from-white to-slate-50/50 border border-slate-100/80 p-8 shadow-[0_15px_45px_rgba(0,0,0,0.02)] transition-all duration-500 hover:-translate-y-3 group-hover:shadow-[0_30px_60px_rgba(73,116,249,0.07)] group-hover:border-blue-200/50 overflow-hidden w-full flex-1">
+                    
+                    {/* Glowing Accent Top Bar */}
+                    <div className="absolute top-0 inset-x-8 h-[3px] bg-gradient-to-r from-transparent via-[#4974f9]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    
+                    {/* Big Elegant Number Background */}
+                    <span className="absolute -right-2 -top-4 text-8xl font-black text-slate-100/50 select-none tracking-tighter group-hover:text-blue-50/70 transition-colors duration-500">
+                      0{index + 1}
+                    </span>
+
+                    {/* Icon Container */}
+                    <div className={`relative mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr shadow-md ${step.color} border border-white/50`}>
+                      <step.icon className="h-7 w-7 transition-transform duration-500 group-hover:scale-110" />
                     </div>
-                  </div>
-                  <div className="rounded-[2.5rem] bg-white/40 p-8 backdrop-blur-xl border border-white/60 shadow-xl transition-all group-hover:bg-white group-hover:shadow-2xl">
-                    <h3 className="mb-4 text-xl font-black text-slate-900">{step.title}</h3>
-                    <p className="text-sm leading-7 font-medium text-slate-500">{step.description}</p>
+
+                    {/* Step Content */}
+                    <div className="relative z-10 flex-1 flex flex-col justify-between">
+                      <div>
+                        <h3 className="mb-3 text-lg font-black text-slate-800 transition-colors group-hover:text-[#4974f9]">
+                          {step.title}
+                        </h3>
+                        <p className="text-[11px] leading-relaxed font-semibold text-slate-400 group-hover:text-slate-500 transition-colors">
+                          {step.description}
+                        </p>
+                      </div>
+                      
+                      {/* Sub-indicator */}
+                      <div className="mt-6 flex items-center gap-1.5 text-[10px] font-black text-[#4974f9] opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-500">
+                        <span>ابدأ الخطوة</span>
+                        <span className="text-xs">←</span>
+                      </div>
+                    </div>
+
+                    {/* Glowing bottom-left effect */}
+                    <div className="absolute -left-16 -bottom-16 h-36 w-36 rounded-full bg-gradient-to-tr from-[#4974f9]/5 to-indigo-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                   </div>
                 </div>
               ))}
@@ -230,7 +256,7 @@ function HomePage() {
                   <div className="mt-6 flex items-center gap-3">
                     <span className="text-[10px] font-black text-slate-400 uppercase">هل كان هذا مفيداً؟</span>
                     <button className="rounded-lg bg-white border border-slate-200 px-3 py-1 text-xs font-bold text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 transition-colors">نعم</button>
-                    <button className="rounded-lg bg-white border border-slate-200 px-3 py-1 text-xs font-bold text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors">لا</button>
+                    <button className="rounded-lg bg-white border border-slate-200 px-3 py-1 text-xs font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-colors">لا</button>
                   </div>
                 </div>
               </details>

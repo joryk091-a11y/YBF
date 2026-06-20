@@ -16,6 +16,30 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
+-- Table structure for table `companies`
+--
+
+DROP TABLE IF EXISTS `companies`;
+CREATE TABLE `companies` (
+  `id_company` int NOT NULL AUTO_INCREMENT,
+  `company_name` varchar(100) NOT NULL,
+  `airline_code` varchar(10) NOT NULL,
+  PRIMARY KEY (`id_company`),
+  UNIQUE KEY `airline_code_UNIQUE` (`airline_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `companies`
+--
+
+LOCK TABLES `companies` WRITE;
+/*!40000 ALTER TABLE `companies` DISABLE KEYS */;
+INSERT INTO `companies` (`id_company`, `company_name`, `airline_code`) VALUES 
+(1, 'اليمنية', 'IY');
+/*!40000 ALTER TABLE `companies` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `admins`
 --
 
@@ -23,15 +47,18 @@ DROP TABLE IF EXISTS `admins`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `admins` (
-  `id_admin` int NOT NULL,
-  `email` varchar(50) NOT NULL,
-  `password` varchar(50) NOT NULL,
+  `id_admin` int NOT NULL AUTO_INCREMENT,
+  `email` varchar(100) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `role` enum('admin','company') DEFAULT 'company',
+  `airline_code` varchar(10) DEFAULT NULL,
   `employee_id` varchar(50) DEFAULT NULL,
   `department` varchar(45) DEFAULT NULL,
   `last_login` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id_admin`),
-  UNIQUE KEY `employee_id_UNIQUE` (`employee_id`)
+  KEY `airline_code_idx` (`airline_code`),
+  CONSTRAINT `fk_admins_companies` FOREIGN KEY (`airline_code`) REFERENCES `companies` (`airline_code`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -41,6 +68,9 @@ CREATE TABLE `admins` (
 
 LOCK TABLES `admins` WRITE;
 /*!40000 ALTER TABLE `admins` DISABLE KEYS */;
+INSERT INTO `admins` (`id_admin`, `email`, `password`, `role`, `airline_code`, `employee_id`, `department`, `last_login`, `created_at`) VALUES 
+(1, 'admin@gmail.com', 'ADMIN123', 'admin', NULL, '1', 'قسم الادارة', NULL, CURRENT_TIMESTAMP),
+(2, 'yemenia@gmail.com', 'YEMENIA123', 'company', 'IY', '1', 'قسم اضافة الرحلات', NULL, CURRENT_TIMESTAMP);
 /*!40000 ALTER TABLE `admins` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -160,7 +190,9 @@ CREATE TABLE `flights` (
   `status` enum('active','cancelled','copmleted') DEFAULT NULL,
   `created_at` timestamp(3) NULL DEFAULT NULL,
   `update` timestamp(3) NULL DEFAULT NULL,
-  PRIMARY KEY (`id_flights`)
+  PRIMARY KEY (`id_flights`),
+  KEY `airline_code_idx` (`airline_code`),
+  CONSTRAINT `fk_flights_companies` FOREIGN KEY (`airline_code`) REFERENCES `companies` (`airline_code`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

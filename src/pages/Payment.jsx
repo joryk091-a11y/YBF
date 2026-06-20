@@ -179,7 +179,8 @@ function PaymentPage() {
           extrasTotal,
           paymentMethod,
           userId: userObj.id,
-          reference: refVal
+          reference: refVal,
+          selectedSeats
         })
       })
 

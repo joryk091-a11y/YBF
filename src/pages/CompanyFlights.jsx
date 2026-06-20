@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../utils/AuthContext';
 import Sidebar from '../components/Sidebar';
 import {
@@ -9,17 +9,16 @@ import {
   X,
   Pencil,
   Clock,
-  Trash2,
-  Calendar,
   AlertCircle,
-  TrendingUp,
   XCircle,
   CheckCircle2,
   ChevronDown,
   FileSpreadsheet,
-  UploadCloud,
-  Loader2
+  Loader2,
+  Users,
+  TrendingUp
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 const airportOptions = [
   { code: 'ADE', name: 'عدن (ADE)' },
@@ -35,8 +34,17 @@ const airportOptions = [
   { code: 'ADD', name: 'أديس أبابا (ADD)' },
 ];
 
+const aircraftOptions = [
+  'Airbus A320',
+  'Airbus A330',
+  'Boeing 737',
+  'Boeing 777',
+  'ATR 72',
+  'Fokker 50'
+];
+
 export default function CompanyFlights() {
-  const { user, bookings } = useAuth();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const fileInputRef = useRef(null);
 
@@ -44,70 +52,59 @@ export default function CompanyFlights() {
   const [isDragActive, setIsDragActive] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [toast, setToast] = useState(null);
+  const [loading, setLoading] = useState(true);
   
-  // الحصول على كود الشركة
-  const airlineCode = user.airline_id === 1 ? 'IY' : user.airline_id === 2 ? 'BS' : 'QY';
+  // الحصول على كود واسم الشركة بشكل آمن
+  const companyName = user?.airline_name || localStorage.getItem('companyName') || 'الشركة';
+  const airlineCode = localStorage.getItem('airlineCode') || (user?.airline_id === 1 ? 'IY' : user?.airline_id === 2 ? 'BS' : 'FA');
+  const airlineId = localStorage.getItem('companyId') || user?.airline_id || '';
 
-  // بيانات افتراضية وهمية لرحلات شركة الطيران النشطة
+  // رحلات شركة الطيران النشطة من قاعدة البيانات
   const [flights, setFlights] = useState([]);
 
-  // إعادة تعيين الرحلات عند تغير شركة الطيران للتأكد من مزامنة العرض التقديمي
-  useEffect(() => {
-    const code = user.airline_id === 1 ? 'IY' : user.airline_id === 2 ? 'BS' : 'QY';
-    setFlights([
-      {
-        id: 1,
-        flight_number: `${code}-601`,
-        origin: 'ADE',
-        destination: 'CAI',
-        departure_time: '2026-06-15T08:30',
-        price: 450,
-        status: 'Active',
-      },
-      {
-        id: 2,
-        flight_number: `${code}-702`,
-        origin: 'ADE',
-        destination: 'JED',
-        departure_time: '2026-06-16T14:15',
-        price: 320,
-        status: 'Active',
-      },
-      {
-        id: 3,
-        flight_number: `${code}-803`,
-        origin: 'RIY',
-        destination: 'RUH',
-        departure_time: '2026-06-18T10:00',
-        price: 280,
-        status: 'Delayed',
-      },
-      {
-        id: 4,
-        flight_number: `${code}-904`,
-        origin: 'ADE',
-        destination: 'AMM',
-        departure_time: '2026-06-20T22:30',
-        price: 510,
-        status: 'Cancelled',
-      },
-      {
-        id: 5,
-        flight_number: `${code}-505`,
-        origin: 'GXF',
-        destination: 'ADE',
-        departure_time: '2026-06-22T06:00',
-        price: 150,
-        status: 'Active',
+  // دالة جلب الرحلات الحقيقية من قاعدة البيانات مغلفة بـ useCallback لتجنب التحذيرات
+  const fetchFlights = useCallback(async () => {
+    try {
+      await Promise.resolve();
+      setLoading(true);
+      const code = airlineCode || 'IY';
+      const res = await fetch(`http://localhost:8080/api/flights?airlineCode=${code}&airline_id=${airlineId || ''}`);
+      const data = await res.json();
+      if (data.success) {
+        // مطابقة الحقول القادمة من قاعدة البيانات مع هيكلية الواجهة الأمامية
+        const mapped = data.flights.map(f => ({
+          id: f.id_flights,
+          flight_number: f.flight_number,
+          origin: f.airportOrigin_code,
+          destination: f.airportDestination_code,
+          departure_time: f.departure_time,
+          arrival_time: f.arrival_time,
+          price: Number(f.price),
+          status: f.status === 'active' ? 'Active' : f.status === 'cancelled' ? 'Cancelled' : f.status === 'delayed' ? 'Delayed' : f.status,
+          aircraft_type: f.aircraft_type || 'Boeing 737',
+          total_seats: f.total_seats || 150,
+          available_seats: f.available_seats || 150,
+          passenger_count: f.passenger_count || 0
+        }));
+        setFlights(mapped);
+      } else {
+        setToast({ type: 'error', message: 'فشل في تحميل الرحلات: ' + data.error });
+        setTimeout(() => setToast(null), 3000);
       }
-    ]);
-  }, [user.airline_id]);
+    } catch (error) {
+      console.error('Error fetching flights:', error);
+      setToast({ type: 'error', message: 'خطأ في الاتصال بالخادم!' });
+      setTimeout(() => setToast(null), 3000);
+    } finally {
+      setLoading(false);
+    }
+  }, [airlineCode, airlineId]);
 
-  // دالة حساب ركاب الرحلة الحالية من الحجوزات المشتركة
-  const getBookedPassengersForFlight = (flightNumber) => {
-    const flightBookings = bookings.filter(b => b.flight_number === flightNumber && b.status !== 'Cancelled' && b.status !== 'cancelled');
-    return flightBookings.reduce((sum, b) => sum + (b.passengers ? b.passengers.length : 0), 0);
-  };
+  // إعادة تحميل الرحلات عند تغير شركة الطيران أو الكود
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchFlights();
+  }, [fetchFlights]);
 
   // إدارة النوافذ المنبثقة
   const [showAddModal, setShowAddModal] = useState(false);
@@ -120,6 +117,9 @@ export default function CompanyFlights() {
     origin: '',
     destination: '',
     departure_time: '',
+    arrival_time: '',
+    aircraft_type: 'Airbus A320',
+    total_seats: '150',
     price: '',
     status: 'Active'
   });
@@ -127,14 +127,12 @@ export default function CompanyFlights() {
   // حساب الإحصائيات ديناميكياً
   const totalFlights = flights.length;
   const cancelledFlights = flights.filter(f => f.status === 'Cancelled').length;
-  const activeFlights = flights.filter(f => f.status === 'Active').length;
-  const totalPassengers = flights.reduce((sum, f) => sum + getBookedPassengersForFlight(f.flight_number), 0);
+  const totalPassengers = flights.reduce((sum, f) => sum + (f.passenger_count || 0), 0);
 
-  // معالجة اختيار الملف وقراءته وهمياً
+  // معالجة اختيار الملف وقراءته وحفظه في قاعدة البيانات حقيقياً
   const handleFileImport = (file) => {
     if (!file) return;
     
-    // التحقق من امتداد الملف للتوضيح
     const fileExtension = file.name.split('.').pop().toLowerCase();
     if (fileExtension !== 'xlsx' && fileExtension !== 'csv') {
       setToast({ type: 'error', message: 'عذراً، يجب اختيار ملف Excel (.xlsx) أو CSV (.csv)!' });
@@ -144,38 +142,101 @@ export default function CompanyFlights() {
 
     setIsImporting(true);
 
-    // محاكاة استيراد الملف لمدة ثانيتين
-    setTimeout(() => {
-      setIsImporting(false);
-      
-      // توليد رحلتين وهميتين قادمتين من الملف المرفوع
-      const importedFlights = [
-        {
-          id: Date.now(),
-          flight_number: 'IY-201',
-          origin: 'ADE',
-          destination: 'KWI',
-          departure_time: '2026-06-28T09:00',
-          price: 390,
-          status: 'Active'
-        },
-        {
-          id: Date.now() + 1,
-          flight_number: 'IY-302',
-          origin: 'RIY',
-          destination: 'CAI',
-          departure_time: '2026-06-30T16:45',
-          price: 420,
-          status: 'Active'
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const jsonRows = XLSX.utils.sheet_to_json(sheet);
+        
+        if (jsonRows.length === 0) {
+          setToast({ type: 'error', message: 'الملف فارغ أو لا يحتوي على صفوف صالحة!' });
+          setIsImporting(false);
+          return;
         }
-      ];
 
-      setFlights(prev => [...importedFlights, ...prev]);
-      setToast({ type: 'success', message: `تم قراءة ملف (${file.name}) بنجاح واستيراد رحلتين جديدتين للجدول!` });
-      
-      // إخفاء الإشعار بعد 3 ثوانٍ
-      setTimeout(() => setToast(null), 4000);
-    }, 2000);
+        let successCount = 0;
+        let failCount = 0;
+
+        for (const row of jsonRows) {
+          const flightNum = row['رقم الرحلة'] || row['flight_number'] || row['Flight Number'];
+          const origin = row['مطار الإقلاع'] || row['origin'] || row['Origin'] || row['airportOrigin_code'];
+          const destination = row['مطار الوصول'] || row['destination'] || row['Destination'] || row['airportDestination_code'];
+          const departure = row['وقت الإقلاع'] || row['departure_time'] || row['Departure Time'] || row['Departure'];
+          const arrival = row['وقت الوصول'] || row['arrival_time'] || row['Arrival Time'] || row['Arrival'];
+          const price = row['السعر'] || row['price'] || row['Price'] || 0;
+          const aircraft = row['نوع الطائرة'] || row['aircraft_type'] || row['Aircraft'] || 'Airbus A320';
+          const seats = row['عدد المقاعد'] || row['total_seats'] || row['Total Seats'] || 150;
+
+          if (!flightNum || !origin || !destination || !departure || !arrival) {
+            failCount++;
+            continue;
+          }
+
+          const formatDateTime = (val) => {
+            if (!val) return null;
+            if (typeof val === 'number') {
+              const date = XLSX.SSF.parse_date_code(val);
+              return `${date.y}-${String(date.m).padStart(2, '0')}-${String(date.d).padStart(2, '0')}T${String(date.H).padStart(2, '0')}:${String(date.M).padStart(2, '0')}`;
+            }
+            const d = new Date(val);
+            if (isNaN(d.getTime())) return val;
+            return d.toISOString().slice(0, 16);
+          };
+
+          const formattedDeparture = formatDateTime(departure);
+          const formattedArrival = formatDateTime(arrival);
+
+          const flightPayload = {
+            flight_number: flightNum,
+            airline_code: airlineCode,
+            airline_id: user?.airline_id || 1,
+            airportOrigin_code: String(origin).toUpperCase(),
+            airportDestination_code: String(destination).toUpperCase(),
+            departure_time: formattedDeparture,
+            arrival_time: formattedArrival,
+            aircraft_type: aircraft,
+            total_seats: parseInt(seats, 10),
+            available_seats: parseInt(seats, 10),
+            status: 'active',
+            price: Number(price)
+          };
+
+          const res = await fetch('http://localhost:8080/api/flights', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(flightPayload)
+          });
+          const resData = await res.json();
+          if (resData.success) {
+            successCount++;
+          } else {
+            console.error('Failed to import row:', row, resData.error);
+            failCount++;
+          }
+        }
+
+        if (successCount > 0) {
+          setToast({ 
+            type: 'success', 
+            message: `تم بنجاح استيراد ${successCount} رحلة إلى جدول الرحلات! ${failCount > 0 ? `(فشل استيراد ${failCount} رحلة)` : ''}` 
+          });
+          fetchFlights();
+        } else {
+          setToast({ type: 'error', message: 'فشل استيراد الرحلات! تأكد من مطابقة أسماء الأعمدة وصيغة البيانات.' });
+        }
+      } catch (err) {
+        console.error('Error parsing excel file:', err);
+        setToast({ type: 'error', message: 'حدث خطأ أثناء قراءة ملف الإكسل!' });
+      } finally {
+        setIsImporting(false);
+        setTimeout(() => setToast(null), 5000);
+      }
+    };
+
+    reader.readAsArrayBuffer(file);
   };
 
   // معالجات أحداث السحب والإفلات
@@ -208,62 +269,167 @@ export default function CompanyFlights() {
     }
   };
 
-  // إضافة رحلة جديدة يدوياً
-  const handleAddFlight = (e) => {
+  // إضافة رحلة جديدة يدوياً لقاعدة البيانات
+  const handleAddFlight = async (e) => {
     e.preventDefault();
-    const flight = {
-      ...newFlight,
-      id: Date.now(),
-      price: Number(newFlight.price)
-    };
-    setFlights(prev => [flight, ...prev]);
-    setShowAddModal(false);
-    setNewFlight({
-      flight_number: '',
-      origin: '',
-      destination: '',
-      departure_time: '',
-      price: '',
-      status: 'Active'
-    });
-    setToast({ type: 'success', message: 'تم إضافة الرحلة الجديدة بنجاح!' });
+    try {
+      const flightPayload = {
+        flight_number: newFlight.flight_number,
+        airline_code: airlineCode,
+        airline_id: user?.airline_id || 1,
+        airportOrigin_code: newFlight.origin,
+        airportDestination_code: newFlight.destination,
+        departure_time: newFlight.departure_time,
+        arrival_time: newFlight.arrival_time || newFlight.departure_time, // fallback to departure time if empty
+        aircraft_type: newFlight.aircraft_type,
+        total_seats: parseInt(newFlight.total_seats, 10),
+        available_seats: parseInt(newFlight.total_seats, 10),
+        status: 'active',
+        price: Number(newFlight.price)
+      };
+
+      const res = await fetch('http://localhost:8080/api/flights', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(flightPayload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        setToast({ type: 'success', message: 'تم إضافة الرحلة الجديدة بنجاح!' });
+        setShowAddModal(false);
+        setNewFlight({
+          flight_number: '',
+          origin: '',
+          destination: '',
+          departure_time: '',
+          arrival_time: '',
+          aircraft_type: 'Airbus A320',
+          total_seats: '150',
+          price: '',
+          status: 'Active'
+        });
+        fetchFlights();
+      } else {
+        setToast({ type: 'error', message: 'فشل إضافة الرحلة: ' + data.error });
+      }
+    } catch (error) {
+      console.error('Error adding flight:', error);
+      setToast({ type: 'error', message: 'خطأ في الاتصال بالخادم!' });
+    }
     setTimeout(() => setToast(null), 3000);
   };
 
-  // إلغاء رحلة (تغيير الحالة لـ Cancelled)
-  const handleCancelFlight = (id) => {
+  // إلغاء رحلة في قاعدة البيانات (تغيير الحالة لـ Cancelled)
+  const handleCancelFlight = async (flight) => {
     if (window.confirm('هل أنت متأكد من إلغاء هذه الرحلة؟')) {
-      setFlights(prev =>
-        prev.map(f => f.id === id ? { ...f, status: 'Cancelled' } : f)
-      );
-      setToast({ type: 'success', message: 'تم إلغاء الرحلة بنجاح وتحديث إحصائيات هذا الشهر.' });
+      try {
+        const flightPayload = {
+          flight_number: flight.flight_number,
+          airline_code: airlineCode,
+          airline_id: user?.airline_id || 1,
+          airportOrigin_code: flight.origin,
+          airportDestination_code: flight.destination,
+          departure_time: flight.departure_time,
+          arrival_time: flight.arrival_time || flight.departure_time,
+          aircraft_type: flight.aircraft_type,
+          total_seats: flight.total_seats,
+          available_seats: flight.available_seats,
+          status: 'cancelled',
+          price: flight.price
+        };
+
+        const res = await fetch(`http://localhost:8080/api/flights/${flight.id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(flightPayload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          setToast({ type: 'success', message: 'تم إلغاء الرحلة بنجاح وتحديث إحصائيات هذا الشهر.' });
+          fetchFlights();
+        } else {
+          setToast({ type: 'error', message: 'فشل إلغاء الرحلة: ' + data.error });
+        }
+      } catch (error) {
+        console.error('Error cancelling flight:', error);
+        setToast({ type: 'error', message: 'خطأ في الاتصال بالخادم!' });
+      }
       setTimeout(() => setToast(null), 3000);
     }
   };
 
-  // فتح نافذة التعديل
+  // مساعد تنسيق وقت datetime-local
+  const formatDateForInput = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      const tzOffset = date.getTimezoneOffset() * 60000;
+      return new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
+    } catch {
+      return '';
+    }
+  };
+
+  // فتح نافذة التعديل مع تعبئة الحقول المناسبة
   const openEditModal = (flight) => {
-    setEditingFlight({ ...flight });
+    setEditingFlight({
+      ...flight,
+      departure_time: formatDateForInput(flight.departure_time),
+      arrival_time: formatDateForInput(flight.arrival_time),
+    });
     setShowEditModal(true);
   };
 
-  // حفظ التعديلات
-  const handleEditFlight = (e) => {
+  // حفظ التعديلات في قاعدة البيانات حقيقياً
+  const handleEditFlight = async (e) => {
     e.preventDefault();
-    setFlights(prev =>
-      prev.map(f => f.id === editingFlight.id ? { ...editingFlight, price: Number(editingFlight.price) } : f)
-    );
-    setShowEditModal(false);
-    setEditingFlight(null);
-    setToast({ type: 'success', message: 'تم تحديث بيانات الرحلة بنجاح!' });
+    try {
+      const statusStr = (editingFlight.status || 'active').toLowerCase();
+      const dbStatus = statusStr === 'active' ? 'active' :
+                       statusStr === 'cancelled' ? 'cancelled' :
+                       statusStr === 'delayed' ? 'delayed' : statusStr;
+
+      const flightPayload = {
+        flight_number: editingFlight.flight_number,
+        airline_code: airlineCode,
+        airline_id: user?.airline_id || 1,
+        airportOrigin_code: editingFlight.origin,
+        airportDestination_code: editingFlight.destination,
+        departure_time: editingFlight.departure_time,
+        arrival_time: editingFlight.arrival_time || editingFlight.departure_time,
+        aircraft_type: editingFlight.aircraft_type,
+        total_seats: parseInt(editingFlight.total_seats, 10),
+        available_seats: parseInt(editingFlight.available_seats, 10),
+        status: dbStatus,
+        price: Number(editingFlight.price)
+      };
+
+      const res = await fetch(`http://localhost:8080/api/flights/${editingFlight.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(flightPayload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        setToast({ type: 'success', message: 'تم تحديث بيانات الرحلة بنجاح!' });
+        setShowEditModal(false);
+        setEditingFlight(null);
+        fetchFlights();
+      } else {
+        setToast({ type: 'error', message: 'فشل التعديل: ' + data.error });
+      }
+    } catch (error) {
+      console.error('Error updating flight:', error);
+      setToast({ type: 'error', message: 'خطأ في الاتصال بالخادم!' });
+    }
     setTimeout(() => setToast(null), 3000);
   };
 
   // تصفية الرحلات بالبحث
   const filteredFlights = flights.filter(f =>
-    f.flight_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    f.origin.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    f.destination.toLowerCase().includes(searchTerm.toLowerCase())
+    (f.flight_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (f.origin || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (f.destination || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -285,7 +451,7 @@ export default function CompanyFlights() {
           <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-3 py-1 rounded-full uppercase tracking-wider mb-2 inline-block">
             إدارة العمليات اليومية
           </span>
-          <h1 className="text-3xl font-black tracking-tight">إدارة رحلات {user.airline_name}</h1>
+          <h1 className="text-3xl font-black tracking-tight">إدارة رحلات {companyName}</h1>
           <p className="text-slate-400 dark:text-slate-500 text-xs font-bold mt-1">
             متابعة وجدولة وتعديل حالات رحلات الطيران واستيراد الجداول من ملفات Excel.
           </p>
@@ -436,85 +602,95 @@ export default function CompanyFlights() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
-                {filteredFlights.map((flight) => (
-                  <tr key={flight.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                    <td className="py-6 px-4 font-black text-blue-600">{flight.flight_number}</td>
-                    <td className="py-6 px-4">
-                      <span className="inline-flex items-center rounded-lg bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-black text-slate-600 dark:text-slate-300">
-                        {flight.origin}
-                      </span>
-                    </td>
-                    <td className="py-6 px-4">
-                      <span className="inline-flex items-center rounded-lg bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-black text-slate-600 dark:text-slate-300">
-                        {flight.destination}
-                      </span>
-                    </td>
-                    <td className="py-6 px-4">
-                      <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
-                        <Clock size={14} className="text-slate-400" />
-                        <span>
-                          {new Date(flight.departure_time).toLocaleString('ar-EG', {
-                            month: 'short',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-6 px-4">
-                      <span className="inline-flex items-center rounded-lg bg-blue-500/10 dark:bg-blue-900/20 px-2.5 py-1 text-xs font-black text-blue-600 dark:text-blue-400">
-                        {getBookedPassengersForFlight(flight.flight_number)} ركاب
-                      </span>
-                    </td>
-                    <td className="py-6 px-4">
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-black ${
-                        flight.status === 'Active'
-                          ? 'bg-green-500/10 text-green-500'
-                          : flight.status === 'Delayed'
-                          ? 'bg-amber-500/10 text-amber-500'
-                          : 'bg-red-500/10 text-red-500'
-                      }`}>
-                        <div className={`h-1.5 w-1.5 rounded-full ${
-                          flight.status === 'Active'
-                            ? 'bg-green-500'
-                            : flight.status === 'Delayed'
-                            ? 'bg-amber-500'
-                            : 'bg-red-500'
-                        }`} />
-                        {flight.status === 'Active' ? 'نشطة' : flight.status === 'Delayed' ? 'متأخرة' : 'ملغاة'}
-                      </span>
-                    </td>
-                    <td className="py-6 px-4 text-left">
-                      <div className="flex items-center justify-end gap-2">
-                        {/* تعديل */}
-                        <button
-                          onClick={() => openEditModal(flight)}
-                          className="h-9 w-9 flex items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white transition-all shadow-sm"
-                          title="تعديل الرحلة"
-                        >
-                          <Pencil size={15} />
-                        </button>
-                        {/* إلغاء */}
-                        {flight.status !== 'Cancelled' && (
-                          <button
-                            onClick={() => handleCancelFlight(flight.id)}
-                            className="h-9 w-9 flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white transition-all shadow-sm"
-                            title="إلغاء الرحلة"
-                          >
-                            <X size={15} />
-                          </button>
-                        )}
+                {loading ? (
+                  <tr>
+                    <td colSpan="7" className="py-20 text-center">
+                      <div className="flex flex-col items-center justify-center gap-3">
+                        <Loader2 size={36} className="text-blue-600 dark:text-blue-400 animate-spin" />
+                        <span className="text-xs font-bold text-slate-400">جاري تحميل الرحلات من قاعدة البيانات...</span>
                       </div>
                     </td>
                   </tr>
-                ))}
-                {filteredFlights.length === 0 && (
+                ) : filteredFlights.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="py-20 text-center text-slate-400 font-bold">
+                    <td colSpan="7" className="py-20 text-center text-slate-400 font-bold">
                       لا توجد رحلات مطابقة للبحث
                     </td>
                   </tr>
+                ) : (
+                  filteredFlights.map((flight) => (
+                    <tr key={flight.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                      <td className="py-6 px-4 font-black text-blue-600">{flight.flight_number}</td>
+                      <td className="py-6 px-4">
+                        <span className="inline-flex items-center rounded-lg bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-black text-slate-600 dark:text-slate-300">
+                          {flight.origin}
+                        </span>
+                      </td>
+                      <td className="py-6 px-4">
+                        <span className="inline-flex items-center rounded-lg bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-black text-slate-600 dark:text-slate-300">
+                          {flight.destination}
+                        </span>
+                      </td>
+                      <td className="py-6 px-4">
+                        <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
+                          <Clock size={14} className="text-slate-400" />
+                          <span>
+                            {new Date(flight.departure_time).toLocaleString('ar-EG', {
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-6 px-4">
+                        <span className="inline-flex items-center rounded-lg bg-blue-500/10 dark:bg-blue-900/20 px-2.5 py-1 text-xs font-black text-blue-600 dark:text-blue-400">
+                          {flight.passenger_count || 0} ركاب
+                        </span>
+                      </td>
+                      <td className="py-6 px-4">
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-black ${
+                          flight.status === 'Active'
+                            ? 'bg-green-500/10 text-green-500'
+                            : flight.status === 'Delayed'
+                            ? 'bg-amber-500/10 text-amber-500'
+                            : 'bg-red-500/10 text-red-500'
+                        }`}>
+                          <div className={`h-1.5 w-1.5 rounded-full ${
+                            flight.status === 'Active'
+                              ? 'bg-green-500'
+                              : flight.status === 'Delayed'
+                              ? 'bg-amber-500'
+                              : 'bg-red-500'
+                          }`} />
+                          {flight.status === 'Active' ? 'نشطة' : flight.status === 'Delayed' ? 'متأخرة' : 'ملغاة'}
+                        </span>
+                      </td>
+                      <td className="py-6 px-4 text-left">
+                        <div className="flex items-center justify-end gap-2">
+                          {/* تعديل */}
+                          <button
+                            onClick={() => openEditModal(flight)}
+                            className="h-9 w-9 flex items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white transition-all shadow-sm"
+                            title="تعديل الرحلة"
+                          >
+                            <Pencil size={15} />
+                          </button>
+                          {/* إلغاء */}
+                          {flight.status !== 'Cancelled' && (
+                            <button
+                              onClick={() => handleCancelFlight(flight)}
+                              className="h-9 w-9 flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white transition-all shadow-sm"
+                              title="إلغاء الرحلة"
+                            >
+                              <X size={15} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
@@ -601,7 +777,7 @@ export default function CompanyFlights() {
                   </div>
 
                   {/* وقت الإقلاع */}
-                  <div className="space-y-2 md:col-span-2">
+                  <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">وقت وتاريخ الإقلاع</label>
                     <input
                       type="datetime-local"
@@ -609,6 +785,49 @@ export default function CompanyFlights() {
                       required
                       value={newFlight.departure_time}
                       onChange={e => setNewFlight({ ...newFlight, departure_time: e.target.value })}
+                    />
+                  </div>
+
+                  {/* وقت الوصول */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">وقت وتاريخ الوصول</label>
+                    <input
+                      type="datetime-local"
+                      className="w-full h-14 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl px-4 text-xs font-bold outline-none focus:border-blue-500 transition-all dark:text-white"
+                      required
+                      value={newFlight.arrival_time}
+                      onChange={e => setNewFlight({ ...newFlight, arrival_time: e.target.value })}
+                    />
+                  </div>
+
+                  {/* نوع الطائرة */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">نوع الطائرة (Aircraft)</label>
+                    <div className="relative">
+                      <select
+                        className="w-full h-14 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl px-4 pr-10 text-xs font-bold outline-none focus:border-blue-500 transition-all appearance-none dark:text-white"
+                        required
+                        value={newFlight.aircraft_type}
+                        onChange={e => setNewFlight({ ...newFlight, aircraft_type: e.target.value })}
+                      >
+                        {aircraftOptions.map(opt => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                      <ChevronDown size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    </div>
+                  </div>
+
+                  {/* السعة الإجمالية */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">عدد المقاعد الإجمالي</label>
+                    <input
+                      type="number"
+                      placeholder="150"
+                      className="w-full h-14 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl px-4 text-xs font-bold outline-none focus:border-blue-500 transition-all dark:text-white"
+                      required
+                      value={newFlight.total_seats}
+                      onChange={e => setNewFlight({ ...newFlight, total_seats: e.target.value })}
                     />
                   </div>
                 </div>
@@ -708,8 +927,8 @@ export default function CompanyFlights() {
                     </div>
                   </div>
 
-                  {/* التاريخ والوقت */}
-                  <div className="space-y-2 md:col-span-2">
+                  {/* وقت الإقلاع */}
+                  <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">وقت وتاريخ الإقلاع</label>
                     <input
                       type="datetime-local"
@@ -717,6 +936,49 @@ export default function CompanyFlights() {
                       required
                       value={editingFlight.departure_time}
                       onChange={e => setEditingFlight({ ...editingFlight, departure_time: e.target.value })}
+                    />
+                  </div>
+
+                  {/* وقت الوصول */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">وقت وتاريخ الوصول</label>
+                    <input
+                      type="datetime-local"
+                      className="w-full h-14 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl px-4 text-xs font-bold outline-none focus:border-blue-500 transition-all dark:text-white"
+                      required
+                      value={editingFlight.arrival_time || ''}
+                      onChange={e => setEditingFlight({ ...editingFlight, arrival_time: e.target.value })}
+                    />
+                  </div>
+
+                  {/* نوع الطائرة */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">نوع الطائرة (Aircraft)</label>
+                    <div className="relative">
+                      <select
+                        className="w-full h-14 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl px-4 pr-10 text-xs font-bold outline-none focus:border-blue-500 transition-all appearance-none dark:text-white"
+                        required
+                        value={editingFlight.aircraft_type || 'Airbus A320'}
+                        onChange={e => setEditingFlight({ ...editingFlight, aircraft_type: e.target.value })}
+                      >
+                        {aircraftOptions.map(opt => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                      <ChevronDown size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    </div>
+                  </div>
+
+                  {/* السعة الإجمالية */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">عدد المقاعد الإجمالي</label>
+                    <input
+                      type="number"
+                      placeholder="150"
+                      className="w-full h-14 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl px-4 text-xs font-bold outline-none focus:border-blue-500 transition-all dark:text-white"
+                      required
+                      value={editingFlight.total_seats || '150'}
+                      onChange={e => setEditingFlight({ ...editingFlight, total_seats: e.target.value })}
                     />
                   </div>
 

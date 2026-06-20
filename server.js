@@ -438,7 +438,10 @@ app.post('/api/company-login', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
     const [rows] = await connection.execute(
-      'SELECT * FROM admins WHERE email = ? AND password = ?',
+      `SELECT a.*, c.airline_name, c.logo_url, c.id_airline
+       FROM admins a
+       LEFT JOIN airline_companies c ON a.airlineId_airline = c.id_airline
+       WHERE a.email = ? AND a.password = ?`,
       [email, password]
     );
 
@@ -450,6 +453,9 @@ app.post('/api/company-login', async (req, res) => {
         success: true,
         role: admin.role,
         airline_code: admin.airline_code,
+        airline_id: admin.id_airline || admin.airlineId_airline,
+        airline_name: admin.airline_name,
+        logo_url: admin.logo_url,
         id: admin.id_admin,
         email: admin.email,
       });
@@ -539,15 +545,21 @@ app.get('/api/booking-passengers/:bookingId', async (req, res) => {
 
 // Get all flights for a specific airline/company
 app.get('/api/flights', async (req, res) => {
-  const { airlineCode } = req.query;
+  const { airlineCode, airline_id } = req.query;
+  if (!airlineCode && !airline_id) {
+    return res.status(400).json({ success: false, error: 'airlineCode or airline_id is required' });
+  }
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
-    let query = 'SELECT * FROM flights';
+    let query = 'SELECT * FROM flights WHERE 1=1';
     const params = [];
     if (airlineCode && airlineCode !== 'undefined' && airlineCode !== 'null' && airlineCode.trim() !== '') {
-      query += ' WHERE airline_code = ?';
+      query += ' AND airline_code = ?';
       params.push(airlineCode);
+    } else if (airline_id) {
+      query += ' AND airline_id = ?';
+      params.push(airline_id);
     }
     query += ' ORDER BY departure_time DESC';
     
@@ -856,6 +868,745 @@ app.delete('/api/notifications/:id', async (req, res) => {
     await connection.execute('DELETE FROM notifications WHERE id_notifications = ?', [id]);
     res.json({ success: true });
   } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+
+// --- HELPER TRANSLATION MAPS ---
+const arabicCityMap = {
+  'ADE': 'عدن',
+  'CAI': 'القاهرة',
+  'RUH': 'الرياض',
+  'JED': 'جدة',
+  'RIY': 'المكلا',
+  'GXF': 'سيئون',
+  'SCT': 'سقطرى',
+  'AMM': 'عمان',
+  'KWI': 'الكويت',
+  'JIB': 'جيبوتي',
+  'ADD': 'أديس أبابا',
+  'SAH': 'صنعاء',
+  'SNA': 'صنعاء'
+};
+
+const serviceMap = {
+  'مساعدة بالكرسي المتحرك': 'كرسي متحرك',
+  'أكسجين طبي على المتن': 'أكسجين طبي',
+  'مساعدة طبية متخصصة': 'مرافقة طبية',
+  'وجبة غذائية طبية': 'وجبة طبية'
+};
+
+const classMap = {
+  'economy': 'الدرجة السياحية',
+  'business': 'درجة الأعمال',
+  'first': 'الدرجة الأولى',
+  ' business': 'درجة الأعمال'
+};
+
+const arabicMonths = {
+  '01': 'يناير', '02': 'فبراير', '03': 'مارس', '04': 'أبريل', '05': 'مايو', '06': 'يونيو',
+  '07': 'يوليو', '08': 'أغسطس', '09': 'سبتمبر', '10': 'أكتوبر', '11': 'نوفمبر', '12': 'ديسمبر'
+};
+
+const arabicWeekdays = {
+  1: 'الأحد', 2: 'الاثنين', 3: 'الثلاثاء', 4: 'الأربعاء', 5: 'الخميس', 6: 'الجمعة', 7: 'السبت'
+};
+
+
+// --- MULTI-TENANT STATISTICS & REPORTING ENDPOINTS ---
+
+// Get analytics stats for company dashboard
+app.get('/api/company/analytics-stats', async (req, res) => {
+  const { airlineCode, airline_id } = req.query;
+  if (!airlineCode && !airline_id) {
+    return res.status(400).json({ success: false, error: 'airlineCode or airline_id is required' });
+  }
+
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+
+    // 1. Total Revenue
+    const [revRow] = await connection.execute(`
+      SELECT COALESCE(SUM(p.amount), 0) as totalRevenue
+      FROM payments p
+      JOIN bookings b ON p.booking_id = b.id_bookings
+      JOIN flights f ON b.flight_id = f.id_flights
+      WHERE p.payment_status = 'success' AND (f.airline_code = ? OR f.airline_id = ?)
+    `, [airlineCode || '', airline_id || 0]);
+    const totalRevenue = Number(revRow[0].totalRevenue) || 0;
+
+    // 2. Active Bookings
+    const [actRow] = await connection.execute(`
+      SELECT COUNT(b.id_bookings) as activeBookings
+      FROM bookings b
+      JOIN flights f ON b.flight_id = f.id_flights
+      WHERE b.status = 'certain' AND (f.airline_code = ? OR f.airline_id = ?)
+    `, [airlineCode || '', airline_id || 0]);
+    const activeBookings = Number(actRow[0].activeBookings) || 0;
+
+    // 3. Available Flights
+    const [avRow] = await connection.execute(`
+      SELECT COUNT(id_flights) as availableFlights
+      FROM flights
+      WHERE status = 'active' AND (airline_code = ? OR airline_id = ?)
+    `, [airlineCode || '', airline_id || 0]);
+    const availableFlights = Number(avRow[0].availableFlights) || 0;
+
+    // 4. Total Passengers
+    const [passRow] = await connection.execute(`
+      SELECT COALESCE(SUM(b.total_passengers), 0) as totalPassengers
+      FROM bookings b
+      JOIN flights f ON b.flight_id = f.id_flights
+      WHERE b.status = 'certain' AND (f.airline_code = ? OR f.airline_id = ?)
+    `, [airlineCode || '', airline_id || 0]);
+    const totalPassengers = Number(passRow[0].totalPassengers) || 0;
+
+    // 5. Destinations Stats
+    const [destRows] = await connection.execute(`
+      SELECT f.airportDestination_code as name, COUNT(b.id_bookings) as bookings
+      FROM bookings b
+      JOIN flights f ON b.flight_id = f.id_flights
+      WHERE (f.airline_code = ? OR f.airline_id = ?)
+      GROUP BY f.airportDestination_code
+      ORDER BY bookings DESC
+      LIMIT 5
+    `, [airlineCode || '', airline_id || 0]);
+
+    const destinationsStats = destRows.map(r => ({
+      name: arabicCityMap[r.name] || r.name,
+      bookings: Number(r.bookings) || 0
+    }));
+
+    // 6. Services Stats
+    const [serviceRows] = await connection.execute(`
+      SELECT gs.service_name as name, COUNT(*) as value
+      FROM ground_services gs
+      JOIN bookings b ON gs.booking_id = b.id_bookings
+      JOIN flights f ON b.flight_id = f.id_flights
+      WHERE gs.is_active = 1 AND (f.airline_code = ? OR f.airline_id = ?)
+      GROUP BY gs.service_name
+    `, [airlineCode || '', airline_id || 0]);
+
+    const servicesStats = serviceRows.map(r => ({
+      name: serviceMap[r.name] || r.name,
+      value: Number(r.value) || 0
+    }));
+
+    // 7. Recent Bookings
+    const [recentRows] = await connection.execute(`
+      SELECT b.id_bookings, b.booking_reference, b.final_price, b.status,
+             f.airportOrigin_code, f.airportDestination_code,
+             (SELECT p.name FROM bookings_passengers bp JOIN passengers p ON bp.passenger_id = p.id_passengers WHERE bp.booking_id = b.id_bookings LIMIT 1) as passenger
+      FROM bookings b
+      JOIN flights f ON b.flight_id = f.id_flights
+      WHERE (f.airline_code = ? OR f.airline_id = ?)
+      ORDER BY b.booking_date DESC
+      LIMIT 5
+    `, [airlineCode || '', airline_id || 0]);
+
+    const recentBookings = recentRows.map(r => ({
+      id: r.booking_reference,
+      route: `${arabicCityMap[r.airportOrigin_code] || r.airportOrigin_code} - ${arabicCityMap[r.airportDestination_code] || r.airportDestination_code}`,
+      passenger: r.passenger || 'مسافر',
+      total: `$${Number(r.final_price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      status: r.status === 'certain' ? 'مؤكد' : r.status === 'temporary' ? 'مؤقت' : 'ملغي',
+      badgeColor: r.status === 'certain' ? 'green' : r.status === 'temporary' ? 'yellow' : 'red'
+    }));
+
+    // 8. Sparkline Data
+    const [sparkRows] = await connection.execute(`
+      SELECT SUM(p.amount) as revenue
+      FROM payments p
+      JOIN bookings b ON p.booking_id = b.id_bookings
+      JOIN flights f ON b.flight_id = f.id_flights
+      WHERE p.payment_status = 'success' AND (f.airline_code = ? OR f.airline_id = ?)
+      GROUP BY DATE_FORMAT(b.booking_date, '%Y-%m')
+      ORDER BY DATE_FORMAT(b.booking_date, '%Y-%m') ASC
+      LIMIT 7
+    `, [airlineCode || '', airline_id || 0]);
+
+    const sparklineData = sparkRows.map(r => ({ pv: Number(r.revenue) || 0 }));
+
+    res.json({
+      success: true,
+      stats: {
+        totalRevenue,
+        activeBookings,
+        availableFlights,
+        totalPassengers,
+        destinationsStats,
+        servicesStats,
+        recentBookings,
+        sparklineData
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching analytics stats:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// Get financial stats for company dashboard
+app.get('/api/financial-stats', async (req, res) => {
+  const { airlineCode, airline_id } = req.query;
+  if (!airlineCode && !airline_id) {
+    return res.status(400).json({ success: false, error: 'airlineCode or airline_id is required' });
+  }
+
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+
+    // 1. Total Revenue
+    const [revRow] = await connection.execute(`
+      SELECT COALESCE(SUM(p.amount), 0) as totalRevenue
+      FROM payments p
+      JOIN bookings b ON p.booking_id = b.id_bookings
+      JOIN flights f ON b.flight_id = f.id_flights
+      WHERE p.payment_status = 'success' AND (f.airline_code = ? OR f.airline_id = ?)
+    `, [airlineCode || '', airline_id || 0]);
+    const totalRevenue = Number(revRow[0].totalRevenue) || 0;
+
+    // 2. Current Month Revenue
+    const [currRow] = await connection.execute(`
+      SELECT COALESCE(SUM(p.amount), 0) as currentMonthRevenue
+      FROM payments p
+      JOIN bookings b ON p.booking_id = b.id_bookings
+      JOIN flights f ON b.flight_id = f.id_flights
+      WHERE p.payment_status = 'success' 
+        AND MONTH(b.booking_date) = MONTH(CURRENT_DATE())
+        AND YEAR(b.booking_date) = YEAR(CURRENT_DATE())
+        AND (f.airline_code = ? OR f.airline_id = ?)
+    `, [airlineCode || '', airline_id || 0]);
+    const currentMonthRevenue = Number(currRow[0].currentMonthRevenue) || 0;
+
+    // 3. Previous Month Revenue
+    const [prevRow] = await connection.execute(`
+      SELECT COALESCE(SUM(p.amount), 0) as previousMonthRevenue
+      FROM payments p
+      JOIN bookings b ON p.booking_id = b.id_bookings
+      JOIN flights f ON b.flight_id = f.id_flights
+      WHERE p.payment_status = 'success' 
+        AND b.booking_date >= DATE_SUB(DATE_FORMAT(CURRENT_DATE(), '%Y-%m-01'), INTERVAL 1 MONTH)
+        AND b.booking_date < DATE_FORMAT(CURRENT_DATE(), '%Y-%m-01')
+        AND (f.airline_code = ? OR f.airline_id = ?)
+    `, [airlineCode || '', airline_id || 0]);
+    const previousMonthRevenue = Number(prevRow[0].previousMonthRevenue) || 0;
+
+    // 4. Growth
+    const revenueGrowth = previousMonthRevenue > 0 
+      ? Number(((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue * 100).toFixed(1))
+      : 0;
+
+    // 5. Monthly Revenue
+    const [monthRows] = await connection.execute(`
+      SELECT DATE_FORMAT(b.booking_date, '%m') as monthNum, SUM(p.amount) as revenue
+      FROM payments p
+      JOIN bookings b ON p.booking_id = b.id_bookings
+      JOIN flights f ON b.flight_id = f.id_flights
+      WHERE p.payment_status = 'success' AND (f.airline_code = ? OR f.airline_id = ?)
+      GROUP BY monthNum
+      ORDER BY monthNum ASC
+      LIMIT 6
+    `, [airlineCode || '', airline_id || 0]);
+
+    const monthlyRevenue = monthRows.map(r => ({
+      name: arabicMonths[r.monthNum] || r.monthNum,
+      revenue: Number(r.revenue) || 0
+    }));
+
+    // 6. Weekly Revenue
+    const [weekRows] = await connection.execute(`
+      SELECT DAYOFWEEK(b.booking_date) as dayNum, SUM(p.amount) as revenue
+      FROM payments p
+      JOIN bookings b ON p.booking_id = b.id_bookings
+      JOIN flights f ON b.flight_id = f.id_flights
+      WHERE p.payment_status = 'success' AND (f.airline_code = ? OR f.airline_id = ?)
+        AND b.booking_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+      GROUP BY dayNum
+      ORDER BY dayNum ASC
+    `, [airlineCode || '', airline_id || 0]);
+
+    const weeklyRevenue = weekRows.map(r => ({
+      name: arabicWeekdays[r.dayNum] || `اليوم ${r.dayNum}`,
+      revenue: Number(r.revenue) || 0
+    }));
+
+    // 7. Class Stats
+    const [classRows] = await connection.execute(`
+      SELECT s.seat_class as name, COUNT(bp.id_bookings_passengers) as value
+      FROM bookings_passengers bp
+      JOIN seats s ON bp.seat_id = s.id_seats
+      JOIN bookings b ON bp.booking_id = b.id_bookings
+      JOIN flights f ON b.flight_id = f.id_flights
+      WHERE (f.airline_code = ? OR f.airline_id = ?)
+      GROUP BY s.seat_class
+    `, [airlineCode || '', airline_id || 0]);
+
+    const classStats = classRows.map(r => ({
+      name: classMap[r.name] || r.name,
+      value: Number(r.value) || 0
+    }));
+
+    // 8. Flight Profits
+    const [profitRows] = await connection.execute(`
+      SELECT f.flight_number, f.airportOrigin_code, f.airportDestination_code,
+             COALESCE(SUM(b.final_price), 0) as revenue
+      FROM flights f
+      LEFT JOIN bookings b ON b.flight_id = f.id_flights AND b.status = 'certain'
+      WHERE (f.airline_code = ? OR f.airline_id = ?)
+      GROUP BY f.id_flights
+      ORDER BY revenue DESC
+      LIMIT 5
+    `, [airlineCode || '', airline_id || 0]);
+
+    const flightsProfits = profitRows.map(r => {
+      const rev = Number(r.revenue) || 0;
+      const costs = Math.round(rev * 0.4);
+      const netProfit = rev - costs;
+      return {
+        flightNumber: r.flight_number,
+        route: `${arabicCityMap[r.airportOrigin_code] || r.airportOrigin_code} - ${arabicCityMap[r.airportDestination_code] || r.airportDestination_code}`,
+        costs,
+        revenue: rev,
+        netProfit
+      };
+    });
+
+    res.json({
+      success: true,
+      stats: {
+        totalRevenue,
+        currentMonthRevenue,
+        previousMonthRevenue,
+        revenueGrowth,
+        monthlyRevenue,
+        weeklyRevenue,
+        classStats,
+        flightsProfits
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching financial stats:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// Get traffic stats for company dashboard
+app.get('/api/traffic-stats', async (req, res) => {
+  const { airlineCode, airline_id } = req.query;
+  if (!airlineCode && !airline_id) {
+    return res.status(400).json({ success: false, error: 'airlineCode or airline_id is required' });
+  }
+
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+
+    // 1. Top Destinations
+    const [destRows] = await connection.execute(`
+      SELECT f.airportDestination_code as name, COUNT(b.id_bookings) as bookings
+      FROM bookings b
+      JOIN flights f ON b.flight_id = f.id_flights
+      WHERE b.status = 'certain' AND (f.airline_code = ? OR f.airline_id = ?)
+      GROUP BY f.airportDestination_code
+      ORDER BY bookings DESC
+      LIMIT 5
+    `, [airlineCode || '', airline_id || 0]);
+
+    const topDestinations = destRows.map(r => ({
+      name: arabicCityMap[r.name] || r.name,
+      bookings: Number(r.bookings) || 0
+    }));
+
+    // 2. Occupancy Rates
+    const [occRows] = await connection.execute(`
+      SELECT flight_number, airportOrigin_code, airportDestination_code, total_seats, available_seats
+      FROM flights
+      WHERE (airline_code = ? OR airline_id = ?)
+      ORDER BY departure_time DESC
+      LIMIT 10
+    `, [airlineCode || '', airline_id || 0]);
+
+    const occupancyRates = occRows.map(r => {
+      const total = r.total_seats || 150;
+      const available = r.available_seats !== null ? r.available_seats : total;
+      const booked = total - available;
+      const rate = Math.round((booked / total) * 100);
+      return {
+        flightNumber: r.flight_number,
+        route: `${arabicCityMap[r.airportOrigin_code] || r.airportOrigin_code} - ${arabicCityMap[r.airportDestination_code] || r.airportDestination_code}`,
+        bookedSeats: booked,
+        totalSeats: total,
+        rate: Math.min(100, Math.max(0, rate))
+      };
+    });
+
+    res.json({
+      success: true,
+      stats: {
+        topDestinations,
+        occupancyRates
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching traffic stats:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// Get medical services stats for company dashboard
+app.get('/api/medical-services', async (req, res) => {
+  const { airlineCode, airline_id } = req.query;
+  if (!airlineCode && !airline_id) {
+    return res.status(400).json({ success: false, error: 'airlineCode or airline_id is required' });
+  }
+
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+
+    // 1. Services Stats
+    const [serviceRows] = await connection.execute(`
+      SELECT gs.service_name as name, COUNT(*) as value
+      FROM ground_services gs
+      JOIN bookings b ON gs.booking_id = b.id_bookings
+      JOIN flights f ON b.flight_id = f.id_flights
+      WHERE gs.is_active = 1 AND (f.airline_code = ? OR f.airline_id = ?)
+      GROUP BY gs.service_name
+    `, [airlineCode || '', airline_id || 0]);
+
+    const servicesStats = serviceRows.map(r => ({
+      name: serviceMap[r.name] || r.name,
+      value: Number(r.value) || 0
+    }));
+
+    // 2. Critical Flights
+    const [critRows] = await connection.execute(`
+      SELECT f.flight_number, f.airportOrigin_code, f.airportDestination_code,
+             COUNT(gs.id_Ground_services) as criticalCount,
+             GROUP_CONCAT(gs.service_name) as servicesList
+      FROM ground_services gs
+      JOIN bookings b ON gs.booking_id = b.id_bookings
+      JOIN flights f ON b.flight_id = f.id_flights
+      WHERE gs.is_active = 1 AND (f.airline_code = ? OR f.airline_id = ?)
+      GROUP BY f.id_flights
+      ORDER BY criticalCount DESC
+      LIMIT 10
+    `, [airlineCode || '', airline_id || 0]);
+
+    const criticalFlights = critRows.map(r => {
+      const list = r.servicesList ? r.servicesList.split(',') : [];
+      const counts = {};
+      list.forEach(s => {
+        const shortName = serviceMap[s] || s;
+        counts[shortName] = (counts[shortName] || 0) + 1;
+      });
+      const servicesStr = Object.entries(counts)
+        .map(([name, count]) => `${name} (${count})`)
+        .join('، ');
+
+      return {
+        flightNumber: r.flight_number,
+        route: `${arabicCityMap[r.airportOrigin_code] || r.airportOrigin_code} - ${arabicCityMap[r.airportDestination_code] || r.airportDestination_code}`,
+        criticalCount: Number(r.criticalCount) || 0,
+        services: servicesStr || 'لا توجد خدمات حالية'
+      };
+    });
+
+    res.json({
+      success: true,
+      stats: {
+        servicesStats,
+        criticalFlights
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching medical services stats:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// Get passenger stats for company dashboard
+app.get('/api/passenger-stats', async (req, res) => {
+  const { airlineCode, airline_id } = req.query;
+  if (!airlineCode && !airline_id) {
+    return res.status(400).json({ success: false, error: 'airlineCode or airline_id is required' });
+  }
+
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+
+    // 1. Status Distribution
+    const [statusRows] = await connection.execute(`
+      SELECT b.status, COUNT(*) as value
+      FROM bookings b
+      JOIN flights f ON b.flight_id = f.id_flights
+      WHERE (f.airline_code = ? OR f.airline_id = ?)
+      GROUP BY b.status
+    `, [airlineCode || '', airline_id || 0]);
+
+    const statusMapLocal = {
+      'certain': 'مؤكد',
+      'temporary': 'مؤقت',
+      'canceled': 'ملغي'
+    };
+
+    const statusDistribution = statusRows.map(r => ({
+      name: statusMapLocal[r.status] || r.status,
+      value: Number(r.value) || 0
+    }));
+
+    // 2. Peak Times
+    const [dayRows] = await connection.execute(`
+      SELECT DAYOFWEEK(b.booking_date) as dayNum, COUNT(b.id_bookings) as count
+      FROM bookings b
+      JOIN flights f ON b.flight_id = f.id_flights
+      WHERE (f.airline_code = ? OR f.airline_id = ?)
+      GROUP BY dayNum
+    `, [airlineCode || '', airline_id || 0]);
+
+    const weekDays = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    const peakTimes = weekDays.map((d, index) => {
+      const match = dayRows.find(r => r.dayNum === (index + 1));
+      return {
+        day: d,
+        bookings: match ? Number(match.count) : 0
+      };
+    });
+
+    res.json({
+      success: true,
+      stats: {
+        statusDistribution,
+        peakTimes
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching passenger stats:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// Get flights by day for drill-down reporting
+app.get('/api/flights-by-day/:day', async (req, res) => {
+  const { day } = req.params;
+  const { airlineCode, airline_id } = req.query;
+  if (!airlineCode && !airline_id) {
+    return res.status(400).json({ success: false, error: 'airlineCode or airline_id is required' });
+  }
+
+  const dayMap = {
+    'الأحد': 1, 'الاحد': 1,
+    'الإثنين': 2, 'الاثنين': 2,
+    'الثلاثاء': 3,
+    'الأربعاء': 4, 'الاربعاء': 4,
+    'الخميس': 5,
+    'الجمعة': 6,
+    'السبت': 7
+  };
+
+  const dayIndex = dayMap[day];
+  if (!dayIndex) {
+    return res.status(400).json({ success: false, error: 'Invalid day name' });
+  }
+
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+
+    const [rows] = await connection.execute(`
+      SELECT f.id_flights as id, f.flight_number as flightNumber, f.departure_time as departureTime,
+             f.airportOrigin_code, f.airportDestination_code,
+             COALESCE((
+               SELECT SUM(b.total_passengers)
+               FROM bookings b
+               WHERE b.flight_id = f.id_flights AND b.status = 'certain'
+             ), 0) as totalPassengers
+      FROM flights f
+      WHERE DAYOFWEEK(f.departure_time) = ? AND (f.airline_code = ? OR f.airline_id = ?)
+    `, [dayIndex, airlineCode || '', airline_id || 0]);
+
+    const flights = rows.map(r => ({
+      id: r.id,
+      flightNumber: r.flightNumber,
+      route: `${arabicCityMap[r.airportOrigin_code] || r.airportOrigin_code} - ${arabicCityMap[r.airportDestination_code] || r.airportDestination_code}`,
+      departureTime: r.departureTime,
+      totalPassengers: Number(r.totalPassengers) || 0
+    }));
+
+    res.json({ success: true, flights });
+  } catch (error) {
+    console.error('Error fetching flights by day:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// Get passenger details for a specific flight
+app.get('/api/flight-passengers/:flightNumber', async (req, res) => {
+  const { flightNumber } = req.params;
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+
+    const [bookedRows] = await connection.execute(`
+      SELECT p.id_passengers as id, p.name as passengerName, p.passport_number as passportNumber,
+             p.nationality, p.gander as gender, s.seat_number as seatNumber, b.booking_reference as bookingReference,
+             bg.weight as baggageWeight, bg.extra_price as extraBaggagePrice, b.final_price as finalPrice,
+             b.id_bookings as bookingId
+      FROM passengers p
+      JOIN bookings_passengers bp ON bp.passenger_id = p.id_passengers
+      JOIN bookings b ON bp.booking_id = b.id_bookings
+      JOIN flights f ON b.flight_id = f.id_flights
+      LEFT JOIN seats s ON bp.seat_id = s.id_seats
+      LEFT JOIN baggage bg ON bp.baggage_id = bg.id_baggage
+      WHERE REPLACE(f.flight_number, ' ', '') = ? AND b.status = 'certain'
+    `, [flightNumber.replace(/\s+/g, '')]);
+
+    const bookingIds = [...new Set(bookedRows.map(r => r.bookingId))];
+    let servicesMap = {};
+    if (bookingIds.length > 0) {
+      const [serviceRows] = await connection.query(
+        'SELECT booking_id, service_name FROM ground_services WHERE booking_id IN (?) AND is_active = 1',
+        [bookingIds]
+      );
+      serviceRows.forEach(sr => {
+        servicesMap[sr.booking_id] = servicesMap[sr.booking_id] || [];
+        servicesMap[sr.booking_id].push(serviceMap[sr.service_name] || sr.service_name);
+      });
+    }
+
+    const passengers = bookedRows.map(r => ({
+      id: r.id,
+      passengerName: r.passengerName,
+      passportNumber: r.passportNumber,
+      nationality: r.nationality,
+      gender: r.gender === 'female' ? 'أنثى' : 'ذكر',
+      seatNumber: r.seatNumber || 'غير محدد',
+      bookingReference: r.bookingReference,
+      extraWeight: r.baggageWeight > 23 ? Math.round(r.baggageWeight - 23) : 0,
+      extraBaggagePrice: Number(r.extraBaggagePrice) || 0,
+      services: servicesMap[r.bookingId] || [],
+      finalPrice: Number(r.finalPrice) || 0
+    }));
+
+    res.json({ success: true, passengers });
+  } catch (error) {
+    console.error('Error fetching flight passengers:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// Get seat map status and details for a specific flight
+app.get('/api/flight-details/:flightNumber', async (req, res) => {
+  const { flightNumber } = req.params;
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    
+    // Fetch the flight
+    const [flights] = await connection.execute(
+      'SELECT id_flights as id, flight_number as flightNumber, airportOrigin_code as origin, airportDestination_code as destination, aircraft_type as aircraftType, departure_time as departureTime, arrival_time as arrivalTime FROM flights WHERE REPLACE(flight_number, " ", "") = ?',
+      [flightNumber.replace(/\s+/g, '')]
+    );
+    
+    if (flights.length === 0) {
+      return res.status(404).json({ success: false, error: 'الرحلة غير موجودة' });
+    }
+    
+    const flight = flights[0];
+    
+    // Fetch the booked seats
+    const [bookedRows] = await connection.execute(`
+      SELECT s.seat_number as seatNumber, s.seat_class as seatClass, p.name as passengerName,
+             p.passport_number as passportNumber, p.nationality, p.gander as gender,
+             b.booking_reference as bookingReference, b.id_bookings as bookingId
+      FROM bookings_passengers bp
+      JOIN passengers p ON bp.passenger_id = p.id_passengers
+      JOIN bookings b ON bp.booking_id = b.id_bookings
+      JOIN seats s ON bp.seat_id = s.id_seats
+      WHERE b.flight_id = ? AND b.status = 'certain'
+    `, [flight.id]);
+    
+    const bookingIds = [...new Set(bookedRows.map(r => r.bookingId))];
+    let servicesMap = {};
+    if (bookingIds.length > 0) {
+      const [serviceRows] = await connection.query(
+        'SELECT booking_id, service_name FROM ground_services WHERE booking_id IN (?) AND is_active = 1',
+        [bookingIds]
+      );
+      serviceRows.forEach(sr => {
+        servicesMap[sr.booking_id] = servicesMap[sr.booking_id] || [];
+        servicesMap[sr.booking_id].push(serviceMap[sr.service_name] || sr.service_name);
+      });
+    }
+    
+    const bookedSeats = bookedRows.map(r => ({
+      seatNumber: r.seatNumber,
+      seatClass: (r.seatClass || '').trim().toLowerCase() === 'economy' ? 'economy' : 'business',
+      passengerName: r.passengerName,
+      passportNumber: r.passportNumber,
+      nationality: r.nationality,
+      gender: r.gender,
+      bookingReference: r.bookingReference,
+      services: servicesMap[r.bookingId] || []
+    }));
+    
+    // Calculate stats
+    const businessOccupied = bookedSeats.filter(s => s.seatClass === 'business').length;
+    const economyOccupied = bookedSeats.filter(s => s.seatClass === 'economy').length;
+    
+    res.json({
+      success: true,
+      flight: {
+        id: flight.id,
+        flightNumber: flight.flightNumber,
+        origin: arabicCityMap[flight.origin] || flight.origin,
+        destination: arabicCityMap[flight.destination] || flight.destination,
+        aircraftType: flight.aircraftType,
+        departureTime: flight.departureTime,
+        arrivalTime: flight.arrivalTime
+      },
+      bookedSeats,
+      stats: {
+        business: {
+          total: 12,
+          occupied: businessOccupied,
+          vacant: Math.max(0, 12 - businessOccupied)
+        },
+        economy: {
+          total: 138,
+          occupied: economyOccupied,
+          vacant: Math.max(0, 138 - economyOccupied)
+        },
+        first: {
+          total: 0,
+          occupied: 0,
+          vacant: 0
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching flight details:', error);
     res.status(500).json({ success: false, error: error.message });
   } finally {
     if (connection) await connection.end();

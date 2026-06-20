@@ -12,6 +12,10 @@ import CompanyDashboard from './pages/CompanyDashboard.jsx'
 import CompanyFlights from './pages/CompanyFlights.jsx'
 import CompanyPassengers from './pages/CompanyPassengers.jsx'
 import CompanyAnalytics from './pages/CompanyAnalytics.jsx'
+import FinancialReport from './pages/FinancialReport.jsx'
+import DestinationReport from './pages/DestinationReport.jsx'
+import MedicalServicesReport from './pages/MedicalServicesReport.jsx'
+import PassengerStatusReport from './pages/PassengerStatusReport.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx'
 import AdminUsers from './pages/AdminUsers.jsx'
 import SeatsPage from './pages/Seats.jsx'
@@ -116,6 +120,46 @@ function App() {
               element={
                 <CompanyProtectedRoute>
                   <CompanyAnalytics />
+                </CompanyProtectedRoute>
+              }
+            />
+            <Route
+              path="/company-analytics"
+              element={
+                <CompanyProtectedRoute>
+                  <CompanyAnalytics />
+                </CompanyProtectedRoute>
+              }
+            />
+            <Route
+              path="/financial-report"
+              element={
+                <CompanyProtectedRoute>
+                  <FinancialReport />
+                </CompanyProtectedRoute>
+              }
+            />
+            <Route
+              path="/destination-report"
+              element={
+                <CompanyProtectedRoute>
+                  <DestinationReport />
+                </CompanyProtectedRoute>
+              }
+            />
+            <Route
+              path="/medical-services"
+              element={
+                <CompanyProtectedRoute>
+                  <MedicalServicesReport />
+                </CompanyProtectedRoute>
+              }
+            />
+            <Route
+              path="/passenger-status"
+              element={
+                <CompanyProtectedRoute>
+                  <PassengerStatusReport />
                 </CompanyProtectedRoute>
               }
             />

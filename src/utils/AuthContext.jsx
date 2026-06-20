@@ -17,10 +17,12 @@ export const AuthProvider = ({ children }) => {
     } else if (currentRole === 'company') {
       const companyName = localStorage.getItem('companyName') || 'Yemenia';
       const companyId = parseInt(localStorage.getItem('companyId') || '1', 10);
+      const logoUrl = localStorage.getItem('companyLogo') || null;
       return {
         role: 'company_admin',
         airline_name: companyName,
         airline_id: companyId,
+        logo_url: logoUrl,
       };
     }
 
@@ -117,7 +119,12 @@ export const AuthProvider = ({ children }) => {
       }
       localStorage.setItem('companyId', String(user.airline_id || 1));
       localStorage.setItem('companyName', user.airline_name || 'Yemenia');
-      localStorage.setItem('airlineCode', user.airline_id === 1 ? 'IY' : user.airline_id === 2 ? 'BS' : 'QY');
+      if (user.logo_url) {
+        localStorage.setItem('companyLogo', user.logo_url);
+      }
+      if (!localStorage.getItem('airlineCode')) {
+        localStorage.setItem('airlineCode', user.airline_id === 1 ? 'IY' : user.airline_id === 2 ? 'BS' : 'FA');
+      }
       
       // مسح قيم المدير لتجنب التداخل
       localStorage.removeItem('adminToken');
@@ -152,8 +159,19 @@ export const AuthProvider = ({ children }) => {
     }));
   };
 
+  // تسجيل الخروج المركزي
+  const logout = () => {
+    localStorage.clear();
+    setUser({
+      role: 'user',
+      airline_name: null,
+      airline_id: null,
+      logo_url: null,
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, setUser, setRole, toggleRole, bookings, setBookings, addBooking }}>
+    <AuthContext.Provider value={{ user, setUser, logout, setRole, toggleRole, bookings, setBookings, addBooking }}>
       {children}
     </AuthContext.Provider>
   );

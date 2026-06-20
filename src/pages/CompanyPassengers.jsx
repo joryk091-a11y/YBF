@@ -25,7 +25,7 @@ export default function CompanyPassengers() {
   const [searchTerm, setSearchTerm] = useState('');
 
   // 1. تصفية الحجوزات بحيث تتبع شركة الطيران الحالية فقط (مثل رحلات IY- لشركة Yemenia)
-  const airlineCode = user.airline_id === 1 ? 'IY' : user.airline_id === 2 ? 'BS' : 'QY';
+  const airlineCode = localStorage.getItem('airlineCode') || (user.airline_id === 1 ? 'IY' : user.airline_id === 2 ? 'BS' : 'FA');
   
   const companyBookings = bookings.filter(b => 
     b.flight_number.startsWith(airlineCode) && b.status !== 'cancelled'

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -27,6 +27,7 @@ const AdminDashboard = () => {
         return 'dashboard';
     });
     const [loading, setLoading] = useState(true);
+    const isInitialMount = useRef(true);
     const [selectedDashboardYear, setSelectedDashboardYear] = useState(() => {
         const now = new Date();
         return String(now.getFullYear());
@@ -113,7 +114,10 @@ const AdminDashboard = () => {
     // Fetch Dashboard Stats
     const fetchDashboardStats = useCallback(async () => {
         if (!token || role !== 'admin') return;
-        setLoading(true);
+        if (isInitialMount.current) {
+            setLoading(true);
+            isInitialMount.current = false;
+        }
         try {
             let url = `http://localhost:8080/api/admin/dashboard-stats`;
             const params = [];
@@ -329,15 +333,14 @@ const AdminDashboard = () => {
         return () => clearTimeout(timer);
     }, [activeTab, fetchDashboardStats, fetchFlights, fetchUsers, fetchCompanies]);
 
-    // Initial load
+    // Initial mount load of companies and users (dashboard stats are fetched by the tab change hook since activeTab defaults to 'dashboard')
     useEffect(() => {
         const timer = setTimeout(() => {
-            fetchDashboardStats();
             fetchUsers();
             fetchCompanies();
         }, 0);
         return () => clearTimeout(timer);
-    }, [fetchDashboardStats, fetchUsers, fetchCompanies]);
+    }, [fetchUsers, fetchCompanies]);
 
     // Auto-refresh database data every 20 seconds for real-time reporting
     useEffect(() => {

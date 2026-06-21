@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
 import { MessageSquare, Send, X, Mail, Sparkles, ShieldCheck } from 'lucide-react'
@@ -9,9 +9,11 @@ function MainLayout() {
   const [inputText, setInputText] = useState('');
   const [messages, setMessages] = useState([]);
   const location = useLocation();
+  const navigate = useNavigate();
   const chatEndRef = useRef(null);
 
   const isHomePage = location.pathname === '/' || location.pathname === '/home';
+  const loggedInUser = JSON.parse(localStorage.getItem('user') || 'null');
 
   // Get active chat user details
   const getChatUser = () => {
@@ -23,26 +25,7 @@ function MainLayout() {
         email: loggedIn.email
       };
     }
-    
-    // Check for guest user
-    const savedGuest = localStorage.getItem('guest_chat_user');
-    if (savedGuest) {
-      try {
-        return JSON.parse(savedGuest);
-      } catch (e) {
-        // Fallback
-      }
-    }
-    
-    // Generate new guest
-    const rand = Math.floor(1000 + Math.random() * 9000);
-    const newGuest = {
-      id: null,
-      name: `زائر ${rand}`,
-      email: `guest_${rand}@ybf.com`
-    };
-    localStorage.setItem('guest_chat_user', JSON.stringify(newGuest));
-    return newGuest;
+    return null;
   };
 
   const fetchChatHistory = async (email) => {
@@ -70,11 +53,13 @@ function MainLayout() {
     let intervalId;
     if (isOpen) {
       const chatUser = getChatUser();
-      fetchChatHistory(chatUser.email);
-
-      intervalId = setInterval(() => {
+      if (chatUser) {
         fetchChatHistory(chatUser.email);
-      }, 3000);
+
+        intervalId = setInterval(() => {
+          fetchChatHistory(chatUser.email);
+        }, 3000);
+      }
     }
 
     return () => {
@@ -87,6 +72,8 @@ function MainLayout() {
     if (!inputText.trim()) return;
 
     const chatUser = getChatUser();
+    if (!chatUser) return;
+
     const text = inputText.trim();
     setInputText('');
 
@@ -150,47 +137,72 @@ function MainLayout() {
                 </div>
               </div>
 
-              {/* Chat Messages Area */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/20">
-                {messages.map((msg, index) => (
-                  <div 
-                    key={msg.id_chat || msg.id || index}
-                    className={`flex flex-col max-w-[80%] ${msg.sender === 'user' ? 'mr-auto items-end' : 'ml-auto items-start'}`}
-                  >
-                    <div 
-                      className={`rounded-2xl px-3.5 py-2.5 text-xs font-bold shadow-sm leading-relaxed ${
-                        msg.sender === 'user' 
-                          ? 'bg-gradient-to-tr from-[#4974f9] to-[#3a5fd4] text-white rounded-br-none' 
-                          : 'bg-white text-slate-800 border border-slate-100 rounded-bl-none'
-                      }`}
-                    >
-                      {msg.message || msg.text}
-                    </div>
-                    <span className="text-[8px] text-slate-400 mt-1 font-bold">
-                      {new Date(msg.created_at || msg.time).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
-                    </span>
+              {!loggedInUser ? (
+                /* Unauthenticated view */
+                <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-slate-50/20 select-none">
+                  <div className="h-14 w-14 bg-blue-50/60 dark:bg-blue-900/10 rounded-2xl flex items-center justify-center text-[#4974f9] mb-4 shadow-sm border border-blue-100/40">
+                    <MessageSquare size={24} />
                   </div>
-                ))}
-                <div ref={chatEndRef} />
-              </div>
+                  <h5 className="text-xs font-black text-slate-800 mb-1.5">يرجى تسجيل الدخول أولاً</h5>
+                  <p className="text-[10px] text-slate-400 font-bold max-w-[200px] leading-relaxed mb-4">
+                    يجب أن يكون لديك حساب مسجل ومسجل الدخول لتتمكن من مراسلة الدعم الفني والحصول على المساعدة.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setIsOpen(false);
+                      navigate('/login');
+                    }}
+                    className="bg-gradient-to-tr from-[#4974f9] to-[#3a5fd4] text-white text-[10px] font-black py-2.5 px-6 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md shadow-[#4974f9]/20 cursor-pointer"
+                  >
+                    تسجيل الدخول
+                  </button>
+                </div>
+              ) : (
+                /* Authenticated user chat view */
+                <>
+                  {/* Chat Messages Area */}
+                  <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/20">
+                    {messages.map((msg, index) => (
+                      <div 
+                        key={msg.id_chat || msg.id || index}
+                        className={`flex flex-col max-w-[80%] ${msg.sender === 'user' ? 'mr-auto items-end' : 'ml-auto items-start'}`}
+                      >
+                        <div 
+                          className={`rounded-2xl px-3.5 py-2.5 text-xs font-bold shadow-sm leading-relaxed ${
+                            msg.sender === 'user' 
+                              ? 'bg-gradient-to-tr from-[#4974f9] to-[#3a5fd4] text-white rounded-br-none' 
+                              : 'bg-white text-slate-800 border border-slate-100 rounded-bl-none'
+                          }`}
+                        >
+                          {msg.message || msg.text}
+                        </div>
+                        <span className="text-[8px] text-slate-400 mt-1 font-bold">
+                          {new Date(msg.created_at || msg.time).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    ))}
+                    <div ref={chatEndRef} />
+                  </div>
 
-              {/* Chat Input Bar */}
-              <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-100 flex items-center gap-2 bg-white">
-                <input 
-                  type="text" 
-                  value={inputText}
-                  onChange={e => setInputText(e.target.value)}
-                  placeholder="اكتب استفسارك هنا..."
-                  className="flex-1 bg-slate-50 border border-slate-200/80 rounded-xl px-3.5 py-2.5 text-xs font-bold outline-none focus:border-[#4974f9] transition-all"
-                />
-                <button 
-                  type="submit"
-                  disabled={!inputText.trim()}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-[#4974f9] to-[#3a5fd4] text-white shadow-md shadow-[#4974f9]/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 cursor-pointer"
-                >
-                  <Send size={14} className="rotate-180" />
-                </button>
-              </form>
+                  {/* Chat Input Bar */}
+                  <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-100 flex items-center gap-2 bg-white">
+                    <input 
+                      type="text" 
+                      value={inputText}
+                      onChange={e => setInputText(e.target.value)}
+                      placeholder="اكتب استفسارك هنا..."
+                      className="flex-1 bg-slate-50 border border-slate-200/80 rounded-xl px-3.5 py-2.5 text-xs font-bold outline-none focus:border-[#4974f9] transition-all"
+                    />
+                    <button 
+                      type="submit"
+                      disabled={!inputText.trim()}
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-[#4974f9] to-[#3a5fd4] text-white shadow-md shadow-[#4974f9]/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 cursor-pointer"
+                    >
+                      <Send size={14} className="rotate-180" />
+                    </button>
+                  </form>
+                </>
+              )}
 
               {/* Quick Contact Footer */}
               <div className="px-5 py-2 border-t border-slate-50 bg-slate-50/10 flex items-center justify-between text-[8px] text-slate-400 font-bold">

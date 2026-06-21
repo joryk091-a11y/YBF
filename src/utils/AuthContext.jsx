@@ -117,7 +117,10 @@ export const AuthProvider = ({ children }) => {
       }
       localStorage.setItem('companyId', String(user.airline_id || 1));
       localStorage.setItem('companyName', user.airline_name || 'Yemenia');
-      localStorage.setItem('airlineCode', user.airline_id === 1 ? 'IY' : user.airline_id === 2 ? 'BS' : 'QY');
+      const storedCode = localStorage.getItem('airlineCode');
+      if (!storedCode) {
+        localStorage.setItem('airlineCode', user.airline_id === 1 ? 'IY' : user.airline_id === 2 ? 'BS' : user.airline_id === 5 ? 'DH' : user.airline_id === 7 ? 'QA' : 'QY');
+      }
       
       // مسح قيم المدير لتجنب التداخل
       localStorage.removeItem('adminToken');

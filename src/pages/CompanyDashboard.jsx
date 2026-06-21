@@ -54,7 +54,7 @@ const CompanyDashboard = () => {
     const token = localStorage.getItem('companyToken');
     const companyId = localStorage.getItem('companyId');
     const companyName = user.airline_name || localStorage.getItem('companyName') || 'الشركة';
-    const airlineCode = user.airline_id === 1 ? 'IY' : user.airline_id === 2 ? 'BS' : 'QY';
+    const airlineCode = localStorage.getItem('airlineCode') || (user.airline_id === 1 ? 'IY' : user.airline_id === 2 ? 'BS' : user.airline_id === 5 ? 'DH' : user.airline_id === 7 ? 'QA' : 'QY');
 
     const [flights, setFlights] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -63,7 +63,10 @@ const CompanyDashboard = () => {
         switch (airlineCode) {
             case 'IY': return yemeniaLogo;
             case 'BS': return balqisLogo;
+            case 'QA': return balqisLogo;
             case 'QY': return adenLogo;
+            case 'DH': return adenLogo;
+            case 'QTB': return adenLogo;
             default: return logo;
         }
     };
@@ -119,15 +122,14 @@ const CompanyDashboard = () => {
         try {
             const response = await fetch(`http://localhost:8080/api/flights?airlineCode=${airlineCode}`);
             const data = await response.json();
-            if (data.success && data.flights && data.flights.length > 0) {
-                console.log('Fetched flights:', data.flights); // Debug log
+            if (data.success && data.flights) {
                 setFlights(data.flights);
             } else {
-                setFlights(getMockFlights(airlineCode));
+                setFlights([]);
             }
         } catch (error) {
-            console.error('Error fetching flights, falling back to mock data:', error);
-            setFlights(getMockFlights(airlineCode));
+            console.error('Error fetching flights:', error);
+            setFlights([]);
         } finally {
             setLoading(false);
         }

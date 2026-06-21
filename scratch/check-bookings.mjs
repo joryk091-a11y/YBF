@@ -3,9 +3,20 @@ import mysql from 'mysql2/promise';
 dotenv.config();
 
 const url = process.env.DATABASE_URL;
-const regex = /mysql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/;
-const match = url.match(regex);
-const config = { host: match[3], user: match[1], password: match[2], port: Number(match[4]), database: match[5] };
+let config;
+if (!url) {
+  config = {
+    host: '127.0.0.1',
+    user: 'root',
+    password: '',
+    port: 3306,
+    database: 'airlines'
+  };
+} else {
+  const regex = /mysql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/;
+  const match = url.match(regex);
+  config = { host: match[3], user: match[1], password: match[2], port: Number(match[4]), database: match[5] };
+}
 
 const conn = await mysql.createConnection(config);
 

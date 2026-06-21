@@ -239,7 +239,7 @@ app.delete('/api/admin/users/:id', async (req, res) => {
 
 // GET Admin Dashboard stats from database
 app.get('/api/admin/dashboard-stats', async (req, res) => {
-  const { period, date } = req.query; // 'current_month', 'current_year' or YYYY-MM-DD
+  const { period, date, year, month, flightNumber } = req.query; // 'current_month', 'current_year', YYYY-MM-DD or custom year & month
   const isCurrentMonth = period === 'current_month';
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   const isCustomDate = date && dateRegex.test(date);
@@ -247,17 +247,41 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    // شروط تصفية التواريخ للشهر الحالي أو السنة الحالية أو تاريخ محدد
+    // شروط تصفية التواريخ للشهر الحالي أو السنة الحالية أو تاريخ محدد أو سنة وشهر معينين
     let dateFilterBookings;
     let dateFilterPayments;
     let dateFilterBookingsAnd;
     let dateFilterBookingsWhereAlias;
+    let dateFilterSubqueryBookings;
+    let dateFilterSubqueryPayments;
 
-    if (isCustomDate) {
+    if (year && year.trim() !== '') {
+      if (month && month.trim() !== '') {
+        const targetYearMonth = `${year}-${String(month).padStart(2, '0')}`;
+        dateFilterBookings = `WHERE DATE_FORMAT(booking_date, '%Y-%m') = '${targetYearMonth}'`;
+        dateFilterPayments = `AND DATE_FORMAT(payment_date, '%Y-%m') = '${targetYearMonth}'`;
+        dateFilterBookingsAnd = `AND DATE_FORMAT(booking_date, '%Y-%m') = '${targetYearMonth}'`;
+        dateFilterBookingsWhereAlias = `WHERE DATE_FORMAT(b.booking_date, '%Y-%m') = '${targetYearMonth}'`;
+        
+        dateFilterSubqueryBookings = `AND DATE_FORMAT(b.booking_date, '%Y-%m') = '${targetYearMonth}'`;
+        dateFilterSubqueryPayments = `AND DATE_FORMAT(p.payment_date, '%Y-%m') = '${targetYearMonth}'`;
+      } else {
+        dateFilterBookings = `WHERE DATE_FORMAT(booking_date, '%Y') = '${year}'`;
+        dateFilterPayments = `AND DATE_FORMAT(payment_date, '%Y') = '${year}'`;
+        dateFilterBookingsAnd = `AND DATE_FORMAT(booking_date, '%Y') = '${year}'`;
+        dateFilterBookingsWhereAlias = `WHERE DATE_FORMAT(b.booking_date, '%Y') = '${year}'`;
+        
+        dateFilterSubqueryBookings = `AND DATE_FORMAT(b.booking_date, '%Y') = '${year}'`;
+        dateFilterSubqueryPayments = `AND DATE_FORMAT(p.payment_date, '%Y') = '${year}'`;
+      }
+    } else if (isCustomDate) {
       dateFilterBookings = `WHERE DATE(booking_date) = '${date}'`;
       dateFilterPayments = `AND DATE(payment_date) = '${date}'`;
       dateFilterBookingsAnd = `AND DATE(booking_date) = '${date}'`;
       dateFilterBookingsWhereAlias = `WHERE DATE(b.booking_date) = '${date}'`;
+      
+      dateFilterSubqueryBookings = `AND DATE(b.booking_date) = '${date}'`;
+      dateFilterSubqueryPayments = `AND DATE(p.payment_date) = '${date}'`;
     } else {
       dateFilterBookings = isCurrentMonth 
         ? "WHERE DATE_FORMAT(booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')" 
@@ -274,6 +298,14 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       dateFilterBookingsWhereAlias = isCurrentMonth
         ? "WHERE DATE_FORMAT(b.booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')"
         : "WHERE DATE_FORMAT(b.booking_date, '%Y') = DATE_FORMAT(NOW(), '%Y')";
+        
+      dateFilterSubqueryBookings = isCurrentMonth
+        ? "AND DATE_FORMAT(b.booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')"
+        : "AND DATE_FORMAT(b.booking_date, '%Y') = DATE_FORMAT(NOW(), '%Y')";
+        
+      dateFilterSubqueryPayments = isCurrentMonth
+        ? "AND DATE_FORMAT(p.payment_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')"
+        : "AND DATE_FORMAT(p.payment_date, '%Y') = DATE_FORMAT(NOW(), '%Y')";
     }
 
     // 1. Total tickets (number of passenger tickets booked)
@@ -295,15 +327,22 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
     const [[{ totalUsers }]] = await connection.execute('SELECT COUNT(*) as totalUsers FROM users');
 
     // 5. Recent bookings
+    let flightFilter = '';
+    const recentParams = [];
+    if (flightNumber && flightNumber.trim() !== '') {
+      flightFilter = ` AND f.flight_number LIKE ? `;
+      recentParams.push(`%${flightNumber.trim()}%`);
+    }
     const [recentBookings] = await connection.execute(`
       SELECT b.id_bookings, b.booking_reference, b.booking_date, b.total_passengers, b.final_price, b.status, 
              f.flight_number, f.airline_code, f.airportOrigin_code, f.airportDestination_code, f.departure_time,
              (SELECT p.name FROM bookings_passengers bp JOIN passengers p ON bp.passenger_id = p.id_passengers WHERE bp.booking_id = b.id_bookings LIMIT 1) as lead_passenger
       FROM bookings b
       JOIN flights f ON b.flight_id = f.id_flights
+      ${dateFilterBookingsWhereAlias} ${flightFilter}
       ORDER BY b.booking_date DESC
-      LIMIT 10
-    `);
+      LIMIT 100
+    `, recentParams);
 
     // 6. Top Destinations and ticket counts (SUM of passengers)
     const [destinationsStats] = await connection.execute(`
@@ -380,6 +419,33 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       HAVING price > 0
     `);
 
+    // 13. Company Breakdown
+    const [companyBreakdown] = await connection.execute(`
+      SELECT 
+        c.airline_code,
+        c.company_name,
+        (
+          SELECT COALESCE(SUM(b.total_passengers), 0) 
+          FROM bookings b 
+          JOIN flights f ON b.flight_id = f.id_flights 
+          WHERE f.airline_code = c.airline_code ${dateFilterSubqueryBookings}
+        ) as tickets,
+        (
+          SELECT COALESCE(SUM(p.amount), 0) 
+          FROM payments p 
+          JOIN bookings b ON p.booking_id = b.id_bookings
+          JOIN flights f ON b.flight_id = f.id_flights
+          WHERE f.airline_code = c.airline_code AND p.payment_status = 'success' ${dateFilterSubqueryPayments}
+        ) as revenue,
+        (
+          SELECT COUNT(*) 
+          FROM bookings b 
+          JOIN flights f ON b.flight_id = f.id_flights 
+          WHERE f.airline_code = c.airline_code AND b.status = 'canceled' ${dateFilterSubqueryBookings}
+        ) as cancelled_bookings
+      FROM companies c
+    `);
+
     res.json({
       success: true,
       stats: {
@@ -395,6 +461,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
         airlineStats,
         cancellationRate,
         statusStats,
+        companyBreakdown,
         classStats: classStats.length > 0 ? classStats : [
           { name: 'economy', value: totalTickets ? Math.round(totalTickets * 0.7) : 0 },
           { name: 'business', value: totalTickets ? Math.round(totalTickets * 0.2) : 0 },

@@ -35,7 +35,7 @@ function LoginPage() {
             } else {
                 setError(data.error || 'حدث خطأ أثناء تسجيل الدخول')
             }
-        } catch (err) {
+        } catch {
             setError('تعذر الاتصال بالخادم')
         } finally {
             setLoading(false)

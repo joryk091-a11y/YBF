@@ -45,12 +45,12 @@ const AdminDashboard = () => {
         cancellationRate: 0,
         statusStats: [],
         classStats: [],
-        aircraftStats: []
+        aircraftStats: [],
+        companyBreakdown: []
     });
 
     // Lists for other tabs
     const [flights, setFlights] = useState([]);
-    const [bookings, setBookings] = useState([]);
     const [usersList, setUsersList] = useState([]);
     const [companiesList, setCompaniesList] = useState([]);
     const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
@@ -75,10 +75,18 @@ const AdminDashboard = () => {
     });
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedFlightDate, setSelectedFlightDate] = useState('');
-    const [selectedLogsDate, setSelectedLogsDate] = useState('');
-    const [selectedReportDate, setSelectedReportDate] = useState('');
+    const [selectedFlightAirline, setSelectedFlightAirline] = useState('');
+
+    const [selectedReportYear, setSelectedReportYear] = useState(() => {
+        const now = new Date();
+        return String(now.getFullYear());
+    });
+    const [selectedReportMonth, setSelectedReportMonth] = useState(() => {
+        const now = new Date();
+        return String(now.getMonth() + 1).padStart(2, '0');
+    });
+    const [reportFlightSearch, setReportFlightSearch] = useState('');
     const [loadingList, setLoadingList] = useState(false);
-    const [reportsSubTab, setReportsSubTab] = useState('logs'); // 'logs' or 'pdf_report'
 
 
 
@@ -103,9 +111,27 @@ const AdminDashboard = () => {
         if (!token || role !== 'admin') return;
         setLoading(true);
         try {
-            const url = selectedReportDate
-                ? `http://localhost:8080/api/admin/dashboard-stats?date=${selectedReportDate}`
-                : `http://localhost:8080/api/admin/dashboard-stats?period=${statsPeriod}`;
+            let url = `http://localhost:8080/api/admin/dashboard-stats`;
+            const params = [];
+
+            if (activeTab === 'reports') {
+                if (selectedReportYear) {
+                    params.push(`year=${selectedReportYear}`);
+                }
+                if (selectedReportMonth) {
+                    params.push(`month=${selectedReportMonth}`);
+                }
+                if (reportFlightSearch) {
+                    params.push(`flightNumber=${reportFlightSearch}`);
+                }
+            } else {
+                params.push(`period=${statsPeriod}`);
+            }
+
+            if (params.length > 0) {
+                url += `?${params.join('&')}`;
+            }
+
             const res = await fetch(url);
             const data = await res.json();
             if (data.success) {
@@ -116,16 +142,19 @@ const AdminDashboard = () => {
         } finally {
             setLoading(false);
         }
-    }, [token, role, statsPeriod, selectedReportDate]);
+    }, [token, role, statsPeriod, selectedReportYear, selectedReportMonth, reportFlightSearch, activeTab]);
 
     // Fetch Flights
     const fetchFlights = useCallback(async () => {
         if (!token || role !== 'admin') return;
         setLoadingList(true);
         try {
-            const url = selectedFlightDate 
-                ? `http://localhost:8080/api/flights?date=${selectedFlightDate}` 
-                : 'http://localhost:8080/api/flights';
+            const params = [];
+            if (selectedFlightDate) params.push(`date=${selectedFlightDate}`);
+            if (selectedFlightAirline) params.push(`airlineCode=${selectedFlightAirline}`);
+            const queryStr = params.length > 0 ? `?${params.join('&')}` : '';
+            
+            const url = `http://localhost:8080/api/flights${queryStr}`;
             const res = await fetch(url);
             const data = await res.json();
             if (data.success) {
@@ -136,27 +165,9 @@ const AdminDashboard = () => {
         } finally {
             setLoadingList(false);
         }
-    }, [token, role, selectedFlightDate]);
+    }, [token, role, selectedFlightDate, selectedFlightAirline]);
 
-    // Fetch Bookings
-    const fetchBookings = useCallback(async () => {
-        if (!token || role !== 'admin') return;
-        setLoadingList(true);
-        try {
-            const url = selectedLogsDate
-                ? `http://localhost:8080/api/admin/bookings?date=${selectedLogsDate}`
-                : 'http://localhost:8080/api/admin/bookings';
-            const res = await fetch(url);
-            const data = await res.json();
-            if (data.success) {
-                setBookings(data.bookings);
-            }
-        } catch (error) {
-            console.error('Error fetching bookings:', error);
-        } finally {
-            setLoadingList(false);
-        }
-    }, [token, role, selectedLogsDate]);
+
 
     // Fetch Users
     const fetchUsers = useCallback(async () => {
@@ -298,7 +309,6 @@ const AdminDashboard = () => {
             } else if (activeTab === 'flights') {
                 fetchFlights();
             } else if (activeTab === 'reports') {
-                fetchBookings();
                 fetchDashboardStats();
                 fetchFlights();
             } else if (activeTab === 'users') {
@@ -308,7 +318,7 @@ const AdminDashboard = () => {
             }
         }, 0);
         return () => clearTimeout(timer);
-    }, [activeTab, fetchDashboardStats, fetchFlights, fetchBookings, fetchUsers, fetchCompanies]);
+    }, [activeTab, fetchDashboardStats, fetchFlights, fetchUsers, fetchCompanies]);
 
     // Initial load
     useEffect(() => {
@@ -326,9 +336,6 @@ const AdminDashboard = () => {
             if (activeTab === 'dashboard' || activeTab === 'reports') {
                 fetchDashboardStats();
             }
-            if (activeTab === 'reports') {
-                fetchBookings();
-            }
             if (activeTab === 'flights' || activeTab === 'reports') {
                 fetchFlights();
             }
@@ -340,7 +347,7 @@ const AdminDashboard = () => {
             }
         }, 20000); // 20 seconds
         return () => clearInterval(interval);
-    }, [activeTab, fetchDashboardStats, fetchBookings, fetchFlights, fetchUsers, fetchCompanies]);
+    }, [activeTab, fetchDashboardStats, fetchFlights, fetchUsers, fetchCompanies]);
 
 
 
@@ -466,15 +473,29 @@ const AdminDashboard = () => {
 
     // Get airline badge/name
     const getAirlineName = (code) => {
+        if (!code) return 'غير معروف';
+        // Check dynamic database companies list first
+        const dbCompany = companiesList?.find(
+            c => String(c.airline_code).toUpperCase() === String(code).toUpperCase()
+        );
+        if (dbCompany) {
+            const name = dbCompany.company_name;
+            if (name.includes(`(${code})`) || name.includes(code)) {
+                return name;
+            }
+            return `${name} (${code})`;
+        }
+
         const airlines = {
-            'IY': 'اليمنية (IY)',
-            'QA': 'القطرية (QA)',
-            'EK': 'الإماراتية (EK)',
-            'WY': 'العمانية (WY)',
-            'GF': 'الخليج (GF)',
-            'DH': 'القطيبي (DH)'
+            'IY': 'اليمنية',
+            'BS': 'بلقيس',
+            'QA': 'القطرية',
+            'EK': 'الإماراتية',
+            'WY': 'العمانية',
+            'GF': 'الخليج',
+            'DH': 'القطيبي'
         };
-        return airlines[code] || code || 'غير معروف';
+        return airlines[code] ? `${airlines[code]} (${code})` : code;
     };
 
     // Get destination full name
@@ -493,6 +514,25 @@ const AdminDashboard = () => {
         return destinations[code?.toUpperCase()] || code || 'وجهة غير معروفة';
     };
 
+    // Get Arabic month name
+    const getArabicMonthName = (monthStr) => {
+        const months = {
+            '01': 'يناير',
+            '02': 'فبراير',
+            '03': 'مارس',
+            '04': 'أبريل',
+            '05': 'مايو',
+            '06': 'يونيو',
+            '07': 'يوليو',
+            '08': 'أغسطس',
+            '09': 'سبتمبر',
+            '10': 'أكتوبر',
+            '11': 'نوفمبر',
+            '12': 'ديسمبر'
+        };
+        return months[monthStr] || monthStr;
+    };
+
     // Filter logic
     const filteredFlights = flights.filter(f =>
         f.flight_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -500,11 +540,7 @@ const AdminDashboard = () => {
         f.airportDestination_code.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const filteredBookings = bookings.filter(b =>
-        b.booking_reference.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        b.passengers?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        b.flight_number.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+
 
     const filteredUsers = usersList.filter(u =>
         u.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -624,7 +660,7 @@ const AdminDashboard = () => {
                         </div>
                         <h2 className="text-xl font-black tracking-tight">
                             {activeTab === 'dashboard' && 'لوحة التحكم الرئيسية'}
-                            {activeTab === 'flights' && 'إدارة وإضافة الرحلات'}
+                            {activeTab === 'flights' && 'جدول واستعراض الرحلات الجوية'}
                             {activeTab === 'users' && 'إدارة مستخدمي النظام'}
                             {activeTab === 'companies' && 'إدارة شركات الطيران'}
                             {activeTab === 'reports' && 'تقارير حركة الطيران والمبيعات'}
@@ -1063,9 +1099,27 @@ const AdminDashboard = () => {
                                         </div>
                                     </div>
 
-                                    {/* Date Filter */}
+                                    {/* Date and Airline Filters */}
                                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm">
-                                        <div className="flex items-center gap-4 flex-wrap w-full">
+                                        <div className="flex items-center gap-6 flex-wrap w-full">
+                                            {/* Airline Filter */}
+                                            <div className="flex flex-col gap-1.5 w-full md:w-auto">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">تصفية حسب شركة الطيران</label>
+                                                <select
+                                                    value={selectedFlightAirline}
+                                                    onChange={(e) => setSelectedFlightAirline(e.target.value)}
+                                                    className="bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-blue-500 rounded-xl py-2.5 px-4 text-xs font-bold outline-none transition-all dark:text-white min-w-[200px]"
+                                                >
+                                                    <option value="">جميع الشركات</option>
+                                                    {companiesList.map((company) => (
+                                                        <option key={company.id_company || company.id_admin} value={company.airline_code}>
+                                                            {company.company_name} ({company.airline_code})
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            {/* Date Filter */}
                                             <div className="flex flex-col gap-1.5 w-full md:w-auto">
                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">تصفية حسب تاريخ الرحلة</label>
                                                 <div className="flex items-center gap-2">
@@ -1075,12 +1129,15 @@ const AdminDashboard = () => {
                                                         onChange={(e) => setSelectedFlightDate(e.target.value)}
                                                         className="bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-blue-500 rounded-xl py-2.5 px-4 text-xs font-bold outline-none transition-all dark:text-white"
                                                     />
-                                                    {selectedFlightDate && (
+                                                    {(selectedFlightDate || selectedFlightAirline) && (
                                                         <button
-                                                            onClick={() => setSelectedFlightDate('')}
+                                                            onClick={() => {
+                                                                setSelectedFlightDate('');
+                                                                setSelectedFlightAirline('');
+                                                            }}
                                                             className="py-2.5 px-4 rounded-xl text-xs font-black bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-all border border-slate-200/60 dark:border-slate-700/60"
                                                         >
-                                                            عرض كل التواريخ
+                                                            إعادة تعيين الفلاتر
                                                         </button>
                                                     )}
                                                 </div>
@@ -1149,160 +1206,6 @@ const AdminDashboard = () => {
                             {/* ===== VIEW: REPORTS ===== */}
                             {activeTab === 'reports' && (
                                 <div className="space-y-6">
-                                    {/* Sub-tab selection */}
-                                    <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl w-fit mb-6 no-print">
-                                        <button
-                                            onClick={() => setReportsSubTab('logs')}
-                                            className={`py-2.5 px-6 rounded-xl text-xs font-black transition-all ${
-                                                reportsSubTab === 'logs'
-                                                    ? 'bg-blue-600 text-white shadow-md'
-                                                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
-                                            }`}
-                                        >
-                                            سجلات الحجوزات (تصدير CSV)
-                                        </button>
-                                        <button
-                                            onClick={() => setReportsSubTab('pdf_report')}
-                                            className={`py-2.5 px-6 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
-                                                reportsSubTab === 'pdf_report'
-                                                    ? 'bg-blue-600 text-white shadow-md'
-                                                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
-                                            }`}
-                                        >
-                                            <BookOpen size={16} />
-                                            <span>التقرير الشامل والطباعة (PDF)</span>
-                                        </button>
-                                    </div>
-
-                                    {reportsSubTab === 'logs' && (
-                                        <div className="space-y-6">
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <h3 className="text-lg font-black">التقارير وسجلات الحجوزات</h3>
-                                                    <p className="text-xs text-slate-400 font-bold mt-1">مراقبة وفلترة كافة الحجوزات والمبيعات على الموقع</p>
-                                                </div>
-                                                <button
-                                                    onClick={() => {
-                                                        const csvRows = [];
-                                                        const headers = ['رقم الحجز', 'المسافرين', 'رقم الرحلة', 'سعر الحجز', 'الحالة', 'تاريخ الحجز'];
-                                                        csvRows.push(headers.join(','));
-                                                        bookings.forEach(b => {
-                                                            csvRows.push([
-                                                                b.booking_reference,
-                                                                `"${b.passengers?.replace(/"/g, '""') || ''}"`,
-                                                                b.flight_number,
-                                                                b.final_price,
-                                                                b.status,
-                                                                new Date(b.booking_date).toISOString()
-                                                            ].join(','));
-                                                        });
-                                                        const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + csvRows.join("\n");
-                                                        const encodedUri = encodeURI(csvContent);
-                                                        const link = document.createElement("a");
-                                                        link.setAttribute("href", encodedUri);
-                                                        link.setAttribute("download", `YBF-bookings-report-${new Date().toLocaleDateString()}.csv`);
-                                                        document.body.appendChild(link);
-                                                        link.click();
-                                                        document.body.removeChild(link);
-                                                    }}
-                                                    className="bg-blue-600 hover:bg-blue-700 text-white font-black py-3 px-6 rounded-2xl text-xs transition-all shadow-md shadow-blue-500/20"
-                                                >
-                                                    تصدير التقرير المالي (CSV)
-                                                </button>
-                                            </div>
-
-                                            {/* Date Filter */}
-                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm no-print mb-6">
-                                                <div className="flex items-center gap-4 flex-wrap w-full">
-                                                    <div className="flex flex-col gap-1.5 w-full md:w-auto">
-                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">تصفية سجل الحجز حسب تاريخ معين</label>
-                                                        <div className="flex items-center gap-2">
-                                                            <input
-                                                                type="date"
-                                                                value={selectedLogsDate}
-                                                                onChange={(e) => setSelectedLogsDate(e.target.value)}
-                                                                className="bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-blue-500 rounded-xl py-2.5 px-4 text-xs font-bold outline-none transition-all dark:text-white"
-                                                            />
-                                                            {selectedLogsDate && (
-                                                                <button
-                                                                    onClick={() => setSelectedLogsDate('')}
-                                                                    className="py-2.5 px-4 rounded-xl text-xs font-black bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-all border border-slate-200/60 dark:border-slate-700/60"
-                                                                >
-                                                                    عرض كل التواريخ
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Bookings Filter List */}
-                                            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm p-8">
-                                                {loadingList ? (
-                                                    <div className="py-20 text-center text-slate-400">جاري تحميل التقارير...</div>
-                                                ) : (
-                                                    <div className="overflow-x-auto">
-                                                        <table className="w-full text-right text-xs">
-                                                            <thead>
-                                                                <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-black uppercase">
-                                                                    <th className="pb-4 px-4">رقم المرجع</th>
-                                                                    <th className="pb-4 px-4">المسافرين</th>
-                                                                    <th className="pb-4 px-4">الرحلة</th>
-                                                                    <th className="pb-4 px-4">السعر</th>
-                                                                    <th className="pb-4 px-4">حالة الحجز</th>
-                                                                    <th className="pb-4 px-4">حالة الدفع</th>
-                                                                    <th className="pb-4 px-4">تاريخ المعاملة</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
-                                                                {filteredBookings.length > 0 ? (
-                                                                    filteredBookings.map((booking) => (
-                                                                        <tr key={booking.id_bookings} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                                                                            <td className="py-4 px-4 font-black">#{booking.booking_reference}</td>
-                                                                            <td className="py-4 px-4 font-bold text-slate-800 dark:text-white max-w-xs truncate">{booking.passengers}</td>
-                                                                            <td className="py-4 px-4 font-bold text-slate-500">{booking.flight_number}</td>
-                                                                            <td className="py-4 px-4 font-black text-slate-900 dark:text-white">${Number(booking.final_price).toLocaleString()}</td>
-                                                                            <td className="py-4 px-4">
-                                                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black ${
-                                                                                    booking.status === 'certain'
-                                                                                        ? 'bg-emerald-500/10 text-emerald-600'
-                                                                                        : booking.status === 'temporary'
-                                                                                        ? 'bg-amber-500/10 text-amber-600'
-                                                                                        : 'bg-rose-500/10 text-rose-600'
-                                                                                }`}>
-                                                                                    {booking.status === 'certain' ? 'مؤكد' : booking.status === 'temporary' ? 'معلق' : 'ملغي'}
-                                                                                </span>
-                                                                            </td>
-                                                                            <td className="py-4 px-4">
-                                                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black ${
-                                                                                    booking.payment_status === 'success'
-                                                                                        ? 'bg-emerald-500/10 text-emerald-600'
-                                                                                        : booking.payment_status === 'pending' || !booking.payment_status
-                                                                                        ? 'bg-amber-500/10 text-amber-600'
-                                                                                        : 'bg-rose-500/10 text-rose-600'
-                                                                                }`}>
-                                                                                    {booking.payment_status === 'success' ? 'ناجح' : 'قيد الانتظار'}
-                                                                                </span>
-                                                                            </td>
-                                                                            <td className="py-4 px-4 font-medium text-slate-400">
-                                                                                {new Date(booking.booking_date).toLocaleString('ar-EG', { dateStyle: 'short' })}
-                                                                            </td>
-                                                                        </tr>
-                                                                    ))
-                                                                ) : (
-                                                                    <tr>
-                                                                        <td colSpan="7" className="py-12 text-center text-slate-400 font-bold">لا توجد سجلات مطابقة للبحث</td>
-                                                                    </tr>
-                                                                )}
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {reportsSubTab === 'pdf_report' && (
                                         <div className="space-y-6">
                                             <style dangerouslySetInnerHTML={{__html: `
                                                 @media print {
@@ -1358,26 +1261,66 @@ const AdminDashboard = () => {
 
                                             {/* Date Filter (no-print) */}
                                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm no-print mb-6">
-                                                <div className="flex items-center gap-4 flex-wrap w-full">
+                                                <div className="flex items-center gap-6 flex-wrap w-full">
+                                                    {/* Year Filter */}
                                                     <div className="flex flex-col gap-1.5 w-full md:w-auto">
-                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">تصفية التقرير حسب تاريخ محدد</label>
-                                                        <div className="flex items-center gap-2">
-                                                            <input
-                                                                type="date"
-                                                                value={selectedReportDate}
-                                                                onChange={(e) => setSelectedReportDate(e.target.value)}
-                                                                className="bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-blue-500 rounded-xl py-2.5 px-4 text-xs font-bold outline-none transition-all dark:text-white"
-                                                            />
-                                                            {selectedReportDate && (
-                                                                <button
-                                                                    onClick={() => setSelectedReportDate('')}
-                                                                    className="py-2.5 px-4 rounded-xl text-xs font-black bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-all border border-slate-200/60 dark:border-slate-700/60"
-                                                                >
-                                                                    عرض تقرير الفترة المحددة ({statsPeriod === 'current_month' ? 'الشهر الحالي' : 'السنة الحالية'})
-                                                                </button>
-                                                            )}
-                                                        </div>
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">تصفية حسب السنة</label>
+                                                        <select
+                                                            value={selectedReportYear}
+                                                            onChange={(e) => {
+                                                                setSelectedReportYear(e.target.value);
+                                                            }}
+                                                            className="bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-blue-500 rounded-xl py-2.5 px-4 text-xs font-bold outline-none transition-all dark:text-white min-w-[120px]"
+                                                        >
+                                                            <option value="2024">2024</option>
+                                                            <option value="2025">2025</option>
+                                                            <option value="2026">2026</option>
+                                                            <option value="2027">2027</option>
+                                                            <option value="2028">2028</option>
+                                                        </select>
                                                     </div>
+
+                                                    {/* Month Filter */}
+                                                    <div className="flex flex-col gap-1.5 w-full md:w-auto">
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">تصفية حسب الشهر</label>
+                                                        <select
+                                                            value={selectedReportMonth}
+                                                            onChange={(e) => {
+                                                                setSelectedReportMonth(e.target.value);
+                                                            }}
+                                                            className="bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-blue-500 rounded-xl py-2.5 px-4 text-xs font-bold outline-none transition-all dark:text-white min-w-[160px]"
+                                                        >
+                                                            <option value="">كل أشهر السنة</option>
+                                                            <option value="01">01 - يناير</option>
+                                                            <option value="02">02 - فبراير</option>
+                                                            <option value="03">03 - مارس</option>
+                                                            <option value="04">04 - أبريل</option>
+                                                            <option value="05">05 - مايو</option>
+                                                            <option value="06">06 - يونيو</option>
+                                                            <option value="07">07 - يوليو</option>
+                                                            <option value="08">08 - أغسطس</option>
+                                                            <option value="09">09 - سبتمبر</option>
+                                                            <option value="10">10 - أكتوبر</option>
+                                                            <option value="11">11 - نوفمبر</option>
+                                                            <option value="12">12 - ديسمبر</option>
+                                                        </select>
+                                                    </div>
+
+                                                    {/* Reset Button */}
+                                                    {(selectedReportMonth !== String(new Date().getMonth() + 1).padStart(2, '0') || selectedReportYear !== String(new Date().getFullYear())) && (
+                                                        <div className="flex flex-col gap-1.5 w-full md:w-auto self-end">
+                                                            <button
+                                                                onClick={() => {
+                                                                    const now = new Date();
+                                                                    setSelectedReportYear(String(now.getFullYear()));
+                                                                    setSelectedReportMonth(String(now.getMonth() + 1).padStart(2, '0'));
+                                                                }}
+                                                                className="py-2.5 px-4 rounded-xl text-xs font-black bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-all border border-slate-200/60 dark:border-slate-700/60"
+                                                            >
+                                                                إعادة تعيين الفلاتر
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
 
@@ -1396,9 +1339,9 @@ const AdminDashboard = () => {
                                                     </div>
                                                     <div className="text-right text-xs text-slate-500 dark:text-slate-400 font-bold space-y-1 bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
                                                         <div>تاريخ التقرير: <span className="text-slate-900 dark:text-white font-black">{new Date().toLocaleString('ar-YE', { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
-                                                        <div>الفترة الزمنية للتقرير: <span className="text-blue-650 dark:text-blue-350 font-black">{selectedReportDate ? `يوم ${new Date(selectedReportDate).toLocaleDateString('ar-YE', { dateStyle: 'long' })}` : (statsPeriod === 'current_month' ? 'الشهر الحالي' : 'السنة الحالية')}</span></div>
+                                                        <div>الفترة الزمنية للتقرير: <span className="text-blue-650 dark:text-blue-350 font-black">{selectedReportMonth ? `${getArabicMonthName(selectedReportMonth)} ${selectedReportYear}` : `سنة ${selectedReportYear}`}</span></div>
                                                         <div>المسؤول المصدر: <span className="text-slate-900 dark:text-white font-black">{adminEmail}</span></div>
-                                                        <div>حالة النظام: <span className="text-emerald-500 font-black">متصل بقاعدة البيانات</span></div>
+                                                        
                                                     </div>
                                                 </div>
 
@@ -1406,29 +1349,80 @@ const AdminDashboard = () => {
                                                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
                                                     {/* 1. Revenue */}
                                                     <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedReportDate ? 'إيرادات اليوم المحدد' : (statsPeriod === 'current_month' ? 'إيرادات الشهر الحالي' : 'إيرادات السنة الحالية')}</p>
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedReportMonth ? `إيرادات شهر ${getArabicMonthName(selectedReportMonth)} ${selectedReportYear}` : `إيرادات سنة ${selectedReportYear}`}</p>
                                                         <h4 className="text-3xl font-black text-emerald-500">${stats.totalRevenue.toLocaleString()}</h4>
-                                                        <p className="text-[11px] font-bold text-slate-500">
+                                                        <p className="text-[11px] font-bold text-slate-500 border-b border-slate-200/60 dark:border-slate-700/60 pb-3">
                                                             يعادل: <strong className="text-slate-700 dark:text-slate-350">{(stats.totalRevenue * Number(exchangeRate)).toLocaleString()} ريال يمني</strong>
                                                         </p>
+                                                        {stats.companyBreakdown && stats.companyBreakdown.length > 0 && (
+                                                            <div className="space-y-2 pt-1">
+                                                                <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 tracking-wider uppercase mb-2">تفصيل إيرادات الشركات:</p>
+                                                                {stats.companyBreakdown.map((comp) => {
+                                                                    const compRevenue = Number(comp.revenue) || 0;
+                                                                    const compRevenueYer = Math.round(compRevenue * Number(exchangeRate));
+                                                                    return (
+                                                                        <div key={comp.airline_code} className="flex justify-between items-center text-xs border-b border-dashed border-slate-200/40 dark:border-slate-800/40 pb-1.5 last:border-0 last:pb-0">
+                                                                            <span className="font-bold text-slate-650 dark:text-slate-350">{comp.company_name || comp.airline_code}</span>
+                                                                            <div className="text-left font-black text-slate-800 dark:text-slate-100">
+                                                                                <span>${compRevenue.toLocaleString()}</span>
+                                                                                <span className="text-[9px] font-bold text-slate-455 mr-2">({compRevenueYer.toLocaleString()} ر.ي)</span>
+                                                                            </div>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        )}
                                                     </div>
 
                                                     {/* 2. Tickets */}
                                                     <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedReportDate ? 'تذاكر اليوم المحدد' : (statsPeriod === 'current_month' ? 'تذاكر الشهر الحالي' : 'تذاكر السنة الحالية')}</p>
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedReportMonth ? `تذاكر شهر ${getArabicMonthName(selectedReportMonth)} ${selectedReportYear}` : `تذاكر سنة ${selectedReportYear}`}</p>
                                                         <h4 className="text-3xl font-black text-blue-500">{stats.totalTickets.toLocaleString()} تذكرة</h4>
-                                                        <p className="text-[11px] font-bold text-slate-500">
-                                                            {selectedReportDate ? 'الركاب النشطين باليوم:' : (statsPeriod === 'current_month' ? 'الركاب النشطين بالفترة:' : 'الركاب النشطين بالسنة:')} <strong className="text-slate-700 dark:text-slate-350">{stats.activePassengers.toLocaleString()} مسافر</strong>
+                                                        <p className="text-[11px] font-bold text-slate-500 border-b border-slate-200/60 dark:border-slate-700/60 pb-3">
+                                                            الركاب النشطين بالفترة: <strong className="text-slate-700 dark:text-slate-350">{stats.activePassengers.toLocaleString()} مسافر</strong>
                                                         </p>
+                                                        {stats.companyBreakdown && stats.companyBreakdown.length > 0 && (
+                                                            <div className="space-y-2 pt-1">
+                                                                <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 tracking-wider uppercase mb-2">تفصيل تذاكر الشركات:</p>
+                                                                {stats.companyBreakdown.map((comp) => {
+                                                                    const compTickets = Number(comp.tickets) || 0;
+                                                                    return (
+                                                                        <div key={comp.airline_code} className="flex justify-between items-center text-xs border-b border-dashed border-slate-200/40 dark:border-slate-800/40 pb-1.5 last:border-0 last:pb-0">
+                                                                            <span className="font-bold text-slate-655 dark:text-slate-350">{comp.company_name || comp.airline_code}</span>
+                                                                            <span className="font-black text-slate-850 dark:text-slate-100">{compTickets.toLocaleString()} تذكرة</span>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        )}
                                                     </div>
 
                                                     {/* 3. Estimated profit */}
                                                     <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedReportDate ? `أرباح اليوم المحدد (عمولة ${markupRate}%)` : (statsPeriod === 'current_month' ? `أرباح الشهر الحالي (عمولة ${markupRate}%)` : `أرباح السنة الحالية (عمولة ${markupRate}%)`)}</p>
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedReportMonth ? `أرباح شهر ${getArabicMonthName(selectedReportMonth)} ${selectedReportYear} (عمولة ${markupRate}%)` : `أرباح سنة ${selectedReportYear} (عمولة ${markupRate}%)`}</p>
                                                         <h4 className="text-3xl font-black text-indigo-500">${(stats.totalRevenue * (Number(markupRate) / 100)).toLocaleString()}</h4>
-                                                        <p className="text-[11px] font-bold text-slate-500">
+                                                        <p className="text-[11px] font-bold text-slate-500 border-b border-slate-200/60 dark:border-slate-700/60 pb-3">
                                                             يعادل: <strong className="text-slate-700 dark:text-slate-350">{Math.round((stats.totalRevenue * (Number(markupRate) / 100)) * Number(exchangeRate)).toLocaleString()} ريال يمني</strong>
                                                         </p>
+                                                        {stats.companyBreakdown && stats.companyBreakdown.length > 0 && (
+                                                            <div className="space-y-2 pt-1">
+                                                                <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 tracking-wider uppercase mb-2">تفصيل عمولة الشركات:</p>
+                                                                {stats.companyBreakdown.map((comp) => {
+                                                                    const compRevenue = Number(comp.revenue) || 0;
+                                                                    const compProfit = compRevenue * (Number(markupRate) / 100);
+                                                                    const compProfitYer = Math.round(compProfit * Number(exchangeRate));
+                                                                    return (
+                                                                        <div key={comp.airline_code} className="flex justify-between items-center text-xs border-b border-dashed border-slate-200/40 dark:border-slate-800/40 pb-1.5 last:border-0 last:pb-0">
+                                                                            <span className="font-bold text-slate-650 dark:text-slate-350">{comp.company_name || comp.airline_code}</span>
+                                                                            <div className="text-left font-black text-slate-800 dark:text-slate-100">
+                                                                                <span>${compProfit.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                                                                                <span className="text-[9px] font-bold text-slate-455 mr-2">({compProfitYer.toLocaleString()} ر.ي)</span>
+                                                                            </div>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        )}
                                                     </div>
 
                                                     {/* 4. Exchange rate */}
@@ -1436,20 +1430,40 @@ const AdminDashboard = () => {
                                                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">سعر الصرف المعتمد</p>
                                                         <h4 className="text-2xl font-black text-slate-800 dark:text-white">{exchangeRate} ر.ي / $</h4>
                                                         <p className="text-[11px] font-bold text-slate-500">معدل التحويل النشط للمبيعات</p>
-                                                    </div>
-
-                                                    {/* 5. Cancellation rate */}
+                                                    </div>                                                    {/* 5. Cancellation rate */}
                                                     <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedReportDate ? 'نسبة إلغاء حجوزات اليوم' : (statsPeriod === 'current_month' ? 'نسبة إلغاء حجوزات الشهر' : 'نسبة إلغاء حجوزات السنة')}</p>
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedReportMonth ? `نسبة إلغاء شهر ${getArabicMonthName(selectedReportMonth)}` : `نسبة إلغاء سنة ${selectedReportYear}`}</p>
                                                         <h4 className="text-2xl font-black text-rose-500">{stats.cancellationRate}%</h4>
-                                                        <p className="text-[11px] font-bold text-slate-500">تحديث فوري من قاعدة البيانات</p>
-                                                    </div>
-
-                                                    {/* 6. Active Companies */}
+                                                        <p className="text-[11px] font-bold text-slate-500 border-b border-slate-200/60 dark:border-slate-700/60 pb-3">تحديث فوري من قاعدة البيانات</p>
+                                                        {stats.companyBreakdown && stats.companyBreakdown.length > 0 && (
+                                                            <div className="space-y-2 pt-1">
+                                                                <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 tracking-wider uppercase mb-2">الحجوزات الملغية للشركات:</p>
+                                                                {stats.companyBreakdown.map((comp) => {
+                                                                    const compCancelled = Number(comp.cancelled_bookings) || 0;
+                                                                    return (
+                                                                        <div key={comp.airline_code} className="flex justify-between items-center text-xs border-b border-dashed border-slate-200/40 dark:border-slate-800/40 pb-1.5 last:border-0 last:pb-0">
+                                                                            <span className="font-bold text-slate-650 dark:text-slate-350">{comp.company_name || comp.airline_code}</span>
+                                                                            <span className="font-black text-rose-600 dark:text-rose-400">{compCancelled} حجز ملغي</span>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        )}
+                                                    </div>                                                    {/* 6. Active Companies */}
                                                     <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
                                                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">شركات الطيران النشطة</p>
-                                                        <h4 className="text-2xl font-black text-violet-500">{companiesList.length} شركات طيران</h4>
-                                                        <p className="text-[11px] font-bold text-slate-500">المستخدمين المسجلين: {usersList.length} مستخدم</p>
+                                                        <h4 className="text-3xl font-black text-violet-500 border-b border-slate-200/60 dark:border-slate-700/60 pb-3">{companiesList.length} شركات طيران</h4>
+                                                        {companiesList && companiesList.length > 0 && (
+                                                            <div className="space-y-2 pt-1">
+                                                                <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 tracking-wider uppercase mb-2">أسماء الشركات المسجلة:</p>
+                                                                {companiesList.map((comp) => (
+                                                                    <div key={comp.airline_code} className="flex justify-between items-center text-xs border-b border-dashed border-slate-200/40 dark:border-slate-800/40 pb-1.5 last:border-0 last:pb-0">
+                                                                        <span className="font-bold text-slate-655 dark:text-slate-350">{comp.company_name}</span>
+                                                                        <span className="font-black text-[10px] px-2 py-0.5 rounded bg-violet-100 dark:bg-violet-900/50 text-violet-600 dark:text-violet-400">{comp.airline_code}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
 
@@ -1503,10 +1517,22 @@ const AdminDashboard = () => {
 
                                                 {/* Recent Bookings Table */}
                                                 <div className="print-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl space-y-4">
-                                                    <h3 className="text-sm font-black border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center gap-2 text-slate-800 dark:text-white">
-                                                        <Ticket size={16} className="text-blue-500" />
-                                                        <span>سجل آخر الحجوزات المستلمة والمؤكدة في النظام</span>
-                                                    </h3>
+                                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-3">
+                                                        <h3 className="text-sm font-black flex items-center gap-2 text-slate-800 dark:text-white">
+                                                            <Ticket size={16} className="text-blue-500" />
+                                                            <span>سجل آخر الحجوزات المستلمة والمؤكدة في النظام</span>
+                                                        </h3>
+                                                        <div className="no-print relative min-w-[200px]">
+                                                            <input
+                                                                type="text"
+                                                                placeholder="بحث برقم الرحلة..."
+                                                                value={reportFlightSearch}
+                                                                onChange={(e) => setReportFlightSearch(e.target.value)}
+                                                                className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700/60 rounded-xl py-1.5 px-3 pl-8 text-xs font-bold outline-none transition-all focus:border-blue-500 text-slate-750 dark:text-white"
+                                                            />
+                                                            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                                                        </div>
+                                                    </div>
                                                     <div className="overflow-x-auto">
                                                         <table className="w-full text-right text-xs">
                                                             <thead>
@@ -1520,7 +1546,7 @@ const AdminDashboard = () => {
                                                                 </tr>
                                                             </thead>
                                                             <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
-                                                                {stats.recentBookings.slice(0, 5).map((booking) => (
+                                                                {stats.recentBookings.map((booking) => (
                                                                     <tr key={booking.id_bookings} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
                                                                         <td className="py-3 px-2 font-black text-blue-600">#{booking.booking_reference}</td>
                                                                         <td className="py-3 px-2 font-bold text-slate-700 dark:text-white">{booking.lead_passenger || 'غير محدد'}</td>
@@ -1593,7 +1619,6 @@ const AdminDashboard = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                    )}
                                 </div>
                             )}
 

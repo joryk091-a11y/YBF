@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-    PieChart, Pie, Cell, LineChart, Line, ResponsiveContainer, AreaChart, Area
+    PieChart, Pie, Cell, LineChart, Line, ResponsiveContainer
 } from 'recharts';
 import {
     LogOut, Users, Ticket, DollarSign, TrendingUp,
@@ -27,7 +27,6 @@ const AdminDashboard = () => {
         return 'dashboard';
     });
     const [loading, setLoading] = useState(true);
-    const [salesChartPeriod, setSalesChartPeriod] = useState('monthly'); // 'daily' or 'monthly'
     const [selectedDashboardYear, setSelectedDashboardYear] = useState(() => {
         const now = new Date();
         return String(now.getFullYear());
@@ -817,68 +816,7 @@ const AdminDashboard = () => {
                                         ))}
                                     </div>
 
-                                    {/* 2. Sales Analysis Curves (تحليل المبيعات اليومية / الشهرية) */}
-                                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
-                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                                            <div>
-                                                <h3 className="text-lg font-black">تحليل وحركة المبيعات</h3>
-                                                <p className="text-xs text-slate-400 font-bold mt-1">تتبع نمو المبيعات وحجم التذاكر المباعة بناءً على قاعدة البيانات</p>
-                                            </div>
-                                            <div className="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-xl self-start">
-                                                <button
-                                                    onClick={() => setSalesChartPeriod('daily')}
-                                                    className={`py-1.5 px-4 rounded-lg text-xs font-black transition-all ${
-                                                        salesChartPeriod === 'daily'
-                                                            ? 'bg-blue-600 text-white shadow-md'
-                                                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-800'
-                                                    }`}
-                                                >
-                                                    تحليل يومي (آخر 14 يوم)
-                                                </button>
-                                                <button
-                                                    onClick={() => setSalesChartPeriod('monthly')}
-                                                    className={`py-1.5 px-4 rounded-lg text-xs font-black transition-all ${
-                                                        salesChartPeriod === 'monthly'
-                                                            ? 'bg-blue-600 text-white shadow-md'
-                                                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-800'
-                                                    }`}
-                                                >
-                                                    تحليل شهري
-                                                </button>
-                                            </div>
-                                        </div>
 
-                                        <div className="h-72 w-full">
-                                            <ResponsiveContainer width="100%" height="100%">
-                                                <AreaChart data={salesChartPeriod === 'daily' ? stats.dailySales : stats.monthlySales}>
-                                                    <defs>
-                                                        <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3} />
-                                                            <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
-                                                        </linearGradient>
-                                                    </defs>
-                                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" opacity={0.3} />
-                                                    <XAxis 
-                                                        dataKey={salesChartPeriod === 'daily' ? 'day' : 'month'} 
-                                                        axisLine={false} 
-                                                        tickLine={false} 
-                                                        tick={{ fontSize: 10, fontWeight: 'bold' }} 
-                                                    />
-                                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold' }} />
-                                                    <Tooltip />
-                                                    <Area 
-                                                        type="monotone" 
-                                                        dataKey="sales" 
-                                                        stroke="#2563eb" 
-                                                        strokeWidth={3} 
-                                                        fillOpacity={1} 
-                                                        fill="url(#colorSales)" 
-                                                        name="المبيعات ($)" 
-                                                    />
-                                                </AreaChart>
-                                            </ResponsiveContainer>
-                                        </div>
-                                    </div>
 
                                     {/* Company Sales & Bookings Composed Chart */}
                                     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">

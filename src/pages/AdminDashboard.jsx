@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useTheme } from '../utils/ThemeContext';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
     PieChart, Pie, Cell, LineChart, Line, ResponsiveContainer, AreaChart, Area

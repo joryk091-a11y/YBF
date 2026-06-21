@@ -449,28 +449,37 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
     res.json({
       success: true,
       stats: {
-        totalTickets: totalTickets || 0,
+        totalTickets: Number(totalTickets) || 0,
         totalRevenue: Number(totalRevenue) || 0,
-        pendingPayments: pendingPayments || 0,
-        totalUsers: totalUsers || 0,
-        activePassengers: activePassengers || 0,
+        pendingPayments: Number(pendingPayments) || 0,
+        totalUsers: Number(totalUsers) || 0,
+        activePassengers: Number(activePassengers) || 0,
         recentBookings,
-        destinationsStats,
-        monthlySales,
-        dailySales,
-        airlineStats,
-        cancellationRate,
+        destinationsStats: (destinationsStats || []).map(d => ({ ...d, count: Number(d.count) || 0 })),
+        monthlySales: (monthlySales || []).map(m => ({ ...m, sales: Number(m.sales) || 0, passengers: Number(m.passengers) || 0 })),
+        dailySales: (dailySales || []).map(d => ({ ...d, sales: Number(d.sales) || 0, passengers: Number(d.passengers) || 0 })),
+        airlineStats: (airlineStats || []).map(a => ({ ...a, value: Number(a.value) || 0 })),
+        cancellationRate: Number(cancellationRate) || 0,
         statusStats,
-        companyBreakdown,
-        classStats: classStats.length > 0 ? classStats : [
-          { name: 'economy', value: totalTickets ? Math.round(totalTickets * 0.7) : 0 },
-          { name: 'business', value: totalTickets ? Math.round(totalTickets * 0.2) : 0 },
-          { name: 'first', value: totalTickets ? Math.round(totalTickets * 0.1) : 0 }
-        ],
-        aircraftStats: aircraftStats.length > 0 ? aircraftStats : [
-          { name: 'Boeing 787', price: 548 },
-          { name: 'Airbus A350', price: 620 }
-        ]
+        companyBreakdown: (companyBreakdown || []).map(c => ({
+          ...c,
+          tickets: Number(c.tickets) || 0,
+          revenue: Number(c.revenue) || 0,
+          cancelled_bookings: Number(c.cancelled_bookings) || 0
+        })),
+        classStats: classStats.length > 0 
+          ? classStats.map(c => ({ ...c, value: Number(c.value) || 0 })) 
+          : [
+            { name: 'economy', value: totalTickets ? Math.round(Number(totalTickets) * 0.7) : 0 },
+            { name: 'business', value: totalTickets ? Math.round(Number(totalTickets) * 0.2) : 0 },
+            { name: 'first', value: totalTickets ? Math.round(Number(totalTickets) * 0.1) : 0 }
+          ],
+        aircraftStats: aircraftStats.length > 0 
+          ? aircraftStats.map(a => ({ ...a, price: Number(a.price) || 0 })) 
+          : [
+            { name: 'Boeing 787', price: 548 },
+            { name: 'Airbus A350', price: 620 }
+          ]
       }
     });
   } catch (error) {

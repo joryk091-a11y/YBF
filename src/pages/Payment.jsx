@@ -401,6 +401,7 @@ function PaymentPage() {
           paymentMethod,
           userId: userObj.id,
           reference: refVal,
+          selectedSeats,
           paymentProof: paymentProofImage,
           selectedBranchId: selectedBranch ? selectedBranch.id : null
         })

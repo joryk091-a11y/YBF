@@ -16,7 +16,6 @@ import {
 const AdminDashboard = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { isDarkMode, toggleDarkMode } = useTheme();
     const adminEmail = localStorage.getItem('adminEmail') || 'admin@ybf.com';
     const adminInitials = adminEmail.split('@')[0].slice(0, 2).toUpperCase();
     const token = localStorage.getItem('adminToken');
@@ -560,7 +559,7 @@ const AdminDashboard = () => {
     }
 
     return (
-        <div className={`h-screen overflow-hidden font-sans flex text-slate-800 dark:text-slate-100 transition-colors duration-300 ${isDarkMode ? 'dark bg-[#0b1120]' : 'bg-slate-50'}`} dir="rtl">
+        <div className="h-screen overflow-hidden font-sans flex text-slate-800 dark:text-slate-100 transition-colors duration-300 bg-slate-50 dark:bg-[#0b1120]" dir="rtl">
             
             {/* TOAST NOTIFICATION */}
             {notificationMsg && (
@@ -683,13 +682,6 @@ const AdminDashboard = () => {
 
                         {/* Control buttons */}
                         <div className="flex items-center gap-3">
-                            <button
-                                onClick={toggleDarkMode}
-                                className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-blue-500 transition-all"
-                                title="تبديل الوضع الليلي"
-                            >
-                                {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
-                            </button>
                             <button
                                 onClick={() => showToast('لا توجد إشعارات جديدة')}
                                 className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-blue-500 transition-all relative"

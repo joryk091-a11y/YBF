@@ -18,28 +18,32 @@ function LoginPage() {
         setError('')
         setLoading(true)
 
-        try {
-            const response = await fetch('http://localhost:8080/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            })
-
-            const data = await response.json()
-            if (data.success) {
-                // Store user info in localStorage
-                localStorage.setItem('user', JSON.stringify(data.user))
+        // محاكاة وقت الاتصال بالخادم (ثانية واحدة)
+        setTimeout(() => {
+            // التحقق الوهمي (Mock Authentication)
+            if (email === 'yemenia@gmail.com') {
+                // بيانات وهمية لمدير طيران اليمنية
+                const mockUser = {
+                    id: 1,
+                    name: 'مدير النظام',
+                    email: 'yemenia@gmail.com',
+                    role: 'company_admin',
+                    airline_id: 1,
+                    airline_name: 'طيران اليمنية'
+                }
                 
-                const from = location.state?.from || '/'
-                navigate(from, { state: location.state })
+                // حفظ البيانات في المتصفح لكي تقرأها باقي الصفحات
+                localStorage.setItem('user', JSON.stringify(mockUser))
+                
+                // توجيهكِ مباشرة إلى صفحة التقارير التي صممناها
+                navigate('/company-analytics') 
             } else {
-                setError(data.error || 'حدث خطأ أثناء تسجيل الدخول')
+                // رسالة خطأ إذا تم إدخال إيميل آخر
+                setError('للتجربة، يرجى استخدام الإيميل: yemenia@gmail.com')
             }
-        } catch {
-            setError('تعذر الاتصال بالخادم')
-        } finally {
+
             setLoading(false)
-        }
+        }, 1000)
     }
 
     return (
@@ -119,7 +123,6 @@ function LoginPage() {
                                 </button>
                             </div>
                         </div>
-
 
                         {/* Submit */}
                         <button

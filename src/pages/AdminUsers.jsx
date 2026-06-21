@@ -11,7 +11,6 @@ import {
 
 const AdminUsers = () => {
     const navigate = useNavigate();
-    const { isDarkMode, toggleDarkMode } = useTheme();
     const [scrolled, setScrolled] = useState(false);
     const [loading, setLoading] = useState(true);
     const [users, setUsers] = useState([]);
@@ -91,9 +90,6 @@ const AdminUsers = () => {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <button onClick={toggleDarkMode} className="h-11 w-11 flex items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 shadow-sm">
-                            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-                        </button>
                         <button onClick={handleLogout} className="flex h-11 items-center gap-2 rounded-xl bg-red-50 dark:bg-red-500/10 px-5 text-xs font-black text-red-600 transition-all hover:bg-red-600 hover:text-white">
                             <LogOut size={20} />
                             <span className="hidden sm:inline">خروج</span>

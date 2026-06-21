@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Lock, ShieldCheck, ArrowRight, Building2, Activity, Mail, Eye, EyeOff } from 'lucide-react';
 import logo from '../assets/logo.png';
+import { useAuth } from '../utils/AuthContext';
 
 const CompanyLogin = () => {
     const [email, setEmail] = useState('');
@@ -10,6 +11,7 @@ const CompanyLogin = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [focusedField, setFocusedField] = useState(null);
+    const { setUser } = useAuth();
     const navigate = useNavigate();
 
     React.useEffect(() => {
@@ -46,13 +48,28 @@ const CompanyLogin = () => {
                 if (data.role === 'admin') {
                     localStorage.setItem('userRole', 'admin');
                     localStorage.setItem('adminToken', 'admin-token-' + data.id);
+                    setUser({
+                        role: 'super_admin',
+                        airline_name: 'Yemenia',
+                        airline_id: 1,
+                    });
                     navigate('/admin/dashboard');
                 } else {
+                    const companyName = data.airline_name || (data.airline_code === 'IY' ? 'خطوط طيران اليمنية' : data.airline_code === 'BS' ? 'طيران بلقيس' : 'فلاي عدن');
+                    const companyId = data.airline_id || data.id;
+                    const companyLogo = data.logo_url || (data.airline_code === 'IY' ? '/logos/yemenia.png' : data.airline_code === 'BS' ? '/logos/bilqis.png' : '/logos/flyaden.png');
                     localStorage.setItem('userRole', 'company');
                     localStorage.setItem('companyToken', 'company-token-' + data.id);
-                    localStorage.setItem('companyId', data.id);
-                    localStorage.setItem('companyName', data.role === 'admin' ? 'المدير' : (data.airline_code === 'IY' ? 'اليمنية' : data.airline_code === 'BS' ? 'بلقيس' : 'فلاي عدن'));
+                    localStorage.setItem('companyId', companyId);
+                    localStorage.setItem('companyName', companyName);
                     localStorage.setItem('airlineCode', data.airline_code);
+                    localStorage.setItem('companyLogo', companyLogo);
+                    setUser({
+                        role: 'company_admin',
+                        airline_name: companyName,
+                        airline_id: companyId,
+                        logo_url: companyLogo,
+                    });
                     navigate('/company/dashboard');
                 }
             } else {

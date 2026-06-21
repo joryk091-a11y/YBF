@@ -237,80 +237,130 @@ app.delete('/api/admin/users/:id', async (req, res) => {
 });
 
 
-// GET Admin messages from database
-app.get('/api/admin/messages', async (req, res) => {
+// ===== LIVE SUPPORT CHAT API ENDPOINTS =====
+
+// 1. GET chat history for a specific conversation thread (by email)
+app.get('/api/chat/messages', async (req, res) => {
+  const { email } = req.query;
+  if (!email) {
+    return res.status(400).json({ success: false, error: 'البريد الإلكتروني مطلوب' });
+  }
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
-    const [messages] = await connection.execute('SELECT * FROM contact_messages ORDER BY created_at DESC');
+    const [messages] = await connection.execute(
+      'SELECT * FROM chat_messages WHERE sender_email = ? ORDER BY created_at ASC',
+      [email]
+    );
     res.json({ success: true, messages });
   } catch (error) {
-    console.error('Error fetching admin messages:', error);
+    console.error('Error fetching chat messages:', error);
     res.status(500).json({ success: false, error: error.message });
   } finally {
     if (connection) await connection.end();
   }
 });
 
-// PUT Admin message status or reply
-app.put('/api/admin/messages/:id', async (req, res) => {
-  const { id } = req.params;
-  const { status, reply } = req.body;
+// 2. POST a message in a conversation thread (used by both users and admin)
+app.post('/api/chat/messages', async (req, res) => {
+  const { user_id, sender, sender_name, sender_email, message } = req.body;
+  if (!sender || !sender_name || !sender_email || !message) {
+    return res.status(400).json({ success: false, error: 'البيانات غير مكتملة لإرسال الرسالة' });
+  }
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
-    if (reply !== undefined) {
-      await connection.execute(
-        'UPDATE contact_messages SET status = ?, reply = ? WHERE id_messages = ?',
-        [status || 'replied', reply, id]
-      );
-    } else {
-      await connection.execute(
-        'UPDATE contact_messages SET status = ? WHERE id_messages = ?',
-        [status, id]
-      );
-    }
-    res.json({ success: true });
+    const [result] = await connection.execute(
+      'INSERT INTO chat_messages (user_id, sender, sender_name, sender_email, message, is_read) VALUES (?, ?, ?, ?, ?, ?)',
+      [user_id || null, sender, sender_name, sender_email, message, sender === 'admin' ? 1 : 0]
+    );
+    res.json({ success: true, id_chat: result.insertId });
   } catch (error) {
-    console.error('Error updating admin message:', error);
+    console.error('Error sending chat message:', error);
     res.status(500).json({ success: false, error: error.message });
   } finally {
     if (connection) await connection.end();
   }
 });
 
-// DELETE Admin message
-app.delete('/api/admin/messages/:id', async (req, res) => {
-  const { id } = req.params;
+// 3. GET all active conversations for the Admin Dashboard (WhatsApp style list)
+app.get('/api/admin/chat/conversations', async (req, res) => {
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
-    await connection.execute('DELETE FROM contact_messages WHERE id_messages = ?', [id]);
-    res.json({ success: true });
+    const [conversations] = await connection.execute(`
+      SELECT 
+        c.sender_email,
+        COALESCE(
+          (
+            SELECT sender_name 
+            FROM chat_messages 
+            WHERE sender_email = c.sender_email AND sender = 'user' 
+            ORDER BY id_chat DESC 
+            LIMIT 1
+          ),
+          c.sender_name
+        ) AS sender_name,
+        c.user_id,
+        c.message AS last_message,
+        c.created_at AS last_message_time,
+        (
+          SELECT COUNT(*) 
+          FROM chat_messages 
+          WHERE sender_email = c.sender_email AND sender = 'user' AND is_read = 0
+        ) AS unread_count
+      FROM chat_messages c
+      INNER JOIN (
+        SELECT sender_email, MAX(id_chat) AS max_id
+        FROM chat_messages
+        GROUP BY sender_email
+      ) m ON c.id_chat = m.max_id
+      ORDER BY c.created_at DESC
+    `);
+    res.json({ success: true, conversations });
   } catch (error) {
-    console.error('Error deleting admin message:', error);
+    console.error('Error fetching admin chat conversations:', error);
     res.status(500).json({ success: false, error: error.message });
   } finally {
     if (connection) await connection.end();
   }
 });
 
-// POST new contact message
-app.post('/api/messages', async (req, res) => {
-  const { name, email, phone, subject, message } = req.body;
-  if (!name || !email || !message) {
-    return res.status(400).json({ success: false, error: 'الاسم والبريد الإلكتروني والرسالة حقول مطلوبة' });
+// 4. PUT mark all messages in a conversation as read
+app.put('/api/admin/chat/read', async (req, res) => {
+  const { email } = req.query;
+  if (!email) {
+    return res.status(400).json({ success: false, error: 'البريد الإلكتروني مطلوب' });
   }
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
     await connection.execute(
-      'INSERT INTO contact_messages (name, email, phone, subject, message, status) VALUES (?, ?, ?, ?, ?, ?)',
-      [name, email, phone, subject, message, 'unread']
+      "UPDATE chat_messages SET is_read = 1 WHERE sender_email = ? AND sender = 'user'",
+      [email]
     );
     res.json({ success: true });
   } catch (error) {
-    console.error('Error creating contact message:', error);
+    console.error('Error marking messages as read:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// 5. DELETE a full conversation thread
+app.delete('/api/admin/chat/conversations', async (req, res) => {
+  const { email } = req.query;
+  if (!email) {
+    return res.status(400).json({ success: false, error: 'البريد الإلكتروني مطلوب' });
+  }
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    await connection.execute('DELETE FROM chat_messages WHERE sender_email = ?', [email]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting conversation:', error);
     res.status(500).json({ success: false, error: error.message });
   } finally {
     if (connection) await connection.end();

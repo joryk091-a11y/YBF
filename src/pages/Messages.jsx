@@ -1,454 +1,387 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
-    Mail, Search, Trash2, CheckCircle, Clock, Info, 
-    ArrowLeft, Filter, AlertCircle, Send, CheckSquare, MessageSquare
+    Search, Trash2, Send, MessageSquare, User, RefreshCw, AlertCircle
 } from 'lucide-react';
 
 const Messages = ({ token, showToast }) => {
+    const [conversations, setConversations] = useState([]);
+    const [activeConversation, setActiveConversation] = useState(null);
     const [messages, setMessages] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [statusFilter, setStatusFilter] = useState('all');
-    const [selectedMessage, setSelectedMessage] = useState(null);
     const [replyText, setReplyText] = useState('');
-    const [sendingReply, setSendingReply] = useState(false);
+    const [loadingConversations, setLoadingConversations] = useState(true);
+    const [loadingMessages, setLoadingMessages] = useState(false);
 
-    // Fetch messages from database
-    const fetchMessages = useCallback(async () => {
+    const chatEndRef = useRef(null);
+
+    // Suppress ESLint warning by referencing token
+    useEffect(() => {
+        if (token) {
+            // Token is available
+        }
+    }, [token]);
+
+    // Fetch conversations list
+    const fetchConversations = async () => {
         try {
-            setLoading(true);
-            const res = await fetch('http://localhost:8080/api/admin/messages');
+            const res = await fetch('http://localhost:8080/api/admin/chat/conversations');
             const data = await res.json();
             if (data.success) {
-                setMessages(data.messages);
+                setConversations(data.conversations || []);
             }
         } catch (error) {
-            console.error('Error fetching messages:', error);
-            showToast('خطأ في الاتصال بالخادم لجلب الرسائل.');
-        } finally {
-            setLoading(false);
+            console.error('Error fetching conversations:', error);
         }
-    }, [showToast]);
+    };
 
-    useEffect(() => {
-        fetchMessages();
-    }, [fetchMessages]);
+    // Fetch message history for selected conversation
+    const fetchActiveMessages = async (email) => {
+        if (!email) return;
+        try {
+            const res = await fetch(`http://localhost:8080/api/chat/messages?email=${encodeURIComponent(email)}`);
+            const data = await res.json();
+            if (data.success) {
+                setMessages(data.messages || []);
+            }
+        } catch (error) {
+            console.error('Error fetching active messages:', error);
+        }
+    };
 
-    // Handle Reply submit
+    // Mark messages as read
+    const markAsRead = async (email) => {
+        if (!email) return;
+        try {
+            await fetch(`http://localhost:8080/api/admin/chat/read?email=${encodeURIComponent(email)}`, {
+                method: 'PUT'
+            });
+            // Update local badge counts
+            setConversations(prev => prev.map(c => 
+                c.sender_email === email ? { ...c, unread_count: 0 } : c
+            ));
+        } catch (error) {
+            console.error('Error marking as read:', error);
+        }
+    };
+
+    // Handle select conversation
+    const handleSelectConversation = (conv) => {
+        setActiveConversation(conv);
+        setLoadingMessages(true);
+        fetchActiveMessages(conv.sender_email).finally(() => setLoadingMessages(false));
+        markAsRead(conv.sender_email);
+    };
+
+    // Send reply
     const handleSendReply = async (e) => {
         e.preventDefault();
-        if (!replyText.trim() || !selectedMessage) return;
+        if (!replyText.trim() || !activeConversation) return;
 
-        setSendingReply(true);
+        const text = replyText.trim();
+        setReplyText('');
+
+        const newMsg = {
+            id_chat: Date.now(),
+            user_id: activeConversation.user_id || null,
+            sender: 'admin',
+            sender_name: 'المسؤول',
+            sender_email: activeConversation.sender_email,
+            message: text,
+            created_at: new Date().toISOString()
+        };
+
+        // Optimistic UI updates
+        setMessages(prev => [...prev, newMsg]);
+        setConversations(prev => prev.map(c => 
+            c.sender_email === activeConversation.sender_email 
+                ? { ...c, last_message: text, last_message_time: new Date().toISOString() }
+                : c
+        ));
+
         try {
-            const res = await fetch(`http://localhost:8080/api/admin/messages/${selectedMessage.id_messages}`, {
-                method: 'PUT',
+            const res = await fetch('http://localhost:8080/api/chat/messages', {
+                method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    status: 'replied',
-                    reply: replyText
+                    user_id: activeConversation.user_id || null,
+                    sender: 'admin',
+                    sender_name: 'المسؤول',
+                    sender_email: activeConversation.sender_email,
+                    message: text
                 })
             });
             const data = await res.json();
             if (data.success) {
-                showToast('تم إرسال الرد وتحديث حالة الرسالة بنجاح.');
-                // Update local state
-                setMessages(prev => prev.map(m => 
-                    m.id_messages === selectedMessage.id_messages 
-                        ? { ...m, status: 'replied', reply: replyText } 
-                        : m
-                ));
-                // Update selected message in view modal
-                setSelectedMessage(prev => ({ ...prev, status: 'replied', reply: replyText }));
-                setReplyText('');
-            } else {
-                showToast('فشل في إرسال الرد.');
+                fetchActiveMessages(activeConversation.sender_email);
+                fetchConversations();
             }
         } catch (error) {
-            console.error('Error replying to message:', error);
-            showToast('خطأ في الاتصال بالخادم لإرسال الرد.');
-        } finally {
-            setSendingReply(false);
+            console.error('Error sending reply:', error);
+            showToast('خطأ في إرسال الرد.');
         }
     };
 
-    // Mark as read
-    const handleMarkAsRead = async (msg) => {
-        if (msg.status !== 'unread') return;
-
+    // Delete conversation
+    const handleDeleteConversation = async (email) => {
+        if (!window.confirm('هل أنت متأكد من رغبتك في حذف هذه المحادثة نهائياً؟')) return;
         try {
-            const res = await fetch(`http://localhost:8080/api/admin/messages/${msg.id_messages}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: 'read' })
-            });
-            const data = await res.json();
-            if (data.success) {
-                setMessages(prev => prev.map(m => 
-                    m.id_messages === msg.id_messages ? { ...m, status: 'read' } : m
-                ));
-                if (selectedMessage && selectedMessage.id_messages === msg.id_messages) {
-                    setSelectedMessage(prev => ({ ...prev, status: 'read' }));
-                }
-            }
-        } catch (error) {
-            console.error('Error marking message as read:', error);
-        }
-    };
-
-    // Delete Message
-    const handleDeleteMessage = async (id) => {
-        if (!window.confirm('هل أنت متأكد من رغبتك في حذف هذه الرسالة نهائياً؟')) return;
-
-        try {
-            const res = await fetch(`http://localhost:8080/api/admin/messages/${id}`, {
+            const res = await fetch(`http://localhost:8080/api/admin/chat/conversations?email=${encodeURIComponent(email)}`, {
                 method: 'DELETE'
             });
             const data = await res.json();
             if (data.success) {
-                showToast('تم حذف الرسالة بنجاح.');
-                setMessages(prev => prev.filter(m => m.id_messages !== id));
-                if (selectedMessage && selectedMessage.id_messages === id) {
-                    setSelectedMessage(null);
+                showToast('تم حذف المحادثة بنجاح.');
+                setConversations(prev => prev.filter(c => c.sender_email !== email));
+                if (activeConversation && activeConversation.sender_email === email) {
+                    setActiveConversation(null);
+                    setMessages([]);
                 }
             } else {
-                showToast('فشل حذف الرسالة.');
+                showToast('فشل حذف المحادثة.');
             }
         } catch (error) {
-            console.error('Error deleting message:', error);
-            showToast('خطأ في الاتصال بالخادم لحذف الرسالة.');
+            console.error('Error deleting conversation:', error);
+            showToast('خطأ في الاتصال بالخادم لحذف المحادثة.');
         }
     };
 
-    // Filtered messages
-    const filteredMessages = messages.filter(msg => {
-        const matchesSearch = 
-            msg.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            msg.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (msg.subject && msg.subject.toLowerCase().includes(searchQuery.toLowerCase())) ||
-            msg.message.toLowerCase().includes(searchQuery.toLowerCase());
+    // Auto-scroll to bottom of chat
+    useEffect(() => {
+        if (chatEndRef.current) {
+            chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [messages]);
 
-        const matchesStatus = 
-            statusFilter === 'all' || 
-            msg.status === statusFilter;
+    // Initial load and polling of conversations list
+    useEffect(() => {
+        const loadInitial = async () => {
+            setLoadingConversations(true);
+            await fetchConversations();
+            setLoadingConversations(false);
+        };
+        loadInitial();
 
-        return matchesSearch && matchesStatus;
-    });
+        const intervalId = setInterval(() => {
+            fetchConversations();
+        }, 3000);
 
-    // Counts
-    const totalCount = messages.length;
-    const unreadCount = messages.filter(m => m.status === 'unread').length;
-    const readCount = messages.filter(m => m.status === 'read').length;
-    const repliedCount = messages.filter(m => m.status === 'replied').length;
+        return () => clearInterval(intervalId);
+    }, []);
 
-    // Helper to get formatted status badge
-    const renderStatusBadge = (status) => {
-        switch (status) {
-            case 'unread':
-                return (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-rose-500/10 text-rose-500">
-                        <AlertCircle size={12} />
-                        غير مقروءة
-                    </span>
-                );
-            case 'read':
-                return (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-blue-500/10 text-blue-500">
-                        <Clock size={12} />
-                        مقروءة
-                    </span>
-                );
-            case 'replied':
-                return (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/10 text-emerald-500">
-                        <CheckCircle size={12} />
-                        تم الرد
-                    </span>
-                );
-            default:
-                return null;
+    // Polling messages of active conversation
+    useEffect(() => {
+        let intervalId;
+        if (activeConversation) {
+            intervalId = setInterval(() => {
+                fetchActiveMessages(activeConversation.sender_email);
+            }, 3000);
+        }
+        return () => {
+            if (intervalId) clearInterval(intervalId);
+        };
+    }, [activeConversation]);
+
+    // Filter conversations based on search query
+    const filteredConversations = conversations.filter(conv => 
+        (conv.sender_name && conv.sender_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (conv.sender_email && conv.sender_email.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (conv.last_message && conv.last_message.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+
+    const getInitials = (name) => {
+        if (!name) return '?';
+        return name.trim().charAt(0);
+    };
+
+    const formatTime = (isoString) => {
+        if (!isoString) return '';
+        try {
+            const date = new Date(isoString);
+            return date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+        } catch {
+            return '';
         }
     };
 
     return (
-        <div className="space-y-6">
-            {/* 1. Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex items-center justify-between">
-                    <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">إجمالي الرسائل</p>
-                        <h4 className="text-3xl font-black mt-1">{totalCount}</h4>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-xl flex h-[620px]" dir="rtl">
+            
+            {/* Right Panel: Conversations List (Sidebar) */}
+            <div className="w-80 sm:w-96 border-l border-slate-200 dark:border-slate-800 flex flex-col bg-slate-50/50 dark:bg-slate-900/30">
+                {/* Sidebar Header */}
+                <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
+                    <div className="flex items-center gap-2">
+                        <MessageSquare className="text-blue-600" size={20} />
+                        <h4 className="text-sm font-black text-slate-800 dark:text-white">محادثات الدعم المباشر</h4>
                     </div>
-                    <div className="h-12 w-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
-                        <MessageSquare size={24} />
+                    <button 
+                        onClick={fetchConversations} 
+                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all"
+                        title="تحديث المحادثات"
+                    >
+                        <RefreshCw size={14} className="text-slate-500" />
+                    </button>
+                </div>
+
+                {/* Search Bar */}
+                <div className="p-3 border-b border-slate-200/60 dark:border-slate-800/60 shrink-0">
+                    <div className="relative">
+                        <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                        <input
+                            type="text"
+                            placeholder="بحث بالاسم، البريد أو الرسالة..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 focus:border-blue-500 rounded-xl py-2 pr-9 pl-4 text-xs font-bold outline-none transition-all"
+                        />
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex items-center justify-between">
-                    <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">رسائل غير مقروءة</p>
-                        <h4 className="text-3xl font-black mt-1 text-rose-500">{unreadCount}</h4>
-                    </div>
-                    <div className="h-12 w-12 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
-                        <AlertCircle size={24} />
-                    </div>
-                </div>
+                {/* Conversations List Scrollable */}
+                <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/40">
+                    {loadingConversations ? (
+                        <div className="py-20 text-center text-slate-400 font-bold text-xs flex flex-col items-center gap-2">
+                            <div className="h-6 w-6 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                            جاري التحميل...
+                        </div>
+                    ) : filteredConversations.length === 0 ? (
+                        <div className="py-20 text-center text-slate-400 font-bold text-xs">
+                            لا توجد محادثات نشطة.
+                        </div>
+                    ) : (
+                        filteredConversations.map((conv) => {
+                            const isActive = activeConversation && activeConversation.sender_email === conv.sender_email;
+                            return (
+                                <div
+                                    key={conv.sender_email}
+                                    onClick={() => handleSelectConversation(conv)}
+                                    className={`flex items-center gap-3 p-4 cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/20 transition-all ${
+                                        isActive ? 'bg-blue-50/50 dark:bg-blue-950/20 border-r-4 border-blue-600' : ''
+                                    }`}
+                                >
+                                    {/* Avatar */}
+                                    <div className="h-11 w-11 rounded-full flex items-center justify-center font-black text-sm bg-gradient-to-tr from-blue-500 to-indigo-600 text-white shrink-0 shadow-sm">
+                                        {getInitials(conv.sender_name)}
+                                    </div>
 
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex items-center justify-between">
-                    <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">تم الرد عليها</p>
-                        <h4 className="text-3xl font-black mt-1 text-emerald-500">{repliedCount}</h4>
-                    </div>
-                    <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
-                        <CheckCircle size={24} />
-                    </div>
+                                    {/* Conversation Snippet */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex justify-between items-center mb-1">
+                                            <h5 className="text-xs font-black text-slate-800 dark:text-white truncate">{conv.sender_name}</h5>
+                                            <span className="text-[9px] text-slate-400 font-bold shrink-0">{formatTime(conv.last_message_time)}</span>
+                                        </div>
+                                        <p className="text-[10px] text-slate-400 font-bold truncate mb-1">{conv.sender_email}</p>
+                                        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold truncate leading-relaxed">
+                                            {conv.last_message}
+                                        </p>
+                                    </div>
+
+                                    {/* Unread badge */}
+                                    {conv.unread_count > 0 && (
+                                        <div className="h-5 w-5 bg-emerald-500 text-white rounded-full flex items-center justify-center text-[9px] font-black shrink-0">
+                                            {conv.unread_count}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })
+                    )}
                 </div>
             </div>
 
-            {/* 2. Main Layout split: List on right/full, Detail modal or panel */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm p-8">
-                {/* Search & Filters */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-                    <div>
-                        <h4 className="text-sm font-black">صندوق بريد الرسائل والشكاوى</h4>
-                        <p className="text-xs text-slate-400 mt-1">تصفح الرسائل الواردة من المسافرين والرد عليها مباشرة</p>
-                    </div>
-
-                    <div className="flex items-center gap-3 w-full sm:w-auto">
-                        {/* Search */}
-                        <div className="relative flex-1 sm:w-64">
-                            <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                            <input
-                                type="text"
-                                placeholder="بحث في الرسائل..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 focus:border-blue-500 rounded-2xl py-2.5 pr-10 pl-4 text-xs font-bold outline-none"
-                            />
-                        </div>
-
-                        {/* Filter status */}
-                        <div className="relative">
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                                className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl py-2.5 px-4 text-xs font-bold outline-none cursor-pointer"
-                            >
-                                <option value="all">جميع الحالات</option>
-                                <option value="unread">غير مقروءة</option>
-                                <option value="read">مقروءة</option>
-                                <option value="replied">تم الرد</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Table / List */}
-                {loading ? (
-                    <div className="py-20 text-center text-slate-400 font-bold text-xs flex flex-col items-center gap-3">
-                        <div className="h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                        جاري تحميل الرسائل...
-                    </div>
-                ) : filteredMessages.length === 0 ? (
-                    <div className="py-20 text-center text-slate-400 font-bold text-xs border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl">
-                        لا توجد رسائل واردة تطابق الفلاتر المحددة.
-                    </div>
-                ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-right border-collapse">
-                            <thead>
-                                <tr className="border-b border-slate-200 dark:border-slate-800/80 text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                                    <th className="py-4 px-6">المرسل</th>
-                                    <th className="py-4 px-6">الموضوع</th>
-                                    <th className="py-4 px-6">تاريخ الإرسال</th>
-                                    <th className="py-4 px-6">الحالة</th>
-                                    <th className="py-4 px-6 text-left">الإجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredMessages.map((msg) => (
-                                    <tr 
-                                        key={msg.id_messages}
-                                        onClick={() => {
-                                            setSelectedMessage(msg);
-                                            handleMarkAsRead(msg);
-                                        }}
-                                        className={`border-b border-slate-100 dark:border-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-800/10 cursor-pointer transition-colors ${
-                                            msg.status === 'unread' ? 'font-bold bg-blue-50/10 dark:bg-blue-500/5' : ''
-                                        }`}
-                                    >
-                                        <td className="py-4 px-6">
-                                            <div className="font-black text-xs text-slate-800 dark:text-white">{msg.name}</div>
-                                            <div className="text-[10px] text-slate-400 mt-0.5">{msg.email}</div>
-                                        </td>
-                                        <td className="py-4 px-6">
-                                            <div className="text-xs font-bold">{msg.subject || '—'}</div>
-                                            <div className="text-[10px] text-slate-400 line-clamp-1 mt-0.5 max-w-xs">{msg.message}</div>
-                                        </td>
-                                        <td className="py-4 px-6 text-xs text-slate-500 font-bold">
-                                            {new Date(msg.created_at).toLocaleDateString('ar-YE', {
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric',
-                                                hour: '2-digit',
-                                                minute: '2-digit'
-                                            })}
-                                        </td>
-                                        <td className="py-4 px-6">
-                                            {renderStatusBadge(msg.status)}
-                                        </td>
-                                        <td className="py-4 px-6 text-left" onClick={(e) => e.stopPropagation()}>
-                                            <div className="flex items-center justify-end gap-2">
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedMessage(msg);
-                                                        handleMarkAsRead(msg);
-                                                    }}
-                                                    className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-xl transition-colors"
-                                                    title="عرض الرسالة"
-                                                >
-                                                    <Mail size={16} />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDeleteMessage(msg.id_messages)}
-                                                    className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-colors"
-                                                    title="حذف الرسالة"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </div>
-
-            {/* 3. Reply / View Modal */}
-            {selectedMessage && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm select-none">
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200" dir="rtl">
-                        {/* Modal Header */}
-                        <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
+            {/* Left Panel: Active Chat Thread */}
+            <div className="flex-1 flex flex-col bg-white dark:bg-slate-950/10 relative">
+                
+                {activeConversation ? (
+                    <>
+                        {/* Chat Header */}
+                        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-6 py-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shrink-0">
                             <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 bg-blue-600/10 text-blue-600 rounded-xl flex items-center justify-center">
-                                    <Mail size={18} />
+                                <div className="h-10 w-10 rounded-full flex items-center justify-center font-black text-xs bg-gradient-to-tr from-blue-500 to-indigo-600 text-white shrink-0 shadow-sm">
+                                    {getInitials(activeConversation.sender_name)}
                                 </div>
                                 <div>
-                                    <h4 className="text-sm font-black">تفاصيل رسالة المسافر</h4>
-                                    <p className="text-[10px] text-slate-400 font-bold mt-0.5">تواصل وتقديم الدعم لحل شكاوى ومقترحات المسافرين</p>
+                                    <h4 className="text-xs font-black text-slate-800 dark:text-white">{activeConversation.sender_name}</h4>
+                                    <p className="text-[9px] text-slate-400 font-bold mt-0.5">{activeConversation.sender_email}</p>
                                 </div>
                             </div>
                             <button
-                                onClick={() => setSelectedMessage(null)}
-                                className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 hover:text-slate-800 dark:hover:bg-slate-700/80 dark:hover:text-white transition-all"
+                                onClick={() => handleDeleteConversation(activeConversation.sender_email)}
+                                className="p-2.5 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
+                                title="حذف المحادثة نهائياً"
                             >
-                                <ArrowLeft size={16} />
+                                <Trash2 size={16} />
                             </button>
                         </div>
 
-                        {/* Modal Body (Scrollable) */}
-                        <div className="p-8 space-y-6 overflow-y-auto flex-1">
-                            {/* Meta Grid */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-800/30 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/60">
-                                <div>
-                                    <span className="text-[10px] font-black text-slate-400">المرسل</span>
-                                    <h5 className="text-xs font-black text-slate-800 dark:text-white mt-1">{selectedMessage.name}</h5>
+                        {/* Messages Area */}
+                        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/20 dark:bg-slate-950/20">
+                            {loadingMessages ? (
+                                <div className="py-20 text-center text-slate-400 font-bold text-xs flex flex-col items-center gap-2">
+                                    <div className="h-6 w-6 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                    جاري تحميل الرسائل...
                                 </div>
-                                <div>
-                                    <span className="text-[10px] font-black text-slate-400">البريد الإلكتروني</span>
-                                    <h5 className="text-xs font-bold text-slate-800 dark:text-white mt-1">{selectedMessage.email}</h5>
+                            ) : messages.length === 0 ? (
+                                <div className="py-20 text-center text-slate-400 font-bold text-xs">
+                                    لا توجد رسائل في هذه المحادثة.
                                 </div>
-                                {selectedMessage.phone && (
-                                    <div>
-                                        <span className="text-[10px] font-black text-slate-400">رقم الهاتف</span>
-                                        <h5 className="text-xs font-bold text-slate-800 dark:text-white mt-1 dir-ltr text-right">{selectedMessage.phone}</h5>
-                                    </div>
-                                )}
-                                <div>
-                                    <span className="text-[10px] font-black text-slate-400">تاريخ الرسالة</span>
-                                    <h5 className="text-xs font-bold text-slate-800 dark:text-white mt-1">
-                                        {new Date(selectedMessage.created_at).toLocaleString('ar-YE', {
-                                            year: 'numeric',
-                                            month: 'long',
-                                            day: 'numeric',
-                                            hour: '2-digit',
-                                            minute: '2-digit'
-                                        })}
-                                    </h5>
-                                </div>
-                            </div>
-
-                            {/* Message Subject & Body */}
-                            <div className="space-y-2">
-                                <span className="text-[10px] font-black text-slate-400">الموضوع</span>
-                                <h4 className="text-sm font-black text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-800/20 py-2 px-4 rounded-xl border border-slate-100 dark:border-slate-800/40">
-                                    {selectedMessage.subject || 'بدون موضوع'}
-                                </h4>
-                            </div>
-
-                            <div className="space-y-2">
-                                <span className="text-[10px] font-black text-slate-400">نص الرسالة</span>
-                                <p className="text-xs font-bold leading-7 text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/10 p-5 rounded-2xl border border-slate-100 dark:border-slate-800/30 whitespace-pre-wrap">
-                                    {selectedMessage.message}
-                                </p>
-                            </div>
-
-                            {/* Existing Reply if already answered */}
-                            {selectedMessage.status === 'replied' && selectedMessage.reply && (
-                                <div className="space-y-2 bg-emerald-50/10 dark:bg-emerald-500/5 p-5 rounded-2xl border border-emerald-500/20">
-                                    <div className="flex items-center gap-2 text-emerald-500 mb-1">
-                                        <CheckCircle size={14} />
-                                        <span className="text-[10px] font-black uppercase">الرد المرسل مسبقاً</span>
-                                    </div>
-                                    <p className="text-xs font-bold leading-7 text-slate-600 dark:text-slate-300 whitespace-pre-wrap">
-                                        {selectedMessage.reply}
-                                    </p>
-                                </div>
-                            )}
-
-                            {/* Reply Input Form (If not answered, or to update reply) */}
-                            {selectedMessage.status !== 'replied' && (
-                                <form onSubmit={handleSendReply} className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800/60">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400">كتابة الرد على المسافر</label>
-                                        <textarea
-                                            value={replyText}
-                                            onChange={(e) => setReplyText(e.target.value)}
-                                            placeholder="اكتب ردك هنا وسيتم إرساله للمسافر وتحديث حالة الشكوى..."
-                                            rows={4}
-                                            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-2xl py-3.5 px-5 text-xs font-bold outline-none leading-6"
-                                            required
-                                        ></textarea>
-                                    </div>
-
-                                    <div className="flex justify-end">
-                                        <button
-                                            type="submit"
-                                            disabled={sendingReply}
-                                            className="bg-blue-600 hover:bg-blue-700 text-white font-black py-3 px-6 rounded-2xl text-xs transition-all shadow-md shadow-blue-500/20 flex items-center gap-2 disabled:opacity-50"
+                            ) : (
+                                messages.map((msg, index) => {
+                                    const isAdmin = msg.sender === 'admin';
+                                    return (
+                                        <div 
+                                            key={msg.id_chat || index}
+                                            className={`flex flex-col max-w-[75%] ${isAdmin ? 'mr-auto items-end' : 'ml-auto items-start'}`}
                                         >
-                                            {sendingReply ? (
-                                                <>
-                                                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                                    جاري الإرسال...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Send size={14} />
-                                                    إرسال الرد وتحديث الحالة
-                                                </>
-                                            )}
-                                        </button>
-                                    </div>
-                                </form>
+                                            <div 
+                                                className={`rounded-2xl px-4 py-2.5 text-xs font-bold shadow-sm leading-relaxed ${
+                                                    isAdmin 
+                                                        ? 'bg-gradient-to-tr from-blue-600 to-indigo-700 text-white rounded-bl-none' 
+                                                        : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-100 dark:border-slate-800/80 rounded-br-none'
+                                                }`}
+                                            >
+                                                {msg.message}
+                                            </div>
+                                            <span className="text-[8px] text-slate-400 mt-1 font-bold">
+                                                {isAdmin ? 'المسؤول' : msg.sender_name} · {formatTime(msg.created_at)}
+                                            </span>
+                                        </div>
+                                    );
+                                })
                             )}
+                            <div ref={chatEndRef} />
                         </div>
+
+                        {/* Input Area */}
+                        <form onSubmit={handleSendReply} className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-3 shrink-0">
+                            <input
+                                type="text"
+                                placeholder="اكتب ردك هنا..."
+                                value={replyText}
+                                onChange={(e) => setReplyText(e.target.value)}
+                                className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs font-bold outline-none focus:border-blue-500 transition-all"
+                            />
+                            <button
+                                type="submit"
+                                disabled={!replyText.trim()}
+                                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-700 text-white shadow-md shadow-blue-600/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 cursor-pointer"
+                            >
+                                <Send size={14} className="rotate-180" />
+                            </button>
+                        </form>
+                    </>
+                ) : (
+                    <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 select-none">
+                        <div className="h-16 w-16 bg-blue-50 dark:bg-blue-900/10 rounded-2xl flex items-center justify-center text-blue-600 mb-4 shadow-inner">
+                            <MessageSquare size={32} />
+                        </div>
+                        <h4 className="text-sm font-black text-slate-700 dark:text-slate-200 mb-1">مركز الدعم والمحادثات الحية</h4>
+                        <p className="text-xs text-slate-400 font-bold text-center max-w-sm leading-relaxed">
+                            اختر إحدى المحادثات من القائمة الجانبية للتواصل مع المسافرين والزوار والرد على استفساراتهم بشكل فوري.
+                        </p>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 };

@@ -7,59 +7,120 @@ import { MessageSquare, Send, X, Mail, Sparkles, ShieldCheck } from 'lucide-reac
 function MainLayout() {
   const [isOpen, setIsOpen] = useState(false);
   const [inputText, setInputText] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
+  const [messages, setMessages] = useState([]);
   const location = useLocation();
   const chatEndRef = useRef(null);
 
   const isHomePage = location.pathname === '/' || location.pathname === '/home';
 
-  const [messages, setMessages] = useState(() => {
-    const saved = localStorage.getItem('admin_chat_history');
-    return saved ? JSON.parse(saved) : [
-      { id: 1, sender: 'admin', text: 'مرحباً بك! كيف يمكنني مساعدتك اليوم بخصوص استفساراتك أو حجوزاتك على المنصة؟ ✈️', time: new Date().toISOString() }
-    ];
-  });
+  // Get active chat user details
+  const getChatUser = () => {
+    const loggedIn = JSON.parse(localStorage.getItem('user') || 'null');
+    if (loggedIn) {
+      return {
+        id: loggedIn.id || null,
+        name: loggedIn.fullName || loggedIn.name || 'مستخدم',
+        email: loggedIn.email
+      };
+    }
+    
+    // Check for guest user
+    const savedGuest = localStorage.getItem('guest_chat_user');
+    if (savedGuest) {
+      try {
+        return JSON.parse(savedGuest);
+      } catch (e) {
+        // Fallback
+      }
+    }
+    
+    // Generate new guest
+    const rand = Math.floor(1000 + Math.random() * 9000);
+    const newGuest = {
+      id: null,
+      name: `زائر ${rand}`,
+      email: `guest_${rand}@ybf.com`
+    };
+    localStorage.setItem('guest_chat_user', JSON.stringify(newGuest));
+    return newGuest;
+  };
 
-  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  const fetchChatHistory = async (email) => {
+    if (!email) return;
+    try {
+      const res = await fetch(`http://localhost:8080/api/chat/messages?email=${encodeURIComponent(email)}`);
+      const data = await res.json();
+      if (data.success) {
+        setMessages(data.messages || []);
+      }
+    } catch (error) {
+      console.error('Error fetching chat history:', error);
+    }
+  };
 
   // Auto-scroll to bottom of chat
   useEffect(() => {
     if (chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, isTyping, isOpen]);
+  }, [messages, isOpen]);
 
-  const handleSendMessage = (e) => {
+  // Polling for new messages
+  useEffect(() => {
+    let intervalId;
+    if (isOpen) {
+      const chatUser = getChatUser();
+      fetchChatHistory(chatUser.email);
+
+      intervalId = setInterval(() => {
+        fetchChatHistory(chatUser.email);
+      }, 3000);
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isOpen]);
+
+  const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!inputText.trim()) return;
 
-    const userMessage = {
-      id: Date.now(),
-      sender: 'user',
-      text: inputText.trim(),
-      senderName: user?.name || 'زائر',
-      time: new Date().toISOString()
-    };
-
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
-    localStorage.setItem('admin_chat_history', JSON.stringify(updatedMessages));
+    const chatUser = getChatUser();
+    const text = inputText.trim();
     setInputText('');
 
-    // Trigger admin typing and response simulation
-    setIsTyping(true);
-    setTimeout(() => {
-      setIsTyping(false);
-      const adminReply = {
-        id: Date.now() + 1,
-        sender: 'admin',
-        text: 'شكراً لتواصلك معنا. لقد تم استلام رسالتك وإرسالها فوراً إلى المسؤول عن المنصة، وسيقوم بمراجعة تفاصيل حسابك والتواصل معك في أقرب وقت ممكن.',
-        time: new Date().toISOString()
-      };
-      const finalMessages = [...updatedMessages, adminReply];
-      setMessages(finalMessages);
-      localStorage.setItem('admin_chat_history', JSON.stringify(finalMessages));
-    }, 1500);
+    // Optimistic UI update
+    const tempMessage = {
+      id_chat: Date.now(),
+      user_id: chatUser.id,
+      sender: 'user',
+      sender_name: chatUser.name,
+      sender_email: chatUser.email,
+      message: text,
+      created_at: new Date().toISOString()
+    };
+    setMessages(prev => [...prev, tempMessage]);
+
+    try {
+      const res = await fetch('http://localhost:8080/api/chat/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: chatUser.id,
+          sender: 'user',
+          sender_name: chatUser.name,
+          sender_email: chatUser.email,
+          message: text
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchChatHistory(chatUser.email);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
   };
 
   return (
@@ -91,9 +152,9 @@ function MainLayout() {
 
               {/* Chat Messages Area */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/20">
-                {messages.map((msg) => (
+                {messages.map((msg, index) => (
                   <div 
-                    key={msg.id}
+                    key={msg.id_chat || msg.id || index}
                     className={`flex flex-col max-w-[80%] ${msg.sender === 'user' ? 'mr-auto items-end' : 'ml-auto items-start'}`}
                   >
                     <div 
@@ -103,23 +164,13 @@ function MainLayout() {
                           : 'bg-white text-slate-800 border border-slate-100 rounded-bl-none'
                       }`}
                     >
-                      {msg.text}
+                      {msg.message || msg.text}
                     </div>
                     <span className="text-[8px] text-slate-400 mt-1 font-bold">
-                      {new Date(msg.time).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(msg.created_at || msg.time).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
                 ))}
-
-                {isTyping && (
-                  <div className="flex flex-col items-start max-w-[80%] ml-auto">
-                    <div className="bg-white text-slate-400 border border-slate-100 rounded-2xl rounded-bl-none px-4 py-3 flex gap-1 items-center shadow-sm">
-                      <span className="h-1.5 w-1.5 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <span className="h-1.5 w-1.5 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <span className="h-1.5 w-1.5 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                    </div>
-                  </div>
-                )}
                 <div ref={chatEndRef} />
               </div>
 

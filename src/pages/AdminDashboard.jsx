@@ -28,7 +28,14 @@ const AdminDashboard = () => {
     });
     const [loading, setLoading] = useState(true);
     const [salesChartPeriod, setSalesChartPeriod] = useState('monthly'); // 'daily' or 'monthly'
-    const [statsPeriod, setStatsPeriod] = useState('current_month'); // 'current_month' or 'current_year'
+    const [selectedDashboardYear, setSelectedDashboardYear] = useState(() => {
+        const now = new Date();
+        return String(now.getFullYear());
+    });
+    const [selectedDashboardMonth, setSelectedDashboardMonth] = useState(() => {
+        const now = new Date();
+        return String(now.getMonth() + 1).padStart(2, '0');
+    });
     const [stats, setStats] = useState({
         totalTickets: 0,
         totalRevenue: 0,
@@ -123,7 +130,12 @@ const AdminDashboard = () => {
                     params.push(`flightNumber=${reportFlightSearch}`);
                 }
             } else {
-                params.push(`period=${statsPeriod}`);
+                if (selectedDashboardYear) {
+                    params.push(`year=${selectedDashboardYear}`);
+                }
+                if (selectedDashboardMonth) {
+                    params.push(`month=${selectedDashboardMonth}`);
+                }
             }
 
             if (params.length > 0) {
@@ -140,7 +152,7 @@ const AdminDashboard = () => {
         } finally {
             setLoading(false);
         }
-    }, [token, role, statsPeriod, selectedReportYear, selectedReportMonth, reportFlightSearch, activeTab]);
+    }, [token, role, selectedDashboardYear, selectedDashboardMonth, selectedReportYear, selectedReportMonth, reportFlightSearch, activeTab]);
 
     // Fetch Flights
     const fetchFlights = useCallback(async () => {
@@ -712,35 +724,56 @@ const AdminDashboard = () => {
                             {activeTab === 'dashboard' && (
                                 <div className="space-y-10">
                                     
-                                    {/* Dashboard Subheader with Stats Period Toggle */}
+                                    {/* Dashboard Subheader with Custom Month/Year Selectors */}
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200/60 pb-5 dark:border-slate-800/60">
                                         <div>
                                             <h3 className="text-lg font-black">مؤشرات الأداء</h3>
                                             <p className="text-xs text-slate-400 font-bold mt-1">
-                                                {statsPeriod === 'current_month' ? 'عرض إحصائيات حركة الطيران والمبيعات للشهر الحالي' : 'عرض إحصائيات حركة الطيران والمبيعات للسنة الحالية'}
+                                                {selectedDashboardMonth 
+                                                    ? `عرض إحصائيات حركة الطيران والمبيعات لشهر ${getArabicMonthName(selectedDashboardMonth)} ${selectedDashboardYear}` 
+                                                    : `عرض إحصائيات حركة الطيران والمبيعات لسنة ${selectedDashboardYear}`}
                                             </p>
                                         </div>
-                                        <div className="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-xl self-start">
-                                            <button
-                                                onClick={() => setStatsPeriod('current_month')}
-                                                className={`py-1.5 px-4 rounded-lg text-xs font-black transition-all ${
-                                                    statsPeriod === 'current_month'
-                                                        ? 'bg-blue-600 text-white shadow-md'
-                                                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
-                                                }`}
-                                            >
-                                                الشهر الحالي
-                                            </button>
-                                            <button
-                                                onClick={() => setStatsPeriod('current_year')}
-                                                className={`py-1.5 px-4 rounded-lg text-xs font-black transition-all ${
-                                                    statsPeriod === 'current_year'
-                                                        ? 'bg-blue-600 text-white shadow-md'
-                                                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
-                                                }`}
-                                            >
-                                                السنة
-                                            </button>
+                                        <div className="flex flex-wrap items-center gap-3">
+                                            {/* Year Selector */}
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">السنة:</span>
+                                                <select
+                                                    value={selectedDashboardYear}
+                                                    onChange={(e) => setSelectedDashboardYear(e.target.value)}
+                                                    className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-xl py-1.5 px-3 text-xs font-bold outline-none transition-all dark:text-white min-w-[80px]"
+                                                >
+                                                    <option value="2024">2024</option>
+                                                    <option value="2025">2025</option>
+                                                    <option value="2026">2026</option>
+                                                    <option value="2027">2027</option>
+                                                    <option value="2028">2028</option>
+                                                </select>
+                                            </div>
+
+                                            {/* Month Selector */}
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">الشهر:</span>
+                                                <select
+                                                    value={selectedDashboardMonth}
+                                                    onChange={(e) => setSelectedDashboardMonth(e.target.value)}
+                                                    className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-xl py-1.5 px-3 text-xs font-bold outline-none transition-all dark:text-white min-w-[120px]"
+                                                >
+                                                    <option value="">كل أشهر السنة</option>
+                                                    <option value="01">01 - يناير</option>
+                                                    <option value="02">02 - فبراير</option>
+                                                    <option value="03">03 - مارس</option>
+                                                    <option value="04">04 - أبريل</option>
+                                                    <option value="05">05 - مايو</option>
+                                                    <option value="06">06 - يونيو</option>
+                                                    <option value="07">07 - يوليو</option>
+                                                    <option value="08">08 - أغسطس</option>
+                                                    <option value="09">09 - سبتمبر</option>
+                                                    <option value="10">10 - أكتوبر</option>
+                                                    <option value="11">11 - نوفمبر</option>
+                                                    <option value="12">12 - ديسمبر</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -748,25 +781,25 @@ const AdminDashboard = () => {
                                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                                         {[
                                             { 
-                                                label: statsPeriod === 'current_month' ? 'تذاكر الشهر الحالي' : 'تذاكر السنة الحالية', 
+                                                label: selectedDashboardMonth ? `تذاكر شهر ${getArabicMonthName(selectedDashboardMonth)}` : `تذاكر سنة ${selectedDashboardYear}`, 
                                                 value: stats.totalTickets.toLocaleString(), 
                                                 icon: Ticket, 
                                                 color: 'text-blue-600 bg-blue-500/10' 
                                             },
                                             { 
-                                                label: statsPeriod === 'current_month' ? 'إيرادات الشهر الحالي' : 'إيرادات السنة الحالية', 
+                                                label: selectedDashboardMonth ? `إيرادات شهر ${getArabicMonthName(selectedDashboardMonth)}` : `إيرادات سنة ${selectedDashboardYear}`, 
                                                 value: `$${stats.totalRevenue.toLocaleString()}`, 
                                                 icon: DollarSign, 
                                                 color: 'text-emerald-600 bg-emerald-500/10' 
                                             },
                                             { 
-                                                label: statsPeriod === 'current_month' ? 'نسبة إلغاء حجوزات الشهر' : 'نسبة إلغاء حجوزات السنة', 
+                                                label: selectedDashboardMonth ? `نسبة إلغاء الحجوزات للشهر` : `نسبة إلغاء الحجوزات للسنة`, 
                                                 value: `${stats.cancellationRate}%`, 
                                                 icon: XCircle, 
                                                 color: stats.cancellationRate > 15 ? 'text-rose-600 bg-rose-500/10' : 'text-amber-500 bg-amber-500/10' 
                                             },
                                             { 
-                                                label: statsPeriod === 'current_month' ? 'الركاب النشطين بالفترة' : 'الركاب النشطين بالسنة', 
+                                                label: selectedDashboardMonth ? `الركاب النشطين بالشهر` : `الركاب النشطين بالسنة`, 
                                                 value: stats.activePassengers.toLocaleString(), 
                                                 icon: Users, 
                                                 color: 'text-violet-600 bg-violet-500/10' 
@@ -844,6 +877,69 @@ const AdminDashboard = () => {
                                                     />
                                                 </AreaChart>
                                             </ResponsiveContainer>
+                                        </div>
+                                    </div>
+
+                                    {/* Company Sales & Bookings Composed Chart */}
+                                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
+                                        <div className="mb-6">
+                                            <h3 className="text-lg font-black">أداء الشركات (المبيعات والحجوزات)</h3>
+                                            <p className="text-xs text-slate-400 font-bold mt-1">تتبع حجم الحجوزات وإجمالي الإيرادات المحققة لكل شركة طيران للفترة المحددة</p>
+                                        </div>
+
+                                        <div className="h-80 w-full">
+                                            {stats.companyBreakdown && stats.companyBreakdown.length > 0 ? (
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <BarChart data={stats.companyBreakdown} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" opacity={0.3} />
+                                                        <XAxis 
+                                                            dataKey="company_name" 
+                                                            axisLine={false} 
+                                                            tickLine={false} 
+                                                            tick={{ fontSize: 11, fontWeight: 'bold' }} 
+                                                        />
+                                                        {/* Left Y Axis for Sales/Revenue */}
+                                                        <YAxis 
+                                                            yAxisId="left"
+                                                            axisLine={false} 
+                                                            tickLine={false} 
+                                                            tick={{ fontSize: 10, fontWeight: 'bold' }} 
+                                                            tickFormatter={(value) => `$${value}`}
+                                                        />
+                                                        {/* Right Y Axis for Bookings/Tickets */}
+                                                        <YAxis 
+                                                            yAxisId="right"
+                                                            orientation="right"
+                                                            axisLine={false} 
+                                                            tickLine={false} 
+                                                            tick={{ fontSize: 10, fontWeight: 'bold' }} 
+                                                        />
+                                                        <Tooltip 
+                                                            formatter={(value, name) => {
+                                                                if (name === 'revenue') return [`$${Number(value).toLocaleString()}`, 'إجمالي المبيعات'];
+                                                                if (name === 'tickets') return [`${value} تذكرة`, 'إجمالي الحجوزات'];
+                                                                return [value, name];
+                                                            }}
+                                                            contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0' }}
+                                                        />
+                                                        <Legend 
+                                                            verticalAlign="top" 
+                                                            height={36} 
+                                                            formatter={(value) => {
+                                                                if (value === 'revenue') return 'إجمالي المبيعات ($)';
+                                                                if (value === 'tickets') return 'إجمالي الحجوزات (تذكرة)';
+                                                                return value;
+                                                            }}
+                                                        />
+                                                        <Bar yAxisId="left" dataKey="revenue" fill="#10b981" radius={[6, 6, 0, 0]} barSize={30} name="revenue" />
+                                                        <Bar yAxisId="right" dataKey="tickets" fill="#2563eb" radius={[6, 6, 0, 0]} barSize={30} name="tickets" />
+                                                    </BarChart>
+                                                </ResponsiveContainer>
+                                            ) : (
+                                                <div className="h-full flex items-center justify-center">
+                                                    <p className="text-xs text-slate-400 font-bold">لا توجد بيانات شركات متاحة لهذه الفترة</p>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 

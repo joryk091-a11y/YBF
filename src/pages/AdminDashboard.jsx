@@ -11,6 +11,7 @@ import {
     Moon, Sun, Shield, Wallet, BookOpen, Plus, Trash2, Check, X, CreditCard, ChevronRight, Info,
     UserCheck, Mail, Phone, Building2, Printer
 } from 'lucide-react';
+import Messages from './Messages.jsx';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
@@ -609,6 +610,7 @@ const AdminDashboard = () => {
                             { id: 'users', label: 'إدارة المستخدمين', icon: Users },
                             { id: 'companies', label: 'إدارة الشركات', icon: Building2 },
                             { id: 'reports', label: 'التقارير المالية', icon: BookOpen },
+                            { id: 'messages', label: 'الرسائل والشكاوى', icon: Mail },
                             { id: 'settings', label: 'إعدادات النظام', icon: Settings },
                         ].map((item) => {
                             const IconComp = item.icon;
@@ -676,6 +678,7 @@ const AdminDashboard = () => {
                             {activeTab === 'users' && 'إدارة مستخدمي النظام'}
                             {activeTab === 'companies' && 'إدارة شركات الطيران'}
                             {activeTab === 'reports' && 'تقارير حركة الطيران والمبيعات'}
+                            {activeTab === 'messages' && 'صندوق الوارد والرسائل'}
                             {activeTab === 'settings' && 'إعدادات النظام والعمولة'}
                         </h2>
                     </div>
@@ -1993,6 +1996,11 @@ const AdminDashboard = () => {
                                         )}
                                     </div>
                                 </div>
+                            )}
+
+                            {/* ===== VIEW: MESSAGES & COMPLAINTS ===== */}
+                            {activeTab === 'messages' && (
+                                <Messages token={token} showToast={showToast} />
                             )}
                         </>
                     )}

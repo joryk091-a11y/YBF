@@ -237,6 +237,87 @@ app.delete('/api/admin/users/:id', async (req, res) => {
 });
 
 
+// GET Admin messages from database
+app.get('/api/admin/messages', async (req, res) => {
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    const [messages] = await connection.execute('SELECT * FROM contact_messages ORDER BY created_at DESC');
+    res.json({ success: true, messages });
+  } catch (error) {
+    console.error('Error fetching admin messages:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// PUT Admin message status or reply
+app.put('/api/admin/messages/:id', async (req, res) => {
+  const { id } = req.params;
+  const { status, reply } = req.body;
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    if (reply !== undefined) {
+      await connection.execute(
+        'UPDATE contact_messages SET status = ?, reply = ? WHERE id_messages = ?',
+        [status || 'replied', reply, id]
+      );
+    } else {
+      await connection.execute(
+        'UPDATE contact_messages SET status = ? WHERE id_messages = ?',
+        [status, id]
+      );
+    }
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error updating admin message:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// DELETE Admin message
+app.delete('/api/admin/messages/:id', async (req, res) => {
+  const { id } = req.params;
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    await connection.execute('DELETE FROM contact_messages WHERE id_messages = ?', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting admin message:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// POST new contact message
+app.post('/api/messages', async (req, res) => {
+  const { name, email, phone, subject, message } = req.body;
+  if (!name || !email || !message) {
+    return res.status(400).json({ success: false, error: 'الاسم والبريد الإلكتروني والرسالة حقول مطلوبة' });
+  }
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    await connection.execute(
+      'INSERT INTO contact_messages (name, email, phone, subject, message, status) VALUES (?, ?, ?, ?, ?, ?)',
+      [name, email, phone, subject, message, 'unread']
+    );
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error creating contact message:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+
 // GET Admin Dashboard stats from database
 app.get('/api/admin/dashboard-stats', async (req, res) => {
   const { period, date, year, month, flightNumber } = req.query; // 'current_month', 'current_year', YYYY-MM-DD or custom year & month

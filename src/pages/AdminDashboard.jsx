@@ -104,6 +104,29 @@ const AdminDashboard = () => {
 
     // Alert states
     const [notificationMsg, setNotificationMsg] = useState(null);
+    const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
+
+    // Check for unread messages
+    const checkUnreadMessages = useCallback(async () => {
+        try {
+            const res = await fetch('http://localhost:8080/api/admin/chat/conversations');
+            const data = await res.json();
+            if (data.success && data.conversations) {
+                const anyUnread = data.conversations.some(c => c.unread_count > 0);
+                setHasUnreadMessages(anyUnread);
+            }
+        } catch {
+            // Silence error to prevent console clutter
+        }
+    }, []);
+
+    // Polling for unread messages
+    useEffect(() => {
+        if (!token || role !== 'admin') return;
+        checkUnreadMessages();
+        const intervalId = setInterval(checkUnreadMessages, 3000);
+        return () => clearInterval(intervalId);
+    }, [token, role, checkUnreadMessages]);
 
     // Check auth
     useEffect(() => {
@@ -684,26 +707,17 @@ const AdminDashboard = () => {
                     </div>
 
                     <div className="flex items-center gap-6">
-                        {/* Quick Search */}
-                        <div className="relative hidden md:block">
-                            <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                            <input
-                                type="text"
-                                placeholder="بحث سريع..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-64 bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-blue-500 rounded-xl py-2 pr-10 pl-4 text-xs font-bold outline-none transition-all"
-                            />
-                        </div>
-
                         {/* Control buttons */}
                         <div className="flex items-center gap-3">
                             <button
-                                onClick={() => showToast('لا توجد إشعارات جديدة')}
+                                onClick={() => setActiveTab('messages')}
                                 className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-blue-500 transition-all relative"
+                                title="المحادثات والرسائل الواردة"
                             >
                                 <Bell size={18} />
-                                <span className="absolute top-2 left-2.5 h-2.5 w-2.5 bg-blue-500 rounded-full border border-slate-100 dark:border-slate-800" />
+                                {hasUnreadMessages && (
+                                    <span className="absolute top-2 left-2.5 h-2.5 w-2.5 bg-blue-500 rounded-full border border-slate-100 dark:border-slate-800 animate-pulse" />
+                                )}
                             </button>
                             <button
                                 onClick={handleLogout}

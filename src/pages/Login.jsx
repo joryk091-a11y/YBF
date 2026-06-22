@@ -35,7 +35,7 @@ function LoginPage() {
             } else {
                 setError(data.error || 'البريد الإلكتروني أو كلمة المرور غير صحيحة')
             }
-        } catch (err) {
+        } catch {
             setError('تعذر الاتصال بالخادم')
         } finally {
             setLoading(false)

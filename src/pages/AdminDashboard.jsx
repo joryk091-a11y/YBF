@@ -123,9 +123,17 @@ const AdminDashboard = () => {
     // Polling for unread messages
     useEffect(() => {
         if (!token || role !== 'admin') return;
-        checkUnreadMessages();
+        
+        const delayTimer = setTimeout(() => {
+            checkUnreadMessages();
+        }, 0);
+
         const intervalId = setInterval(checkUnreadMessages, 3000);
-        return () => clearInterval(intervalId);
+        
+        return () => {
+            clearTimeout(delayTimer);
+            clearInterval(intervalId);
+        };
     }, [token, role, checkUnreadMessages]);
 
     // Check auth

@@ -91,7 +91,6 @@ const AdminDashboard = () => {
         const now = new Date();
         return String(now.getMonth() + 1).padStart(2, '0');
     });
-    const [reportFlightSearch, setReportFlightSearch] = useState('');
     const [loadingList, setLoadingList] = useState(false);
 
 
@@ -161,9 +160,6 @@ const AdminDashboard = () => {
                 if (selectedReportMonth) {
                     params.push(`month=${selectedReportMonth}`);
                 }
-                if (reportFlightSearch) {
-                    params.push(`flightNumber=${reportFlightSearch}`);
-                }
             } else {
                 if (selectedDashboardYear) {
                     params.push(`year=${selectedDashboardYear}`);
@@ -187,7 +183,7 @@ const AdminDashboard = () => {
         } finally {
             setLoading(false);
         }
-    }, [token, role, selectedDashboardYear, selectedDashboardMonth, selectedReportYear, selectedReportMonth, reportFlightSearch, activeTab]);
+    }, [token, role, selectedDashboardYear, selectedDashboardMonth, selectedReportYear, selectedReportMonth, activeTab]);
 
     // Fetch Flights
     const fetchFlights = useCallback(async () => {
@@ -364,6 +360,13 @@ const AdminDashboard = () => {
         }, 0);
         return () => clearTimeout(timer);
     }, [activeTab, fetchDashboardStats, fetchFlights, fetchUsers, fetchCompanies]);
+
+    // Re-fetch stats when date filters change
+    useEffect(() => {
+        if (activeTab === 'dashboard' || activeTab === 'reports') {
+            fetchDashboardStats();
+        }
+    }, [selectedReportYear, selectedReportMonth, selectedDashboardYear, selectedDashboardMonth, activeTab, fetchDashboardStats]);
 
     // Initial mount load of companies and users (dashboard stats are fetched by the tab change hook since activeTab defaults to 'dashboard')
     useEffect(() => {
@@ -1575,16 +1578,6 @@ const AdminDashboard = () => {
                                                             <Ticket size={16} className="text-blue-500" />
                                                             <span>سجل آخر الحجوزات المستلمة والمؤكدة في النظام</span>
                                                         </h3>
-                                                        <div className="no-print relative min-w-[200px]">
-                                                            <input
-                                                                type="text"
-                                                                placeholder="بحث برقم الرحلة..."
-                                                                value={reportFlightSearch}
-                                                                onChange={(e) => setReportFlightSearch(e.target.value)}
-                                                                className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700/60 rounded-xl py-1.5 px-3 pl-8 text-xs font-bold outline-none transition-all focus:border-blue-500 text-slate-750 dark:text-white"
-                                                            />
-                                                            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                                                        </div>
                                                     </div>
                                                     <div className="overflow-x-auto">
                                                         <table className="w-full text-right text-xs">

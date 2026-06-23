@@ -59,6 +59,10 @@ const AdminDashboard = () => {
     const [flights, setFlights] = useState([]);
     const [usersList, setUsersList] = useState([]);
     const [companiesList, setCompaniesList] = useState([]);
+    const [bookingsList, setBookingsList] = useState([]);
+    const [loadingBookings, setLoadingBookings] = useState(false);
+    const [bookingSearchQuery, setBookingSearchQuery] = useState('');
+    const [updatingBookingId, setUpdatingBookingId] = useState(null);
     const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
     const [isEditingCompany, setIsEditingCompany] = useState(false);
     const [companyForm, setCompanyForm] = useState({
@@ -244,6 +248,49 @@ const AdminDashboard = () => {
         }
     }, [token, role]);
 
+    // Fetch Bookings
+    const fetchBookings = useCallback(async () => {
+        if (!token || role !== 'admin') return;
+        setLoadingBookings(true);
+        try {
+            const res = await fetch('http://localhost:8080/api/admin/bookings');
+            const data = await res.json();
+            if (data.success) {
+                setBookingsList(data.bookings);
+            }
+        } catch (error) {
+            console.error('Error fetching bookings:', error);
+        } finally {
+            setLoadingBookings(false);
+        }
+    }, [token, role]);
+
+    // Update Booking Status
+    const handleUpdateBookingStatus = async (bookingId, status, paymentStatus) => {
+        if (updatingBookingId) return;
+        setUpdatingBookingId(bookingId);
+        try {
+            const res = await fetch(`http://localhost:8080/api/admin/bookings/${bookingId}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status, payment_status: paymentStatus })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast(status === 'certain' ? 'تم تأكيد الحجز والدفع بنجاح!' : 'تم إلغاء الحجز بنجاح.');
+                fetchBookings();
+                fetchDashboardStats();
+            } else {
+                showToast(data.error || 'حدث خطأ أثناء تحديث حالة الحجز.');
+            }
+        } catch (error) {
+            console.error('Error updating booking status:', error);
+            showToast('خطأ في الاتصال بالخادم.');
+        } finally {
+            setUpdatingBookingId(null);
+        }
+    };
+
     // Create new company
     const handleCreateCompany = async (e) => {
         e.preventDefault();
@@ -356,16 +403,21 @@ const AdminDashboard = () => {
                 fetchUsers();
             } else if (activeTab === 'companies') {
                 fetchCompanies();
+            } else if (activeTab === 'bookings') {
+                fetchBookings();
             }
         }, 0);
         return () => clearTimeout(timer);
-    }, [activeTab, fetchDashboardStats, fetchFlights, fetchUsers, fetchCompanies]);
+    }, [activeTab, fetchDashboardStats, fetchFlights, fetchUsers, fetchCompanies, fetchBookings]);
 
     // Re-fetch stats when date filters change
     useEffect(() => {
-        if (activeTab === 'dashboard' || activeTab === 'reports') {
-            fetchDashboardStats();
-        }
+        const timer = setTimeout(() => {
+            if (activeTab === 'dashboard' || activeTab === 'reports') {
+                fetchDashboardStats();
+            }
+        }, 0);
+        return () => clearTimeout(timer);
     }, [selectedReportYear, selectedReportMonth, selectedDashboardYear, selectedDashboardMonth, activeTab, fetchDashboardStats]);
 
     // Initial mount load of companies and users (dashboard stats are fetched by the tab change hook since activeTab defaults to 'dashboard')
@@ -392,9 +444,12 @@ const AdminDashboard = () => {
             if (activeTab === 'companies') {
                 fetchCompanies();
             }
+            if (activeTab === 'bookings') {
+                fetchBookings();
+            }
         }, 20000); // 20 seconds
         return () => clearInterval(interval);
-    }, [activeTab, fetchDashboardStats, fetchFlights, fetchUsers, fetchCompanies]);
+    }, [activeTab, fetchDashboardStats, fetchFlights, fetchUsers, fetchCompanies, fetchBookings]);
 
 
 
@@ -600,6 +655,17 @@ const AdminDashboard = () => {
         (c.airline_code && c.airline_code.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
+    const filteredBookings = bookingsList.filter(b => {
+        const query = bookingSearchQuery.toLowerCase().trim();
+        if (!query) return true;
+        
+        const refMatch = b.booking_reference?.toLowerCase().includes(query);
+        const flightMatch = b.flight_number?.toLowerCase().includes(query);
+        const passengerMatch = b.passengers?.toLowerCase().includes(query);
+        
+        return refMatch || flightMatch || passengerMatch;
+    });
+
     const chartColors = ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'];
 
     if (!token || role !== 'admin') {
@@ -641,6 +707,7 @@ const AdminDashboard = () => {
                         {[
                             { id: 'dashboard', label: 'لوحة التحكم', icon: Activity },
                             { id: 'flights', label: 'إدارة الرحلات', icon: Plane },
+                            { id: 'bookings', label: 'إدارة الحجوزات', icon: Ticket },
                             { id: 'users', label: 'إدارة المستخدمين', icon: Users },
                             { id: 'companies', label: 'إدارة الشركات', icon: Building2 },
                             { id: 'reports', label: 'التقارير المالية', icon: BookOpen },
@@ -709,6 +776,7 @@ const AdminDashboard = () => {
                         <h2 className="text-xl font-black tracking-tight">
                             {activeTab === 'dashboard' && 'لوحة التحكم الرئيسية'}
                             {activeTab === 'flights' && 'جدول واستعراض الرحلات الجوية'}
+                            {activeTab === 'bookings' && 'إدارة وحالة حجوزات الطيران'}
                             {activeTab === 'users' && 'إدارة مستخدمي النظام'}
                             {activeTab === 'companies' && 'إدارة شركات الطيران'}
                             {activeTab === 'reports' && 'تقارير حركة الطيران والمبيعات'}
@@ -2003,6 +2071,263 @@ const AdminDashboard = () => {
                                                         ) : (
                                                             <tr>
                                                                 <td colSpan="5" className="py-12 text-center text-slate-400 font-bold">لا يوجد شركات مطابقة للبحث حالياً</td>
+                                                            </tr>
+                                                        )}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* ===== VIEW: BOOKINGS MANAGEMENT ===== */}
+                            {activeTab === 'bookings' && (
+                                <div className="space-y-6">
+                                    {/* Stats Cards */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                                        {/* Total Bookings */}
+                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex items-center gap-4">
+                                            <div className="h-12 w-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                                                <Ticket size={24} />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">إجمالي الحجوزات</p>
+                                                <h4 className="text-2xl font-black mt-1">{bookingsList.length}</h4>
+                                            </div>
+                                        </div>
+
+                                        {/* Certain Bookings */}
+                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex items-center gap-4">
+                                            <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                                                <CheckCircle size={24} />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">الحجوزات المؤكدة</p>
+                                                <h4 className="text-2xl font-black mt-1">
+                                                    {bookingsList.filter(b => b.status === 'certain').length}
+                                                </h4>
+                                            </div>
+                                        </div>
+
+                                        {/* Pending Bookings */}
+                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex items-center gap-4">
+                                            <div className="h-12 w-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                                                <Clock size={24} />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">الحجوزات المعلقة</p>
+                                                <h4 className="text-2xl font-black mt-1">
+                                                    {bookingsList.filter(b => b.status === 'pending').length}
+                                                </h4>
+                                            </div>
+                                        </div>
+
+                                        {/* Canceled Bookings */}
+                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex items-center gap-4">
+                                            <div className="h-12 w-12 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
+                                                <XCircle size={24} />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">الحجوزات الملغاة</p>
+                                                <h4 className="text-2xl font-black mt-1">
+                                                    {bookingsList.filter(b => b.status === 'canceled').length}
+                                                </h4>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Bookings Table Container */}
+                                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm p-8">
+                                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                                            <div>
+                                                <h4 className="text-sm font-black">جميع حجوزات النظام</h4>
+                                                <p className="text-xs text-slate-400 mt-1">تصفح وتحديث وإلغاء حجوزات المسافرين وحالة الدفع بشكل فوري</p>
+                                            </div>
+
+                                            {/* Search Bar */}
+                                            <div className="relative w-full md:w-96">
+                                                <input
+                                                    type="text"
+                                                    placeholder="البحث باسم المسافر، رقم الرحلة، أو كود الحجز المرجعي..."
+                                                    value={bookingSearchQuery}
+                                                    onChange={(e) => setBookingSearchQuery(e.target.value)}
+                                                    className="w-full bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-blue-500 rounded-2xl py-3 pr-10 pl-4 text-xs font-bold outline-none transition-all dark:text-white"
+                                                />
+                                                <Search size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                                                {bookingSearchQuery && (
+                                                    <button
+                                                        onClick={() => setBookingSearchQuery('')}
+                                                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {loadingBookings ? (
+                                            <div className="py-20 text-center text-slate-400 font-bold">جاري تحميل قائمة الحجوزات...</div>
+                                        ) : (
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full text-right text-xs">
+                                                    <thead>
+                                                        <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-black uppercase">
+                                                            <th className="pb-4 px-4">الرمز المرجعي</th>
+                                                            <th className="pb-4 px-4">الرحلة والمسار</th>
+                                                            <th className="pb-4 px-4">المسافرون</th>
+                                                            <th className="pb-4 px-4">القيمة الإجمالية</th>
+                                                            <th className="pb-4 px-4">تاريخ الحجز</th>
+                                                            <th className="pb-4 px-4">حالة الحجز والدفع</th>
+                                                            <th className="pb-4 px-4 text-left">إجراءات المسؤول</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
+                                                        {filteredBookings.length > 0 ? (
+                                                            filteredBookings.map((booking) => (
+                                                                <tr key={booking.id_bookings} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                                                                    {/* Booking Reference */}
+                                                                    <td className="py-5 px-4 font-black text-slate-900 dark:text-white">
+                                                                        <div className="flex items-center gap-3">
+                                                                            <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-blue-600/10 to-indigo-600/10 dark:from-blue-900/20 dark:to-indigo-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center font-black">
+                                                                                <Ticket size={18} />
+                                                                            </div>
+                                                                            <div>
+                                                                                <p className="font-mono font-bold text-slate-800 dark:text-white tracking-wider">
+                                                                                    {booking.booking_reference}
+                                                                                </p>
+                                                                                <p className="text-[10px] text-slate-400">ID: #{booking.id_bookings}</p>
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
+
+                                                                    {/* Flight & Route */}
+                                                                    <td className="py-5 px-4">
+                                                                        <div className="space-y-1">
+                                                                            <p className="flex items-center gap-1.5 font-black text-slate-800 dark:text-white">
+                                                                                <Plane size={12} className="text-blue-500" />
+                                                                                {booking.flight_number}
+                                                                            </p>
+                                                                            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                                                                                {getDestinationName(booking.airportOrigin_code)} ➔ {getDestinationName(booking.airportDestination_code)}
+                                                                            </p>
+                                                                            <p className="text-[9px] text-slate-400 flex items-center gap-1">
+                                                                                <Calendar size={10} />
+                                                                                الإقلاع: {new Date(booking.departure_time).toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' })}
+                                                                            </p>
+                                                                        </div>
+                                                                    </td>
+
+                                                                    {/* Passengers */}
+                                                                    <td className="py-5 px-4 font-bold text-slate-700 dark:text-slate-300 max-w-[200px] truncate">
+                                                                        <div className="flex flex-col gap-1">
+                                                                            <span className="text-slate-800 dark:text-slate-200">
+                                                                                {booking.passengers || 'لا يوجد مسافرين'}
+                                                                            </span>
+                                                                            <span className="text-[10px] text-slate-400">
+                                                                                العدد: {booking.total_passengers}
+                                                                            </span>
+                                                                        </div>
+                                                                    </td>
+
+                                                                    {/* Total Price */}
+                                                                    <td className="py-5 px-4 font-black text-blue-600 dark:text-blue-400">
+                                                                        ${parseFloat(booking.final_price || 0).toLocaleString()}
+                                                                    </td>
+
+                                                                    {/* Booking Date */}
+                                                                    <td className="py-5 px-4 font-bold text-slate-500">
+                                                                        {new Date(booking.booking_date).toLocaleDateString('ar-EG', { dateStyle: 'medium' })}
+                                                                    </td>
+
+                                                                    {/* Status Badges */}
+                                                                    <td className="py-5 px-4">
+                                                                        <div className="flex flex-wrap gap-2">
+                                                                            {/* Booking status badge */}
+                                                                            {booking.status === 'certain' && (
+                                                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/10">
+                                                                                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                                                                    حجز مؤكد
+                                                                                </span>
+                                                                            )}
+                                                                            {booking.status === 'pending' && (
+                                                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-black bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/10">
+                                                                                    <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                                                                    حجز معلق
+                                                                                </span>
+                                                                            )}
+                                                                            {booking.status === 'canceled' && (
+                                                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-black bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/10">
+                                                                                    <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                                                                                    حجز ملغي
+                                                                                </span>
+                                                                            )}
+
+                                                                            {/* Payment status badge */}
+                                                                            {booking.payment_status === 'success' ? (
+                                                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-black bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/10">
+                                                                                    <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                                                                                    مدفوع
+                                                                                </span>
+                                                                            ) : booking.payment_status === 'pending' ? (
+                                                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-black bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/10">
+                                                                                    <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                                                                    قيد الدفع
+                                                                                </span>
+                                                                            ) : (
+                                                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-black bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/10">
+                                                                                    <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                                                                                    غير مدفوع
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    </td>
+
+                                                                    {/* Action Buttons */}
+                                                                    <td className="py-5 px-4 text-left">
+                                                                        <div className="flex items-center justify-end gap-2">
+                                                                            {updatingBookingId === booking.id_bookings ? (
+                                                                                <div className="h-5 w-5 border-2 border-blue-500 border-t-transparent animate-spin rounded-full mx-6" />
+                                                                            ) : (
+                                                                                <>
+                                                                                    {booking.status === 'pending' && (
+                                                                                        <button
+                                                                                            onClick={() => handleUpdateBookingStatus(booking.id_bookings, 'certain', 'success')}
+                                                                                            className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all text-[11px] font-black border border-emerald-500/20"
+                                                                                            title="تأكيد الحجز والدفع"
+                                                                                        >
+                                                                                            <Check size={12} />
+                                                                                            <span>تأكيد</span>
+                                                                                        </button>
+                                                                                    )}
+                                                                                    {(booking.status === 'pending' || booking.status === 'certain') && (
+                                                                                        <button
+                                                                                            onClick={() => {
+                                                                                                if (window.confirm('هل أنت متأكد من إلغاء هذا الحجز؟')) {
+                                                                                                    handleUpdateBookingStatus(booking.id_bookings, 'canceled', 'failed');
+                                                                                                }
+                                                                                            }}
+                                                                                            className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-rose-500/10 text-rose-600 hover:bg-rose-600 hover:text-white transition-all text-[11px] font-black border border-rose-500/20"
+                                                                                            title="إلغاء الحجز وتغيير الدفع إلى فاشل"
+                                                                                        >
+                                                                                            <X size={12} />
+                                                                                            <span>إلغاء</span>
+                                                                                        </button>
+                                                                                    )}
+                                                                                    {booking.status === 'canceled' && (
+                                                                                        <span className="text-[10px] text-slate-400 font-bold px-4">
+                                                                                            لا توجد إجراءات
+                                                                                        </span>
+                                                                                    )}
+                                                                                </>
+                                                                            )}
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            ))
+                                                        ) : (
+                                                            <tr>
+                                                                <td colSpan="7" className="py-12 text-center text-slate-400 font-bold">لا يوجد حجوزات مطابقة للبحث حالياً</td>
                                                             </tr>
                                                         )}
                                                     </tbody>

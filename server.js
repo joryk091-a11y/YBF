@@ -623,7 +623,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
 
 // GET all bookings for admin
 app.get('/api/admin/bookings', async (req, res) => {
-  const { date } = req.query;
+  const { date, year, month } = req.query;
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
@@ -637,11 +637,26 @@ app.get('/api/admin/bookings', async (req, res) => {
       LEFT JOIN payments p ON p.booking_id = b.id_bookings
     `;
     const params = [];
+    const conditions = [];
+
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (date && dateRegex.test(date)) {
-      query += ` WHERE DATE(b.booking_date) = ?`;
+      conditions.push(`DATE(b.booking_date) = ?`);
       params.push(date);
     }
+    if (year) {
+      conditions.push(`YEAR(b.booking_date) = ?`);
+      params.push(year);
+    }
+    if (month) {
+      conditions.push(`MONTH(b.booking_date) = ?`);
+      params.push(month);
+    }
+
+    if (conditions.length > 0) {
+      query += ` WHERE ` + conditions.join(' AND ');
+    }
+
     query += ` ORDER BY b.booking_date DESC`;
 
     const [rows] = await connection.execute(query, params);

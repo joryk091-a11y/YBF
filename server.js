@@ -2,6 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mysql from 'mysql2/promise';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -922,6 +927,8 @@ async function searchFlightsHandler(req, res) {
     'cairo': 'CAI',
     'riyadh': 'RUH',
     'jeddah': 'JED',
+    'dubai': 'DXB',
+    'doha': 'DOH',
     'mukalla': 'RIY',
     'seiyun': 'GXF',
     'socotra': 'SCT',
@@ -2100,7 +2107,179 @@ async function cancelBookingHandler(req, res) {
 app.patch('/api/bookings/:id/cancel', cancelBookingHandler);
 app.post('/api/bookings/cancel', cancelBookingHandler);
 
+
+// ─── Chat / Support API ──────────────────────────────────────────────────────
+
+// GET /api/chat/sessions — Admin: get all chat sessions
+app.get('/api/chat/sessions', async (req, res) => {
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    const [sessions] = await connection.execute(`
+      SELECT 
+        cs.id, cs.session_key, cs.user_name, cs.user_email, cs.status, cs.created_at, cs.updated_at,
+        (SELECT COUNT(*) FROM chat_messages cm WHERE cm.session_id = cs.id AND cm.sender = 'user' AND cm.is_read = 0) as unread_count,
+        (SELECT cm2.text FROM chat_messages cm2 WHERE cm2.session_id = cs.id ORDER BY cm2.created_at DESC LIMIT 1) as last_message,
+        (SELECT cm3.created_at FROM chat_messages cm3 WHERE cm3.session_id = cs.id ORDER BY cm3.created_at DESC LIMIT 1) as last_message_time
+      FROM chat_sessions cs
+      ORDER BY cs.updated_at DESC
+    `);
+    res.json({ success: true, sessions });
+  } catch (error) {
+    console.error('Chat sessions error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// GET /api/chat/sessions/:key/messages — get messages for a session
+app.get('/api/chat/sessions/:key/messages', async (req, res) => {
+  const { key } = req.params;
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    // Mark messages as read
+    await connection.execute(
+      `UPDATE chat_messages cm JOIN chat_sessions cs ON cm.session_id = cs.id SET cm.is_read = 1 WHERE cs.session_key = ? AND cm.sender = 'user'`,
+      [key]
+    );
+    const [messages] = await connection.execute(`
+      SELECT cm.* FROM chat_messages cm 
+      JOIN chat_sessions cs ON cm.session_id = cs.id 
+      WHERE cs.session_key = ? 
+      ORDER BY cm.created_at ASC
+    `, [key]);
+    res.json({ success: true, messages });
+  } catch (error) {
+    console.error('Chat messages error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// POST /api/chat/send — user sends a message
+app.post('/api/chat/send', async (req, res) => {
+  const { session_key, text, sender, user_name, user_email } = req.body;
+  if (!session_key || !text || !sender) {
+    return res.status(400).json({ success: false, error: 'Missing required fields' });
+  }
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+
+    // Upsert session
+    await connection.execute(`
+      INSERT INTO chat_sessions (session_key, user_name, user_email, status, created_at, updated_at)
+      VALUES (?, ?, ?, 'open', NOW(), NOW())
+      ON DUPLICATE KEY UPDATE updated_at = NOW(), user_name = COALESCE(?, user_name), user_email = COALESCE(?, user_email)
+    `, [session_key, user_name || 'زائر', user_email || null, user_name || null, user_email || null]);
+
+    // Get session id
+    const [[session]] = await connection.execute('SELECT id FROM chat_sessions WHERE session_key = ?', [session_key]);
+    const session_id = session.id;
+
+    // Insert message
+    const [result] = await connection.execute(
+      'INSERT INTO chat_messages (session_id, sender, text, is_read, created_at) VALUES (?, ?, ?, ?, NOW())',
+      [session_id, sender, text, sender === 'admin' ? 1 : 0]
+    );
+
+    // Update session updated_at
+    await connection.execute('UPDATE chat_sessions SET updated_at = NOW(), status = ? WHERE id = ?', [
+      sender === 'admin' ? 'replied' : 'open', session_id
+    ]);
+
+    res.json({ success: true, messageId: result.insertId });
+  } catch (error) {
+    console.error('Chat send error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// GET /api/chat/poll/:key — long-poll for new messages after a given id
+app.get('/api/chat/poll/:key', async (req, res) => {
+  const { key } = req.params;
+  const { after } = req.query; // message id to poll after
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    const [messages] = await connection.execute(`
+      SELECT cm.* FROM chat_messages cm
+      JOIN chat_sessions cs ON cm.session_id = cs.id
+      WHERE cs.session_key = ? AND cm.id > ?
+      ORDER BY cm.created_at ASC
+    `, [key, after || 0]);
+    res.json({ success: true, messages });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// PATCH /api/chat/sessions/:key/close — Admin closes a session
+app.patch('/api/chat/sessions/:key/close', async (req, res) => {
+  const { key } = req.params;
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    await connection.execute("UPDATE chat_sessions SET status = 'closed' WHERE session_key = ?", [key]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// ─── Auto-create chat tables if not exist ────────────────────────────────────
+const ensureChatTables = async () => {
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS chat_sessions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        session_key VARCHAR(64) UNIQUE NOT NULL,
+        user_name VARCHAR(100) DEFAULT 'زائر',
+        user_email VARCHAR(150),
+        status ENUM('open','replied','closed') DEFAULT 'open',
+        created_at DATETIME DEFAULT NOW(),
+        updated_at DATETIME DEFAULT NOW()
+      )
+    `);
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS chat_messages (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        session_id INT NOT NULL,
+        sender ENUM('user','admin') NOT NULL,
+        text TEXT NOT NULL,
+        is_read TINYINT(1) DEFAULT 0,
+        created_at DATETIME DEFAULT NOW(),
+        FOREIGN KEY (session_id) REFERENCES chat_sessions(id) ON DELETE CASCADE
+      )
+    `);
+    console.log('✅ Chat tables ready.');
+  } catch (err) {
+    console.error('Chat table creation error:', err.message);
+  } finally {
+    if (connection) await connection.end();
+  }
+};
+
+// ─── Serve Frontend (React/Vite dist) ────────────────────────────────────────
+app.use(express.static(path.join(__dirname, 'dist')));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
   seedAdmin();
+  ensureChatTables();
 });

@@ -34,6 +34,8 @@ const airportMap = {
   ataq: { city: 'عتق', airport: 'مطار عتق', region: 'شبوة' },
   jeddah: { city: 'جدة', airport: 'مطار الملك عبدالعزيز', region: 'السعودية' },
   riyadh: { city: 'الرياض', airport: 'مطار الملك خالد', region: 'السعودية' },
+  dubai: { city: 'دبي', airport: 'مطار دبي الدولي', region: 'الإمارات' },
+  doha: { city: 'الدوحة', airport: 'مطار حمد الدولي', region: 'قطر' },
   kuwait: { city: 'الكويت', airport: 'مطار الكويت الدولي', region: 'الكويت' },
   amman: { city: 'عمّان', airport: 'مطار الملكة علياء', region: 'الأردن' },
   cairo: { city: 'القاهرة', airport: 'مطار القاهرة الدولي', region: 'مصر' },
@@ -198,7 +200,7 @@ function SearchPage() {
       <section className="mx-auto mt-8 w-full max-w-[1380px] px-4 sm:px-6">
         {/* Sleek Search Summary Bar - Redesigned for Premium Look */}
         {isShowAll ? (
-          <div className="mb-10 overflow-hidden rounded-[40px] border border-white/40 bg-gradient-to-r from-[#4974f9]/10 to-indigo-500/10 p-8 shadow-[0_32px_64px_rgba(0,0,0,0.04)] backdrop-blur-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 animate-in fade-in slide-in-from-top-5 duration-500" dir="rtl">
+          <div className="mb-10 overflow-hidden rounded-[40px] border border-white/40 bg-gradient-to-r from-brand-blue/10 to-indigo-500/10 p-8 shadow-[0_32px_64px_rgba(0,0,0,0.04)] backdrop-blur-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 animate-in fade-in slide-in-from-top-5 duration-500" dir="rtl">
             <div>
               <h2 className="text-2xl font-black text-slate-900">جميع الوجهات والرحلات المتاحة</h2>
               <p className="text-xs font-semibold text-slate-500 mt-2">تصفح وقارن بين جميع الخطوط الجوية والرحلات المجدولة حالياً</p>
@@ -213,33 +215,33 @@ function SearchPage() {
             <div className="grid divide-y divide-slate-200/40 sm:grid-cols-4 sm:divide-x sm:divide-y-0 sm:divide-x-reverse">
               {/* Departure */}
               <div className="flex items-center gap-4 p-6 transition-all duration-300 hover:bg-white/50 group">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 group-hover:bg-[#4974f9] group-hover:text-white transition-all duration-500">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 group-hover:bg-brand-blue group-hover:text-white transition-all duration-500">
                   <MapPin className="h-6 w-6" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-black uppercase tracking-[2px] text-slate-400 group-hover:text-[#4974f9] transition-colors">محطة الإقلاع</span>
+                  <span className="text-[10px] font-black uppercase tracking-[2px] text-slate-400 group-hover:text-brand-blue transition-colors">محطة الإقلاع</span>
                   <span className="mt-0.5 text-sm font-black text-slate-900 line-clamp-1">{getAirportLabel(searchCriteria.fromCity)}</span>
                 </div>
               </div>
 
               {/* Destination */}
               <div className="flex items-center gap-4 p-6 transition-all duration-300 hover:bg-white/50 group">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 group-hover:bg-[#4974f9] group-hover:text-white transition-all duration-500">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 group-hover:bg-brand-blue group-hover:text-white transition-all duration-500">
                   <Plane className="h-6 w-6 rotate-90" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-black uppercase tracking-[2px] text-slate-400 group-hover:text-[#4974f9] transition-colors">وجهة الوصول</span>
+                  <span className="text-[10px] font-black uppercase tracking-[2px] text-slate-400 group-hover:text-brand-blue transition-colors">وجهة الوصول</span>
                   <span className="mt-0.5 text-sm font-black text-slate-900 line-clamp-1">{getAirportLabel(searchCriteria.toCity)}</span>
                 </div>
               </div>
 
               {/* Date */}
               <div className="flex items-center gap-4 p-6 transition-all duration-300 hover:bg-white/50 group">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 group-hover:bg-[#4974f9] group-hover:text-white transition-all duration-500">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 group-hover:bg-brand-blue group-hover:text-white transition-all duration-500">
                   <Calendar className="h-6 w-6" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-black uppercase tracking-[2px] text-slate-400 group-hover:text-[#4974f9] transition-colors">تاريخ السفر</span>
+                  <span className="text-[10px] font-black uppercase tracking-[2px] text-slate-400 group-hover:text-brand-blue transition-colors">تاريخ السفر</span>
                   <span className="mt-0.5 text-sm font-black text-slate-900">{formatSearchDate(searchCriteria.travelDate)}</span>
                 </div>
               </div>
@@ -247,11 +249,11 @@ function SearchPage() {
               {/* Passengers & Edit */}
               <div className="flex items-center justify-between p-6 transition-all duration-300 hover:bg-white/50 group">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 group-hover:bg-[#4974f9] group-hover:text-white transition-all duration-500">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 group-hover:bg-brand-blue group-hover:text-white transition-all duration-500">
                     <Users className="h-6 w-6" />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[10px] font-black uppercase tracking-[2px] text-slate-400 group-hover:text-[#4974f9] transition-colors">المسافرون</span>
+                    <span className="text-[10px] font-black uppercase tracking-[2px] text-slate-400 group-hover:text-brand-blue transition-colors">المسافرون</span>
                     <span className="mt-0.5 text-sm font-black text-slate-900">{searchCriteria.passengerCount ?? 1} مسافر</span>
                   </div>
                 </div>
@@ -273,7 +275,7 @@ function SearchPage() {
                   <h2 className="text-xl font-black text-slate-900">تصفية الرحلات</h2>
                   <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">تحكم في تفاصيل بحثك</p>
                 </div>
-                <div className="h-12 w-12 rounded-2xl bg-[#4974f9]/10 flex items-center justify-center text-[#4974f9]">
+                <div className="h-12 w-12 rounded-2xl bg-brand-blue/10 flex items-center justify-center text-brand-blue">
                   <SlidersHorizontal className="h-6 w-6" />
                 </div>
               </div>
@@ -282,19 +284,19 @@ function SearchPage() {
                 {/* Price Filter */}
                 <div className="group">
                   <h3 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-[3px] text-slate-400">
-                    <DollarSign className="h-3.5 w-3.5 text-[#4974f9]" />
+                    <DollarSign className="h-3.5 w-3.5 text-brand-blue" />
                     نطاق السعر
                   </h3>
                   <div className="px-1">
                     <div className="mb-6 flex items-center justify-between gap-3">
                       <div className="flex-1 rounded-2xl bg-white/50 border border-white p-3 shadow-inner ring-1 ring-slate-100/50">
                         <span className="block text-[9px] font-black text-slate-400 uppercase mb-1">من</span>
-                        <span className="text-base font-black text-[#4974f9] tabular-nums">${priceMin}</span>
+                        <span className="text-base font-black text-brand-blue tabular-nums">${priceMin}</span>
                       </div>
                       <div className="h-px w-3 bg-slate-300" />
                       <div className="flex-1 rounded-2xl bg-white/50 border border-white p-3 shadow-inner ring-1 ring-slate-100/50">
                         <span className="block text-[9px] font-black text-slate-400 uppercase mb-1">إلى</span>
-                        <span className="text-base font-black text-[#4974f9] tabular-nums">${priceMax}</span>
+                        <span className="text-base font-black text-brand-blue tabular-nums">${priceMax}</span>
                       </div>
                     </div>
 
@@ -302,7 +304,7 @@ function SearchPage() {
                       {/* Custom Range Track */}
                       <div className="absolute h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
                         <div
-                          className="absolute h-full bg-gradient-to-r from-[#4974f9] to-indigo-400"
+                          className="absolute h-full bg-gradient-to-r from-brand-blue to-indigo-400"
                           style={{
                             right: `${(priceMin / 2000) * 100}%`,
                             left: `${100 - (priceMax / 2000) * 100}%`
@@ -316,7 +318,7 @@ function SearchPage() {
                         max="2000"
                         value={priceMin}
                         onChange={(event) => setPriceMin(Math.min(Number(event.target.value), priceMax - 50))}
-                        className="absolute h-1.5 w-full cursor-pointer appearance-none bg-transparent accent-[#4974f9]"
+                        className="absolute h-1.5 w-full cursor-pointer appearance-none bg-transparent accent-brand-blue"
                         style={{ pointerEvents: 'auto' }}
                       />
                       <input
@@ -325,7 +327,7 @@ function SearchPage() {
                         max="2000"
                         value={priceMax}
                         onChange={(event) => setPriceMax(Math.max(Number(event.target.value), priceMin + 50))}
-                        className="absolute h-1.5 w-full cursor-pointer appearance-none bg-transparent accent-[#4974f9]"
+                        className="absolute h-1.5 w-full cursor-pointer appearance-none bg-transparent accent-brand-blue"
                         style={{ pointerEvents: 'auto' }}
                       />
                     </div>
@@ -339,7 +341,7 @@ function SearchPage() {
                 {/* Airlines Filter */}
                 <div className="group">
                   <h3 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-[3px] text-slate-400">
-                    <Plane className="h-3.5 w-3.5 text-[#4974f9]" />
+                    <Plane className="h-3.5 w-3.5 text-brand-blue" />
                     شركات الطيران
                   </h3>
                   <div className="space-y-3">
@@ -347,14 +349,14 @@ function SearchPage() {
                       <label
                         key={airline.id}
                         className={`group/airline relative flex cursor-pointer items-center justify-between overflow-hidden rounded-[24px] border px-4 py-4 transition-all duration-300 ${selectedAirlines.has(airline.id)
-                            ? 'border-[#4974f9]/20 bg-white shadow-lg shadow-[#4974f9]/5'
+                            ? 'border-brand-blue/20 bg-white shadow-lg shadow-brand-blue/5'
                             : 'border-transparent hover:bg-white/40'
                           }`}
                       >
                         <div className="relative z-10 flex items-center gap-4">
                           <div className={`flex h-6 w-6 items-center justify-center rounded-lg border-2 transition-all duration-300 ${selectedAirlines.has(airline.id)
-                              ? 'border-[#4974f9] bg-[#4974f9] shadow-md shadow-[#4974f9]/20'
-                              : 'border-slate-200 group-hover/airline:border-[#4974f9]/50'
+                              ? 'border-brand-blue bg-brand-blue shadow-md shadow-brand-blue/20'
+                              : 'border-slate-200 group-hover/airline:border-brand-blue/50'
                             }`}>
                             {selectedAirlines.has(airline.id) && <CheckCircle2 className="h-4 w-4 text-white" />}
                             <input
@@ -376,7 +378,7 @@ function SearchPage() {
                             }`}
                         />
                         {selectedAirlines.has(airline.id) && (
-                          <div className="absolute inset-0 bg-gradient-to-r from-[#4974f9]/5 to-transparent animate-in fade-in duration-500" />
+                          <div className="absolute inset-0 bg-gradient-to-r from-brand-blue/5 to-transparent animate-in fade-in duration-500" />
                         )}
                       </label>
                     ))}
@@ -433,7 +435,7 @@ function SearchPage() {
             <div className="space-y-4">
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-20 bg-white rounded-[32px] border border-dashed border-slate-200">
-                  <div className="h-12 w-12 border-4 border-[#4974f9] border-t-transparent rounded-full animate-spin mb-4" />
+                  <div className="h-12 w-12 border-4 border-brand-blue border-t-transparent rounded-full animate-spin mb-4" />
                   <p className="text-slate-500 font-bold">جاري البحث عن أفضل الرحلات...</p>
                 </div>
               ) : visibleFlights.length > 0 ? (
@@ -449,10 +451,10 @@ function SearchPage() {
                   return (
                     <article
                       key={flight.id}
-                      className="group relative overflow-hidden rounded-[40px] border border-white/40 bg-white/70 shadow-[0_20px_50px_rgba(0,0,0,0.03)] backdrop-blur-2xl transition-all duration-500 hover:-translate-y-2 hover:border-[#4974f9]/30 hover:shadow-[0_40px_80px_rgba(73,116,249,0.12)]"
+                      className="group relative overflow-hidden rounded-[40px] border border-white/40 bg-white/70 shadow-[0_20px_50px_rgba(0,0,0,0.03)] backdrop-blur-2xl transition-all duration-500 hover:-translate-y-2 hover:border-brand-blue/30 hover:shadow-[0_40px_80px_rgba(73,116,249,0.12)]"
                     >
                       {/* Premium Accent Line */}
-                      <div className="absolute top-0 right-0 h-1.5 w-full bg-gradient-to-l from-[#4974f9] via-indigo-400 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                      <div className="absolute top-0 right-0 h-1.5 w-full bg-gradient-to-l from-brand-blue via-indigo-400 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
                       {/* Floating Badges - Simplified Colors */}
                       <div className="absolute left-6 top-6 flex gap-2 z-20">
@@ -475,13 +477,13 @@ function SearchPage() {
                         <div className="relative p-6 sm:p-10">
                           {/* Top Section: Airline Info */}
                           <div className="flex items-center gap-5">
-                            <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-100 transition-all duration-500 group-hover:scale-110 group-hover:shadow-xl group-hover:ring-[#4974f9]/20">
+                            <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-100 transition-all duration-500 group-hover:scale-110 group-hover:shadow-xl group-hover:ring-brand-blue/20">
                               <img src={flight.logo} alt={flight.airlineName} className="h-full w-full object-contain" />
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
                                 <h3 className="text-xl font-black tracking-tight text-slate-900">{flight.airlineName}</h3>
-                                <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover:bg-[#4974f9]/10 group-hover:text-[#4974f9] transition-colors">
+                                <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover:bg-brand-blue/10 group-hover:text-brand-blue transition-colors">
                                   {flight.flightNumber}
                                 </span>
                               </div>
@@ -507,22 +509,22 @@ function SearchPage() {
                             </div>
 
                             <div className="flex flex-col items-center justify-center min-w-[180px] px-2">
-                              <div className="mb-3 flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1 ring-1 ring-slate-100 transition-all group-hover:bg-[#4974f9]/5 group-hover:ring-[#4974f9]/10">
-                                <Clock className="h-3 w-3 text-slate-400 group-hover:text-[#4974f9]" />
-                                <span className="text-xs font-black text-slate-600 group-hover:text-[#4974f9]">{flight.duration}</span>
+                              <div className="mb-3 flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1 ring-1 ring-slate-100 transition-all group-hover:bg-brand-blue/5 group-hover:ring-brand-blue/10">
+                                <Clock className="h-3 w-3 text-slate-400 group-hover:text-brand-blue" />
+                                <span className="text-xs font-black text-slate-600 group-hover:text-brand-blue">{flight.duration}</span>
                               </div>
 
                               <div className="relative flex w-full items-center justify-center py-4">
                                 {/* The animated path */}
                                 <div className="h-[2px] w-full bg-slate-100 overflow-hidden rounded-full">
-                                  <div className="h-full w-full bg-gradient-to-r from-transparent via-[#4974f9]/40 to-transparent translate-x-[-100%] group-hover:animate-shimmer" />
+                                  <div className="h-full w-full bg-gradient-to-r from-transparent via-brand-blue/40 to-transparent translate-x-[-100%] group-hover:animate-shimmer" />
                                 </div>
 
-                                <div className="absolute right-0 h-2.5 w-2.5 rounded-full border-[3px] border-[#4974f9] bg-white shadow-sm shadow-[#4974f9]/20" />
-                                <div className="absolute left-0 h-2.5 w-2.5 rounded-full border-[3px] border-slate-200 bg-white group-hover:border-[#4974f9] transition-all duration-500" />
+                                <div className="absolute right-0 h-2.5 w-2.5 rounded-full border-[3px] border-brand-blue bg-white shadow-sm shadow-brand-blue/20" />
+                                <div className="absolute left-0 h-2.5 w-2.5 rounded-full border-[3px] border-slate-200 bg-white group-hover:border-brand-blue transition-all duration-500" />
 
                                 <div className="absolute flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-lg ring-1 ring-slate-50 transition-all duration-1000 ease-out group-hover:translate-x-[-140px]">
-                                  <Plane className="h-4 w-4 text-[#4974f9] rotate-90" />
+                                  <Plane className="h-4 w-4 text-brand-blue rotate-90" />
                                 </div>
                               </div>
 
@@ -545,20 +547,20 @@ function SearchPage() {
                           <div className="mt-10 flex flex-wrap items-center justify-between border-t border-slate-50 pt-6">
                             <div className="flex items-center gap-6">
                               <div className="flex items-center gap-2.5 group/icon">
-                                <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover/icon:bg-blue-50 group-hover/icon:text-[#4974f9] transition-colors">
+                                <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover/icon:bg-blue-50 group-hover/icon:text-brand-blue transition-colors">
                                   <Package className="h-4 w-4" />
                                 </div>
                                 <span className="text-[11px] font-black text-slate-600">23 كجم (قطعتين)</span>
                               </div>
                               <div className="flex items-center gap-2.5 group/icon">
-                                <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover/icon:bg-blue-50 group-hover/icon:text-[#4974f9] transition-colors">
+                                <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover/icon:bg-blue-50 group-hover/icon:text-brand-blue transition-colors">
                                   <TrendingUp className="h-4 w-4" />
                                 </div>
                                 <span className="text-[11px] font-black text-slate-600">وجبات خفيفة ومشروبات</span>
                               </div>
                             </div>
 
-                            <button className="flex items-center gap-1.5 text-[11px] font-black text-[#4974f9] transition hover:opacity-70">
+                            <button className="flex items-center gap-1.5 text-[11px] font-black text-brand-blue transition hover:opacity-70">
                               عرض تفاصيل الرحلة والقوانين <ChevronDown className="h-3.5 w-3.5" />
                             </button>
                           </div>
@@ -578,7 +580,7 @@ function SearchPage() {
 
                             <button
                               onClick={() => handleSelectFlight(flight)}
-                              className="mt-8 group/btn relative flex w-full h-14 items-center justify-center overflow-hidden rounded-2xl bg-[#d9312b] text-sm font-black text-white shadow-xl shadow-[#d9312b]/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-[#d9312b]/30 active:scale-95"
+                              className="mt-8 group/btn relative flex w-full h-14 items-center justify-center overflow-hidden rounded-2xl bg-brand-red text-sm font-black text-white shadow-xl shadow-brand-red/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-brand-red/30 active:scale-95"
                             >
                               <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000" />
                               <span className="relative z-10">اختيار هذه الرحلة</span>
@@ -607,7 +609,7 @@ function SearchPage() {
                   <p className="text-slate-500 font-bold max-w-sm">جرب اختيار تواريخ أخرى أو مناطق مختلفة، أو تأكد من جلب جميع الرحلات بدون تحديد تاريخ.</p>
                   <button
                     onClick={resetFilters}
-                    className="mt-8 text-[#4974f9] font-black text-sm hover:underline"
+                    className="mt-8 text-brand-blue font-black text-sm hover:underline"
                   >
                     إعادة تعيين جميع الفلاتر
                   </button>

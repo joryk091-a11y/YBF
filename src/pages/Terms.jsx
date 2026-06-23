@@ -73,8 +73,8 @@ function TermsPage() {
         {/* Professional Travel Header */}
         <div className="mb-14 border-b border-slate-200 pb-10">
           <div className="flex items-center gap-3 text-[#1e293b] mb-4">
-            <FileText className="h-6 w-6 text-[#4974f9]" />
-            <span className="text-xs font-black uppercase tracking-widest text-[#4974f9]">شروط الخدمة</span>
+            <FileText className="h-6 w-6 text-brand-blue" />
+            <span className="text-xs font-black uppercase tracking-widest text-brand-blue">شروط الخدمة</span>
           </div>
           <h1 className="text-3xl font-black tracking-tight text-[#0f172a] sm:text-5xl">شروط الخدمة وسياسات الحجز</h1>
           <p className="mt-4 text-sm font-semibold text-slate-500 max-w-3xl leading-relaxed">
@@ -98,7 +98,7 @@ function TermsPage() {
                   onClick={() => scrollToSection(idx)}
                   className={`w-full text-right flex items-center justify-between rounded-xl px-4 py-3 text-xs font-black transition-all ${
                     activeSection === idx
-                      ? 'bg-[#4974f9]/5 text-[#4974f9] border-r-4 border-[#4974f9]'
+                      ? 'bg-brand-blue/5 text-brand-blue border-r-4 border-brand-blue'
                       : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                   }`}
                 >
@@ -114,7 +114,7 @@ function TermsPage() {
             <div className="rounded-[24px] border border-slate-200 bg-white p-6 sm:p-10 shadow-sm">
               
               {/* Document Info Box */}
-              <div className="mb-10 flex items-start gap-4 rounded-2xl bg-blue-500/5 border border-[#4974f9]/10 p-5 text-[#4974f9]">
+              <div className="mb-10 flex items-start gap-4 rounded-2xl bg-blue-500/5 border border-brand-blue/10 p-5 text-brand-blue">
                 <Info className="h-5 w-5 shrink-0 mt-0.5" />
                 <div>
                   <h3 className="text-xs font-black mb-1">توجيهات هامة لرحلتك</h3>
@@ -135,7 +135,7 @@ function TermsPage() {
                       className="py-8 first:pt-0 last:pb-0 scroll-mt-44"
                     >
                       <div className="flex items-center gap-3 mb-4">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#4974f9]/10 text-[#4974f9]">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-blue/10 text-brand-blue">
                           <PolIcon size={16} />
                         </div>
                         <h2 className="text-lg font-black text-slate-900">{pol.title}</h2>
@@ -152,7 +152,7 @@ function TermsPage() {
             {/* Official Signature Section */}
             <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-4 text-right">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#4974f9]/10 text-[#4974f9]">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-blue/10 text-brand-blue">
                   <Shield size={20} />
                 </div>
                 <div>

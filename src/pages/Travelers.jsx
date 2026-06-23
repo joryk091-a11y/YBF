@@ -207,6 +207,17 @@ function TravelersPage() {
         alert(`يرجى إكمال البيانات الأساسية للراكب رقم ${passenger.id} (الاسم، رقم الجواز، والجنس)`)
         return
       }
+
+      if (passenger.passportExpiry) {
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const expiryDate = new Date(passenger.passportExpiry)
+        if (expiryDate < today) {
+          setActivePassengerId(passenger.id)
+          alert(`تاريخ انتهاء الجواز للراكب رقم ${passenger.id} لا يمكن أن يكون في الماضي. يرجى اختيار تاريخ انتهاء صالح في المستقبل.`)
+          return
+        }
+      }
     }
 
     navigate('/payment', { state: { selectedFlight, searchCriteria, passengers, extraBags, selectedServices: [...selectedServices], extrasTotal, selectedSeats } })
@@ -250,7 +261,7 @@ function TravelersPage() {
                   >
                     <div className="flex items-center gap-4">
                       <div className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ${
-                        isActive ? 'bg-[#4974f9] text-white shadow-sm shadow-[#4974f9]/20' : 'bg-slate-100 text-slate-400'
+                        isActive ? 'bg-brand-blue text-white shadow-sm shadow-brand-blue/20' : 'bg-slate-100 text-slate-400'
                       }`}>
                         <UserRound className="h-4.5 w-4.5" />
                       </div>
@@ -305,7 +316,7 @@ function TravelersPage() {
                               onClick={() => updatePassenger(passenger.id, 'gender', 'male')}
                               className={`flex items-center justify-center h-12 rounded-xl border font-black text-xs transition-all duration-200 ${
                                 passenger.gender === 'male'
-                                  ? 'border-[#4974f9] bg-[#4974f9]/5 text-[#4974f9] shadow-[0_2px_8px_rgba(73,116,249,0.06)]'
+                                  ? 'border-brand-blue bg-brand-blue/5 text-brand-blue shadow-[0_2px_8px_rgba(73,116,249,0.06)]'
                                   : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50/50'
                               }`}
                             >
@@ -370,6 +381,7 @@ function TravelersPage() {
                           <Field label="تاريخ انتهاء الجواز" icon={Calendar}>
                             <input
                               type="date"
+                              min={new Date().toISOString().split('T')[0]}
                               className="w-full h-12 pr-11 pl-4 rounded-xl border border-slate-200/80 bg-white text-slate-800 font-bold text-xs focus:border-slate-400 focus:outline-none transition-all duration-150"
                               value={passenger.passportExpiry}
                               onChange={(event) => updatePassenger(passenger.id, 'passportExpiry', event.target.value)}
@@ -387,7 +399,7 @@ function TravelersPage() {
           {/* ═══════════════ جدول الأمتعة ═══════════════ */}
           <section className="mt-8 overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-[0_4px_25px_rgba(0,0,0,0.01)]">
             <div className="flex items-center gap-3 border-b border-slate-100 bg-[#fcfdfe] px-6 py-5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#4974f9]/10 text-[#4974f9]">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-blue/10 text-brand-blue">
                 <Luggage className="h-4.5 w-4.5" />
               </div>
               <div>
@@ -405,7 +417,7 @@ function TravelersPage() {
                     </div>
                     <div>
                       <p className="text-xs font-black text-slate-800">{p.fullName || `الراكب ${p.id}`}</p>
-                      {p.passengerTypeLabel && <span className="text-[9px] font-black text-[#4974f9]">{p.passengerTypeLabel}</span>}
+                      {p.passengerTypeLabel && <span className="text-[9px] font-black text-brand-blue">{p.passengerTypeLabel}</span>}
                     </div>
                   </div>
 
@@ -415,7 +427,7 @@ function TravelersPage() {
                       حقيبة يد: 7 كجم
                     </div>
                     <div className="flex items-center justify-center gap-1.5 rounded-lg bg-slate-50 border border-slate-200/50 px-3 py-1.5 text-[11px] font-bold text-slate-600">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#4974f9]" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-brand-blue" />
                       حقيبة مشحونة: 23 كجم
                     </div>
                   </div>
@@ -429,12 +441,12 @@ function TravelersPage() {
                       ><Minus className="h-3 w-3" /></button>
                       <span className="w-4 text-center text-xs font-black text-slate-800">{extraBags[p.id] || 0}</span>
                       <button onClick={() => changeExtraBag(p.id, 1)}
-                        className="flex h-6 w-6 items-center justify-center rounded-md bg-[#4974f9] text-white hover:bg-[#3862e0] transition disabled:opacity-30"
+                        className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-blue text-white hover:bg-[#3862e0] transition disabled:opacity-30"
                         disabled={extraBags[p.id] >= 2}
                       ><Plus className="h-3 w-3" /></button>
                     </div>
                     {extraBags[p.id] > 0 && (
-                      <span className="text-xs font-black text-[#4974f9] bg-blue-50 px-2 py-1 rounded-md">
+                      <span className="text-xs font-black text-brand-blue bg-blue-50 px-2 py-1 rounded-md">
                         +${extraBags[p.id] * EXTRA_BAG_PRICE}
                       </span>
                     )}
@@ -467,22 +479,22 @@ function TravelersPage() {
                     onClick={() => toggleService(srv.id)}
                     className={`flex items-start gap-4 rounded-xl border p-4 text-right transition-all duration-200 ${
                       isSelected
-                        ? 'border-[#4974f9] bg-[#4974f9]/5 shadow-sm'
+                        ? 'border-brand-blue bg-brand-blue/5 shadow-sm'
                         : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
                     }`}
                   >
-                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-all ${isSelected ? 'bg-[#4974f9] text-white shadow-sm' : 'bg-slate-100 text-slate-400'}`}>
+                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-all ${isSelected ? 'bg-brand-blue text-white shadow-sm' : 'bg-slate-100 text-slate-400'}`}>
                       <Icon className="h-4.5 w-4.5" />
                     </div>
                     <div className="flex-1 min-w-0 pr-0.5">
                       <p className="text-xs font-black text-slate-800">{srv.label}</p>
                       <p className="text-[10px] font-bold text-slate-400 mt-0.5 leading-4">{srv.desc}</p>
-                      <span className={`inline-block mt-2 text-[10px] font-black px-2 py-0.5 rounded-full ${isSelected ? 'bg-[#4974f9] text-white' : 'bg-slate-100 text-slate-500'}`}>
+                      <span className={`inline-block mt-2 text-[10px] font-black px-2 py-0.5 rounded-full ${isSelected ? 'bg-brand-blue text-white' : 'bg-slate-100 text-slate-500'}`}>
                         +${srv.price}
                       </span>
                     </div>
                     <div className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all ${
-                      isSelected ? 'border-[#4974f9] bg-[#4974f9] text-white' : 'border-slate-300 bg-white'
+                      isSelected ? 'border-brand-blue bg-brand-blue text-white' : 'border-slate-300 bg-white'
                     }`}>
                       {isSelected && <CheckCircle2 className="h-3 w-3 text-white" />}
                     </div>
@@ -494,7 +506,7 @@ function TravelersPage() {
             {extrasTotal > 0 && (
               <div className="mx-6 mb-6 flex items-center justify-between rounded-xl bg-slate-900 px-5 py-3 shadow-md">
                 <span className="text-xs font-black text-slate-300">إجمالي رسوم الخدمات الإضافية</span>
-                <span className="text-sm font-black text-[#4974f9]">+${extrasTotal}</span>
+                <span className="text-sm font-black text-brand-blue">+${extrasTotal}</span>
               </div>
             )}
           </section>
@@ -509,7 +521,7 @@ function TravelersPage() {
             </Link>
             <button
               onClick={handleProceedToPayment}
-              className="inline-flex h-12 min-w-[200px] items-center justify-center gap-1.5 rounded-xl bg-[#d9312b] px-8 text-xs font-black text-white shadow-sm shadow-[#d9312b]/10 hover:bg-[#c52b26] transition active:scale-[0.98]"
+              className="inline-flex h-12 min-w-[200px] items-center justify-center gap-1.5 rounded-xl bg-brand-red px-8 text-xs font-black text-white shadow-sm shadow-brand-red/10 hover:bg-brand-red-hover transition active:scale-[0.98]"
             >
               المتابعة لخطوة الدفع
               <span>←</span>
@@ -523,14 +535,14 @@ function TravelersPage() {
             {/* Flight Card (Boarding Pass style) */}
             <section className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_20px_50px_rgba(15,23,42,0.04)]">
               <div className="bg-[#10203d] p-6 text-white">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#4974f9]">ملخص الرحلة المختارة</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-blue">ملخص الرحلة المختارة</p>
                 <div className="mt-4 flex items-center justify-between">
                   <div>
                     <h2 className="text-xl font-black">{summaryFlight.fromCode}</h2>
                     <p className="text-xs font-bold text-slate-400">{summaryFlight.fromCity}</p>
                   </div>
                   <div className="flex flex-col items-center gap-1">
-                    <MoveLeft className="h-5 w-5 text-[#4974f9]" />
+                    <MoveLeft className="h-5 w-5 text-brand-blue" />
                     <div className="h-px w-12 bg-slate-700" />
                   </div>
                   <div className="text-left">
@@ -553,7 +565,7 @@ function TravelersPage() {
                 <button
                   type="button"
                   onClick={() => setShowFullDetails(!showFullDetails)}
-                  className="mt-4 flex w-full items-center justify-center gap-2 text-xs font-black text-[#4974f9] hover:underline"
+                  className="mt-4 flex w-full items-center justify-center gap-2 text-xs font-black text-brand-blue hover:underline"
                 >
                   {showFullDetails ? 'إخفاء التفاصيل' : 'عرض كامل التفاصيل'}
                   <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showFullDetails ? 'rotate-180' : ''}`} />
@@ -565,7 +577,7 @@ function TravelersPage() {
                     <div className="rounded-2xl bg-slate-50 p-4 border border-slate-100">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="h-8 w-8 rounded-lg bg-white flex items-center justify-center shadow-sm">
-                          <Globe className="h-4 w-4 text-[#4974f9]" />
+                          <Globe className="h-4 w-4 text-brand-blue" />
                         </div>
                         <div>
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">رقم الرحلة</p>
@@ -581,7 +593,7 @@ function TravelersPage() {
                         <div className="absolute right-[15px] top-2 bottom-2 w-0.5 bg-slate-200" />
 
                         <div className="relative flex items-start gap-4 pr-8">
-                          <div className="absolute right-0 top-1.5 h-2 w-2 rounded-full bg-[#4974f9] ring-4 ring-white" />
+                          <div className="absolute right-0 top-1.5 h-2 w-2 rounded-full bg-brand-blue ring-4 ring-white" />
                           <div className="flex-1">
                             <p className="text-xs font-black text-slate-900">{summaryFlight.departTime} - {summaryFlight.fromCity}</p>
                             <p className="text-[10px] font-bold text-slate-500 mt-0.5">{summaryFlight.fromAirport || 'مطار الإقلاع'}</p>
@@ -607,7 +619,7 @@ function TravelersPage() {
                       </div>
                       <div className="rounded-2xl bg-slate-50 p-3 border border-slate-100 text-left">
                         <p className="text-[9px] font-black text-slate-400 uppercase mb-1">المقاعد المختارة</p>
-                        <p className="text-[11px] font-black text-[#4974f9] tracking-wider">
+                        <p className="text-[11px] font-black text-brand-blue tracking-wider">
                           {selectedSeats.length > 0 ? selectedSeats.join(' • ') : 'لم يتم الاختيار'}
                         </p>
                       </div>
@@ -615,10 +627,10 @@ function TravelersPage() {
 
                     {/* Extra Bags Summary */}
                     {Object.values(extraBags).some(n => n > 0) && (
-                      <div className="rounded-2xl border border-[#4974f9]/20 bg-[#4974f9]/5 p-4">
+                      <div className="rounded-2xl border border-brand-blue/20 bg-brand-blue/5 p-4">
                         <div className="flex items-center gap-2 mb-3">
-                          <Luggage className="h-4 w-4 text-[#4974f9]" />
-                          <p className="text-[10px] font-black text-[#4974f9] uppercase tracking-wider">حقائب إضافية</p>
+                          <Luggage className="h-4 w-4 text-brand-blue" />
+                          <p className="text-[10px] font-black text-brand-blue uppercase tracking-wider">حقائب إضافية</p>
                         </div>
                         <div className="space-y-2">
                           {passengers.map(p => extraBags[p.id] > 0 && (
@@ -706,7 +718,7 @@ function TravelersPage() {
                   {bagsTotal > 0 && (
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2 text-slate-600">
-                        <Luggage className="h-4 w-4 text-[#4974f9]" />
+                        <Luggage className="h-4 w-4 text-brand-blue" />
                         <span className="font-bold">حقائب إضافية مدفوعة</span>
                       </div>
                       <span className="font-black text-slate-900">+${bagsTotal}</span>

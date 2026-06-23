@@ -97,7 +97,7 @@ function PaymentProofUpload({
   return (
     <div className="rounded-xl border border-slate-200/60 bg-slate-50/10 p-5">
       <h4 className="text-xs font-black text-slate-800 mb-3 flex items-center gap-2 justify-start" dir="rtl">
-        <Camera className="h-4 w-4 text-[#4974f9]" />
+        <Camera className="h-4 w-4 text-brand-blue" />
         <span>إثبات عملية الدفع ({label})</span>
       </h4>
 
@@ -132,7 +132,7 @@ function PaymentProofUpload({
             <button
               type="button"
               onClick={capturePhoto}
-              className="bg-[#4974f9] text-white font-black px-6 py-2.5 rounded-xl shadow-lg hover:bg-[#3b63db] active:scale-95 transition-all text-xs cursor-pointer"
+              className="bg-brand-blue text-white font-black px-6 py-2.5 rounded-xl shadow-lg hover:bg-[#3b63db] active:scale-95 transition-all text-xs cursor-pointer"
             >
               التقاط الصورة
             </button>
@@ -156,7 +156,7 @@ function PaymentProofUpload({
 
           <div className="grid gap-3 sm:grid-cols-2">
             {/* File Upload Button */}
-            <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 hover:border-[#4974f9] hover:bg-[#4974f9]/5 rounded-xl p-5 cursor-pointer transition-all text-center">
+            <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 hover:border-brand-blue hover:bg-brand-blue/5 rounded-xl p-5 cursor-pointer transition-all text-center">
               <Upload className="h-6 w-6 text-slate-400 mb-2" />
               <span className="text-xs font-black text-slate-700">تحميل إيصال الدفع</span>
               <span className="text-[10px] text-slate-400 font-bold mt-1">تصفح ملفات جهازك (PNG, JPG)</span>
@@ -172,7 +172,7 @@ function PaymentProofUpload({
             <button
               type="button"
               onClick={startCamera}
-              className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 hover:border-[#4974f9] hover:bg-[#4974f9]/5 rounded-xl p-5 transition-all text-center cursor-pointer"
+              className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 hover:border-brand-blue hover:bg-brand-blue/5 rounded-xl p-5 transition-all text-center cursor-pointer"
             >
               <Camera className="h-6 w-6 text-slate-400 mb-2" />
               <span className="text-xs font-black text-slate-700">التقاط صورة إثبات الدفع</span>
@@ -473,7 +473,7 @@ function PaymentPage() {
               </div>
               <div>
                 <p className="text-[10px] font-black uppercase text-slate-400">الوقت المتبقي</p>
-                <p className="font-black text-[#d9312b]" dir="ltr">{formatTime(secondsLeft)}</p>
+                <p className="font-black text-brand-red" dir="ltr">{formatTime(secondsLeft)}</p>
               </div>
             </div>
           </div>
@@ -490,13 +490,13 @@ function PaymentPage() {
                     type="button"
                     onClick={() => handlePaymentMethodChange(method.id)}
                     className={`flex items-center justify-between rounded-2xl border p-4 text-right transition-all duration-200 ${isActive
-                        ? 'border-[#4974f9] bg-[#4974f9]/5 shadow-[0_4px_20px_rgba(73,116,249,0.06)]'
+                        ? 'border-brand-blue bg-brand-blue/5 shadow-[0_4px_20px_rgba(73,116,249,0.06)]'
                         : 'border-slate-200/80 bg-white hover:border-slate-300 hover:bg-slate-50/30'
                       }`}
                   >
                     <div className="flex items-center gap-3.5 min-w-0">
                       {/* Radio dot */}
-                      <div className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full border transition-all ${isActive ? 'border-[#4974f9] bg-[#4974f9]' : 'border-slate-300 bg-white'
+                      <div className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full border transition-all ${isActive ? 'border-brand-blue bg-brand-blue' : 'border-slate-300 bg-white'
                         }`}>
                         {isActive && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
                       </div>
@@ -523,7 +523,7 @@ function PaymentPage() {
                           ))}
                         </div>
                       ) : (
-                        <div className={`flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 ${isActive ? 'text-[#4974f9]' : 'text-slate-400'}`}>
+                        <div className={`flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 ${isActive ? 'text-brand-blue' : 'text-slate-400'}`}>
                           <Icon className="h-4 w-4" />
                         </div>
                       )}
@@ -540,7 +540,7 @@ function PaymentPage() {
                   {/* Visual Card Preview */}
                   <div className="relative aspect-[1.6/1] w-full overflow-hidden rounded-[24px] bg-gradient-to-br from-slate-950 via-[#0d1527] to-[#1e293b] p-6 text-white shadow-2xl border border-white/5">
                     {/* Glowing glassmorphic orbs in the background */}
-                    <div className="absolute -left-10 -top-10 h-36 w-36 rounded-full bg-[#4974f9]/15 blur-2xl pointer-events-none" />
+                    <div className="absolute -left-10 -top-10 h-36 w-36 rounded-full bg-brand-blue/15 blur-2xl pointer-events-none" />
                     <div className="absolute -right-10 -bottom-10 h-36 w-36 rounded-full bg-emerald-500/10 blur-2xl pointer-events-none" />
                     <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
 
@@ -587,7 +587,7 @@ function PaymentPage() {
                     <div className="space-y-2">
                       <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block text-right">اسم حامل البطاقة</label>
                       <input
-                        className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50/20 px-4 text-xs font-black text-slate-800 transition-all duration-200 placeholder-slate-300 focus:border-[#4974f9] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#4974f9]/10"
+                        className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50/20 px-4 text-xs font-black text-slate-800 transition-all duration-200 placeholder-slate-300 focus:border-brand-blue focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue/10"
                         placeholder="أدخل الاسم كما في البطاقة"
                         value={cardHolderName}
                         onChange={(e) => setCardHolderName(e.target.value)}
@@ -598,7 +598,7 @@ function PaymentPage() {
                       <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block text-right">رقم البطاقة</label>
                       <div className="relative">
                         <input
-                          className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50/20 pl-10 pr-4 text-xs font-black text-slate-800 transition-all duration-200 placeholder-slate-300 focus:border-[#4974f9] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#4974f9]/10"
+                          className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50/20 pl-10 pr-4 text-xs font-black text-slate-800 transition-all duration-200 placeholder-slate-300 focus:border-brand-blue focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue/10"
                           placeholder="0000 0000 0000 0000"
                           value={cardNumber}
                           onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, '').slice(0, 16))}
@@ -613,14 +613,14 @@ function PaymentPage() {
                         <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block text-right">تاريخ الانتهاء</label>
                         <div className="flex items-center gap-2" dir="ltr">
                           <input
-                            className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50/20 px-2 text-center text-xs font-black text-slate-800 transition-all duration-200 placeholder-slate-300 focus:border-[#4974f9] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#4974f9]/10"
+                            className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50/20 px-2 text-center text-xs font-black text-slate-800 transition-all duration-200 placeholder-slate-300 focus:border-brand-blue focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue/10"
                             placeholder="MM"
                             value={expMonth}
                             onChange={(e) => setExpMonth(e.target.value.replace(/\D/g, '').slice(0, 2))}
                           />
                           <span className="font-black text-slate-300">/</span>
                           <input
-                            className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50/20 px-2 text-center text-xs font-black text-slate-800 transition-all duration-200 placeholder-slate-300 focus:border-[#4974f9] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#4974f9]/10"
+                            className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50/20 px-2 text-center text-xs font-black text-slate-800 transition-all duration-200 placeholder-slate-300 focus:border-brand-blue focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue/10"
                             placeholder="YY"
                             value={expYear}
                             onChange={(e) => setExpYear(e.target.value.replace(/\D/g, '').slice(0, 2))}
@@ -631,7 +631,7 @@ function PaymentPage() {
                       <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block text-right">رمز التحقق (CVV)</label>
                         <input
-                          className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50/20 px-4 text-center text-xs font-black text-slate-800 transition-all duration-200 placeholder-slate-300 focus:border-[#4974f9] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#4974f9]/10"
+                          className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50/20 px-4 text-center text-xs font-black text-slate-800 transition-all duration-200 placeholder-slate-300 focus:border-brand-blue focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue/10"
                           placeholder="***"
                           type="password"
                           value={cvv}
@@ -669,7 +669,7 @@ function PaymentPage() {
                   <div className="space-y-6">
                     <div>
                       <h3 className="text-xs font-black text-slate-800 mb-3 flex items-center gap-2 justify-start" dir="rtl">
-                        <Building className="h-4 w-4 text-[#4974f9]" />
+                        <Building className="h-4 w-4 text-brand-blue" />
                         <span>مواقع المكاتب والفروع المعتمدة للدفع</span>
                       </h3>
                       <p className="text-[11px] font-bold text-slate-400 mb-4 text-right">
@@ -685,7 +685,7 @@ function PaymentPage() {
                             onClick={() => setSelectedBranchCity(city)}
                             className={`px-3.5 py-1.5 text-xs font-black rounded-xl border transition-all duration-200 cursor-pointer ${
                               selectedBranchCity === city
-                                ? 'bg-[#4974f9] text-white border-[#4974f9] shadow-md shadow-[#4974f9]/20'
+                                ? 'bg-brand-blue text-white border-brand-blue shadow-md shadow-brand-blue/20'
                                 : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
                             }`}
                           >
@@ -706,14 +706,14 @@ function PaymentPage() {
                               onClick={() => setSelectedBranch(branch)}
                               className={`flex flex-col text-right p-4 rounded-xl border-2 transition-all cursor-pointer ${
                                 isSelected
-                                  ? 'border-[#4974f9] bg-[#4974f9]/5 shadow-sm'
+                                  ? 'border-brand-blue bg-brand-blue/5 shadow-sm'
                                   : 'border-slate-100 bg-slate-50/50 hover:border-slate-200'
                               }`}
                             >
                               <div className="flex items-start justify-between w-full">
                                 <span className="font-black text-xs text-slate-800">{branch.name}</span>
                                 {isSelected && (
-                                  <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-[#4974f9] text-white">
+                                  <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-brand-blue text-white">
                                     <CheckCircle2 className="h-3 w-3" />
                                   </span>
                                 )}
@@ -839,7 +839,7 @@ function PaymentPage() {
                     <h2 className="text-2xl font-black">{summaryFlight.fromCode}</h2>
                     <p className="text-[10px] font-bold text-slate-400">{summaryFlight.fromCity}</p>
                   </div>
-                  <MoveLeft className="h-6 w-6 text-[#4974f9]" />
+                  <MoveLeft className="h-6 w-6 text-brand-blue" />
                   <div className="text-left">
                     <h2 className="text-2xl font-black">{summaryFlight.toCode}</h2>
                     <p className="text-[10px] font-bold text-slate-400 text-left">{summaryFlight.toCity}</p>
@@ -923,7 +923,7 @@ function PaymentPage() {
                     {bagsTotal > 0 && (
                       <div className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2 text-slate-600">
-                          <Luggage className="h-4 w-4 text-[#4974f9]" />
+                          <Luggage className="h-4 w-4 text-brand-blue" />
                           <span className="font-semibold text-xs">حقائب إضافية مدفوعة</span>
                         </div>
                         <span className="font-black text-slate-900">+${bagsTotal}</span>
@@ -1014,7 +1014,7 @@ function PaymentPage() {
             <p className="mt-3 text-sm font-bold text-slate-500 leading-7">تم إرسال تفاصيل الحجز وتذكرة الطيران إلى بريدك الإلكتروني بنجاح.</p>
             <div className="mt-6 rounded-2xl bg-slate-50 p-4 border border-dashed border-slate-300">
               <p className="text-[10px] font-black uppercase text-slate-400">رقم مرجع الحجز</p>
-              <p className="text-xl font-black text-[#4974f9] tracking-widest">{bookingRef}</p>
+              <p className="text-xl font-black text-brand-blue tracking-widest">{bookingRef}</p>
             </div>
             <Link
               to="/"

@@ -57,7 +57,7 @@ function LoginPage() {
                 <div className="mx-auto w-full max-w-[580px]">
                     {/* Header */}
                     <div className="mb-10 text-right">
-                        <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-[#4974f9]/10 text-[#4974f9] mb-6">
+                        <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-blue/10 text-brand-blue mb-6">
                             <UserRound className="h-7 w-7" />
                         </div>
                         <h1 className="text-4xl font-black tracking-tight text-slate-900">مرحبًا بعودتك</h1>
@@ -76,7 +76,7 @@ function LoginPage() {
                         {/* Email */}
                         <div className="space-y-2">
                             <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400">البريد الإلكتروني</label>
-                            <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'email' ? 'border-[#4974f9] bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
+                            <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'email' ? 'border-brand-blue bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
                                 <Mail className="pointer-events-none absolute right-4 h-4 w-4 text-slate-400" />
                                 <input
                                     type="email"
@@ -96,9 +96,9 @@ function LoginPage() {
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">
                                 <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400">كلمة المرور</label>
-                                <Link to="/forgot-password" size="sm" className="text-[11px] font-black text-[#4974f9] hover:underline">نسيت كلمة المرور؟</Link>
+                                <Link to="/forgot-password" size="sm" className="text-[11px] font-black text-brand-blue hover:underline">نسيت كلمة المرور؟</Link>
                             </div>
-                            <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'pass' ? 'border-[#4974f9] bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
+                            <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'pass' ? 'border-brand-blue bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
                                 <Lock className="pointer-events-none absolute right-4 h-4 w-4 text-slate-400" />
                                 <input
                                     type={showPassword ? 'text' : 'password'}
@@ -139,7 +139,7 @@ function LoginPage() {
                         {/* Register link */}
                         <p className="text-center text-sm font-bold text-slate-500">
                             لا تملك حسابًا؟{' '}
-                            <Link to="/register" state={location.state} className="font-black text-[#4974f9] transition hover:text-[#1e40af]">
+                            <Link to="/register" state={location.state} className="font-black text-brand-blue transition hover:text-[#1e40af]">
                                 إنشاء حساب جديد
                             </Link>
                         </p>
@@ -164,7 +164,7 @@ function LoginPage() {
                             { val: '24/7', label: 'دعم' }
                         ].map(stat => (
                             <div key={stat.label} className="text-center">
-                                <p className="text-xl font-black text-[#4974f9]">{stat.val}</p>
+                                <p className="text-xl font-black text-brand-blue">{stat.val}</p>
                                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{stat.label}</p>
                             </div>
                         ))}

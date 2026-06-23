@@ -369,7 +369,7 @@ function SeatsPage() {
                                         disabled={selectedSeats.length !== passengerCount}
                                         className={`group relative w-full overflow-hidden rounded-3xl py-6 font-black text-base flex items-center justify-center gap-3 transition-all duration-300 ${
                                             selectedSeats.length === passengerCount
-                                                ? 'bg-[#d9312b] text-white shadow-[0_20px_40px_rgba(217,49,43,0.3)] hover:-translate-y-1 hover:shadow-[0_25px_50px_rgba(217,49,43,0.4)] active:scale-95'
+                                                ? 'bg-brand-red text-white shadow-[0_20px_40px_rgba(217,49,43,0.3)] hover:-translate-y-1 hover:shadow-[0_25px_50px_rgba(217,49,43,0.4)] active:scale-95'
                                                 : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                                         }`}
                                     >

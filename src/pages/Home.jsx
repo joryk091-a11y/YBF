@@ -1,8 +1,16 @@
 import { useEffect, useState } from 'react'
-import { Car, Hotel, Plane, MapPin, LayoutGrid, ClipboardList, Ticket, Shield, Package, Clock, Globe, Award, ShieldCheck } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Car, Hotel, Plane, MapPin, LayoutGrid, ClipboardList, Ticket, Shield, Package, Clock, Globe, Award, ShieldCheck, HeartPulse, Headphones, Check } from 'lucide-react'
 
 import HeroSearchPanel from '../components/HeroSearchPanel.jsx'
 import heroPlane from '../assets/image1.png'
+import { useSearch } from '../utils/SearchContext'
+import ScrollReveal from '../components/ScrollReveal.jsx'
+
+import cairoImg from '../assets/cairo.png'
+import dubaiImg from '../assets/dubai.png'
+import riyadhImg from '../assets/riyadh.png'
+import ammanImg from '../assets/amman.png'
 
 const serviceTabs = [
   { id: 'flight', label: 'رحلات', icon: Plane },
@@ -10,6 +18,58 @@ const serviceTabs = [
   { id: 'car', label: 'تأجير سيارات', icon: Car },
 ]
 
+const servicesList = [
+  {
+    title: 'حجز رحلات طيران',
+    description: 'ابحث وقارن بين مئات خيارات الطيران من وإلى اليمن مع كبرى شركات الطيران المحلية والدولية بأفضل الأسعار وأقل جهد.',
+    icon: Plane,
+    badge: 'الأكثر شعبية',
+    features: ['تأكيد فوري للحجز', 'مخطط مقاعد تفاعلي', 'إدارة مرنة للمسافرين'],
+    gradient: 'from-blue-600 to-indigo-650',
+    glowColor: 'rgba(59,130,246,0.15)'
+  },
+  {
+    title: 'فنادق وأماكن إقامة',
+    description: 'اعثر على الفندق المثالي لإقامتك القادمة من بين آلاف الفنادق والشقق المفروشة بأسعار تنافسية.',
+    icon: Hotel,
+    features: ['إلغاء مجاني متوفر', 'تقييمات نزلاء حقيقية'],
+    gradient: 'from-purple-550 to-indigo-600',
+    glowColor: 'rgba(168,85,247,0.1)'
+  },
+  {
+    title: 'تأجير سيارات',
+    description: 'استأجر سيارتك المفضلة لتتنقل بحرية وراحة تامة طوال رحلتك.',
+    icon: Car,
+    features: ['مواقع استلام متعددة', 'تأمين شامل متوفر'],
+    gradient: 'from-emerald-500 to-teal-650',
+    glowColor: 'rgba(16,185,129,0.1)'
+  },
+  {
+    title: 'شحن وأمتعة إضافية',
+    description: 'احجز وزناً إضافياً مسبقاً بأسعار مخفضة وتجنب الرسوم المرتفعة في المطار.',
+    icon: Package,
+    features: ['توفير حتى 40%', 'تتبع فوري للشحنات'],
+    gradient: 'from-amber-500 to-orange-600',
+    glowColor: 'rgba(245,158,11,0.1)'
+  },
+  {
+    title: 'خدمات ورعاية خاصة',
+    description: 'نوفر رعاية طبية متكاملة ومرافقة خاصة للأطفال والمسنين لضمان رحلة مريحة وآمنة للجميع.',
+    icon: HeartPulse,
+    features: ['مرافقة طبية مؤهلة', 'كراسي متحركة ووجبات خاصة'],
+    gradient: 'from-rose-500 to-pink-650',
+    glowColor: 'rgba(244,63,94,0.1)'
+  },
+  {
+    title: 'دعم ومساندة 24/7',
+    description: 'فريق خدمة العملاء متواجد على مدار الساعة طوال أيام الأسبوع للإجابة على استفساراتك ومساعدتك في أي طارئ.',
+    icon: Headphones,
+    badge: 'متواجدون دائماً',
+    features: ['استجابة في أقل من دقيقة', 'دعم عبر الهاتف والواتساب'],
+    gradient: 'from-blue-600 to-indigo-750',
+    glowColor: 'rgba(59,130,246,0.15)'
+  }
+]
 
 const faqItems = [
   {
@@ -39,40 +99,254 @@ const steps = [
     title: 'ابحث عن رحلتك',
     description: 'قارن بين مئات الرحلات والأسعار من مختلف شركات الطيران اليمنية والدولية.',
     icon: MapPin,
-    color: 'from-blue-500/10 to-indigo-500/5 text-blue-600 border-blue-100',
-    hoverGlow: 'group-hover:shadow-blue-500/20'
+    gradient: 'from-blue-600 to-indigo-650',
+    bgLight: 'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-900/50',
+    glowColor: '#3b82f6'
   },
   {
     title: 'اختر مقعدك',
     description: 'استعرض مخطط الطائرة الحقيقي واختر مقعدك المفضل بكل سهولة.',
     icon: LayoutGrid,
-    color: 'from-amber-500/10 to-orange-500/5 text-amber-600 border-amber-100',
-    hoverGlow: 'group-hover:shadow-amber-500/20'
+    gradient: 'from-amber-500 to-orange-500',
+    bgLight: 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-900/50',
+    glowColor: '#f59e0b'
   },
   {
     title: 'أدخل بياناتك',
     description: 'قم بتعبئة بيانات المسافرين وحفظها لحجوزاتك القادمة بشكل أسرع.',
     icon: ClipboardList,
-    color: 'from-emerald-500/10 to-teal-500/5 text-emerald-600 border-emerald-100',
-    hoverGlow: 'group-hover:shadow-emerald-500/20'
+    gradient: 'from-emerald-500 to-teal-500',
+    bgLight: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50',
+    glowColor: '#10b981'
   },
   {
     title: 'احجز واستلم التذكرة',
     description: 'ادفع بأمان عبر وسائل الدفع المتاحة واستلم تذكرتك الإلكترونية فوراً.',
     icon: Ticket,
-    color: 'from-purple-500/10 to-indigo-500/5 text-purple-600 border-purple-100',
-    hoverGlow: 'group-hover:shadow-purple-500/20'
+    gradient: 'from-purple-500 to-indigo-500',
+    bgLight: 'bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 border-purple-100 dark:border-purple-900/50',
+    glowColor: '#8b5cf6'
+  },
+]
+
+const popularDestinations = [
+  {
+    id: 'cairo',
+    city: 'القاهرة',
+    country: 'جمهورية مصر العربية',
+    airport: 'مطار القاهرة الدولي',
+    image: cairoImg,
+    price: '180',
+    tag: 'الأكثر زيارة',
+  },
+  {
+    id: 'dubai',
+    city: 'دبي',
+    country: 'الإمارات العربية المتحدة',
+    airport: 'مطار دبي الدولي',
+    image: dubaiImg,
+    price: '220',
+    tag: 'طلب مرتفع',
+  },
+  {
+    id: 'riyadh',
+    city: 'الرياض',
+    country: 'المملكة العربية السعودية',
+    airport: 'مطار الملك خالد الدولي',
+    image: riyadhImg,
+    price: '250',
+    tag: 'شعبية كبيرة',
+  },
+  {
+    id: 'amman',
+    city: 'عمّان',
+    country: 'المملكة الأردنية الهاشمية',
+    airport: 'مطار الملكة علياء الدولي',
+    image: ammanImg,
+    price: '190',
+    tag: 'أفضل قيمة',
   },
 ]
 
 function HomePage() {
   const [showHeroText, setShowHeroText] = useState(false)
   const [activeService, setActiveService] = useState('flight')
+  const [activeStep, setActiveStep] = useState(0)
+  const [openFaq, setOpenFaq] = useState(0)
+  const navigate = useNavigate()
+  const { updateSearchCriteria } = useSearch()
+
+  const handleDestinationSelect = (destId) => {
+    updateSearchCriteria({ toCity: destId })
+    const searchPanel = document.getElementById('search-panel')
+    if (searchPanel) {
+      searchPanel.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
+  const handleBookNow = (e, destId) => {
+    e.stopPropagation()
+    updateSearchCriteria({ toCity: destId })
+    navigate('/search')
+  }
 
   useEffect(() => {
     const timer = setTimeout(() => setShowHeroText(true), 80)
     return () => clearTimeout(timer)
   }, [])
+
+  const stepMockups = [
+    // Step 1: Flight Search Mockup
+    <div key="step-1" className="flex flex-col gap-4 bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-md border border-slate-100 dark:border-slate-800 w-full max-w-sm mx-auto">
+      <div className="flex items-center justify-between border-b border-slate-50 dark:border-slate-800 pb-3">
+        <span className="text-xs font-black text-slate-800 dark:text-white">البحث عن رحلة</span>
+        <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+      </div>
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex-1 bg-slate-50 dark:bg-slate-950 rounded-xl p-2 text-right">
+            <span className="block text-[8px] text-slate-400">من</span>
+            <span className="text-xs font-black text-slate-700 dark:text-slate-200">صنعاء (SAH)</span>
+          </div>
+          <div className="h-6 w-6 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 shrink-0 select-none text-[10px] font-black">⇄</div>
+          <div className="flex-1 bg-slate-50 dark:bg-slate-950 rounded-xl p-2 text-right">
+            <span className="block text-[8px] text-slate-400">إلى</span>
+            <span className="text-xs font-black text-slate-700 dark:text-slate-200">القاهرة (CAI)</span>
+          </div>
+        </div>
+        <div className="bg-slate-50 dark:bg-slate-950 rounded-xl p-3 flex justify-between items-center">
+          <div className="text-right">
+            <span className="block text-[8px] text-slate-400 font-semibold">تاريخ المغادرة</span>
+            <span className="text-xs font-black text-slate-700 dark:text-slate-200">28 يوليو 2026</span>
+          </div>
+          <Plane className="h-4 w-4 text-blue-500" />
+        </div>
+        <button className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black shadow-sm transition-all">
+          البحث عن الرحلات
+        </button>
+      </div>
+    </div>,
+
+    // Step 2: Seat Selection Mockup
+    <div key="step-2" className="flex flex-col gap-4 bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-md border border-slate-100 dark:border-slate-800 w-full max-w-sm mx-auto">
+      <div className="flex items-center justify-between border-b border-slate-50 dark:border-slate-800 pb-3">
+        <span className="text-xs font-black text-slate-800 dark:text-white">اختيار المقعد</span>
+        <span className="text-[10px] font-bold text-amber-600 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-full">درجة الأعمال</span>
+      </div>
+      <div className="grid grid-cols-4 gap-2 justify-center py-2 max-w-[200px] mx-auto">
+        {['1A', '1B', '1C', '1D', '2A', '2B', '2C', '2D', '3A', '3B', '3C', '3D'].map((seat, i) => {
+          const isSelected = seat === '2B';
+          const isBooked = ['1A', '1D', '3A', '3C'].includes(seat);
+          return (
+            <button
+              key={seat}
+              disabled={isBooked}
+              className={`h-8 w-8 rounded-lg text-[9px] font-black transition-all flex items-center justify-center ${isSelected
+                  ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20 scale-105'
+                  : isBooked
+                    ? 'bg-slate-100 dark:bg-slate-950 text-slate-350 dark:text-slate-700 cursor-not-allowed'
+                    : 'bg-slate-50 dark:bg-slate-850 hover:bg-amber-50 dark:hover:bg-amber-950 text-slate-700 dark:text-slate-300 border border-slate-200/40 dark:border-slate-800'
+                }`}
+            >
+              {seat}
+            </button>
+          );
+        })}
+      </div>
+      <div className="flex justify-between items-center border-t border-slate-50 dark:border-slate-800 pt-3">
+        <span className="text-[10px] text-slate-400 font-bold">المقعد المختار</span>
+        <span className="text-xs font-black text-amber-600">الصف 2 ، المقعد 2B</span>
+      </div>
+    </div>,
+
+    // Step 3: Traveler Details Mockup
+    <div key="step-3" className="flex flex-col gap-4 bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-md border border-slate-100 dark:border-slate-800 w-full max-w-sm mx-auto">
+      <div className="flex items-center justify-between border-b border-slate-50 dark:border-slate-800 pb-3">
+        <span className="text-xs font-black text-slate-800 dark:text-white">معلومات المسافر الرئيسي</span>
+        <span className="text-[10px] text-emerald-600 font-black">الخطوة 3 من 4</span>
+      </div>
+      <div className="space-y-3">
+        <div className="space-y-1 text-right">
+          <label className="text-[9px] font-black text-slate-450">الاسم الكامل (كما في الجواز)</label>
+          <input
+            type="text"
+            readOnly
+            value="أحمد محمد علي"
+            className="w-full bg-slate-50 dark:bg-slate-950 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 border-none outline-none"
+          />
+        </div>
+        <div className="space-y-1 text-right">
+          <label className="text-[9px] font-black text-slate-450">رقم جواز السفر</label>
+          <input
+            type="text"
+            readOnly
+            value="092837482"
+            className="w-full bg-slate-50 dark:bg-slate-950 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 border-none outline-none"
+          />
+        </div>
+        <div className="flex items-center gap-2 mt-2 bg-emerald-50/50 dark:bg-emerald-950/10 p-2.5 rounded-xl border border-emerald-100/50 dark:border-emerald-900/40">
+          <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+          <span className="text-[9px] font-black text-emerald-700 dark:text-emerald-400">تم التحقق من تطابق البيانات مع شروط السفر</span>
+        </div>
+      </div>
+    </div>,
+
+    // Step 4: Booking & Ticket Mockup
+    <div key="step-4" className="relative overflow-hidden bg-gradient-to-br from-indigo-900 to-slate-900 rounded-3xl p-5 text-white w-full max-w-sm mx-auto shadow-xl border border-indigo-950">
+      {/* Flight info */}
+      <div className="relative z-10 flex justify-between items-start mb-6">
+        <div>
+          <span className="text-[10px] font-bold text-indigo-250 block">رقم الرحلة</span>
+          <span className="text-sm font-black tracking-wider">IY 607</span>
+        </div>
+        <div className="text-left">
+          <span className="text-[10px] font-bold text-indigo-250 block">اليمنية للخطوط الجوية</span>
+          <span className="text-xs bg-indigo-500/30 px-2 py-0.5 rounded-md font-bold text-white">تذكرة مؤكدة</span>
+        </div>
+      </div>
+
+      {/* Flight locations details */}
+      <div className="relative z-10 flex justify-between items-center bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 mb-5">
+        <div>
+          <span className="text-lg font-black block tracking-wider">SAH</span>
+          <span className="text-[9px] text-white/70 block">صنعاء</span>
+        </div>
+        <div className="flex flex-col items-center flex-1 mx-2">
+          <span className="text-[8px] text-indigo-250 font-bold mb-1">مباشر</span>
+          <div className="w-full h-0.5 bg-white/20 relative">
+            <Plane className="h-3.5 w-3.5 text-blue-400 absolute left-1/2 -translate-x-1/2 -top-1.5 transform rotate-90" />
+          </div>
+          <span className="text-[8px] text-white/50 mt-1">3 ساعات و 15 دقيقة</span>
+        </div>
+        <div className="text-left">
+          <span className="text-lg font-black block tracking-wider">CAI</span>
+          <span className="text-[9px] text-white/70 block">القاهرة</span>
+        </div>
+      </div>
+
+      {/* Barcode mock */}
+      <div className="relative z-10 flex items-center justify-between border-t border-white/10 pt-4">
+        <div className="space-y-1">
+          <span className="text-[8px] text-white/60 block">اسم الراكب</span>
+          <span className="text-xs font-black block">Ahmed Mohamed</span>
+        </div>
+        <div className="bg-white p-1 rounded-md">
+          {/* Mock QR / Barcode */}
+          <div className="h-8 w-24 bg-slate-900 flex flex-col gap-[2px] p-0.5 justify-between">
+            <div className="flex gap-[3px] h-full">
+              <div className="w-1.5 bg-white h-full" />
+              <div className="w-0.5 bg-white h-full" />
+              <div className="w-1 bg-white h-full" />
+              <div className="w-2 bg-white h-full" />
+              <div className="w-0.5 bg-white h-full" />
+              <div className="w-1.5 bg-white h-full" />
+              <div className="w-1 bg-white h-full" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  ]
 
   return (
     <main>
@@ -113,158 +387,441 @@ function HomePage() {
       </section>
 
       <div id="search-panel" className="relative z-30 -mt-60 pb-12 sm:-mt-64 sm:pb-16">
-        <div className="absolute -top-10 left-1/2 z-40 -translate-x-1/2 sm:-top-12" dir="rtl">
-          <div className="inline-flex overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-slate-200">
-            {serviceTabs.map((tab) => {
-              const Icon = tab.icon
-              const isActive = activeService === tab.id
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActiveService(tab.id)}
-                  className={`inline-flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold transition sm:px-5 ${isActive ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 hover:bg-slate-100'
-                    }`}
-                >
-                  <Icon className="h-4.5 w-4.5" />
-                  {tab.label}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        <div className="pt-4">
-          <HeroSearchPanel />
-        </div>
-
-
-        {/* Innovative 'Flight Journey' Section */}
-        <section id="how-it-works" className="mx-auto mt-40 max-w-7xl px-4 sm:px-6 lg:px-8 relative" dir="rtl">
-          <div className="relative mb-24 text-center">
-            <h2 className="text-4xl font-black tracking-tight text-slate-900 sm:text-5xl">أربع خطوات بسيطة تفصلك عن إقلاعك القادم</h2>
-            <div className="mx-auto mt-4 h-1.5 w-24 rounded-full bg-gradient-to-r from-[#4974f9] to-indigo-400" />
+        <ScrollReveal animation="fade-up" duration={800} delay={100}>
+          <div className="absolute -top-8 left-1/2 z-40 -translate-x-1/2 sm:-top-10" dir="rtl">
+            <div className="inline-flex items-center gap-1.5 p-1.5 rounded-2xl bg-white/90 backdrop-blur-md border border-slate-200/60 shadow-[0_12px_30px_rgba(0,0,0,0.08)]">
+              {serviceTabs.map((tab) => {
+                const Icon = tab.icon
+                const isActive = activeService === tab.id
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveService(tab.id)}
+                    className={`inline-flex items-center gap-2 px-4 py-2.5 text-xs font-black rounded-xl transition-all duration-300 hover:scale-102 active:scale-98 cursor-pointer focus:outline-none ${isActive
+                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
+                        : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
+                      }`}
+                  >
+                    <Icon className={`h-4 w-4 transition-transform duration-300 ${isActive ? 'rotate-3 scale-110' : ''}`} />
+                    {tab.label}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
-          <div className="relative">
-            <svg className="absolute left-0 top-1/2 hidden w-full -translate-y-1/2 lg:block" height="200" viewBox="0 0 1200 200" fill="none" preserveAspectRatio="none">
-              <path
-                d="M50,100 C200,100 250,50 400,50 C550,50 650,150 800,150 C950,150 1000,100 1150,100"
-                stroke="#cbd5e1"
-                strokeWidth="2"
-                strokeDasharray="12 12"
-                className="animate-[dash_60s_linear_infinite]"
-              />
-              <circle r="4" fill="#2563eb">
-                <animateMotion
-                  path="M50,100 C200,100 250,50 400,50 C550,50 650,150 800,150 C950,150 1000,100 1150,100"
-                  dur="10s"
-                  repeatCount="indefinite"
-                />
-              </circle>
-            </svg>
+          <div className="pt-4">
+            <HeroSearchPanel />
+          </div>
+        </ScrollReveal>
 
-            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 relative z-10">
-              {steps.map((step, index) => (
+        {/* الوجهات الأكثر طلباً */}
+        <section className="mx-auto mt-24 max-w-7xl px-4 sm:px-6 lg:px-8 relative" dir="rtl">
+          <ScrollReveal animation="fade-down" duration={700}>
+            <div className="text-center mb-16 relative flex flex-col items-center">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-4 py-1.5 text-[10px] font-black tracking-wider text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 uppercase mb-4 shadow-sm">
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
+                الوجهات المفضلة
+              </span>
+              <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white sm:text-4xl md:text-5xl leading-tight">
+                الوجهات <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">الأكثر طلباً</span>
+              </h2>
+              <div className="relative mt-4 mb-6 flex items-center justify-center w-32">
+                <div className="absolute h-[2px] w-full bg-slate-200/60 dark:bg-slate-800" />
+                <div className="absolute h-1 w-12 rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 shadow-md shadow-blue-500/30" />
+              </div>
+              <p className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 max-w-xl mx-auto leading-relaxed">
+                اكتشف خيارات السفر المفضلة لعملائنا وخطط لرحلتك القادمة إلى أكثر المدن حيوية بأفضل الأسعار.
+              </p>
+            </div>
+          </ScrollReveal>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {popularDestinations.map((dest, index) => (
+              <ScrollReveal
+                key={dest.id}
+                animation="fade-up"
+                duration={700}
+                delay={index * 100}
+              >
                 <div
-                  key={index}
-                  className="group relative flex flex-col transition-all duration-500"
+                  onClick={() => handleDestinationSelect(dest.id)}
+                  className="group relative h-[380px] overflow-hidden rounded-[2.5rem] bg-white border border-slate-100 dark:border-slate-800/80 shadow-[0_15px_45px_rgba(0,0,0,0.02)] hover:shadow-[0_30px_60px_rgba(73,116,249,0.12)] hover:-translate-y-1.5 transition-all duration-300 overflow-hidden cursor-pointer"
                 >
-                  {/* Step Card Container */}
-                  <div className="relative flex flex-col h-full rounded-[2.5rem] bg-gradient-to-b from-white to-slate-50/50 border border-slate-100/80 p-8 shadow-[0_15px_45px_rgba(0,0,0,0.02)] transition-all duration-500 hover:-translate-y-3 group-hover:shadow-[0_30px_60px_rgba(73,116,249,0.07)] group-hover:border-blue-200/50 overflow-hidden w-full flex-1">
-                    
-                    {/* Glowing Accent Top Bar */}
-                    <div className="absolute top-0 inset-x-8 h-[3px] bg-gradient-to-r from-transparent via-[#4974f9]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    
-                    {/* Big Elegant Number Background */}
-                    <span className="absolute -right-2 -top-4 text-8xl font-black text-slate-100/50 select-none tracking-tighter group-hover:text-blue-50/70 transition-colors duration-500">
-                      0{index + 1}
-                    </span>
+                  {/* Image background with scale effect */}
+                  <img
+                    src={dest.image}
+                    alt={dest.city}
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                  />
 
-                    {/* Icon Container */}
-                    <div className={`relative mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr shadow-md ${step.color} border border-white/50`}>
-                      <step.icon className="h-7 w-7 transition-transform duration-500 group-hover:scale-110" />
+                  {/* Dark gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent opacity-90 transition-opacity group-hover:opacity-95" />
+
+                  {/* Card Glow Effect */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-[radial-gradient(circle_at_bottom,rgba(59,130,246,0.15)_0%,transparent_70%)]" />
+
+                  {/* Top Tag */}
+                  <div className="absolute left-6 top-6 z-10">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 backdrop-blur-md px-3 py-1 text-[10px] font-black text-white uppercase tracking-wider">
+                      {dest.tag}
+                    </span>
+                  </div>
+
+                  {/* Bottom Content Container */}
+                  <div className="absolute inset-x-0 bottom-0 p-6 flex flex-col justify-end h-1/2 z-10 text-right">
+                    <span className="text-[10px] font-bold text-blue-300 mb-1">{dest.country}</span>
+                    <h3 className="text-2xl font-black text-white mb-1 group-hover:text-blue-200 transition-colors">
+                      {dest.city}
+                    </h3>
+                    <p className="text-[10px] text-white/70 font-semibold mb-4 flex items-center gap-1">
+                      <MapPin className="h-3 w-3 text-blue-400 shrink-0" />
+                      {dest.airport}
+                    </p>
+
+                    {/* Divider */}
+                    <div className="h-px bg-white/10 my-3 transition-all duration-500 group-hover:bg-white/20" />
+
+                    {/* Price and Action Button */}
+                    <div className="flex items-center justify-between mt-1">
+                      <div className="flex flex-col text-right">
+                        <span className="text-[9px] font-bold text-white/50">تبدأ من</span>
+                        <div className="flex items-baseline gap-0.5">
+                          <span className="text-xl font-black text-white tabular-nums">${dest.price}</span>
+                          <span className="text-xs font-medium text-white/70">/ اتجاه</span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={(e) => handleBookNow(e, dest.id)}
+                        className="relative overflow-hidden rounded-xl bg-blue-600 hover:bg-blue-500 px-4 py-2.5 text-xs font-black text-white shadow-lg shadow-blue-600/20 transition-all duration-300 hover:-translate-y-0.5 active:scale-95 group/btn"
+                      >
+                        <span className="relative z-10">احجز الآن</span>
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </ScrollReveal>
+            ))}
+          </div>
+        </section>
+
+        {/* Services Bento Grid Section */}
+        <section id="services" className="mx-auto mt-32 max-w-7xl px-4 sm:px-6 lg:px-8 relative" dir="rtl">
+          <ScrollReveal animation="fade-down" duration={700}>
+            <div className="text-center mb-16 relative flex flex-col items-center">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-4 py-1.5 text-[10px] font-black tracking-wider text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 uppercase mb-4 shadow-sm">
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
+                خدمات المنصة
+              </span>
+              <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white sm:text-4xl md:text-5xl leading-tight">
+                خدماتنا الرقمية <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">المتكاملة</span>
+              </h2>
+              <div className="relative mt-4 mb-6 flex items-center justify-center w-32">
+                <div className="absolute h-[2px] w-full bg-slate-200/60 dark:bg-slate-800" />
+                <div className="absolute h-1 w-12 rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 shadow-md shadow-blue-500/30" />
+              </div>
+              <p className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 max-w-xl mx-auto leading-relaxed">
+                نوفر لك باقة شاملة من الخدمات السياحية الرقمية لنجعل تجربة سفرك سهلة وخالية من المتاعب.
+              </p>
+            </div>
+          </ScrollReveal>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {servicesList.map((service, index) => {
+              const Icon = service.icon;
+              const isFeatured = index === 0 || index === 5;
+              return (
+                <ScrollReveal
+                  key={index}
+                  animation="scale-up"
+                  duration={700}
+                  delay={index * 80}
+                  className={isFeatured ? 'lg:col-span-2' : 'lg:col-span-1'}
+                >
+                  <div
+                    className="group relative h-full rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-8 shadow-[0_15px_45px_rgba(0,0,0,0.02)] hover:shadow-[0_30px_60px_rgba(73,116,249,0.06)] hover:-translate-y-1.5 transition-all duration-300 overflow-hidden flex flex-col justify-between"
+                  >
+                    {/* Color Glow Indicator behind card */}
+                    <div
+                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                      style={{
+                        background: `radial-gradient(circle 140px at 50% 100%, ${service.glowColor}, transparent 80%)`
+                      }}
+                    />
+
+                    <div>
+                      {/* Top Header of Card */}
+                      <div className="flex justify-between items-start mb-6">
+                        <div className={`p-4 rounded-2xl bg-gradient-to-br ${service.gradient} text-white shadow-md`}>
+                          <Icon className="h-6 w-6" />
+                        </div>
+                        {service.badge && (
+                          <span className="text-[10px] font-black tracking-wider uppercase bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 px-3 py-1 rounded-full">
+                            {service.badge}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Title and Description */}
+                      <h3 className="text-xl font-black text-slate-800 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        {service.title}
+                      </h3>
+                      <p className="text-xs leading-relaxed font-semibold text-slate-450 dark:text-slate-500 mb-6 max-w-xl">
+                        {service.description}
+                      </p>
                     </div>
 
-                    {/* Step Content */}
-                    <div className="relative z-10 flex-1 flex flex-col justify-between">
-                      <div>
-                        <h3 className="mb-3 text-lg font-black text-slate-800 transition-colors group-hover:text-[#4974f9]">
-                          {step.title}
-                        </h3>
-                        <p className="text-[11px] leading-relaxed font-semibold text-slate-400 group-hover:text-slate-500 transition-colors">
+                    {/* Features List and Interactive Mockups (Split-view for featured cards) */}
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-t border-slate-50 dark:border-slate-800/60 pt-6">
+                      <ul className="space-y-2.5">
+                        {service.features.map((feat, idx) => (
+                          <li key={idx} className="flex items-center gap-2.5 text-[11px] font-bold text-slate-650 dark:text-slate-300">
+                            <Check className="h-4.5 w-4.5 text-blue-500 shrink-0" />
+                            <span>{feat}</span>
+                          </li>
+                        ))}
+                      </ul>
+
+                      {/* Mockup for Flight Service */}
+                      {isFeatured && service.title === 'حجز رحلات طيران' && (
+                        <div className="hidden md:flex flex-col bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-5 text-white w-64 shrink-0 shadow-lg relative overflow-hidden group/pass translate-y-2">
+                          <div className="absolute right-0 top-0 h-16 w-16 bg-white/5 rounded-full blur-xl" />
+                          <div className="flex justify-between items-center text-[9px] font-bold mb-4">
+                            <span>طيران السعيدة</span>
+                            <span className="bg-white/20 px-2 py-0.5 rounded-md">مؤكد</span>
+                          </div>
+                          <div className="flex justify-between items-center mb-4">
+                            <div>
+                              <span className="text-xs font-black block">SAH</span>
+                              <span className="text-[8px] opacity-75">صنعاء</span>
+                            </div>
+                            <Plane className="h-4 w-4 text-blue-300 transform rotate-90" />
+                            <div className="text-left">
+                              <span className="text-xs font-black block">ADE</span>
+                              <span className="text-[8px] opacity-75">عدن</span>
+                            </div>
+                          </div>
+                          <div className="border-t border-white/10 pt-3 flex justify-between items-center">
+                            <span className="text-[8px] opacity-70">رقم البوابة 04</span>
+                            <div className="h-3 w-16 bg-white/20 rounded flex items-center justify-between px-1 gap-[2px]">
+                              <div className="w-1 bg-white h-full" />
+                              <div className="w-0.5 bg-white h-full" />
+                              <div className="w-1.5 bg-white h-full" />
+                              <div className="w-0.5 bg-white h-full" />
+                              <div className="w-1 bg-white h-full" />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Mockup for Support Service */}
+                      {isFeatured && service.title === 'دعم ومساندة 24/7' && (
+                        <div className="hidden md:flex flex-col bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-3xl p-4 w-64 shrink-0 shadow-sm translate-y-2">
+                          <div className="flex items-center gap-2.5 mb-3">
+                            <div className="h-7 w-7 rounded-full bg-blue-500 flex items-center justify-center text-[10px] text-white font-black">م</div>
+                            <div>
+                              <span className="text-[9px] font-black text-slate-800 dark:text-white block">مستشار الدعم</span>
+                              <span className="text-[7px] text-emerald-500 font-bold block">نشط الآن</span>
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="bg-blue-600 text-white rounded-2xl rounded-tr-sm p-2 text-[9px] font-semibold text-right max-w-[85%] mr-auto">
+                              مرحباً بك! كيف يمكنني مساعدتك في حجزك اليوم؟
+                            </div>
+                            <div className="bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 rounded-2xl rounded-tl-sm p-2 text-[9px] font-semibold text-right max-w-[70%] ml-auto">
+                              أود الاستفسار عن تعديل موعد الرحلة.
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </ScrollReveal>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Interactive Split-Screen 'Flight Journey' Section */}
+        <section id="how-it-works" className="mx-auto mt-40 max-w-7xl px-4 sm:px-6 lg:px-8 relative" dir="rtl">
+          <ScrollReveal animation="fade-down" duration={700}>
+            <div className="relative mb-20 text-center flex flex-col items-center">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-4 py-1.5 text-[10px] font-black tracking-wider text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 uppercase mb-4 shadow-sm">
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
+                كيفية الحجز
+              </span>
+              <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white sm:text-4xl md:text-5xl leading-tight">
+                خطوات بسيطة <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">تفصلك عن وجهتك</span>
+              </h2>
+              <div className="relative mt-4 mb-6 flex items-center justify-center w-32">
+                <div className="absolute h-[2px] w-full bg-slate-200/60 dark:bg-slate-800" />
+                <div className="absolute h-1 w-12 rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 shadow-md shadow-blue-500/30" />
+              </div>
+              <p className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 max-w-xl mx-auto leading-relaxed">
+                تصفح التفاعلية الحية لتتعرف على تجربة الحجز خطوة بخطوة وتأكيد تذكرتك في ثوانٍ معدودة.
+              </p>
+            </div>
+          </ScrollReveal>
+
+          <div className="grid gap-12 lg:grid-cols-12 items-center">
+            {/* Steps Left Interactive Showcase (5 Columns) */}
+            <ScrollReveal
+              animation="fade-right"
+              duration={850}
+              className="lg:col-span-5 flex justify-center items-center relative min-h-[380px] order-last lg:order-first"
+            >
+              {/* Radial glow tailored to step color */}
+              <div
+                className="absolute inset-0 rounded-[3rem] blur-3xl opacity-15 pointer-events-none transition-all duration-500 scale-90"
+                style={{
+                  background: `radial-gradient(circle, ${steps[activeStep].glowColor} 0%, transparent 70%)`
+                }}
+              />
+
+              {/* Frameless glass envelope for the mockup */}
+              <div className="relative w-full max-w-sm rounded-[3rem] bg-white/20 dark:bg-slate-900/30 backdrop-blur-xl border border-white/40 dark:border-slate-800/40 p-8 shadow-2xl transition-all duration-500">
+                {stepMockups[activeStep]}
+              </div>
+            </ScrollReveal>
+
+            {/* Steps List Right Panel (7 Columns) */}
+            <div className="lg:col-span-7 space-y-4">
+              {steps.map((step, index) => {
+                const Icon = step.icon;
+                const isActive = activeStep === index;
+                return (
+                  <ScrollReveal
+                    key={index}
+                    animation="fade-left"
+                    duration={600}
+                    delay={index * 100}
+                  >
+                    <div
+                      onMouseEnter={() => setActiveStep(index)}
+                      onClick={() => setActiveStep(index)}
+                      className={`w-full flex items-start text-right gap-5 p-6 rounded-[2rem] border transition-all duration-500 cursor-pointer ${isActive
+                          ? 'bg-white dark:bg-slate-900 border-blue-500/30 dark:border-blue-500/20 shadow-[0_20px_50px_rgba(73,116,249,0.06)] scale-[1.01]'
+                          : 'bg-white/40 dark:bg-slate-950/20 border-slate-100 dark:border-slate-900/50 hover:bg-white/60 dark:hover:bg-slate-900/40'
+                        }`}
+                    >
+                      {/* Step Icon Container */}
+                      <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr ${isActive ? 'from-blue-600 to-indigo-650 text-white' : 'from-slate-100 to-slate-200 text-slate-500 dark:from-slate-800 dark:to-slate-900 dark:text-slate-400'
+                        } shadow-sm transition-all duration-500`}>
+                        <Icon className="h-6 w-6" />
+                      </div>
+
+                      {/* Text details */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <h3 className={`text-lg font-black transition-colors ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-800 dark:text-slate-350'
+                            }`}>
+                            {step.title}
+                          </h3>
+                          <span className={`text-[10px] font-black tracking-wider uppercase px-2.5 py-0.5 rounded-full transition-colors ${isActive ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-455' : 'bg-slate-100 dark:bg-slate-850 text-slate-400 dark:text-slate-500'
+                            }`}>
+                            الخطوة 0{index + 1}
+                          </span>
+                        </div>
+                        <p className={`text-xs leading-relaxed font-semibold transition-colors ${isActive ? 'text-slate-550 dark:text-slate-300' : 'text-slate-400 dark:text-slate-500'
+                          }`}>
                           {step.description}
                         </p>
                       </div>
-                      
-                      {/* Sub-indicator */}
-                      <div className="mt-6 flex items-center gap-1.5 text-[10px] font-black text-[#4974f9] opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-500">
-                        <span>ابدأ الخطوة</span>
-                        <span className="text-xs">←</span>
-                      </div>
                     </div>
-
-                    {/* Glowing bottom-left effect */}
-                    <div className="absolute -left-16 -bottom-16 h-36 w-36 rounded-full bg-gradient-to-tr from-[#4974f9]/5 to-indigo-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                  </div>
-                </div>
-              ))}
+                  </ScrollReveal>
+                );
+              })}
             </div>
           </div>
         </section>
 
-        <style>{`
-          @keyframes dash {
-            to { stroke-dashoffset: -1000; }
-          }
-        `}</style>
-
         {/* Modernized FAQ Section */}
         <section id="faq" className="mx-auto mt-40 max-w-4xl px-4 pb-32 sm:px-6 lg:px-8" dir="rtl">
-          <div className="text-center mb-16">
-            <span className="inline-block rounded-full bg-blue-600/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 mb-4">
-              الأسئلة الشائعة
-            </span>
-            <h2 className="text-3xl font-black text-slate-900 sm:text-5xl">لديك استفسار؟ <br /> <span className="text-blue-600">نحن هنا للإجابة</span></h2>
-            <p className="mt-6 text-sm font-semibold text-slate-500 sm:text-base">
-              إليك كل ما تحتاج معرفته حول إجراءات الحجز، الأمتعة، والسياسات العامة.
-            </p>
-          </div>
+          <ScrollReveal animation="fade-down" duration={700}>
+            <div className="relative mb-24 text-center flex flex-col items-center">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-4 py-1.5 text-[10px] font-black tracking-wider text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 uppercase mb-4 shadow-sm">
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
+                الأسئلة الشائعة
+              </span>
+              <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white sm:text-4xl md:text-5xl leading-tight">
+                لديك استفسار؟ <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">نحن هنا للإجابة</span>
+              </h2>
+              <div className="relative mt-4 mb-6 flex items-center justify-center w-32">
+                <div className="absolute h-[2px] w-full bg-slate-200/60 dark:bg-slate-800" />
+                <div className="absolute h-1 w-12 rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 shadow-md shadow-blue-500/30" />
+              </div>
+              <p className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 max-w-xl mx-auto leading-relaxed">
+                إليك كل ما تحتاج معرفته حول إجراءات الحجز، الأمتعة، والسياسات العامة.
+              </p>
+            </div>
+          </ScrollReveal>
 
-          <div className="space-y-4">
-            {faqItems.map((item, index) => (
-              <details
-                key={index}
-                className="group overflow-hidden rounded-3xl border border-slate-200 bg-white transition-all duration-300 hover:border-blue-400 hover:shadow-2xl hover:shadow-blue-600/5"
-              >
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-6 text-right text-lg font-black text-slate-800 transition-colors group-open:bg-blue-600 group-open:text-white marker:content-none">
-                  <div className="flex items-center gap-4">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600/10 text-xs font-black text-blue-600 group-open:bg-white/20 group-open:text-white">
-                      {index + 1}
-                    </span>
-                    <span>{item.q}</span>
+          <div className="space-y-4 relative z-10">
+            {faqItems.map((item, index) => {
+              const isOpen = openFaq === index;
+              return (
+                <ScrollReveal
+                  key={index}
+                  animation="fade-up"
+                  duration={600}
+                  delay={index * 80}
+                >
+                  <div
+                    className={`group overflow-hidden rounded-[2rem] border transition-all duration-300 bg-white dark:bg-slate-900 ${isOpen
+                        ? 'border-blue-500/30 dark:border-blue-500/20 shadow-[0_20px_50px_rgba(73,116,249,0.04)]'
+                        : 'border-slate-100 dark:border-slate-800/80 hover:border-slate-350 dark:hover:border-slate-700 shadow-sm'
+                      }`}
+                  >
+                    {/* Question Summary (Trigger) */}
+                    <button
+                      onClick={() => setOpenFaq(isOpen ? null : index)}
+                      className="w-full flex items-center justify-between gap-4 p-6 text-right text-base font-black text-slate-800 dark:text-white focus:outline-none"
+                    >
+                      <div className="flex items-center gap-4">
+                        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-black transition-colors ${isOpen
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400'
+                          }`}>
+                          0{index + 1}
+                        </span>
+                        <span className={`transition-colors ${isOpen ? 'text-blue-600 dark:text-blue-400' : 'text-slate-800 dark:text-slate-200'}`}>{item.q}</span>
+                      </div>
+
+                      {/* Plus/Minus Animated Icon */}
+                      <div className="relative h-5 w-5 shrink-0 flex items-center justify-center">
+                        <div className={`absolute h-0.5 w-4 bg-slate-450 transition-transform duration-300 ${isOpen ? 'rotate-180 bg-blue-500' : ''}`} />
+                        <div className={`absolute h-4 w-0.5 bg-slate-455 transition-transform duration-300 ${isOpen ? 'rotate-90 scale-0 bg-blue-500' : ''}`} />
+                      </div>
+                    </button>
+
+                    {/* Answer Body (Smooth Height Transition) */}
+                    <div className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                      <div className="overflow-hidden">
+                        <div className="border-t border-slate-50 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/30 p-8">
+                          <p className="text-xs sm:text-sm leading-relaxed font-semibold text-slate-500 dark:text-slate-400">
+                            {item.a}
+                          </p>
+
+                          {/* Feedback Buttons */}
+                          <div className="mt-6 flex items-center gap-3">
+                            <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">هل كان هذا مفيداً؟</span>
+                            <button className="rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-1 text-[10px] font-black text-slate-650 dark:text-slate-350 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 dark:hover:text-emerald-450 hover:border-emerald-250 dark:hover:border-emerald-900 transition-colors">نعم</button>
+                            <button className="rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-1 text-[10px] font-black text-slate-650 dark:text-slate-350 hover:bg-blue-50 dark:hover:bg-blue-950/20 hover:text-blue-600 dark:hover:text-blue-455 hover:border-blue-250 dark:hover:border-blue-900 transition-colors">لا</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="relative h-6 w-6">
-                    <div className="absolute top-1/2 left-1/2 h-0.5 w-4 -translate-x-1/2 -translate-y-1/2 bg-current transition-transform group-open:rotate-180" />
-                    <div className="absolute top-1/2 left-1/2 h-4 w-0.5 -translate-x-1/2 -translate-y-1/2 bg-current transition-transform group-open:rotate-90" />
-                  </div>
-                </summary>
-                <div className="border-t border-slate-100 bg-slate-50/50 p-8">
-                  <p className="text-sm leading-8 font-medium text-slate-600 sm:text-base">
-                    {item.a}
-                  </p>
-                  <div className="mt-6 flex items-center gap-3">
-                    <span className="text-[10px] font-black text-slate-400 uppercase">هل كان هذا مفيداً؟</span>
-                    <button className="rounded-lg bg-white border border-slate-200 px-3 py-1 text-xs font-bold text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 transition-colors">نعم</button>
-                    <button className="rounded-lg bg-white border border-slate-200 px-3 py-1 text-xs font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-colors">لا</button>
-                  </div>
-                </div>
-              </details>
-            ))}
+                </ScrollReveal>
+              );
+            })}
           </div>
         </section>
       </div>
-      
+
     </main>
   )
 }

@@ -112,9 +112,9 @@ function RegisterPage() {
             {/* ─── Left decorative panel ──────────────────────────────── */}
             <div className="relative hidden lg:flex lg:w-1/2 flex-col justify-between overflow-hidden bg-gradient-to-br from-[#0a1628] via-[#10203d] to-[#0f172a] p-12 text-white">
                 {/* Animated blobs */}
-                <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-[#4974f9]/20 blur-[80px] animate-pulse" />
-                <div className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-[#d9312b]/15 blur-[80px] animate-pulse" style={{ animationDelay: '1s' }} />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-64 w-64 rounded-full bg-[#4974f9]/10 blur-[60px]" />
+                <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-brand-blue/20 blur-[80px] animate-pulse" />
+                <div className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-brand-red/15 blur-[80px] animate-pulse" style={{ animationDelay: '1s' }} />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-64 w-64 rounded-full bg-brand-blue/10 blur-[60px]" />
 
                 {/* Grid overlay */}
                 <div
@@ -127,7 +127,7 @@ function RegisterPage() {
                 <div className="relative z-10 my-auto">
                     <h2 className="text-4xl font-black leading-tight xl:text-5xl">
                         سفرك يبدأ<br />
-                        <span className="bg-gradient-to-l from-[#93b4ff] to-[#4974f9] bg-clip-text text-transparent">
+                        <span className="bg-gradient-to-l from-[#93b4ff] to-brand-blue bg-clip-text text-transparent">
                             من هنا
                         </span>
                     </h2>
@@ -137,7 +137,7 @@ function RegisterPage() {
                         {features.map(({ icon: Icon, title, desc }) => (
                             <div key={title} className="flex items-start gap-4">
                                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/5 border border-white/10">
-                                    <Icon className="h-5 w-5 text-[#4974f9]" />
+                                    <Icon className="h-5 w-5 text-brand-blue" />
                                 </div>
                                 <div>
                                     <p className="text-sm font-black text-white">{title}</p>
@@ -162,7 +162,7 @@ function RegisterPage() {
                 <div className="mx-auto w-full max-w-[580px]">
                     {/* Header */}
                     <div className="mb-8">
-                        <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#4974f9] to-[#7c3aed] shadow-xl shadow-[#4974f9]/25 mb-5">
+                        <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-blue to-[#7c3aed] shadow-xl shadow-brand-blue/25 mb-5">
                             <UserPlus className="h-7 w-7 text-white" />
                         </div>
                         <h1 className="text-4xl font-black tracking-tight text-slate-900">إنشاء حساب جديد</h1>
@@ -181,7 +181,7 @@ function RegisterPage() {
                         {/* Full name */}
                         <div className="space-y-2">
                             <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400">الاسم الكامل</label>
-                            <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'name' ? 'border-[#4974f9] bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
+                            <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'name' ? 'border-brand-blue bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
                                 <User className="pointer-events-none absolute right-4 h-4 w-4 text-slate-400" />
                                 <input
                                     className="w-full bg-transparent py-5 pr-12 pl-4 text-base font-bold text-slate-900 placeholder:text-slate-300 outline-none"
@@ -199,7 +199,7 @@ function RegisterPage() {
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
                                 <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400">البريد الإلكتروني</label>
-                                <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'email' ? 'border-[#4974f9] bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
+                                <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'email' ? 'border-brand-blue bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
                                     <Mail className="pointer-events-none absolute right-4 h-4 w-4 text-slate-400" />
                                     <input
                                         type="email"
@@ -216,7 +216,7 @@ function RegisterPage() {
                             </div>
                             <div className="space-y-2">
                                 <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400">رقم الهاتف</label>
-                                <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'phone' ? 'border-[#4974f9] bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`} dir="ltr">
+                                <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'phone' ? 'border-brand-blue bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`} dir="ltr">
                                     {/* Country Selector */}
                                     <div className="relative flex items-center pl-4">
                                         <select
@@ -248,7 +248,7 @@ function RegisterPage() {
                         {/* Password */}
                         <div className="space-y-2">
                             <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400">كلمة المرور</label>
-                            <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'pass' ? 'border-[#4974f9] bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
+                            <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'pass' ? 'border-brand-blue bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
                                 <Lock className="pointer-events-none absolute right-4 h-4 w-4 text-slate-400" />
                                 <input
                                     type={showPassword ? 'text' : 'password'}
@@ -290,7 +290,7 @@ function RegisterPage() {
                         {/* Confirm password */}
                         <div className="space-y-2">
                             <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400">تأكيد كلمة المرور</label>
-                            <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'confirm' ? 'border-[#4974f9] bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
+                            <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'confirm' ? 'border-brand-blue bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
                                 <Lock className="pointer-events-none absolute right-4 h-4 w-4 text-slate-400" />
                                 <input
                                     type={showConfirmPassword ? 'text' : 'password'}
@@ -317,7 +317,7 @@ function RegisterPage() {
                             <button
                                 type="button"
                                 onClick={() => setAgreed((v) => !v)}
-                                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-all ${agreed ? 'border-[#4974f9] bg-[#4974f9]' : 'border-slate-300 bg-white hover:border-[#4974f9]'}`}
+                                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-all ${agreed ? 'border-brand-blue bg-brand-blue' : 'border-slate-300 bg-white hover:border-brand-blue'}`}
                             >
                                 {agreed && <CheckCircle2 className="h-3.5 w-3.5 text-white" />}
                             </button>
@@ -326,7 +326,7 @@ function RegisterPage() {
                                 <button
                                     type="button"
                                     onClick={() => setIsTermsOpen(true)}
-                                    className="font-black text-[#4974f9] underline-offset-2 hover:underline transition"
+                                    className="font-black text-brand-blue underline-offset-2 hover:underline transition"
                                 >
                                     الشروط والأحكام
                                 </button>
@@ -338,9 +338,9 @@ function RegisterPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="group relative flex h-16 w-full items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-l from-[#4974f9] to-[#3b5fe0] text-base font-black text-white shadow-xl shadow-[#4974f9]/25 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-[#4974f9]/35 active:translate-y-[1px] active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed"
+                            className="group relative flex h-16 w-full items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-l from-brand-blue to-[#3b5fe0] text-base font-black text-white shadow-xl shadow-brand-blue/25 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-brand-blue/35 active:translate-y-[1px] active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed"
                         >
-                            <div className="absolute inset-0 bg-gradient-to-l from-[#3b5fe0] to-[#4974f9] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                            <div className="absolute inset-0 bg-gradient-to-l from-[#3b5fe0] to-brand-blue opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                             {loading ? (
                                 <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                             ) : (
@@ -361,7 +361,7 @@ function RegisterPage() {
                         {/* Login link */}
                         <p className="text-center text-sm font-bold text-slate-500">
                             لديك حساب بالفعل؟{' '}
-                            <Link to="/login" state={location.state} className="font-black text-[#4974f9] transition hover:text-[#1e40af]">
+                            <Link to="/login" state={location.state} className="font-black text-brand-blue transition hover:text-[#1e40af]">
                                 تسجيل الدخول
                             </Link>
                         </p>
@@ -376,8 +376,8 @@ function RegisterPage() {
                         {/* Modal header */}
                         <div className="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-5">
                             <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#4974f9]/10">
-                                    <FileText className="h-5 w-5 text-[#4974f9]" />
+                                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-blue/10">
+                                    <FileText className="h-5 w-5 text-brand-blue" />
                                 </div>
                                 <h2 className="text-lg font-black text-slate-900">الشروط والأحكام</h2>
                             </div>
@@ -410,7 +410,7 @@ function RegisterPage() {
                         <div className="border-t border-slate-100 bg-slate-50 px-6 py-4">
                             <button
                                 onClick={() => { setAgreed(true); setIsTermsOpen(false) }}
-                                className="flex h-12 w-full items-center justify-center rounded-2xl bg-gradient-to-l from-[#4974f9] to-[#3b5fe0] text-sm font-black text-white shadow-lg shadow-[#4974f9]/20 transition-all hover:shadow-xl hover:shadow-[#4974f9]/30"
+                                className="flex h-12 w-full items-center justify-center rounded-2xl bg-gradient-to-l from-brand-blue to-[#3b5fe0] text-sm font-black text-white shadow-lg shadow-brand-blue/20 transition-all hover:shadow-xl hover:shadow-brand-blue/30"
                             >
                                 <CheckCircle2 className="ml-2 h-4 w-4" />
                                 لقد قرأت الشروط وأوافق عليها

@@ -3,6 +3,13 @@
 @import "tailwindcss";
 @config "../tailwind.config.js";
 
+@theme {
+  --color-brand-blue: #4974f9;
+  --color-brand-blue-hover: #3862e0;
+  --color-brand-pearl: #b4d3f8;
+}
+
+
 @layer base {
   :root {
     --hero-red: #f93f3b;
@@ -123,6 +130,11 @@
 
   .app-shell {
     background: #f4f3f9;
+    transition: background-color 0.3s ease;
+  }
+
+  .dark .app-shell {
+    background: #0b0f19;
   }
 
   .app-surface {
@@ -231,9 +243,15 @@
   }
 
   @keyframes shimmer {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
+    0% {
+      transform: translateX(-100%);
+    }
+
+    100% {
+      transform: translateX(100%);
+    }
   }
+
   .animate-shimmer {
     animation: shimmer 3s infinite linear;
   }

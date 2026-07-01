@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { Building2, CheckCircle2, CreditCard, Landmark, Lock, ShieldCheck, Plane, MoveLeft, ChevronDown, Luggage, HeartPulse, Accessibility, Wind, Salad, BadgeCheck, Headphones, Camera, Upload, MapPin, Phone, Trash2, AlertCircle, Building, Clock } from 'lucide-react'
-import { useLocation, Link } from 'react-router-dom'
+import { useLocation, Link, useSearchParams } from 'react-router-dom'
 import { useSearch } from '../utils/SearchContext'
 import { useAuth } from '../utils/AuthContext'
 import BookingStepper from '../components/BookingStepper.jsx'
 
 import creditCardTemplate from '../assets/credite card.png'
 import masterCardLogo from '../assets/mastercard logo.png'
-import paypalLogo from '../assets/paypal.png'
 import visaLogo from '../assets/visa.png'
 
 const CARD_COUNTDOWN = 10 * 60 // 10 minutes for card payment
@@ -17,7 +16,7 @@ const SERVICES = [
   { id: 'wheelchair', icon: Accessibility, label: 'مساعدة بالكرسي المتحرك', desc: 'خدمة مرافقة وكرسي متحرك داخل المطار والطائرة', price: 20, color: 'blue' },
   { id: 'oxygen', icon: Wind, label: 'أكسجين طبي على المتن', desc: 'توفير أسطوانة أكسجين طبية معتمدة خلال الرحلة', price: 55, color: 'sky' },
   { id: 'medical', icon: HeartPulse, label: 'مساعدة طبية متخصصة', desc: 'طاقم طبي مدرّب لمرافقة المريض طوال الرحلة', price: 80, color: 'red' },
-  { id: 'medmeal', icon: Salad, label: 'وجبة غذائية طبية', desc: 'وجبة مخصصة وفق الحالة الصحية (سكري، ضغط...)', price: 18, color: 'emerald' },
+  { id: 'medmeal', icon: HeartPulse, label: 'سيارة إسعاف', desc: 'تأمين سيارة إسعاف مجهزة لنقل المريض من/إلى الطائرة', price: 18, color: 'emerald' },
 ]
 
 const paymentMethods = [
@@ -26,12 +25,6 @@ const paymentMethods = [
     label: 'بطاقة ائتمانية / خصم',
     description: 'Visa, Mastercard',
     logos: [visaLogo, masterCardLogo],
-  },
-  {
-    id: 'paypal',
-    label: 'PayPal',
-    description: 'دفع سريع وآمن',
-    logos: [paypalLogo],
   },
   {
     id: 'branch',
@@ -228,7 +221,7 @@ function PaymentPage() {
     else adults++
   })
 
-  const EXTRA_BAG_PRICE = 35
+  const EXTRA_BAG_PRICE = 2
   const bagsTotal = Object.values(extraBags).reduce((s, n) => s + n * EXTRA_BAG_PRICE, 0)
   const servicesTotal = SERVICES.filter(s => selectedServices.includes(s.id)).reduce((s, srv) => s + srv.price, 0)
 
@@ -248,13 +241,16 @@ function PaymentPage() {
   const totalPrice = ticketsTotal
   const finalTotal = ticketsTotal + businessSurchargeTotal + extrasTotal
 
-  const [cardHolderName, setCardHolderName] = useState('')
-  const [cardNumber, setCardNumber] = useState('')
-  const [cvv, setCvv] = useState('')
-  const [expMonth, setExpMonth] = useState('')
-  const [expYear, setExpYear] = useState('')
+  const [searchParams] = useSearchParams()
+
   const [paymentMethod, setPaymentMethod] = useState('card')
   const [secondsLeft, setSecondsLeft] = useState(CARD_COUNTDOWN)
+
+  useEffect(() => {
+    if (searchParams.get('cancel') === 'true') {
+      alert('تم إلغاء عملية الدفع، يرجى المحاولة مرة أخرى.');
+    }
+  }, [searchParams])
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
 
   // Branch and Payment Proof states
@@ -398,7 +394,7 @@ function PaymentPage() {
           extraBags,
           selectedServices,
           extrasTotal,
-          paymentMethod,
+          paymentMethod: paymentMethod === 'card' ? 'card' : paymentMethod,
           userId: userObj.id,
           reference: refVal,
           selectedSeats,
@@ -411,7 +407,30 @@ function PaymentPage() {
       if (data.success) {
         setBookingRef(data.reference)
         addMockBookingLocal(data.reference)
-        setIsPaymentModalOpen(true)
+
+        if (paymentMethod === 'card') {
+          const stripeResponse = await fetch('http://localhost:8080/api/create-checkout-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              bookingId: data.bookingId,
+              reference: data.reference,
+              amount: finalTotal,
+              flightNumber: selectedFlight?.flight_number || 'IY-601',
+              origin: selectedFlight?.airportOrigin_code || 'ADE',
+              destination: selectedFlight?.airportDestination_code || 'CAI'
+            })
+          })
+          const stripeData = await stripeResponse.json()
+          if (stripeData.success && stripeData.url) {
+            window.location.href = stripeData.url
+            return
+          } else {
+            alert('حدث خطأ أثناء تشغيل الدفع بواسطة Stripe: ' + stripeData.error)
+          }
+        } else {
+          setIsPaymentModalOpen(true)
+        }
       } else {
         alert('حدث خطأ أثناء تأكيد الحجز: ' + data.error)
       }
@@ -444,11 +463,7 @@ function PaymentPage() {
     price: 856,
   }
 
-  const cardDigits = cardNumber.replace(/\D/g, '').slice(0, 16)
-  const displayCardNumber =
-    `${cardDigits}${'•'.repeat(Math.max(0, 16 - cardDigits.length))}`.match(/.{1,4}/g)?.join(' ') ??
-    '•••• •••• •••• ••••'
-  const displayExpiry = `${expMonth.padEnd(2, '•')}/${expYear.padEnd(2, '•')}`
+
 
   return (
     <main className="min-h-[100svh] bg-[#f8f9fc] pb-16 pt-24 sm:pt-28" dir="rtl">
@@ -480,7 +495,7 @@ function PaymentPage() {
 
           <div className="space-y-6">
             {/* Payment Method Selector */}
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-3">
               {paymentMethods.map((method) => {
                 const isActive = paymentMethod === method.id
                 const Icon = method.icon
@@ -536,124 +551,23 @@ function PaymentPage() {
             {/* Dynamic Payment Form */}
             <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm sm:p-8">
               {paymentMethod === 'card' && (
-                <div className="grid gap-10 lg:grid-cols-[1fr_minmax(0,1.2fr)]">
-                  {/* Visual Card Preview */}
-                  <div className="relative aspect-[1.6/1] w-full overflow-hidden rounded-[24px] bg-gradient-to-br from-slate-950 via-[#0d1527] to-[#1e293b] p-6 text-white shadow-2xl border border-white/5">
-                    {/* Glowing glassmorphic orbs in the background */}
-                    <div className="absolute -left-10 -top-10 h-36 w-36 rounded-full bg-brand-blue/15 blur-2xl pointer-events-none" />
-                    <div className="absolute -right-10 -bottom-10 h-36 w-36 rounded-full bg-emerald-500/10 blur-2xl pointer-events-none" />
-                    <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
-
-                    <div className="relative z-10 flex h-full flex-col justify-between">
-                      {/* Top row: Premium metallic chip & Glass badge logos */}
-                      <div className="flex items-start justify-between">
-                        {/* Real-looking metallic Microchip */}
-                        <div className="relative h-8 w-10 overflow-hidden rounded-md border border-amber-300/40 bg-gradient-to-r from-amber-100 via-amber-200 to-amber-400 p-1 shadow-sm">
-                          <div className="absolute inset-x-0 top-1/2 h-[1px] -translate-y-1/2 bg-amber-600/30" />
-                          <div className="absolute inset-y-0 left-1/2 w-[1px] -translate-x-1/2 bg-amber-600/30" />
-                          <div className="absolute inset-1.5 rounded-sm border border-amber-500/20 bg-amber-300/20" />
-                        </div>
-                        
-                        {/* Brand logos directly */}
-                        <div className="flex gap-2">
-                          <img src={visaLogo} alt="" className="h-4.5 w-auto object-contain" />
-                          <img src={masterCardLogo} alt="" className="h-4.5 w-auto object-contain" />
-                        </div>
-                      </div>
-
-                      {/* Bottom/Middle rows: Live dynamic values */}
-                      <div className="space-y-3.5">
-                        {/* Monospaced realistic Card Number */}
-                        <p className="text-[17px] font-black tracking-[0.25em] font-mono text-white/95 drop-shadow-[0_2px_10px_rgba(255,255,255,0.08)]" dir="ltr">
-                          {displayCardNumber}
-                        </p>
-                        
-                        <div className="flex justify-between items-end">
-                          <div className="space-y-0.5 text-right">
-                            <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400">حامل البطاقة</span>
-                            <p className="text-[11px] font-black uppercase tracking-wider text-slate-100">{cardHolderName || 'اسم حامل البطاقة'}</p>
-                          </div>
-                          <div className="space-y-0.5 text-left">
-                            <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400">ينتهي في</span>
-                            <p className="text-[11px] font-black text-slate-100" dir="ltr">{displayExpiry}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Card Form */}
-                  <div className="space-y-5">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block text-right">اسم حامل البطاقة</label>
-                      <input
-                        className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50/20 px-4 text-xs font-black text-slate-800 transition-all duration-200 placeholder-slate-300 focus:border-brand-blue focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue/10"
-                        placeholder="أدخل الاسم كما في البطاقة"
-                        value={cardHolderName}
-                        onChange={(e) => setCardHolderName(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block text-right">رقم البطاقة</label>
-                      <div className="relative">
-                        <input
-                          className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50/20 pl-10 pr-4 text-xs font-black text-slate-800 transition-all duration-200 placeholder-slate-300 focus:border-brand-blue focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue/10"
-                          placeholder="0000 0000 0000 0000"
-                          value={cardNumber}
-                          onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, '').slice(0, 16))}
-                          dir="ltr"
-                        />
-                        <CreditCard className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-300" />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block text-right">تاريخ الانتهاء</label>
-                        <div className="flex items-center gap-2" dir="ltr">
-                          <input
-                            className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50/20 px-2 text-center text-xs font-black text-slate-800 transition-all duration-200 placeholder-slate-300 focus:border-brand-blue focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue/10"
-                            placeholder="MM"
-                            value={expMonth}
-                            onChange={(e) => setExpMonth(e.target.value.replace(/\D/g, '').slice(0, 2))}
-                          />
-                          <span className="font-black text-slate-300">/</span>
-                          <input
-                            className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50/20 px-2 text-center text-xs font-black text-slate-800 transition-all duration-200 placeholder-slate-300 focus:border-brand-blue focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue/10"
-                            placeholder="YY"
-                            value={expYear}
-                            onChange={(e) => setExpYear(e.target.value.replace(/\D/g, '').slice(0, 2))}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block text-right">رمز التحقق (CVV)</label>
-                        <input
-                          className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50/20 px-4 text-center text-xs font-black text-slate-800 transition-all duration-200 placeholder-slate-300 focus:border-brand-blue focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue/10"
-                          placeholder="***"
-                          type="password"
-                          value={cvv}
-                          onChange={(e) => setCvv(e.target.value.replace(/\D/g, '').slice(0, 3))}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {paymentMethod === 'paypal' && (
                 <div className="flex flex-col items-center py-10 text-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#003087]/5 mb-6 text-[#003087]">
-                    <img src={paypalLogo} alt="PayPal" className="h-6 w-auto object-contain" />
+                  <div className="flex gap-4 items-center justify-center mb-6">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-blue/5 text-brand-blue">
+                      <img src={visaLogo} alt="Visa" className="h-4.5 w-auto object-contain" />
+                    </div>
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/5 text-amber-600">
+                      <img src={masterCardLogo} alt="Mastercard" className="h-6 w-auto object-contain" />
+                    </div>
                   </div>
-                  <h3 className="text-sm font-black text-slate-800">تأكيد الدفع عبر PayPal</h3>
-                  <p className="mt-2 max-w-sm text-[11px] font-bold leading-relaxed text-slate-400">
-                    بمجرد النقر على "إتمام الحجز"، سنقوم بتوجيهك بشكل آمن إلى بوابة PayPal لإتمام عملية الدفع بسرعة وأمان.
+                  <h3 className="text-sm font-black text-slate-800">الدفع الآمن عبر بطاقة الائتمان (Visa / Mastercard)</h3>
+                  <p className="mt-2 max-w-md text-[11px] font-bold leading-relaxed text-slate-400">
+                    عند النقر على "إتمام الحجز والدفع"، سنقوم بتوجيهك بشكل آمن إلى بوابة الدفع المعتمدة لدى Stripe لإدخال بيانات بطاقتك وإتمام العملية بأقصى درجات الأمان.
                   </p>
                 </div>
               )}
+
+
 
               {paymentMethod === 'branch' && (
                 <div className="py-2">

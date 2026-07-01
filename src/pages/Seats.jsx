@@ -270,8 +270,8 @@ function SeatsPage() {
 
                             {/* Main Galley Area */}
                             <div className="h-28 w-full bg-slate-50/80 border-y-2 border-slate-100 flex items-center justify-between px-12 relative overflow-hidden">
-                                 <div className="absolute left-[-20px] top-1/2 -translate-y-1/2 w-6 h-16 bg-red-500 rounded-r-2xl shadow-lg shadow-red-500/20 flex items-center justify-center text-[9px] text-white font-black [writing-mode:vertical-lr] rotate-180 z-10 border-2 border-white/20">EXIT DOOR</div>
-                                 <div className="absolute right-[-20px] top-1/2 -translate-y-1/2 w-6 h-16 bg-red-500 rounded-l-2xl shadow-lg shadow-red-500/20 flex items-center justify-center text-[9px] text-white font-black [writing-mode:vertical-lr] z-10 border-2 border-white/20">EXIT DOOR</div>
+                                 <div className="absolute left-[-20px] top-1/2 -translate-y-1/2 w-6 h-16 bg-brand-blue rounded-r-2xl shadow-lg shadow-brand-blue/20 flex items-center justify-center text-[9px] text-white font-black [writing-mode:vertical-lr] rotate-180 z-10 border-2 border-white/20">EXIT DOOR</div>
+                                 <div className="absolute right-[-20px] top-1/2 -translate-y-1/2 w-6 h-16 bg-brand-blue rounded-l-2xl shadow-lg shadow-brand-blue/20 flex items-center justify-center text-[9px] text-white font-black [writing-mode:vertical-lr] z-10 border-2 border-white/20">EXIT DOOR</div>
                                  <div className="h-full w-px bg-gradient-to-b from-transparent via-slate-200 to-transparent mx-auto" />
                                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.8)_0%,transparent_70%)]" />
                             </div>
@@ -344,7 +344,7 @@ function SeatsPage() {
                                                 </div>
                                                 <button 
                                                     onClick={() => toggleSeat(seat)}
-                                                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500 text-white flex items-center justify-center text-[10px] font-bold shadow-lg opacity-0 group-hover/seat:opacity-100 transition-opacity"
+                                                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-brand-blue text-white flex items-center justify-center text-[10px] font-bold shadow-lg opacity-0 group-hover/seat:opacity-100 transition-opacity"
                                                 >
                                                     ×
                                                 </button>
@@ -369,7 +369,7 @@ function SeatsPage() {
                                         disabled={selectedSeats.length !== passengerCount}
                                         className={`group relative w-full overflow-hidden rounded-3xl py-6 font-black text-base flex items-center justify-center gap-3 transition-all duration-300 ${
                                             selectedSeats.length === passengerCount
-                                                ? 'bg-brand-red text-white shadow-[0_20px_40px_rgba(217,49,43,0.3)] hover:-translate-y-1 hover:shadow-[0_25px_50px_rgba(217,49,43,0.4)] active:scale-95'
+                                                ? 'bg-brand-blue hover:bg-brand-blue-hover text-white shadow-[0_20px_40px_rgba(73,116,249,0.3)] hover:-translate-y-1 hover:shadow-[0_25px_50px_rgba(73,116,249,0.4)] active:scale-95'
                                                 : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                                         }`}
                                     >

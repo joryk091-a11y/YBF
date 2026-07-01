@@ -7,7 +7,6 @@ import {
   Accessibility,
   Wind,
   HeartPulse,
-  Salad,
   Plane,
   ShieldCheck,
   ClipboardList
@@ -17,7 +16,7 @@ const serviceConfig = {
   wheelchair: { label: 'كرسي متحرك', icon: Accessibility, bg: 'bg-blue-500/10 text-blue-600 border border-blue-500/20' },
   oxygen: { label: 'أكسجين طبي', icon: Wind, bg: 'bg-sky-500/10 text-sky-600 border border-sky-500/20' },
   medical: { label: 'مرافق طبي', icon: HeartPulse, bg: 'bg-red-500/10 text-red-600 border border-red-500/20' },
-  medmeal: { label: 'وجبة طبية', icon: Salad, bg: 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20' },
+  medmeal: { label: 'سيارة إسعاف', icon: HeartPulse, bg: 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20' },
 };
 
 export default function CompanyPassengers() {

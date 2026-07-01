@@ -4,13 +4,13 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useSearch } from '../utils/SearchContext'
 import BookingStepper from '../components/BookingStepper.jsx'
 
-const EXTRA_BAG_PRICE = 35
+const EXTRA_BAG_PRICE = 2
 
 const SERVICES = [
   { id: 'wheelchair', icon: Accessibility, label: 'مساعدة بالكرسي المتحرك', desc: 'خدمة مرافقة وكرسي متحرك داخل المطار والطائرة', price: 20, color: 'blue' },
   { id: 'oxygen', icon: Wind, label: 'أكسجين طبي على المتن', desc: 'توفير أسطوانة أكسجين طبية معتمدة خلال الرحلة', price: 55, color: 'sky' },
   { id: 'medical', icon: HeartPulse, label: 'مساعدة طبية متخصصة', desc: 'طاقم طبي مدرّب لمرافقة المريض طوال الرحلة', price: 80, color: 'red' },
-  { id: 'medmeal', icon: Salad, label: 'وجبة غذائية طبية', desc: 'وجبة مخصصة وفق الحالة الصحية (سكري، ضغط...)', price: 18, color: 'emerald' },
+  { id: 'medmeal', icon: HeartPulse, label: 'سيارة إسعاف', desc: 'تأمين سيارة إسعاف مجهزة لنقل المريض من/إلى الطائرة', price: 18, color: 'emerald' },
 ]
 
 const createPassenger = (id) => ({

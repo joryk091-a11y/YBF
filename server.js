@@ -4,12 +4,14 @@ import dotenv from 'dotenv';
 import mysql from 'mysql2/promise';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import Stripe from 'stripe';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
 const app = express();
 const PORT = 8080;
 
@@ -1113,6 +1115,78 @@ app.post('/api/bookings', async (req, res) => {
     if (connection) await connection.end();
   }
 });
+
+// Create Stripe Checkout Session
+app.post('/api/create-checkout-session', async (req, res) => {
+  const { bookingId, reference, amount, flightNumber, origin, destination } = req.body;
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `حجز رحلة طيران ${flightNumber}`,
+              description: `من ${origin} إلى ${destination} (رمز الحجز: ${reference})`,
+            },
+            unit_amount: Math.round(amount * 100), // convert to cents
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `http://localhost:5173/payment-success?reference=${reference}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `http://localhost:5173/payment?cancel=true`,
+    });
+
+    res.json({ success: true, url: session.url });
+  } catch (error) {
+    console.error('Stripe Session Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Confirm Booking Payment status
+app.post('/api/bookings/confirm-payment', async (req, res) => {
+  const { reference } = req.body;
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    await connection.beginTransaction();
+
+    const [bookings] = await connection.execute(
+      'SELECT id_bookings FROM bookings WHERE booking_reference = ?',
+      [reference]
+    );
+
+    if (bookings.length === 0) {
+      return res.status(404).json({ success: false, error: 'Booking not found' });
+    }
+
+    const bookingId = bookings[0].id_bookings;
+
+    await connection.execute(
+      "UPDATE bookings SET status = 'certain' WHERE id_bookings = ?",
+      [bookingId]
+    );
+
+    await connection.execute(
+      "UPDATE payments SET payment_status = 'success' WHERE booking_id = ?",
+      [bookingId]
+    );
+
+    await connection.commit();
+    res.json({ success: true });
+  } catch (error) {
+    if (connection) await connection.rollback();
+    console.error('Confirm Payment Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
 
 // ─── Notifications API ─────────────────────────────────────────────────────
 
@@ -2274,7 +2348,7 @@ const ensureChatTables = async () => {
 // ─── Serve Frontend (React/Vite dist) ────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'dist')));
 
-app.get('*', (req, res) => {
+app.get('*splat', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 

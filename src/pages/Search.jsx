@@ -326,27 +326,7 @@ function SearchPage() {
               </div>
             </div>
 
-            {/* Footer Details */}
-            <div className="mt-10 flex flex-wrap items-center justify-between border-t border-slate-50 pt-6">
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2.5 group/icon">
-                  <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover/icon:bg-blue-50 group-hover/icon:text-brand-blue transition-colors">
-                    <Package className="h-4 w-4" />
-                  </div>
-                  <span className="text-[11px] font-black text-slate-600">23 كجم (قطعتين)</span>
-                </div>
-                <div className="flex items-center gap-2.5 group/icon">
-                  <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover/icon:bg-blue-50 group-hover/icon:text-brand-blue transition-colors">
-                    <TrendingUp className="h-4 w-4" />
-                  </div>
-                  <span className="text-[11px] font-black text-slate-600">وجبات خفيفة ومشروبات</span>
-                </div>
-              </div>
 
-              <button className="flex items-center gap-1.5 text-[11px] font-black text-brand-blue transition hover:opacity-70">
-                عرض تفاصيل الرحلة والقوانين <ChevronDown className="h-3.5 w-3.5" />
-              </button>
-            </div>
           </div>
 
           {/* Pricing Stub */}

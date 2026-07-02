@@ -79,31 +79,29 @@ function SeatsPage() {
                     onMouseEnter={() => !isOccupied && setHoveredSeat({ id: seatId, isBusiness, isExit })}
                     onMouseLeave={() => setHoveredSeat(null)}
                     disabled={isOccupied}
-                    className={`relative flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl transition-all duration-500 overflow-hidden ${
-                        isOccupied 
-                            ? 'bg-slate-100 text-slate-300 cursor-not-allowed opacity-60' 
-                            : isSelected
-                                ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.5)] scale-110 z-20'
-                                : isBusiness
-                                    ? 'bg-amber-50 border-2 border-amber-200 text-amber-600 hover:bg-amber-100 hover:border-amber-400 hover:-translate-y-1'
-                                    : isExit
-                                        ? 'bg-emerald-50 border-2 border-emerald-200 text-emerald-600 hover:bg-emerald-100 hover:border-emerald-400 hover:-translate-y-1'
-                                        : 'bg-white border-2 border-slate-100 text-slate-400 hover:border-blue-400 hover:text-blue-500 hover:-translate-y-1 shadow-sm'
-                    }`}
+                    className={`relative flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl transition-all duration-500 overflow-hidden ${isOccupied
+                        ? 'bg-slate-100 text-slate-300 cursor-not-allowed opacity-60'
+                        : isSelected
+                            ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.5)] scale-110 z-20'
+                            : isBusiness
+                                ? 'bg-amber-50 border-2 border-amber-200 text-amber-600 hover:bg-amber-100 hover:border-amber-400 hover:-translate-y-1'
+                                : isExit
+                                    ? 'bg-emerald-50 border-2 border-emerald-200 text-emerald-600 hover:bg-emerald-100 hover:border-emerald-400 hover:-translate-y-1'
+                                    : 'bg-white border-2 border-slate-100 text-slate-400 hover:border-blue-400 hover:text-blue-500 hover:-translate-y-1 shadow-sm'
+                        }`}
                 >
                     <Armchair size={18} className={`${isSelected ? 'animate-pulse' : 'transition-transform group-hover:scale-110'}`} />
-                    <span className={`absolute -top-0.5 -right-0.5 text-[8px] font-black px-1.5 py-0.5 rounded-bl-lg transition-colors ${
-                        isSelected 
-                        ? 'bg-blue-400 text-white' 
-                        : isOccupied 
+                    <span className={`absolute -top-0.5 -right-0.5 text-[8px] font-black px-1.5 py-0.5 rounded-bl-lg transition-colors ${isSelected
+                        ? 'bg-blue-400 text-white'
+                        : isOccupied
                             ? 'bg-slate-200 text-slate-400'
                             : isBusiness
                                 ? 'bg-amber-200 text-amber-800'
                                 : 'bg-slate-100 text-slate-500'
-                    }`}>
+                        }`}>
                         {col}
                     </span>
-                    
+
                     {/* Animated shine effect on hover */}
                     {!isOccupied && !isSelected && (
                         <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
@@ -116,10 +114,10 @@ function SeatsPage() {
                         <div className="relative w-80 overflow-hidden rounded-[2.5rem] bg-white/95 p-8 shadow-[0_30px_70px_rgba(0,0,0,0.15)] border border-white/50 backdrop-blur-2xl">
                             {/* Accent Gradient */}
                             <div className={`absolute top-0 left-0 right-0 h-2 ${isBusiness ? 'bg-gradient-to-r from-amber-400 to-yellow-600' : 'bg-gradient-to-r from-blue-400 to-indigo-600'}`} />
-                            
+
                             {/* Tip Arrow */}
                             <div className="absolute bottom-[-10px] left-1/2 h-5 w-5 -translate-x-1/2 rotate-45 bg-white/95 border-r border-b border-white/50" />
-                            
+
                             {/* Header */}
                             <div className="mb-6 flex items-center justify-between" dir="rtl">
                                 <div className="text-right">
@@ -128,9 +126,8 @@ function SeatsPage() {
                                         <span className="block text-blue-600 text-sm mt-1">مقعد {seatId}</span>
                                     </h4>
                                     <div className="mt-2 flex items-center gap-2">
-                                        <span className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${
-                                            isExit ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-50 text-blue-700'
-                                        }`}>
+                                        <span className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${isExit ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-50 text-blue-700'
+                                            }`}>
                                             {isExit ? <Zap size={10} /> : <Star size={10} />}
                                             {isExit ? 'مساحة أرجل إضافية' : 'مقعد قياسي'}
                                         </span>
@@ -159,7 +156,7 @@ function SeatsPage() {
                                     <p className="text-sm font-black text-slate-900 mt-1">{isBusiness ? '5"' : '3"'}</p>
                                 </div>
                             </div>
-                            
+
                             <div className="mt-6 flex items-center justify-center gap-2 opacity-30">
                                 <div className="h-px w-8 bg-slate-300" />
                                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-[4px]">
@@ -177,7 +174,7 @@ function SeatsPage() {
     const renderRow = (rowNum) => {
         const isBusiness = BUSINESS_ROWS.includes(rowNum)
         const isExit = EXIT_ROWS.includes(rowNum)
-        
+
         const leftCols = isBusiness ? ['A', 'B'] : ['A', 'B', 'C']
         const rightCols = isBusiness ? ['E', 'F'] : ['D', 'E', 'F']
 
@@ -205,12 +202,12 @@ function SeatsPage() {
 
     const handleContinue = () => {
         if (selectedSeats.length === passengerCount) {
-            navigate('/travelers', { 
-                state: { 
-                    selectedFlight, 
+            navigate('/travelers', {
+                state: {
+                    selectedFlight,
                     searchCriteria,
-                    selectedSeats 
-                } 
+                    selectedSeats
+                }
             })
         }
     }
@@ -224,27 +221,51 @@ function SeatsPage() {
             </div>
 
             <div className="mx-auto mt-12 grid w-full max-w-7xl gap-12 px-4 lg:grid-cols-[1fr_400px] sm:px-6">
-                
+
                 {/* Airplane Map Section */}
                 <section className="relative z-10 flex flex-col items-center">
                     <div className="mb-12 w-full text-center lg:text-right">
-                        <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-blue-600 mb-4">
-                            <Plane size={16} />
-                            <span className="text-xs font-black uppercase tracking-widest">خريطة الطائرة</span>
-                        </div>
                         <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">اختر مقعدك المفضل</h1>
-                        <p className="text-lg font-bold text-slate-500">
+                        <p className="text-lg font-bold text-slate-550">
                             {selectedFlight?.airlineName || 'طيران اليمنية'} | {selectedFlight?.raw?.aircraft_type || 'Airbus A320-200'}
                         </p>
+                    </div>
+
+                    {/* Modern Horizontal Legend */}
+                    <div className="flex flex-wrap items-center justify-center gap-6 px-6 py-4 rounded-3xl bg-white border border-slate-200/60 shadow-sm max-w-[580px] w-full mb-6" dir="rtl">
+                        <div className="flex items-center gap-2">
+                            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-50 border border-amber-200 text-amber-600 shadow-sm">
+                                <Armchair size={12} />
+                            </span>
+                            <span className="text-xs font-black text-slate-700">درجة الأعمال</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 shadow-sm">
+                                <Armchair size={12} />
+                            </span>
+                            <span className="text-xs font-black text-slate-700">صف الطوارئ</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-400 shadow-sm">
+                                <Armchair size={12} />
+                            </span>
+                            <span className="text-xs font-black text-slate-700">مقعد متاح</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-slate-100 border border-slate-200/40 text-slate-300 shadow-inner">
+                                <Armchair size={12} />
+                            </span>
+                            <span className="text-xs font-black text-slate-700">مقعد محجوز</span>
+                        </div>
                     </div>
 
                     <div className="relative w-full max-w-[580px] mt-48">
                         {/* Realistic Airplane Body */}
                         <div className="relative mx-auto w-full max-w-[480px] bg-gradient-to-b from-white via-slate-50 to-white border-x-[16px] border-slate-200/80 shadow-[0_50px_100px_rgba(0,0,0,0.1)] p-0 overflow-visible pb-32">
-                            
+
                             {/* Nose Section with Cockpit */}
                             <div className="absolute top-[-180px] left-[-16px] right-[-16px] h-[200px] bg-white border-x-[16px] border-t-[16px] border-slate-200/80 shadow-inner"
-                                 style={{ borderRadius: '50% 50% 0 0 / 100% 100% 0 0' }}>
+                                style={{ borderRadius: '50% 50% 0 0 / 100% 100% 0 0' }}>
                                 <div className="absolute inset-0 flex flex-col items-center justify-end pb-10">
                                     {/* Cockpit Windows */}
                                     <div className="flex gap-1.5 mb-6">
@@ -270,10 +291,10 @@ function SeatsPage() {
 
                             {/* Main Galley Area */}
                             <div className="h-28 w-full bg-slate-50/80 border-y-2 border-slate-100 flex items-center justify-between px-12 relative overflow-hidden">
-                                 <div className="absolute left-[-20px] top-1/2 -translate-y-1/2 w-6 h-16 bg-brand-blue rounded-r-2xl shadow-lg shadow-brand-blue/20 flex items-center justify-center text-[9px] text-white font-black [writing-mode:vertical-lr] rotate-180 z-10 border-2 border-white/20">EXIT DOOR</div>
-                                 <div className="absolute right-[-20px] top-1/2 -translate-y-1/2 w-6 h-16 bg-brand-blue rounded-l-2xl shadow-lg shadow-brand-blue/20 flex items-center justify-center text-[9px] text-white font-black [writing-mode:vertical-lr] z-10 border-2 border-white/20">EXIT DOOR</div>
-                                 <div className="h-full w-px bg-gradient-to-b from-transparent via-slate-200 to-transparent mx-auto" />
-                                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.8)_0%,transparent_70%)]" />
+                                <div className="absolute left-[-20px] top-1/2 -translate-y-1/2 w-6 h-16 bg-brand-blue rounded-r-2xl shadow-lg shadow-brand-blue/20 flex items-center justify-center text-[9px] text-white font-black [writing-mode:vertical-lr] rotate-180 z-10 border-2 border-white/20">EXIT DOOR</div>
+                                <div className="absolute right-[-20px] top-1/2 -translate-y-1/2 w-6 h-16 bg-brand-blue rounded-l-2xl shadow-lg shadow-brand-blue/20 flex items-center justify-center text-[9px] text-white font-black [writing-mode:vertical-lr] z-10 border-2 border-white/20">EXIT DOOR</div>
+                                <div className="h-full w-px bg-gradient-to-b from-transparent via-slate-200 to-transparent mx-auto" />
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.8)_0%,transparent_70%)]" />
                             </div>
 
                             {/* Interior Mapping Area */}
@@ -282,14 +303,14 @@ function SeatsPage() {
                                     <div className="h-1 w-24 bg-amber-200 rounded-full" />
                                     <span className="text-[10px] font-black text-amber-500 uppercase tracking-[4px]">درجة رجال الأعمال</span>
                                 </div>
-                                
+
                                 {BUSINESS_ROWS.map(num => renderRow(num))}
 
                                 {/* Overwing Exit Area */}
                                 <div className="py-16 flex flex-col items-center justify-center relative">
                                     <div className="absolute left-[-60px] right-[-60px] h-32 bg-emerald-500/5 backdrop-blur-[2px] border-y border-emerald-500/10" />
                                     <div className="z-10 flex flex-col items-center gap-3">
-                                        <div className="bg-emerald-500 text-white text-[10px] font-black px-8 py-2.5 rounded-full shadow-xl shadow-emerald-500/20 border-4 border-white animate-pulse">
+                                        <div className="bg-emerald-500 text-white text-[10px] font-black px-8 py-2.5 rounded-full shadow-xl shadow-emerald-500/20 border-4 border-white">
                                             مخارج طوارئ فوق الأجنحة
                                         </div>
                                     </div>
@@ -304,7 +325,7 @@ function SeatsPage() {
 
                             {/* Tail Unit Section */}
                             <div className="absolute bottom-[-140px] left-[-16px] right-[-16px] h-[160px] bg-white border-x-[16px] border-b-[16px] border-slate-200/80 shadow-2xl"
-                                 style={{ borderRadius: '0 0 50% 50% / 0 0 100% 100%' }}>
+                                style={{ borderRadius: '0 0 50% 50% / 0 0 100% 100%' }}>
                                 <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center">
                                     <div className="relative mb-4">
                                         <Plane className="h-8 w-8 text-slate-100" />
@@ -322,7 +343,7 @@ function SeatsPage() {
 
                 {/* Information & Actions Sidebar */}
                 <aside className="h-fit lg:sticky lg:top-48 space-y-8">
-                    
+
                     {/* Booking Summary Card */}
                     <div className="group relative overflow-hidden rounded-[3rem] border border-white bg-white/80 p-1 shadow-2xl shadow-blue-900/10 backdrop-blur-xl">
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-indigo-50/30 opacity-50" />
@@ -334,7 +355,16 @@ function SeatsPage() {
                                 </div>
                             </div>
 
-                            <div className="space-y-8">
+                            <div className="space-y-6">
+                                {selectedFlight?.availableSeats !== undefined && selectedFlight?.availableSeats !== null && (
+                                    <div className="flex items-center justify-between rounded-3xl bg-slate-50 border border-slate-100/60 px-5 py-3.5 transition-all duration-300">
+                                        <span className="text-xs font-black text-slate-450">المقاعد المتاحة بالرحلة</span>
+                                        <span className="text-xs font-black text-slate-700">
+                                            {selectedFlight.availableSeats} مقعد
+                                        </span>
+                                    </div>
+                                )}
+
                                 <div className="flex flex-wrap gap-4 min-h-[80px] content-start">
                                     {selectedSeats.length > 0 ? (
                                         selectedSeats.map(seat => (
@@ -342,7 +372,7 @@ function SeatsPage() {
                                                 <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-gradient-to-br from-blue-600 to-indigo-700 text-white font-black text-2xl shadow-xl shadow-blue-600/30 animate-in zoom-in duration-500 hover:scale-110 transition-transform">
                                                     {seat}
                                                 </div>
-                                                <button 
+                                                <button
                                                     onClick={() => toggleSeat(seat)}
                                                     className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-brand-blue text-white flex items-center justify-center text-[10px] font-bold shadow-lg opacity-0 group-hover/seat:opacity-100 transition-opacity"
                                                 >
@@ -367,11 +397,10 @@ function SeatsPage() {
                                     <button
                                         onClick={handleContinue}
                                         disabled={selectedSeats.length !== passengerCount}
-                                        className={`group relative w-full overflow-hidden rounded-3xl py-6 font-black text-base flex items-center justify-center gap-3 transition-all duration-300 ${
-                                            selectedSeats.length === passengerCount
-                                                ? 'bg-brand-blue hover:bg-brand-blue-hover text-white shadow-[0_20px_40px_rgba(73,116,249,0.3)] hover:-translate-y-1 hover:shadow-[0_25px_50px_rgba(73,116,249,0.4)] active:scale-95'
-                                                : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                                        }`}
+                                        className={`group relative w-full overflow-hidden rounded-3xl py-6 font-black text-base flex items-center justify-center gap-3 transition-all duration-300 ${selectedSeats.length === passengerCount
+                                            ? 'bg-brand-blue hover:bg-brand-blue-hover text-white shadow-[0_20px_40px_rgba(73,116,249,0.3)] hover:-translate-y-1 hover:shadow-[0_25px_50px_rgba(73,116,249,0.4)] active:scale-95'
+                                            : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                            }`}
                                     >
                                         <span className="relative z-10">تأكيد المقاعد والمتابعة</span>
                                         <ChevronRight size={20} className="relative z-10 rotate-180 group-hover:-translate-x-1 transition-transform" />
@@ -381,55 +410,16 @@ function SeatsPage() {
                         </div>
                     </div>
 
-                    {/* Legend Card */}
-                    <div className="rounded-[3rem] border border-slate-100 bg-white p-8 shadow-xl shadow-slate-200/50">
-                        <div className="flex items-center gap-3 mb-8">
-                            <div className="h-8 w-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500">
-                                <Info size={18} />
-                            </div>
-                            <p className="text-sm font-black uppercase tracking-widest text-slate-900">دليل الخريطة</p>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 gap-6">
-                            <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-slate-100/50 transition-colors">
-                                <span className="text-xs font-black text-slate-600">درجة رجال الأعمال</span>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-[10px] font-bold text-slate-400">مريح جداً</span>
-                                    <div className="w-6 h-6 rounded-lg bg-amber-50 border-2 border-amber-200" />
-                                </div>
-                            </div>
-                            <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-slate-100/50 transition-colors">
-                                <span className="text-xs font-black text-slate-600">صف الطوارئ</span>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-[10px] font-bold text-slate-400">مساحة إضافية</span>
-                                    <div className="w-6 h-6 rounded-lg bg-emerald-50 border-2 border-emerald-200" />
-                                </div>
-                            </div>
-                            <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-slate-100/50 transition-colors">
-                                <span className="text-xs font-black text-slate-600">مقعد متاح</span>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-[10px] font-bold text-slate-400">اختر الآن</span>
-                                    <div className="w-6 h-6 rounded-lg bg-white border-2 border-slate-200" />
-                                </div>
-                            </div>
-                            <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-slate-100/50 transition-colors">
-                                <span className="text-xs font-black text-slate-600">مقعد محجوز</span>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-[10px] font-bold text-slate-400">غير متاح</span>
-                                    <div className="w-6 h-6 rounded-lg bg-slate-200 opacity-60" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+
 
                     {/* Trust Banner */}
-                    <div className="flex items-center gap-4 px-8 py-6 rounded-[2.5rem] bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-2xl">
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md">
-                            <ShieldCheck size={24} className="text-blue-400" />
+                    <div className="flex items-center gap-4 px-6 py-5 rounded-[2rem] bg-white border border-slate-200/50 shadow-[0_8px_30px_rgb(0,0,0,0.02)] transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-brand-blue">
+                            <ShieldCheck size={22} />
                         </div>
-                        <div>
-                            <p className="text-xs font-black text-blue-400 uppercase tracking-widest mb-0.5">آمن 100%</p>
-                            <p className="text-sm font-bold text-slate-300 leading-tight">يتم حجز مقعدك فوراً عند التأكيد</p>
+                        <div className="text-right">
+                            <p className="text-xs font-black text-brand-blue uppercase tracking-wider mb-1">آمن 100%</p>
+                            <p className="text-xs font-bold text-slate-500 leading-tight">يتم حجز مقعدك فوراً عند التأكيد</p>
                         </div>
                     </div>
                 </aside>

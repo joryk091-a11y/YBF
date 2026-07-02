@@ -236,7 +236,7 @@ function Navbar({
   return (
     <header className="fixed top-0 inset-x-0 z-50 w-full px-4 pt-4 sm:px-6 lg:px-8 transition-all duration-300" dir="rtl">
       <div className="mx-auto max-w-7xl">
-        <nav className="backdrop-blur-xl bg-white/85 border border-slate-200/50 rounded-[2rem] px-6 py-2.5 text-slate-850 shadow-[0_10px_35px_rgba(0,0,0,0.08)] transition-all duration-300">
+        <nav className="backdrop-blur-xl bg-white/85 dark:bg-slate-900/80 border border-slate-200/50 dark:border-slate-800/40 rounded-[2rem] px-6 py-2.5 text-slate-850 dark:text-slate-200 shadow-[0_10px_35px_rgba(0,0,0,0.08)] transition-all duration-300">
           {/* Desktop Menu */}
           <div className="relative hidden md:flex md:items-center md:justify-between">
             <div className="flex items-center justify-end gap-3.5">
@@ -244,14 +244,14 @@ function Navbar({
                 <img
                   src={logoSrc}
                   alt={logoAlt}
-                  className="h-14 w-14 object-contain brightness-0 transition-transform duration-300 hover:scale-105"
+                  className="h-14 w-14 object-contain brightness-0 dark:brightness-0 dark:invert transition-transform duration-300 hover:scale-105"
                 />
               </Link>
               <div className="hidden flex-col justify-center lg:flex">
-                <span className="font-brand text-[13px] font-black tracking-wide text-slate-800">
+                <span className="font-brand text-[13px] font-black tracking-wide text-slate-800 dark:text-slate-100">
                   Yemen Booking Flight
                 </span>
-                <span className="mt-0.5 text-[10px] font-bold tracking-wide text-slate-450">
+                <span className="mt-0.5 text-[10px] font-bold tracking-wide text-slate-450 dark:text-slate-400">
                   حجز رحلات اليمن
                 </span>
               </div>
@@ -267,11 +267,10 @@ function Navbar({
                         <a
                           href={item.href}
                           onClick={(event) => goTo(item.href, event)}
-                          className={`group relative inline-flex select-none py-1.5 px-3.5 text-xs font-black transition-all duration-300 rounded-xl ${
-                            isActive
-                              ? 'text-blue-500 bg-blue-500/5'
-                              : 'text-slate-650 hover:text-blue-500'
-                          } focus:outline-none`}
+                          className={`group relative inline-flex select-none py-1.5 px-3.5 text-xs font-black transition-all duration-300 rounded-xl ${isActive
+                              ? 'text-blue-500 bg-blue-500/5 dark:bg-blue-500/10'
+                              : 'text-slate-650 dark:text-slate-300 hover:text-blue-500 dark:hover:text-blue-400'
+                            } focus:outline-none`}
                         >
                           {item.label}
                           <span className={`pointer-events-none absolute -bottom-0.5 left-1/2 h-[2px] w-0 -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-300 group-hover:w-1/2 ${isActive ? 'w-1/2' : ''}`} />
@@ -280,11 +279,10 @@ function Navbar({
                         <Link
                           to={item.href}
                           state={item.label === 'الوجهات' ? { showAll: true } : undefined}
-                          className={`group relative inline-flex select-none py-1.5 px-3.5 text-xs font-black transition-all duration-300 rounded-xl ${
-                            location.pathname === item.href
-                              ? 'text-blue-500 bg-blue-500/5'
-                              : 'text-slate-655 hover:text-blue-500'
-                          } focus:outline-none`}
+                          className={`group relative inline-flex select-none py-1.5 px-3.5 text-xs font-black transition-all duration-300 rounded-xl ${location.pathname === item.href
+                              ? 'text-blue-500 bg-blue-500/5 dark:bg-blue-500/10'
+                              : 'text-slate-655 dark:text-slate-300 hover:text-blue-500 dark:hover:text-blue-400'
+                            } focus:outline-none`}
                         >
                           {item.label}
                           <span className={`pointer-events-none absolute -bottom-0.5 left-1/2 h-[2px] w-0 -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-300 group-hover:w-1/2 ${location.pathname === item.href ? 'w-1/2' : ''}`} />
@@ -328,7 +326,7 @@ function Navbar({
                       {user.fullName?.split(' ')[0]}
                     </span>
                   </div>
-                   <button
+                  <button
                     onClick={() => {
                       localStorage.removeItem('user')
                       setUser(null)
@@ -363,7 +361,7 @@ function Navbar({
                 <img
                   src={logoSrc}
                   alt={logoAlt}
-                  className="h-12 w-12 object-contain brightness-0"
+                  className="h-12 w-12 object-contain brightness-0 dark:brightness-0 dark:invert"
                 />
               </Link>
             </div>
@@ -382,23 +380,23 @@ function Navbar({
                   )}
                 </button>
               )}
-              
+
               <button
                 type="button"
                 aria-expanded={isMenuOpen}
                 aria-label="فتح قائمة التنقل"
                 onClick={() => setIsMenuOpen((current) => !current)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200/50 bg-slate-50 text-slate-650 transition duration-300 hover:bg-slate-100 focus:outline-none cursor-pointer"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200/50 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-800 text-slate-650 dark:text-slate-300 transition duration-300 hover:bg-slate-100 dark:hover:bg-slate-700 focus:outline-none cursor-pointer"
               >
                 <span className="relative block h-3.5 w-4">
                   <span
-                    className={`absolute right-0 top-0 h-[2px] w-4 rounded bg-slate-700 transition duration-300 ${isMenuOpen ? 'translate-y-[6px] rotate-45' : ''}`}
+                    className={`absolute right-0 top-0 h-[2px] w-4 rounded bg-slate-700 dark:bg-slate-300 transition duration-300 ${isMenuOpen ? 'translate-y-[6px] rotate-45' : ''}`}
                   />
                   <span
-                    className={`absolute right-0 top-[6px] h-[2px] w-4 rounded bg-slate-700 transition duration-300 ${isMenuOpen ? 'opacity-0' : ''}`}
+                    className={`absolute right-0 top-[6px] h-[2px] w-4 rounded bg-slate-700 dark:bg-slate-300 transition duration-300 ${isMenuOpen ? 'opacity-0' : ''}`}
                   />
                   <span
-                    className={`absolute right-0 top-[12px] h-[2px] w-4 rounded bg-slate-700 transition duration-300 ${isMenuOpen ? '-translate-y-[6px] -rotate-45' : ''}`}
+                    className={`absolute right-0 top-[12px] h-[2px] w-4 rounded bg-slate-700 dark:bg-slate-300 transition duration-300 ${isMenuOpen ? '-translate-y-[6px] -rotate-45' : ''}`}
                   />
                 </span>
               </button>
@@ -409,14 +407,14 @@ function Navbar({
           <div
             className={`overflow-hidden transition-all duration-300 md:hidden ${isMenuOpen ? 'max-h-96 pt-4 opacity-100' : 'max-h-0 opacity-0'}`}
           >
-            <ul className="space-y-1.5 rounded-2xl border border-slate-200/50 bg-white/90 backdrop-blur-md p-3 shadow-lg">
+            <ul className="space-y-1.5 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 bg-white/90 dark:bg-slate-900/95 backdrop-blur-md p-3 shadow-lg">
               {links.map((item) => (
                 <li key={`${item.label}-mobile`}>
                   {item.href.startsWith('#') ? (
                     <a
                       href={item.href}
                       onClick={(event) => goTo(item.href, event)}
-                      className="block rounded-xl px-4 py-2.5 text-xs font-black text-slate-700 hover:bg-slate-50 hover:text-blue-500 transition duration-300 focus:outline-none"
+                      className="block rounded-xl px-4 py-2.5 text-xs font-black text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850 hover:text-blue-500 transition duration-300 focus:outline-none"
                     >
                       {item.label}
                     </a>
@@ -425,14 +423,14 @@ function Navbar({
                       to={item.href}
                       state={item.label === 'الوجهات' ? { showAll: true } : undefined}
                       onClick={() => setIsMenuOpen(false)}
-                      className="block rounded-xl px-4 py-2.5 text-xs font-black text-slate-700 hover:bg-slate-50 hover:text-blue-500 transition duration-300 focus:outline-none"
+                      className="block rounded-xl px-4 py-2.5 text-xs font-black text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850 hover:text-blue-500 transition duration-300 focus:outline-none"
                     >
                       {item.label}
                     </Link>
                   )}
                 </li>
               ))}
-              
+
               {/* Login/Logout in Mobile Menu */}
               <li className="pt-2 border-t border-slate-100">
                 {user ? (

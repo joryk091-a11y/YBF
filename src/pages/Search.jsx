@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useSearch } from '../utils/SearchContext'
-import { CheckCircle2, ChevronDown, Plane, ShieldCheck, SlidersHorizontal, Clock, TrendingUp, Package, MapPin, Calendar, Users } from 'lucide-react'
+import { CheckCircle2, ChevronDown, Plane, ShieldCheck, SlidersHorizontal, Clock, TrendingUp, Package, MapPin, Calendar, Users, X, RotateCcw, Sparkles, BadgePercent, Zap } from 'lucide-react'
 import BookingStepper from '../components/BookingStepper.jsx'
 import logoY from '../assets/Y.png'
 import logoB from '../assets/B.png'
@@ -57,6 +57,8 @@ function SearchPage() {
   const [selectedAirlines, setSelectedAirlines] = useState(() =>
     new Set(airlinePanelItems.map((item) => item.id)),
   )
+  const [priceRange, setPriceRange] = useState(1500)
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
 
   const fromCityQuery = searchCriteria?.fromCity || ''
   const toCityQuery = searchCriteria?.toCity || ''
@@ -126,14 +128,19 @@ function SearchPage() {
               toCode: f.airportDestination_code,
               toCity: toInfo.city,
               toAirport: toInfo.airport,
-              departTime: dep.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
-              arriveTime: arr.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+              departTime: dep.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+              arriveTime: arr.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
               duration: `${hours} س ${mins} د`,
               price: f.price || 0,
+              availableSeats: f.available_seats,
               raw: f
             }
           });
           setFlights(mappedFlights);
+          if (mappedFlights.length > 0) {
+            const maxP = Math.max(...mappedFlights.map(f => f.price));
+            setPriceRange(maxP);
+          }
         }
       } catch (error) {
         console.error('Error fetching flights:', error);
@@ -147,20 +154,20 @@ function SearchPage() {
 
   const groupedFlights = useMemo(() => {
     if (!isShowAll) return null;
-    
+
     const groups = [
       { id: 'yemenia', name: 'الخطوط الجوية اليمنية', logo: logoY, flights: [] },
       { id: 'balqis', name: 'طيران الملكة بلقيس', logo: logoB, flights: [] },
       { id: 'aden', name: 'طيران عدن', logo: logoF, flights: [] }
     ];
-    
+
     flights.forEach(flight => {
       const group = groups.find(g => g.id === flight.airlineId);
       if (group) {
         group.flights.push(flight);
       }
     });
-    
+
     return groups;
   }, [flights, isShowAll])
 
@@ -196,7 +203,7 @@ function SearchPage() {
               <p className="text-2xl font-black tracking-tighter text-slate-900 leading-none">{flight.departTime}</p>
               <p className="text-xs font-black text-slate-800 mt-1 leading-none">{flight.fromCity}</p>
             </div>
-            
+
             <div className="flex flex-col items-center justify-center min-w-[70px]">
               <span className="text-[10px] font-black text-slate-500 leading-none">{flight.duration}</span>
               <div className="relative flex w-full items-center justify-center py-2">
@@ -234,26 +241,18 @@ function SearchPage() {
     return (
       <article
         key={flight.id}
-        className="group relative overflow-hidden rounded-[40px] border border-white/40 bg-white/70 shadow-[0_20px_50px_rgba(0,0,0,0.03)] backdrop-blur-2xl transition-all duration-500 hover:-translate-y-2 hover:border-brand-blue/30 hover:shadow-[0_40px_80px_rgba(73,116,249,0.12)]"
+        className="group relative overflow-hidden rounded-[30px] border border-white/40 bg-white/70 shadow-[0_20px_50px_rgba(0,0,0,0.03)] backdrop-blur-2xl transition-all duration-500 hover:-translate-y-1.5 hover:border-brand-blue/20 hover:shadow-[0_30px_60px_rgba(73,116,249,0.08)]"
       >
         {/* Premium Accent Line */}
         <div className="absolute top-0 right-0 h-1.5 w-full bg-gradient-to-l from-brand-blue via-indigo-400 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
         {/* Floating Badges - Simplified Colors */}
-        {showBadges && (isCheapest || isFastest) && (
+        {showBadges && isCheapest && (
           <div className="absolute left-6 top-6 flex gap-2 z-20">
-            {isCheapest && (
-              <div className="flex items-center gap-1.5 rounded-full bg-slate-900 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-white shadow-lg shadow-slate-900/10">
-                <TrendingUp className="h-2.5 w-2.5" />
-                الأرخص
-              </div>
-            )}
-            {isFastest && (
-              <div className="flex items-center gap-1.5 rounded-full bg-white border border-slate-200 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-slate-900 shadow-sm">
-                <Clock className="h-2.5 w-2.5" />
-                الأسرع
-              </div>
-            )}
+            <div className="flex items-center gap-1.5 rounded-full bg-slate-900 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-white shadow-lg shadow-slate-900/10">
+              <TrendingUp className="h-2.5 w-2.5" />
+              الأرخص
+            </div>
           </div>
         )}
 
@@ -262,8 +261,13 @@ function SearchPage() {
           <div className="relative p-6 sm:p-10">
             {/* Top Section: Airline Info */}
             <div className="flex items-center gap-5">
-              <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-100 transition-all duration-500 group-hover:scale-110 group-hover:shadow-xl group-hover:ring-brand-blue/20">
-                <img src={flight.logo} alt={flight.airlineName} className="h-full w-full object-contain" />
+              <div className="relative flex h-14 w-14 items-center justify-center rounded-xl bg-white p-2 shadow-sm ring-1 ring-slate-100/80 transition-all duration-500 group-hover:scale-105 group-hover:shadow-md group-hover:ring-brand-blue/20">
+                <img
+                  src={flight.logo}
+                  alt={flight.airlineName}
+                  className={`h-full w-full object-contain ${flight.airlineId === 'balqis' ? 'scale-[1.25]' : 'scale-[0.95]'
+                    }`}
+                />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -273,8 +277,6 @@ function SearchPage() {
                   </span>
                 </div>
                 <div className="mt-1 flex items-center gap-3">
-                  <span className="text-xs font-bold text-slate-400">سياحية كلاسيكية</span>
-                  <span className="h-1 w-1 rounded-full bg-slate-200" />
                   <span className="text-xs font-bold text-slate-400">Airbus A320</span>
                 </div>
               </div>
@@ -282,78 +284,79 @@ function SearchPage() {
 
             {/* Flight Path Visualization */}
             <div className="mt-12 grid items-center gap-8 sm:grid-cols-[1fr_auto_1fr]">
+              {/* Departure Info */}
               <div className="text-right">
-                <p className="text-[10px] font-black uppercase tracking-[3px] text-slate-400 mb-2">الإقلاع</p>
-                <p className="text-4xl font-black tracking-tighter text-slate-900 tabular-nums leading-none">{flight.departTime}</p>
-                <div className="mt-3">
-                  <p className="text-lg font-black text-slate-800 leading-none">{flight.fromCity}</p>
-                  <p className="text-[11px] font-bold text-slate-400 mt-1.5 opacity-80">
+                <div className="flex items-center gap-2 justify-end mb-1">
+                  <span className="text-xs font-black text-slate-400">({flight.fromCode})</span>
+                  <span className="text-[10px] font-black uppercase tracking-[2px] text-slate-400">الإقلاع</span>
+                </div>
+                <p className="text-3xl font-black tracking-tighter text-slate-800 tabular-nums leading-none">{flight.departTime}</p>
+                <div className="mt-2.5">
+                  <p className="text-base font-extrabold text-slate-700 leading-none">{flight.fromCity}</p>
+                  <p className="text-[11px] font-bold text-slate-400 mt-1 leading-none line-clamp-1 max-w-[200px]" title={flight.fromAirport}>
                     {flight.fromAirport}
                   </p>
                 </div>
               </div>
 
-              <div className="flex flex-col items-center justify-center min-w-[180px] px-2">
-                <div className="mb-3 flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1 ring-1 ring-slate-100 transition-all group-hover:bg-brand-blue/5 group-hover:ring-brand-blue/10">
+              {/* Progress Line */}
+              <div className="flex flex-col items-center justify-center min-w-[240px] px-4">
+                <div className="mb-2.5 flex items-center gap-1.5 rounded-full bg-slate-50 border border-slate-200/50 px-3.5 py-1 transition-all duration-300 group-hover:bg-brand-blue/5 group-hover:border-brand-blue/10">
                   <Clock className="h-3 w-3 text-slate-400 group-hover:text-brand-blue" />
-                  <span className="text-xs font-black text-slate-600 group-hover:text-brand-blue">{flight.duration}</span>
+                  <span className="text-xs font-black text-slate-650 group-hover:text-brand-blue">{flight.duration}</span>
                 </div>
 
-                <div className="relative flex w-full items-center justify-center py-4">
-                  {/* The animated path */}
-                  <div className="h-[2px] w-full bg-slate-100 overflow-hidden rounded-full">
-                    <div className="h-full w-full bg-gradient-to-r from-transparent via-brand-blue/40 to-transparent translate-x-[-100%] group-hover:animate-shimmer" />
-                  </div>
+                <div className="relative flex w-full items-center justify-center py-2">
+                  <div className="h-[2px] w-full bg-slate-100 rounded-full" />
+                  <div className="absolute right-0 h-2 w-2 rounded-full bg-brand-blue" />
+                  <div className="absolute left-0 h-2 w-2 rounded-full bg-slate-300 group-hover:bg-brand-blue transition-colors duration-500" />
 
-                  <div className="absolute right-0 h-2.5 w-2.5 rounded-full border-[3px] border-brand-blue bg-white shadow-sm shadow-brand-blue/20" />
-                  <div className="absolute left-0 h-2.5 w-2.5 rounded-full border-[3px] border-slate-200 bg-white group-hover:border-brand-blue transition-all duration-500" />
-
-                  <div className="absolute flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-lg ring-1 ring-slate-50 transition-all duration-1000 ease-out group-hover:translate-x-[-140px]">
-                    <Plane className="h-4 w-4 text-brand-blue rotate-90" />
+                  <div className="absolute flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-md border border-slate-100 transition-all duration-1000 ease-out group-hover:translate-x-[-80px]">
+                    <Plane className="h-3.5 w-3.5 text-brand-blue rotate-90" />
                   </div>
                 </div>
+                <span className="text-[9px] font-black text-slate-400 mt-1 uppercase tracking-widest">رحلة مباشرة</span>
               </div>
 
+              {/* Arrival Info */}
               <div className="text-left">
-                <p className="text-[10px] font-black uppercase tracking-[3px] text-slate-400 mb-2">الوصول</p>
-                <p className="text-4xl font-black tracking-tighter text-slate-900 tabular-nums leading-none">{flight.arriveTime}</p>
-                <div className="mt-3">
-                  <p className="text-lg font-black text-slate-800 leading-none">{flight.toCity}</p>
-                  <p className="text-[11px] font-bold text-slate-400 mt-1.5 opacity-80">
+                <div className="flex items-center gap-2 justify-start mb-1">
+                  <span className="text-[10px] font-black uppercase tracking-[2px] text-slate-400">الوصول</span>
+                  <span className="text-xs font-black text-slate-400">({flight.toCode})</span>
+                </div>
+                <p className="text-3xl font-black tracking-tighter text-slate-800 tabular-nums leading-none">{flight.arriveTime}</p>
+                <div className="mt-2.5">
+                  <p className="text-base font-extrabold text-slate-700 leading-none">{flight.toCity}</p>
+                  <p className="text-[11px] font-bold text-slate-400 mt-1 leading-none line-clamp-1 max-w-[200px]" title={flight.toAirport}>
                     {flight.toAirport}
                   </p>
                 </div>
               </div>
             </div>
 
-
           </div>
 
           {/* Pricing Stub */}
-          <div className="relative flex flex-col items-center justify-center border-t border-slate-100 bg-slate-50/50 p-8 lg:border-r lg:border-t-0">
+          <div className="relative flex flex-col items-center justify-center bg-slate-50/30 p-8 rounded-b-[30px] lg:rounded-b-0 lg:rounded-l-[30px] border-t border-slate-100 lg:border-t-0 lg:border-r">
             <div className="relative z-10 w-full text-center">
-              <span className="text-[10px] font-black uppercase tracking-[4px] text-slate-400">السعر الكلي</span>
+              <span className="text-[10px] font-black uppercase tracking-[3px] text-slate-400">السعر الإجمالي</span>
               <div className="mt-2 flex items-baseline justify-center gap-1">
-                <span className="text-[40px] font-black tracking-tighter text-slate-900 leading-none">{flight.price}</span>
-                <span className="text-xl font-black text-slate-400">$</span>
+                <span className="text-4xl font-black tracking-tighter text-slate-900 leading-none">{flight.price}</span>
+                <span className="text-lg font-black text-slate-400">$</span>
               </div>
-              <p className="mt-1 text-[10px] font-bold text-slate-400">شامل الضرائب والرسوم</p>
+              <p className="mt-1 text-[10px] font-bold text-slate-400">شامل الرسوم</p>
 
               <button
                 onClick={() => handleSelectFlight(flight)}
-                className="mt-8 group/btn relative flex w-full h-14 items-center justify-center overflow-hidden rounded-2xl bg-brand-blue hover:bg-brand-blue-hover text-sm font-black text-white shadow-xl shadow-brand-blue/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-brand-blue/30 active:scale-95"
+                className="mt-6 group/btn relative flex w-full h-12 items-center justify-center overflow-hidden rounded-2xl bg-brand-blue hover:bg-brand-blue-hover text-sm font-black text-white shadow-lg shadow-brand-blue/15 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-brand-blue/25 active:scale-98"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000" />
                 <span className="relative z-10">اختيار هذه الرحلة</span>
               </button>
 
-              <div className="mt-6 flex flex-col items-center gap-3">
-                <div className="flex items-center gap-1.5 opacity-60">
-                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">حجز مؤمن بالكامل</span>
-                </div>
-                <div className="h-px w-12 bg-slate-200" />
-                <p className="text-[9px] font-bold text-slate-400">تبقى 5 مقاعد بهذا السعر</p>
+              <div className="mt-5 flex items-center justify-center gap-1.5 opacity-60">
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider">حجز مرن ومؤمن</span>
               </div>
             </div>
           </div>
@@ -388,7 +391,7 @@ function SearchPage() {
     }
 
     return filtered
-  }, [flights, selectedAirlines, sortBy])
+  }, [flights, selectedAirlines, sortBy, priceRange])
 
   const toggleAirline = (id) => {
     setSelectedAirlines((prev) => {
@@ -402,6 +405,11 @@ function SearchPage() {
   const resetFilters = () => {
     setSelectedAirlines(new Set(airlinePanelItems.map((item) => item.id)))
     setSortBy('الأفضل')
+    if (flights.length > 0) {
+      setPriceRange(Math.max(...flights.map(f => f.price)))
+    } else {
+      setPriceRange(1500)
+    }
   }
 
   const handleSelectFlight = (flight) => {
@@ -491,7 +499,7 @@ function SearchPage() {
                     <span className="mt-0.5 text-sm font-black text-slate-900">{searchCriteria.passengerCount ?? 1} مسافر</span>
                   </div>
                 </div>
-                <Link to="/" className="relative flex h-10 items-center justify-center overflow-hidden rounded-xl bg-slate-900 px-6 text-xs font-black text-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-slate-800 active:scale-95 group/edit">
+                <Link to="/" className="relative flex h-10 items-center justify-center overflow-hidden rounded-xl bg-brand-blue hover:bg-brand-blue-hover px-6 text-xs font-black text-white shadow-md shadow-brand-blue/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg active:scale-95 group/edit">
                   <span className="relative z-10">تعديل</span>
                   <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover/edit:translate-x-[100%] transition-transform duration-1000" />
                 </Link>
@@ -504,81 +512,73 @@ function SearchPage() {
           {/* Professional Filters Sidebar */}
           {!isShowAll && (
             <aside className="sticky top-40 hidden space-y-6 lg:block" dir="rtl">
-            <div className="rounded-[40px] border border-white/40 bg-white/70 p-8 shadow-[0_30px_60px_rgba(0,0,0,0.04)] backdrop-blur-3xl">
-              <div className="mb-10 flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-black text-slate-900">تصفية الرحلات</h2>
-                  <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">تحكم في تفاصيل بحثك</p>
-                </div>
-                <div className="h-12 w-12 rounded-2xl bg-brand-blue/10 flex items-center justify-center text-brand-blue">
-                  <SlidersHorizontal className="h-6 w-6" />
-                </div>
-              </div>
-
-              <div className="space-y-10">
-
-
-                {/* Airlines Filter */}
-                <div className="group">
-                  <h3 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-[3px] text-slate-400">
-                    <Plane className="h-3.5 w-3.5 text-brand-blue" />
-                    شركات الطيران
-                  </h3>
-                  <div className="space-y-3">
-                    {airlinePanelItems.map((airline) => (
-                      <label
-                        key={airline.id}
-                        className={`group/airline relative flex cursor-pointer items-center justify-between overflow-hidden rounded-[24px] border px-4 py-4 transition-all duration-300 ${selectedAirlines.has(airline.id)
-                            ? 'border-brand-blue/20 bg-white shadow-lg shadow-brand-blue/5'
-                            : 'border-transparent hover:bg-white/40'
-                          }`}
-                      >
-                        <div className="relative z-10 flex items-center gap-4">
-                          <div className={`flex h-6 w-6 items-center justify-center rounded-lg border-2 transition-all duration-300 ${selectedAirlines.has(airline.id)
-                              ? 'border-brand-blue bg-brand-blue shadow-md shadow-brand-blue/20'
-                              : 'border-slate-200 group-hover/airline:border-brand-blue/50'
-                            }`}>
-                            {selectedAirlines.has(airline.id) && <CheckCircle2 className="h-4 w-4 text-white" />}
-                            <input
-                              type="checkbox"
-                              checked={selectedAirlines.has(airline.id)}
-                              onChange={() => toggleAirline(airline.id)}
-                              className="sr-only"
-                            />
-                          </div>
-                          <span className={`text-[13px] font-black transition-colors ${selectedAirlines.has(airline.id) ? 'text-slate-900' : 'text-slate-500'
-                            }`}>
-                            {airline.name}
-                          </span>
-                        </div>
-                        <img
-                          src={airline.logo}
-                          alt=""
-                          className={`relative z-10 h-8 w-8 object-contain transition-all duration-500 ${selectedAirlines.has(airline.id) ? 'scale-110 opacity-100' : 'grayscale opacity-40 group-hover/airline:grayscale-0 group-hover/airline:opacity-70'
-                            }`}
-                        />
-                        {selectedAirlines.has(airline.id) && (
-                          <div className="absolute inset-0 bg-gradient-to-r from-brand-blue/5 to-transparent animate-in fade-in duration-500" />
-                        )}
-                      </label>
-                    ))}
+              <div className="rounded-[36px] border border-slate-100 bg-white p-8 shadow-[0_20px_50px_rgba(0,0,0,0.015)] transition-all duration-300 hover:shadow-[0_30px_60px_rgba(37,99,235,0.02)]">
+                <div className="mb-8 flex items-center justify-between border-b border-slate-50 pb-6">
+                  <div>
+                    <h2 className="text-lg font-black text-slate-800">تصفية النتائج</h2>
+                    <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider">تحكم في تفاصيل بحثك</p>
+                  </div>
+                  <div className="h-10 w-10 rounded-2xl bg-brand-blue/5 flex items-center justify-center text-brand-blue">
+                    <SlidersHorizontal className="h-5 w-5" />
                   </div>
                 </div>
 
-                {/* Reset Action */}
-                <button
-                  type="button"
-                  onClick={resetFilters}
-                  className="group/reset relative flex w-full h-14 items-center justify-center overflow-hidden rounded-2xl bg-slate-900 text-xs font-black text-white shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:bg-slate-800"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 translate-x-[-100%] group-hover/reset:translate-x-[100%] transition-transform duration-1000" />
-                  <span className="relative z-10 flex items-center gap-2">
-                    إعادة تعيين جميع الفلاتر
-                  </span>
-                </button>
-              </div>
-            </div>
+                <div className="space-y-8">
+                  {/* Airlines Filter */}
+                  <div className="group">
+                    <h3 className="mb-5 flex items-center gap-2 text-[11px] font-black uppercase tracking-[3px] text-slate-400">
+                      <Plane className="h-3.5 w-3.5 text-brand-blue" />
+                      شركات الطيران
+                    </h3>
+                    <div className="space-y-3.5">
+                      {airlinePanelItems.map((airline) => {
+                        const isSelected = selectedAirlines.has(airline.id);
+                        return (
+                          <button
+                            key={airline.id}
+                            type="button"
+                            onClick={() => toggleAirline(airline.id)}
+                            className={`relative w-full flex items-center justify-between rounded-2.5xl border p-4 transition-all duration-300 text-right ${isSelected
+                                ? 'border-brand-blue/25 bg-slate-50/50 shadow-[0_10px_25px_rgba(37,99,235,0.03)]'
+                                : 'border-slate-100 bg-white hover:bg-slate-50'
+                              }`}
+                          >
+                            <div className="flex items-center gap-3.5">
+                              <div className={`flex h-5.5 w-5.5 items-center justify-center rounded-lg border transition-all duration-300 ${isSelected
+                                  ? 'border-brand-blue bg-brand-blue text-white shadow-md shadow-brand-blue/20'
+                                  : 'border-slate-205 bg-white'
+                                }`}>
+                                {isSelected && <CheckCircle2 className="h-3.5 w-3.5" />}
+                              </div>
+                              <span className={`text-xs font-black transition-colors ${isSelected ? 'text-slate-900' : 'text-slate-500'}`}>
+                                {airline.name}
+                              </span>
+                            </div>
+                            <img
+                              src={airline.logo}
+                              alt=""
+                              className={`h-9 w-9 object-contain transition-all duration-300 ${airline.id === 'balqis' ? 'scale-[1.35]' : 'scale-[1.05]'
+                                } ${isSelected ? 'opacity-100' : 'grayscale opacity-50'}`}
+                            />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
 
+                  {/* Reset Action */}
+                  <button
+                    type="button"
+                    onClick={resetFilters}
+                    className="group/reset relative flex w-full h-12 items-center justify-center overflow-hidden rounded-xl border border-slate-200 text-xs font-black text-slate-600 shadow-sm transition-all duration-300 hover:bg-slate-50 active:scale-98"
+                  >
+                    <span className="relative z-10 flex items-center gap-2">
+                      <RotateCcw className="h-3.5 w-3.5" />
+                      إعادة تعيين الفلاتر
+                    </span>
+                  </button>
+                </div>
+              </div>
             </aside>
           )}
 
@@ -593,23 +593,35 @@ function SearchPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="inline-flex rounded-[20px] bg-slate-100 p-1.5 ring-1 ring-slate-200/50">
-                    {['الأفضل', 'الأرخص', 'الأسرع'].map((option) => (
-                      <button
-                        key={option}
-                        onClick={() => setSortBy(option)}
-                        className={`rounded-[14px] px-6 py-2.5 text-xs font-black transition-all duration-300 ${sortBy === option
-                          ? 'bg-slate-900 text-white shadow-lg shadow-slate-200'
-                          : 'text-slate-500 hover:text-slate-900 hover:bg-white'
-                          }`}
-                      >
-                        {option}
-                      </button>
-                    ))}
+                  <div className="inline-flex rounded-[24px] bg-white p-1 border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.015)]">
+                    {[
+                      { key: 'الأفضل', label: 'الرحلات الأحدث', icon: Calendar },
+                      { key: 'الأرخص', label: 'الأرخص سعراً', icon: BadgePercent },
+                      { key: 'الأسرع', label: 'الأسرع وقتاً', icon: Zap }
+                    ].map((option) => {
+                      const Icon = option.icon;
+                      const isSelected = sortBy === option.key;
+                      return (
+                        <button
+                          key={option.key}
+                          onClick={() => setSortBy(option.key)}
+                          className={`flex items-center gap-2 rounded-[18px] px-5 py-2.5 text-xs font-black transition-all duration-300 ${isSelected
+                              ? 'bg-brand-blue text-white shadow-lg shadow-brand-blue/20'
+                              : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                            }`}
+                        >
+                          <Icon className={`h-4 w-4 ${isSelected ? 'text-white' : 'text-slate-400'}`} />
+                          <span>{option.label}</span>
+                        </button>
+                      );
+                    })}
                   </div>
 
                   {/* Mobile Filter Button */}
-                  <button className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-600 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50 lg:hidden">
+                  <button
+                    onClick={() => setIsMobileFilterOpen(true)}
+                    className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-600 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50 lg:hidden"
+                  >
                     <SlidersHorizontal className="h-5 w-5" />
                   </button>
                 </div>
@@ -669,6 +681,93 @@ function SearchPage() {
           </div>
         </div>
       </section>
+
+      {/* Mobile Filter Drawer Overlay */}
+      {isMobileFilterOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 backdrop-blur-sm lg:hidden animate-in fade-in duration-300">
+          <div className="absolute inset-0" onClick={() => setIsMobileFilterOpen(false)} />
+          <div className="relative w-full max-h-[85vh] overflow-y-auto rounded-t-[36px] bg-white p-6 shadow-2xl animate-in slide-in-from-bottom duration-500" dir="rtl">
+            {/* Handle bar */}
+            <div className="mx-auto mb-6 h-1 w-12 rounded-full bg-slate-200" />
+
+            <div className="mb-8 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-black text-slate-800">تصفية النتائج</h3>
+                <p className="text-[10px] font-bold text-slate-400 mt-0.5">تحكم في تفاصيل بحثك</p>
+              </div>
+              <button
+                onClick={() => setIsMobileFilterOpen(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-8 pb-8">
+              {/* Airlines Filter */}
+              <div>
+                <h4 className="mb-5 flex items-center gap-2 text-[11px] font-black uppercase tracking-[3px] text-slate-400">
+                  <Plane className="h-3.5 w-3.5 text-brand-blue" />
+                  شركات الطيران
+                </h4>
+                <div className="grid grid-cols-1 gap-3.5">
+                  {airlinePanelItems.map((airline) => {
+                    const isSelected = selectedAirlines.has(airline.id);
+                    return (
+                      <button
+                        key={airline.id}
+                        type="button"
+                        onClick={() => toggleAirline(airline.id)}
+                        className={`relative w-full flex items-center justify-between rounded-2xl border p-4 transition-all duration-300 text-right ${isSelected
+                            ? 'border-brand-blue/20 bg-slate-50/50 shadow-sm'
+                            : 'border-slate-100 bg-white hover:bg-slate-50'
+                          }`}
+                      >
+                        <div className="flex items-center gap-3.5">
+                          <div className={`flex h-5.5 w-5.5 items-center justify-center rounded-lg border transition-all duration-300 ${isSelected
+                              ? 'border-brand-blue bg-brand-blue text-white shadow-md shadow-brand-blue/20'
+                              : 'border-slate-205 bg-white'
+                            }`}>
+                            {isSelected && <CheckCircle2 className="h-3.5 w-3.5" />}
+                          </div>
+                          <span className={`text-xs font-black transition-colors ${isSelected ? 'text-slate-900' : 'text-slate-500'}`}>
+                            {airline.name}
+                          </span>
+                        </div>
+                        <img
+                          src={airline.logo}
+                          alt=""
+                          className={`h-9 w-9 object-contain transition-all duration-300 ${airline.id === 'balqis' ? 'scale-[1.35]' : 'scale-[1.05]'
+                            } ${isSelected ? 'opacity-100' : 'grayscale opacity-50'}`}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Reset & Apply Buttons */}
+              <div className="flex items-center gap-4 pt-4">
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="flex h-12 w-1/3 items-center justify-center gap-1.5 rounded-2xl border border-slate-200 text-xs font-black text-slate-655 hover:bg-slate-50 transition-colors"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  إعادة تعيين
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsMobileFilterOpen(false)}
+                  className="flex h-12 w-2/3 items-center justify-center rounded-2xl bg-brand-blue text-xs font-black text-white hover:bg-brand-blue-hover shadow-md shadow-brand-blue/10 active:scale-98 transition-all"
+                >
+                  تطبيق الفلاتر
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }

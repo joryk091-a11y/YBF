@@ -65,6 +65,7 @@ app.post('/api/passengers', async (req, res) => {
 
     for (const p of passengers) {
       const birthDate = p.birthDate || null;
+      const passportExpiry = p.passportExpiry || null;
 
       // Upsert logic using MySQL
       const [existing] = await connection.execute(
@@ -74,14 +75,14 @@ app.post('/api/passengers', async (req, res) => {
 
       if (existing.length > 0) {
         await connection.execute(
-          'UPDATE passengers SET name = ?, date_of_birth = ?, nationality = ?, gander = ?, user_id = ? WHERE passport_number = ?',
-          [p.fullName, birthDate, p.nationality || null, p.gender, userId || null, p.passportNumber]
+          'UPDATE passengers SET name = ?, date_of_birth = ?, passport_expiry = ?, nationality = ?, gander = ?, user_id = ? WHERE passport_number = ?',
+          [p.fullName, birthDate, passportExpiry, p.nationality || null, p.gender, userId || null, p.passportNumber]
         );
         results.push({ id: existing[0].id_passengers, status: 'updated' });
       } else {
         const [insertResult] = await connection.execute(
-          'INSERT INTO passengers (name, passport_number, date_of_birth, nationality, gander, user_id) VALUES (?, ?, ?, ?, ?, ?)',
-          [p.fullName, p.passportNumber, birthDate, p.nationality || null, p.gender, userId || null]
+          'INSERT INTO passengers (name, passport_number, date_of_birth, passport_expiry, nationality, gander, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          [p.fullName, p.passportNumber, birthDate, passportExpiry, p.nationality || null, p.gender, userId || null]
         );
         results.push({ id: insertResult.insertId, status: 'created' });
       }
@@ -831,6 +832,7 @@ async function getBookingPassengersHandler(req, res) {
         p.id_passengers,
         p.name,
         p.passport_number,
+        p.passport_expiry AS passportExpiry,
         p.date_of_birth,
         p.nationality,
         p.gander AS gender

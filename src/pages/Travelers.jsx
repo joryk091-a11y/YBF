@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Calendar, ChevronDown, Globe, IdCard, Plane, PlaneTakeoff, MoveLeft, ShieldCheck, Lock, UserRound, Luggage, CheckCircle2, Plus, Minus, Accessibility, Wind, HeartPulse, Salad } from 'lucide-react'
+import { Calendar, ChevronDown, Globe, IdCard, Plane, PlaneTakeoff, MoveLeft, ShieldCheck, Lock, UserRound, Luggage, CheckCircle2, Plus, Minus, Accessibility, Wind, HeartPulse, Salad, AlertCircle, Clock, BadgeCheck } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useSearch } from '../utils/SearchContext'
 import BookingStepper from '../components/BookingStepper.jsx'
@@ -9,7 +9,7 @@ const EXTRA_BAG_PRICE = 2
 const SERVICES = [
   { id: 'wheelchair', icon: Accessibility, label: 'مساعدة بالكرسي المتحرك', desc: 'خدمة مرافقة وكرسي متحرك داخل المطار والطائرة', price: 20, color: 'blue' },
   { id: 'oxygen', icon: Wind, label: 'أكسجين طبي على المتن', desc: 'توفير أسطوانة أكسجين طبية معتمدة خلال الرحلة', price: 55, color: 'sky' },
-  { id: 'medical', icon: HeartPulse, label: 'مساعدة طبية متخصصة', desc: 'طاقم طبي مدرّب لمرافقة المريض طوال الرحلة', price: 80, color: 'red' },
+  { id: 'medical', icon: HeartPulse, label: 'مساعدة طبية متخصصة', desc: 'طاقم طبي مدرّب لمرافقة المريض طوال الرحلة', price: 80, color: 'orange' },
   { id: 'medmeal', icon: HeartPulse, label: 'سيارة إسعاف', desc: 'تأمين سيارة إسعاف مجهزة لنقل المريض من/إلى الطائرة', price: 18, color: 'emerald' },
 ]
 
@@ -224,9 +224,9 @@ function TravelersPage() {
   }
 
   return (
-    <main className="min-h-[100svh] bg-[#fcfdfe] pb-20 pt-24 sm:pt-28" dir="rtl">
+    <main className="min-h-[100svh] bg-[#f3f4f6] pb-20 pt-24 sm:pt-28" dir="rtl">
       {/* Sticky Stepper Bar */}
-      <div className="sticky top-16 z-40 w-full border-b border-slate-200/50 bg-white/70 py-4 backdrop-blur-xl sm:top-20">
+      <div className="sticky top-16 z-40 w-full border-b border-slate-200 bg-white/90 py-4 backdrop-blur-xl sm:top-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <BookingStepper current="travelers" />
         </div>
@@ -249,9 +249,9 @@ function TravelersPage() {
               return (
                 <article
                   key={passenger.id}
-                  className={`overflow-hidden rounded-2xl border transition-all duration-300 ${isActive
-                      ? 'border-slate-300/80 bg-white shadow-[0_12px_40px_rgba(0,0,0,0.03)]'
-                      : 'border-slate-200/50 bg-[#fbfcfe] hover:bg-white hover:border-slate-300'
+                  className={`overflow-hidden rounded-[2.2rem] border transition-all duration-300 ${isActive
+                      ? 'border-blue-100 bg-white shadow-[0_20px_40px_rgba(0,0,0,0.03)]'
+                      : 'border-slate-200/60 bg-white/70 hover:bg-white hover:border-slate-300'
                     }`}
                 >
                   <button
@@ -282,8 +282,8 @@ function TravelersPage() {
                           مكتمل
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-black text-amber-600 border border-amber-100">
-                          <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                        <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2.5 py-1 text-[10px] font-black text-orange-600 border border-orange-100">
+                          <span className="h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse" />
                           غير مكتمل
                         </span>
                       )}
@@ -307,9 +307,6 @@ function TravelersPage() {
                       <div className="border-t border-slate-50 p-6 sm:p-8">
                         {/* Gender Selector */}
                         <div className="mb-6">
-                          <label className="mb-2 block text-right text-[10px] font-black uppercase tracking-wider text-slate-400">
-                            الجنس <span className="text-red-500">*</span>
-                          </label>
                           <div className="grid grid-cols-2 gap-3 w-full">
                             <button
                               type="button"
@@ -339,7 +336,7 @@ function TravelersPage() {
                         <div className="grid gap-6 md:grid-cols-2">
                           <Field label="الاسم الكامل (كما في جواز السفر)" icon={UserRound} className="md:col-span-2" required>
                             <input
-                              className="w-full h-12 pr-11 pl-4 rounded-xl border border-slate-200/80 bg-white text-slate-800 font-bold text-xs placeholder:text-slate-300 focus:border-slate-400 focus:outline-none transition-all duration-150"
+                              className="w-full h-12 pr-11 pl-4 rounded-xl border border-slate-200/80 bg-white text-slate-800 font-bold text-xs placeholder:text-slate-300 focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/5 focus:outline-none transition-all duration-150"
                               placeholder="مثال: محمد أحمد علي"
                               value={passenger.fullName}
                               onChange={(event) => updatePassenger(passenger.id, 'fullName', event.target.value)}
@@ -348,7 +345,7 @@ function TravelersPage() {
 
                           <Field label="رقم جواز السفر" icon={IdCard} required>
                             <input
-                              className="w-full h-12 pr-11 pl-4 rounded-xl border border-slate-200/80 bg-white text-slate-800 font-bold text-xs placeholder:text-slate-300 focus:border-slate-400 focus:outline-none transition-all duration-150"
+                              className="w-full h-12 pr-11 pl-4 rounded-xl border border-slate-200/80 bg-white text-slate-800 font-bold text-xs placeholder:text-slate-300 focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/5 focus:outline-none transition-all duration-150"
                               placeholder="مثال: 00123456"
                               value={passenger.passportNumber}
                               onChange={(event) => updatePassenger(passenger.id, 'passportNumber', event.target.value)}
@@ -357,7 +354,7 @@ function TravelersPage() {
 
                           <Field label="الجنسية" icon={Globe}>
                             <select
-                              className="w-full h-12 pr-11 pl-10 rounded-xl border border-slate-200/80 bg-white text-slate-800 font-bold text-xs focus:border-slate-400 focus:outline-none transition-all duration-150 appearance-none"
+                              className="w-full h-12 pr-11 pl-10 rounded-xl border border-slate-200/80 bg-white text-slate-800 font-bold text-xs focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/5 focus:outline-none transition-all duration-150 appearance-none"
                               value={passenger.nationality}
                               onChange={(event) => updatePassenger(passenger.id, 'nationality', event.target.value)}
                             >
@@ -371,8 +368,13 @@ function TravelersPage() {
 
                           <Field label="تاريخ الميلاد" icon={Calendar}>
                             <input
-                              type="date"
-                              className="w-full h-12 pr-11 pl-4 rounded-xl border border-slate-200/80 bg-white text-slate-800 font-bold text-xs focus:border-slate-400 focus:outline-none transition-all duration-150"
+                              type={passenger.birthDate ? "date" : "text"}
+                              placeholder="يوم / شهر / سنة"
+                              dir="ltr"
+                              lang="en-GB"
+                              onFocus={(e) => (e.target.type = "date")}
+                              onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }}
+                              className="w-full h-12 pr-11 pl-4 text-right rounded-xl border border-slate-200/80 bg-white text-slate-800 font-bold text-xs focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/5 focus:outline-none transition-all duration-150"
                               value={passenger.birthDate}
                               onChange={(event) => updatePassenger(passenger.id, 'birthDate', event.target.value)}
                             />
@@ -380,9 +382,14 @@ function TravelersPage() {
 
                           <Field label="تاريخ انتهاء الجواز" icon={Calendar}>
                             <input
-                              type="date"
+                              type={passenger.passportExpiry ? "date" : "text"}
+                              placeholder="يوم / شهر / سنة"
+                              dir="ltr"
+                              lang="en-GB"
+                              onFocus={(e) => (e.target.type = "date")}
+                              onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }}
                               min={new Date().toISOString().split('T')[0]}
-                              className="w-full h-12 pr-11 pl-4 rounded-xl border border-slate-200/80 bg-white text-slate-800 font-bold text-xs focus:border-slate-400 focus:outline-none transition-all duration-150"
+                              className="w-full h-12 pr-11 pl-4 text-right rounded-xl border border-slate-200/80 bg-white text-slate-800 font-bold text-xs focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/5 focus:outline-none transition-all duration-150"
                               value={passenger.passportExpiry}
                               onChange={(event) => updatePassenger(passenger.id, 'passportExpiry', event.target.value)}
                             />
@@ -397,14 +404,14 @@ function TravelersPage() {
           </div>
 
           {/* ═══════════════ جدول الأمتعة ═══════════════ */}
-          <section className="mt-8 overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-[0_4px_25px_rgba(0,0,0,0.01)]">
-            <div className="flex items-center gap-3 border-b border-slate-100 bg-[#fcfdfe] px-6 py-5">
+          <section className="mt-8 overflow-hidden rounded-[2.2rem] border border-slate-200 bg-white shadow-sm">
+            <div className="flex items-center gap-3 border-b border-slate-100 bg-white px-6 py-5">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-blue/10 text-brand-blue">
                 <Luggage className="h-4.5 w-4.5" />
               </div>
               <div>
-                <h2 className="text-sm font-black text-slate-800">الوزن وحقائب الأمتعة المشمولة</h2>
-                <p className="text-[10px] font-bold text-slate-400 mt-0.5">يمكنك إضافة حقيبة يد إضافية بسعر ${EXTRA_BAG_PRICE} فقط</p>
+                <h2 className="text-sm font-black text-slate-800">الوزن المسموح وحقائب الأمتعة</h2>
+                <p className="text-[10px] font-bold text-slate-400 mt-0.5">الوزن المجاني المتاح حمله لكل مسافر على متن الطائرة مع خيارات إضافة وزن إضافي</p>
               </div>
             </div>
 
@@ -422,31 +429,30 @@ function TravelersPage() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-4">
-                    <div className="flex items-center justify-center gap-1.5 rounded-lg bg-slate-50 border border-slate-200/50 px-3 py-1.5 text-[11px] font-bold text-slate-600">
+                    <div className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-200/60 dark:border-slate-800 px-3 py-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                      حقيبة يد: 7 كجم
+                      حقيبة يد مقصورة (مجاناً): 7 كجم
                     </div>
-                    <div className="flex items-center justify-center gap-1.5 rounded-lg bg-slate-50 border border-slate-200/50 px-3 py-1.5 text-[11px] font-bold text-slate-600">
+                    <div className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-200/60 dark:border-slate-800 px-3 py-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300">
                       <span className="h-1.5 w-1.5 rounded-full bg-brand-blue" />
-                      حقيبة مشحونة: 23 كجم
+                      حقيبة شحن رئيسية (مجاناً): 23 كجم
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3 justify-end mt-2 sm:mt-0">
-                    <span className="text-[10px] font-black text-slate-400 ml-1">إضافة حقائب إضافية:</span>
-                    <div className="flex items-center gap-3 bg-slate-50 rounded-lg p-1 border border-slate-200/40">
+                    <div className="flex items-center gap-3 rounded-lg p-1 border border-slate-200/40 dark:border-slate-800">
                       <button onClick={() => changeExtraBag(p.id, -1)}
-                        className="flex h-6 w-6 items-center justify-center rounded-md bg-white border border-slate-200 text-slate-500 hover:bg-slate-100 transition disabled:opacity-30"
+                        className="flex h-6 w-6 items-center justify-center rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition disabled:opacity-30"
                         disabled={!extraBags[p.id]}
                       ><Minus className="h-3 w-3" /></button>
-                      <span className="w-4 text-center text-xs font-black text-slate-800">{extraBags[p.id] || 0}</span>
+                      <span className="w-12 text-center text-xs font-black text-slate-800 dark:text-slate-150">{(extraBags[p.id] || 0) * 2} كجم</span>
                       <button onClick={() => changeExtraBag(p.id, 1)}
                         className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-blue text-white hover:bg-[#3862e0] transition disabled:opacity-30"
                         disabled={extraBags[p.id] >= 2}
                       ><Plus className="h-3 w-3" /></button>
                     </div>
                     {extraBags[p.id] > 0 && (
-                      <span className="text-xs font-black text-brand-blue bg-blue-50 px-2 py-1 rounded-md">
+                      <span className="text-xs font-black text-brand-blue dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 px-2 py-1 rounded-md">
                         +${extraBags[p.id] * EXTRA_BAG_PRICE}
                       </span>
                     )}
@@ -457,9 +463,9 @@ function TravelersPage() {
           </section>
 
           {/* ═══════════════ جدول الخدمات الصحية ═══════════════ */}
-          <section className="mt-6 overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-[0_4px_25px_rgba(0,0,0,0.01)]">
-            <div className="flex items-center gap-3 border-b border-slate-100 bg-[#fcfdfe] px-6 py-5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-500/10 text-red-600">
+          <section className="mt-6 overflow-hidden rounded-[2.2rem] border border-slate-200 bg-white shadow-sm">
+            <div className="flex items-center gap-3 border-b border-slate-100 bg-white px-6 py-5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500/10 text-orange-600">
                 <HeartPulse className="h-4.5 w-4.5" />
               </div>
               <div>
@@ -504,9 +510,9 @@ function TravelersPage() {
             </div>
 
             {extrasTotal > 0 && (
-              <div className="mx-6 mb-6 flex items-center justify-between rounded-xl bg-slate-900 px-5 py-3 shadow-md">
-                <span className="text-xs font-black text-slate-300">إجمالي رسوم الخدمات الإضافية</span>
-                <span className="text-sm font-black text-brand-blue">+${extrasTotal}</span>
+              <div className="mx-6 mb-6 flex items-center justify-between rounded-2xl bg-brand-blue/5 border border-brand-blue/10 px-5 py-3.5 shadow-sm">
+                <span className="text-xs font-black text-slate-650">إجمالي رسوم الخدمات الإضافية</span>
+                <span className="text-xs font-black text-brand-blue">+${extrasTotal}</span>
               </div>
             )}
           </section>
@@ -521,7 +527,7 @@ function TravelersPage() {
             </Link>
             <button
               onClick={handleProceedToPayment}
-              className="inline-flex h-12 min-w-[200px] items-center justify-center gap-1.5 rounded-xl bg-brand-red px-8 text-xs font-black text-white shadow-sm shadow-brand-red/10 hover:bg-brand-red-hover transition active:scale-[0.98]"
+              className="inline-flex h-12 min-w-[200px] items-center justify-center gap-1.5 rounded-xl bg-brand-blue px-8 text-xs font-black text-white shadow-[0_12px_24px_rgba(73,116,249,0.2)] hover:bg-brand-blue-hover transition active:scale-[0.98]"
             >
               المتابعة لخطوة الدفع
               <span>←</span>
@@ -534,20 +540,20 @@ function TravelersPage() {
           <div className="space-y-6">
             {/* Flight Card (Boarding Pass style) */}
             <section className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_20px_50px_rgba(15,23,42,0.04)]">
-              <div className="bg-[#10203d] p-6 text-white">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-blue">ملخص الرحلة المختارة</p>
+              <div className="bg-gradient-to-br from-brand-blue to-indigo-900 p-6 text-white">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-200">ملخص الرحلة المختارة</p>
                 <div className="mt-4 flex items-center justify-between">
                   <div>
                     <h2 className="text-xl font-black">{summaryFlight.fromCode}</h2>
-                    <p className="text-xs font-bold text-slate-400">{summaryFlight.fromCity}</p>
+                    <p className="text-xs font-bold text-blue-200/70">{summaryFlight.fromCity}</p>
                   </div>
                   <div className="flex flex-col items-center gap-1">
-                    <MoveLeft className="h-5 w-5 text-brand-blue" />
-                    <div className="h-px w-12 bg-slate-700" />
+                    <MoveLeft className="h-5 w-5 text-blue-300" />
+                    <div className="h-px w-12 bg-white/20" />
                   </div>
                   <div className="text-left">
                     <h2 className="text-xl font-black">{summaryFlight.toCode}</h2>
-                    <p className="text-xs font-bold text-slate-400 text-left">{summaryFlight.toCity}</p>
+                    <p className="text-xs font-bold text-blue-200/70 text-left">{summaryFlight.toCity}</p>
                   </div>
                 </div>
               </div>
@@ -574,9 +580,9 @@ function TravelersPage() {
                 {/* Expanded Details */}
                 <div className={`grid transition-all duration-500 ease-in-out ${showFullDetails ? 'grid-rows-[1fr] mt-6 opacity-100' : 'grid-rows-[0fr] mt-0 opacity-0'}`}>
                   <div className="overflow-hidden space-y-5">
-                    <div className="rounded-2xl bg-slate-50 p-4 border border-slate-100">
+                    <div className="rounded-2xl bg-transparent p-4 border border-slate-100">
                       <div className="flex items-center gap-3 mb-4">
-                        <div className="h-8 w-8 rounded-lg bg-white flex items-center justify-center shadow-sm">
+                        <div className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-100">
                           <Globe className="h-4 w-4 text-brand-blue" />
                         </div>
                         <div>
@@ -611,13 +617,13 @@ function TravelersPage() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="rounded-2xl bg-slate-50 p-3 border border-slate-100">
+                      <div className="rounded-2xl bg-transparent p-3 border border-slate-100">
                         <p className="text-[9px] font-black text-slate-400 uppercase mb-1">الدرجة</p>
                         <p className="text-[11px] font-black text-slate-900">
                           {businessSeatsCount > 0 ? 'درجة الأعمال' : 'الدرجة السياحية'}
                         </p>
                       </div>
-                      <div className="rounded-2xl bg-slate-50 p-3 border border-slate-100 text-left">
+                      <div className="rounded-2xl bg-transparent p-3 border border-slate-100 text-left">
                         <p className="text-[9px] font-black text-slate-400 uppercase mb-1">المقاعد المختارة</p>
                         <p className="text-[11px] font-black text-brand-blue tracking-wider">
                           {selectedSeats.length > 0 ? selectedSeats.join(' • ') : 'لم يتم الاختيار'}
@@ -712,14 +718,14 @@ function TravelersPage() {
               {/* Extra Bags & Services Section */}
               {(bagsTotal > 0 || servicesTotal > 0) && (
                 <div className="mt-5 space-y-3 border-b border-slate-100 pb-5">
-                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">الخدمات والحقائب الإضافية</p>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">الخدمات والوزن الإضافي</p>
 
                   {/* Extra Bags */}
                   {bagsTotal > 0 && (
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2 text-slate-600">
                         <Luggage className="h-4 w-4 text-brand-blue" />
-                        <span className="font-bold">حقائب إضافية مدفوعة</span>
+                        <span className="font-bold">وزن إضافي مدفوع</span>
                       </div>
                       <span className="font-black text-slate-900">+${bagsTotal}</span>
                     </div>
@@ -731,7 +737,7 @@ function TravelersPage() {
                     return (
                       <div key={srv.id} className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2 text-slate-600">
-                          <Icon className="h-4 w-4 text-red-500" />
+                          <Icon className="h-4 w-4 text-orange-500" />
                           <span className="font-bold">{srv.label}</span>
                         </div>
                         <span className="font-black text-slate-900">+${srv.price}</span>
@@ -751,17 +757,64 @@ function TravelersPage() {
               </div>
             </section>
 
-            {/* Trust Badge */}
-            <section className="rounded-2xl border border-slate-200/60 bg-slate-50/40 p-5">
-              <div className="flex items-start gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600">
-                  <Lock className="h-4 w-4" />
+            {/* Travel Guidelines */}
+            <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-sm transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)]">
+              <h3 className="mb-5 text-[11px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 border-b border-slate-100 pb-3 justify-start" dir="rtl">
+                <AlertCircle className="h-4 w-4 text-brand-blue" />
+                <span>إرشادات هامة قبل تأكيد الحجز</span>
+              </h3>
+
+              <div className="space-y-4">
+                {/* Guideline 1: Name match */}
+                <div className="group flex items-start gap-3.5 p-3 rounded-2xl border border-transparent hover:border-slate-100 hover:bg-slate-50/50 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-blue/5 text-brand-blue transition-all duration-300 group-hover:bg-brand-blue group-hover:text-white group-hover:shadow-[0_4px_12px_rgba(73,116,249,0.2)] shadow-sm">
+                    <BadgeCheck className="h-5 w-5" />
+                  </div>
+                  <div className="text-right">
+                    <h4 className="text-xs font-black text-slate-800 transition-colors group-hover:text-slate-900">تطابق أسماء المسافرين</h4>
+                    <p className="mt-1 text-[10px] font-bold leading-relaxed text-slate-400 transition-colors group-hover:text-slate-500">
+                      يجب كتابة الأسماء تماماً كما هي واردة في جواز السفر لتفادي رسوم وغرامات التعديل لاحقاً.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-xs font-black text-slate-800">حماية الخصوصية والأمان</h3>
-                  <p className="mt-1.5 text-[10px] font-bold leading-relaxed text-slate-400">
-                    تُشفر بياناتك الشخصية وتفاصيل الحجز بالكامل عبر اتصال SSL آمن، بما يتوافق مع المعايير الأمنية العالمية لحماية الخصوصية.
-                  </p>
+
+                {/* Guideline 2: Passport Validity */}
+                <div className="group flex items-start gap-3.5 p-3 rounded-2xl border border-transparent hover:border-slate-100 hover:bg-slate-50/50 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-blue/5 text-brand-blue transition-all duration-300 group-hover:bg-brand-blue group-hover:text-white group-hover:shadow-[0_4px_12px_rgba(73,116,249,0.2)] shadow-sm">
+                    <ShieldCheck className="h-5 w-5" />
+                  </div>
+                  <div className="text-right">
+                    <h4 className="text-xs font-black text-slate-800 transition-colors group-hover:text-slate-900">صلاحية جواز السفر</h4>
+                    <p className="mt-1 text-[10px] font-bold leading-relaxed text-slate-400 transition-colors group-hover:text-slate-500">
+                      تأكد من صلاحية جواز سفرك لمدة لا تقل عن 6 أشهر للرحلات الدولية لتجنب إلغاء السفر في المطار.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Guideline 3: Airport Arrival */}
+                <div className="group flex items-start gap-3.5 p-3 rounded-2xl border border-transparent hover:border-slate-100 hover:bg-slate-50/50 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-blue/5 text-brand-blue transition-all duration-300 group-hover:bg-brand-blue group-hover:text-white group-hover:shadow-[0_4px_12px_rgba(73,116,249,0.2)] shadow-sm">
+                    <Clock className="h-5 w-5" />
+                  </div>
+                  <div className="text-right">
+                    <h4 className="text-xs font-black text-slate-800 transition-colors group-hover:text-slate-900">مواعيد التواجد بالمطار</h4>
+                    <p className="mt-1 text-[10px] font-bold leading-relaxed text-slate-400 transition-colors group-hover:text-slate-500">
+                      يرجى التواجد في المطار قبل 3 ساعات من موعد الإقلاع للرحلات الدولية وقبل ساعتين للرحلات الداخلية.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Guideline 4: Baggage Policy */}
+                <div className="group flex items-start gap-3.5 p-3 rounded-2xl border border-transparent hover:border-slate-100 hover:bg-slate-50/50 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-blue/5 text-brand-blue transition-all duration-300 group-hover:bg-brand-blue group-hover:text-white group-hover:shadow-[0_4px_12px_rgba(73,116,249,0.2)] shadow-sm">
+                    <Luggage className="h-5 w-5" />
+                  </div>
+                  <div className="text-right">
+                    <h4 className="text-xs font-black text-slate-800 transition-colors group-hover:text-slate-900">الأمتعة والأوزان المسموحة</h4>
+                    <p className="mt-1 text-[10px] font-bold leading-relaxed text-slate-400 transition-colors group-hover:text-slate-500">
+                      يرجى مراجعة تفاصيل الوزن المسموح به في تذكرتك لتفادي دفع رسوم إضافية للوزن الزائد في المطار.
+                    </p>
+                  </div>
                 </div>
               </div>
             </section>

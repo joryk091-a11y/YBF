@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../utils/AuthContext';
 import { useTheme } from '../utils/ThemeContext';
@@ -18,7 +18,8 @@ import {
   ChevronDown,
   ChevronUp,
   Sun,
-  Moon
+  Moon,
+  Bell
 } from 'lucide-react';
 
 // استيراد الشعارات
@@ -34,6 +35,29 @@ export default function Sidebar() {
   const location = useLocation();
   const [logoError, setLogoError] = useState(false);
   const [logoOnlineError, setLogoOnlineError] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  // Fetch pending count for company notifications badge
+  const companyId = localStorage.getItem('companyId') || user?.airline_id || '';
+  useEffect(() => {
+    if (user.role === 'company_admin' && companyId) {
+      const getCount = () => {
+        fetch(`http://localhost:8080/api/bookings/pending?airline_id=${companyId}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              setPendingCount(data.bookings ? data.bookings.length : 0);
+            }
+          })
+          .catch(err => console.error('Error fetching pending count:', err));
+      };
+      
+      getCount();
+      // Poll every 30 seconds to keep it fresh
+      const interval = setInterval(getCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user.role, companyId]);
 
   // روابط التقارير الفرعية (لتسهيل إضافة مسارات أخرى مستقبلاً)
   const reportLinks = [
@@ -154,6 +178,11 @@ export default function Sidebar() {
       path: '/company/services',
       icon: HeartPulse,
     },
+    {
+      label: 'طلبات الحجز المعلقة',
+      path: '/company/notifications',
+      icon: Bell,
+    },
   ];
 
   const currentLinks = user.role === 'super_admin' ? adminLinks : companyLinks;
@@ -212,20 +241,27 @@ export default function Sidebar() {
               key={link.path}
               to={link.path}
               className={({ isActive }) =>
-                `group flex items-center gap-3.5 rounded-xl px-4 py-3.5 text-xs font-black transition-all duration-300 relative overflow-hidden ${
+                `group flex items-center justify-between rounded-xl px-4 py-3.5 text-xs font-black transition-all duration-300 relative overflow-hidden ${
                   isActive
                     ? 'bg-gradient-to-r from-blue-500/10 to-indigo-500/10 text-blue-600 dark:text-blue-400 border-r-[4px] border-blue-600'
                     : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/50 hover:text-slate-800 dark:hover:text-slate-200'
                 }`
               }
             >
-              <Icon
-                size={18}
-                className={`transition-transform duration-500 group-hover:scale-110 ${
-                  isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300'
-                }`}
-              />
-              <span>{link.label}</span>
+              <div className="flex items-center gap-3.5">
+                <Icon
+                  size={18}
+                  className={`transition-transform duration-500 group-hover:scale-110 ${
+                    isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300'
+                  }`}
+                />
+                <span>{link.label}</span>
+              </div>
+              {link.path === '/company/notifications' && pendingCount > 0 && (
+                <span className="bg-red-500 text-white text-[10px] font-black h-5 px-1.5 rounded-full flex items-center justify-center min-w-5 shadow-sm animate-pulse">
+                  {pendingCount}
+                </span>
+              )}
             </NavLink>
           );
         })}

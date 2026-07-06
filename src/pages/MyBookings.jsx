@@ -53,6 +53,7 @@ const formatDuration = (m) => m ? `${Math.floor(m / 60)}س ${m % 60}د` : '—';
 /* ── Individual Boarding Pass for one passenger ── */
 function BoardingPass({ passenger, booking, index }) {
     const [showQrModal, setShowQrModal] = useState(false);
+    const [downloadingItinerary, setDownloadingItinerary] = useState(false);
     const airline = airlineConfig[booking.airline_code] || { name: booking.airline_code, color: 'from-slate-600 to-slate-800' };
     const status = statusConfig[booking.status] || statusConfig.certain;
     const StatusIcon = status.icon;
@@ -154,6 +155,32 @@ function BoardingPass({ passenger, booking, index }) {
             </html>
         `);
         doc.close();
+    };
+
+    const handleDownloadItinerary = async () => {
+        if (downloadingItinerary) return;
+        setDownloadingItinerary(true);
+        try {
+            const response = await fetch(`http://localhost:8080/api/bookings/${booking.id_bookings}/ticket`);
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.error || 'فشل تحميل التذكرة الإلكترونية');
+            }
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ticket-${booking.booking_reference}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Error downloading ticket:', error);
+            alert('حدث خطأ أثناء تحميل التذكرة الإلكترونية: ' + error.message);
+        } finally {
+            setDownloadingItinerary(false);
+        }
     };
 
     return (
@@ -300,13 +327,34 @@ function BoardingPass({ passenger, booking, index }) {
             {/* Download PDF button bar */}
             <div className="bg-slate-50 px-5 py-3.5 flex justify-between items-center border-t border-slate-150" data-html2canvas-ignore="true">
                 <span className="text-[10px] font-bold text-slate-400">تذكرة صعود جاهزة للطباعة أو الحفظ</span>
-                <button
-                    onClick={handleDownloadPdf}
-                    className="flex items-center gap-1.5 px-4.5 py-2 bg-[#4974f9] hover:bg-[#3a5fd4] text-white rounded-xl text-xs font-black shadow-md shadow-[#4974f9]/20 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
-                >
-                    <Download size={14} />
-                    <span>تحميل التذكرة PDF</span>
-                </button>
+                <div className="flex gap-2">
+                    {booking.status === 'certain' && (
+                        <button
+                            onClick={handleDownloadItinerary}
+                            disabled={downloadingItinerary}
+                            className="flex items-center gap-1.5 px-4.5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl text-xs font-black shadow-md shadow-emerald-600/20 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
+                        >
+                            {downloadingItinerary ? (
+                                <>
+                                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                    <span>جاري التوليد...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Download size={14} />
+                                    <span>تحميل التذكرة الإلكترونية</span>
+                                </>
+                            )}
+                        </button>
+                    )}
+                    <button
+                        onClick={handleDownloadPdf}
+                        className="flex items-center gap-1.5 px-4.5 py-2 bg-[#4974f9] hover:bg-[#3a5fd4] text-white rounded-xl text-xs font-black shadow-md shadow-[#4974f9]/20 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
+                    >
+                        <Download size={14} />
+                        <span>تحميل التذكرة PDF</span>
+                    </button>
+                </div>
             </div>
 
             {/* QR Zoom Modal */}

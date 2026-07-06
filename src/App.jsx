@@ -12,6 +12,7 @@ import CompanyDashboard from './pages/CompanyDashboard.jsx'
 import CompanyFlights from './pages/CompanyFlights.jsx'
 import CompanyPassengers from './pages/CompanyPassengers.jsx'
 import CompanyAnalytics from './pages/CompanyAnalytics.jsx'
+import Notifications from './pages/Notifications.jsx'
 import FinancialReport from './pages/FinancialReport.jsx'
 import DestinationReport from './pages/DestinationReport.jsx'
 import MedicalServicesReport from './pages/MedicalServicesReport.jsx'
@@ -172,6 +173,14 @@ function App() {
                     description="تنسيق وتوفير الخدمات الخاصة مثل الكراسي المتحركة أو الخدمات الطبية للركاب."
                     icon={HeartPulse}
                   />
+                </CompanyProtectedRoute>
+              }
+            />
+            <Route
+              path="/company/notifications"
+              element={
+                <CompanyProtectedRoute>
+                  <Notifications />
                 </CompanyProtectedRoute>
               }
             />

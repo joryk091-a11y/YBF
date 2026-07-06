@@ -2,6 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mysql from 'mysql2/promise';
+import fs from 'fs';
+import path from 'path';
+import puppeteer from 'puppeteer';
 
 dotenv.config();
 
@@ -10,6 +13,7 @@ const PORT = 8080;
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static('public'));
 
 // Helper to parse DATABASE_URL
 const getDbConfig = () => {
@@ -481,6 +485,60 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
   }
 });
 
+// GET pending bookings for a specific airline (strict Data Isolation)
+app.get('/api/bookings/pending', async (req, res) => {
+  const { airline_id } = req.query;
+  
+  if (!airline_id || airline_id === 'undefined' || airline_id === 'null' || airline_id.toString().trim() === '') {
+    return res.status(400).json({ success: false, error: 'airline_id query parameter is required for data isolation.' });
+  }
+
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    
+    // We enforce data isolation by joining bookings with flights and filtering strictly by the active company's airline_id
+    const [rows] = await connection.execute(`
+      SELECT b.id_bookings, b.booking_reference, b.booking_date, b.total_passengers, b.base_price, b.extra_total, b.final_price, b.status,
+             f.flight_number, f.airline_code, f.airline_id, f.airportOrigin_code, f.airportDestination_code, f.departure_time, f.arrival_time, f.price as flight_price,
+             p.payment_method, p.payment_status, p.tansaction_id, p.payment_date, p.gateway_response,
+             (SELECT GROUP_CONCAT(name SEPARATOR ', ') FROM bookings_passengers bp JOIN passengers pass ON bp.passenger_id = pass.id_passengers WHERE bp.booking_id = b.id_bookings) as passengers
+      FROM bookings b
+      JOIN flights f ON b.flight_id = f.id_flights
+      LEFT JOIN payments p ON p.booking_id = b.id_bookings
+      WHERE b.status = 'temporary' AND f.airline_id = ?
+      ORDER BY b.booking_date DESC
+    `, [airline_id]);
+
+    // Parse the gateway_response to retrieve payment receipt if it exists
+    const bookings = rows.map(r => {
+      let paymentProof = null;
+      let selectedBranchId = null;
+      if (r.gateway_response) {
+        try {
+          const parsed = JSON.parse(r.gateway_response);
+          paymentProof = parsed.paymentProof;
+          selectedBranchId = parsed.selectedBranchId;
+        } catch (e) {
+          paymentProof = r.gateway_response;
+        }
+      }
+      return {
+        ...r,
+        paymentProof,
+        selectedBranchId
+      };
+    });
+
+    res.json({ success: true, bookings });
+  } catch (error) {
+    console.error('Error fetching pending bookings:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
 // GET all bookings for admin
 app.get('/api/admin/bookings', async (req, res) => {
   const { date } = req.query;
@@ -529,6 +587,31 @@ async function updateBookingStatusHandler(req, res) {
         'UPDATE bookings SET status = ?, cancelled_date = ? WHERE id_bookings = ?',
         [status, status === 'canceled' ? new Date() : null, id]
       );
+
+      // Fetch booking reference and lead passenger to notify
+      const [[bookingRow]] = await connection.execute(
+        'SELECT booking_reference FROM bookings WHERE id_bookings = ?',
+        [id]
+      );
+      const reference = bookingRow ? bookingRow.booking_reference : id;
+
+      const [passengersRows] = await connection.execute(
+        'SELECT passenger_id FROM bookings_passengers WHERE booking_id = ? ORDER BY id_bookings_passengers ASC LIMIT 1',
+        [id]
+      );
+      if (passengersRows.length > 0) {
+        const passengerId = passengersRows[0].passenger_id;
+        const title = status === 'certain' ? 'تم تأكيد حجزك بنجاح' : 'تم إلغاء حجزك';
+        const message = status === 'certain' 
+          ? `تهانينا! تم تأكيد حجزك برقم المرجع ${reference} بنجاح.` 
+          : `نأسف، تم رفض طلب حجزك برقم المرجع ${reference} وإلغاء الحجز.`;
+        const type = status === 'certain' ? 'payment' : 'cancellation';
+        
+        await connection.execute(
+          'INSERT INTO notifications (passenger_id, booking_id, title, message, type, is_read, created_at) VALUES (?, ?, ?, ?, ?, 0, NOW())',
+          [passengerId, id, title, message, type]
+        );
+      }
     }
 
     if (payment_status) {
@@ -689,6 +772,295 @@ async function getBookingPassengersHandler(req, res) {
 app.get('/api/bookings/:id/passengers', getBookingPassengersHandler);
 app.get('/api/booking-passengers/:bookingId', getBookingPassengersHandler);
 
+// GET /api/bookings/:id/ticket — Generate official PDF ticket
+app.get('/api/bookings/:id/ticket', async (req, res) => {
+  const { id } = req.params;
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    const [rows] = await connection.execute(
+      `SELECT b.id_bookings, b.booking_reference, b.status AS booking_status, b.booking_date, b.final_price,
+              f.flight_number, f.airline_code, f.airportOrigin_code, f.airportDestination_code, f.departure_time, f.arrival_time, f.aircraft_type,
+              c.airline_name,
+              p.payment_method, p.payment_status, p.gateway_response,
+              pass.name AS passenger_name, pass.passport_number,
+              s.seat_class, s.seat_number,
+              bg.weight AS baggage_weight
+       FROM bookings b
+       JOIN bookings_passengers bp ON b.id_bookings = bp.booking_id
+       JOIN passengers pass ON bp.passenger_id = pass.id_passengers
+       JOIN flights f ON b.flight_id = f.id_flights
+       LEFT JOIN airline_companies c ON f.airline_id = c.id_airline
+       LEFT JOIN payments p ON p.booking_id = b.id_bookings
+       LEFT JOIN seats s ON bp.seat_id = s.id_seats
+       LEFT JOIN baggage bg ON (bp.baggage_id = bg.id_baggage OR (bg.booking_id = b.id_bookings AND bg.passenger_id = pass.id_passengers))
+       WHERE b.id_bookings = ?`,
+      [id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Booking not found' });
+    }
+
+    // Format final price, reference and passengers list
+    const firstRow = rows[0];
+    const passengersMap = new Map();
+    rows.forEach(r => {
+      // Ensure unique passengers in case of duplicate joins
+      passengersMap.set(r.passenger_name + '_' + r.passport_number, {
+        name: r.passenger_name,
+        passport_number: r.passport_number || 'N/A',
+        seat_class: r.seat_class || 'Economy',
+        seat_number: r.seat_number || 'N/A',
+        baggage_weight: r.baggage_weight ? `${Math.round(r.baggage_weight)} KG` : '23 KG'
+      });
+    });
+
+    const booking = {
+      id_bookings: firstRow.id_bookings,
+      booking_reference: firstRow.booking_reference,
+      booking_status: firstRow.booking_status,
+      booking_date: firstRow.booking_date,
+      final_price: firstRow.final_price,
+      flight_number: firstRow.flight_number,
+      airline_code: firstRow.airline_code,
+      airportOrigin_code: firstRow.airportOrigin_code,
+      airportDestination_code: firstRow.airportDestination_code,
+      departure_time: firstRow.departure_time,
+      arrival_time: firstRow.arrival_time,
+      aircraft_type: firstRow.aircraft_type,
+      airline_name: firstRow.airline_name || 'Yemen Airways',
+      payment_method: firstRow.payment_method,
+      payment_status: firstRow.payment_status,
+      gateway_response: firstRow.gateway_response,
+      passengers: Array.from(passengersMap.values())
+    };
+
+    // Generate HTML template
+    const htmlContent = generateTicketHtml(booking);
+
+    // Launch puppeteer to generate PDF
+    const localHeadlessShell = 'C:\\Users\\ABRAG Soft\\.cache\\puppeteer\\chrome-headless-shell\\win64-150.0.7871.24\\chrome-headless-shell-win64\\chrome-headless-shell.exe';
+    const launchOptions = {
+      headless: 'new',
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--single-process',
+        '--no-zygote'
+      ]
+    };
+    if (fs.existsSync(localHeadlessShell)) {
+      launchOptions.executablePath = localHeadlessShell;
+    }
+    const browser = await puppeteer.launch(launchOptions);
+    const page = await browser.newPage();
+    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      margin: {
+        top: '20mm',
+        bottom: '20mm',
+        left: '15mm',
+        right: '15mm'
+      },
+      printBackground: true
+    });
+
+    await browser.close();
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="ticket-${booking.booking_reference}.pdf"`);
+    res.send(pdfBuffer);
+
+  } catch (error) {
+    console.error('Error generating PDF ticket:', error);
+    res.status(500).json({ success: false, error: 'حدث خطأ أثناء إصدار التذكرة: ' + error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+function generateTicketHtml(booking) {
+  const issueDateStr = new Date(booking.booking_date).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
+  const depDateStr = new Date(booking.departure_time).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
+  const depTimeStr = new Date(booking.departure_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+  const arrTimeStr = new Date(booking.arrival_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+  const passengerNames = booking.passengers.map(p => p.name.toUpperCase()).join(' / ');
+  const passengerPassports = booking.passengers.map(p => p.passport_number.toUpperCase()).join(' / ');
+  const baggageAllowance = booking.passengers[0]?.baggage_weight || '23 KG';
+  const resClass = (booking.passengers[0]?.seat_class || 'Economy').toUpperCase();
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Passenger Itinerary Receipt - ${booking.booking_reference}</title>
+  <style>
+    body {
+      font-family: 'Courier New', Courier, monospace;
+      color: #000;
+      background-color: #fff;
+      font-size: 12px;
+      line-height: 1.5;
+      padding: 20px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 2px dashed #000;
+      padding-bottom: 10px;
+    }
+    .header h1 {
+      font-size: 18px;
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .header h2 {
+      font-size: 12px;
+      margin: 5px 0 0 0;
+      font-weight: normal;
+      text-transform: uppercase;
+    }
+    .info-section {
+      width: 100%;
+      margin-bottom: 30px;
+      border-collapse: collapse;
+    }
+    .info-section td {
+      padding: 4px 0;
+      vertical-align: top;
+    }
+    .info-label {
+      font-weight: bold;
+      width: 220px;
+      text-transform: uppercase;
+    }
+    .info-value {
+      text-transform: uppercase;
+    }
+    .itinerary-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+    }
+    .itinerary-table th {
+      border-top: 1px solid #000;
+      border-bottom: 1px solid #000;
+      padding: 8px 5px;
+      text-align: left;
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 11px;
+    }
+    .itinerary-table td {
+      padding: 10px 5px;
+      border-bottom: 1px dashed #000;
+      font-size: 11px;
+    }
+    .payment-section {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      border-top: 2px dashed #000;
+      padding-top: 15px;
+    }
+    .payment-section td {
+      padding: 4px 0;
+    }
+    .footer {
+      margin-top: 50px;
+      text-align: center;
+      font-size: 10px;
+      border-top: 1px solid #000;
+      padding-top: 10px;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>${booking.airline_name}</h1>
+    <h2>Passenger Itinerary Receipt / Electronic Ticket</h2>
+  </div>
+
+  <table class="info-section">
+    <tr>
+      <td class="info-label">PASSENGER NAME</td>
+      <td class="info-value">: ${passengerNames}</td>
+    </tr>
+    <tr>
+      <td class="info-label">PASSENGER PASSPORT NO</td>
+      <td class="info-value">: ${passengerPassports}</td>
+    </tr>
+    <tr>
+      <td class="info-label">BOOKING REF</td>
+      <td class="info-value" style="font-weight: bold; letter-spacing: 1px;">: ${booking.booking_reference}</td>
+    </tr>
+    <tr>
+      <td class="info-label">DATE OF ISSUE</td>
+      <td class="info-value">: ${issueDateStr}</td>
+    </tr>
+  </table>
+
+  <table class="itinerary-table">
+    <thead>
+      <tr>
+        <th>ROUTE</th>
+        <th>AIRLINE CODE</th>
+        <th>FLIGHT NO</th>
+        <th>RES. CLASS</th>
+        <th>DATE</th>
+        <th>DEP TIME</th>
+        <th>ARR TIME</th>
+        <th>BAGGAGE ALLOWANCE</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>${booking.airportOrigin_code} - ${booking.airportDestination_code}</td>
+        <td>${booking.airline_code}</td>
+        <td>${booking.flight_number}</td>
+        <td>${resClass}</td>
+        <td>${depDateStr}</td>
+        <td>${depTimeStr}</td>
+        <td>${arrTimeStr}</td>
+        <td>${baggageAllowance}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table class="payment-section">
+    <tr>
+      <td class="info-label">FARE AMOUNT</td>
+      <td>: USD ${Number(booking.final_price).toFixed(2)}</td>
+    </tr>
+    <tr>
+      <td class="info-label">TOTAL PAID</td>
+      <td style="font-weight: bold;">: USD ${Number(booking.final_price).toFixed(2)}</td>
+    </tr>
+    <tr>
+      <td class="info-label">PAYMENT METHOD</td>
+      <td>: ${booking.payment_method === 'bank_transfer' ? 'BANK TRANSFER / CASH' : (booking.payment_method || 'N/A').toUpperCase()}</td>
+    </tr>
+    <tr>
+      <td class="info-label">BOOKING STATUS</td>
+      <td style="font-weight: bold; color: #000;">: ${booking.booking_status === 'certain' ? 'CONFIRMED / PAID' : booking.booking_status.toUpperCase()}</td>
+    </tr>
+  </table>
+
+  <div class="footer">
+    Thank you for choosing ${booking.airline_name}. Wish you a pleasant flight.
+  </div>
+</body>
+</html>
+  `;
+}
+
 
 // --- NEW FLIGHT MANAGEMENT ENDPOINTS ---
 
@@ -728,8 +1100,8 @@ app.post('/api/flights', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
     const [result] = await connection.execute(
-      'INSERT INTO flights (flight_number, airline_code, airportOrigin_code, airportDestination_code, departure_time, arrival_time, aircraft_type, total_seats, available_seats, status, price, duration) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TIMESTAMPDIFF(MINUTE, ?, ?))',
-      [f.flight_number, f.airline_code, f.airportOrigin_code, f.airportDestination_code, f.departure_time, f.arrival_time, f.aircraft_type, f.total_seats, f.available_seats, 'active', f.price || 0, f.departure_time, f.arrival_time]
+      'INSERT INTO flights (flight_number, airline_code, airline_id, airportOrigin_code, airportDestination_code, departure_time, arrival_time, aircraft_type, total_seats, available_seats, status, price, duration) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TIMESTAMPDIFF(MINUTE, ?, ?))',
+      [f.flight_number, f.airline_code, f.airline_id || 1, f.airportOrigin_code, f.airportDestination_code, f.departure_time, f.arrival_time, f.aircraft_type, f.total_seats, f.available_seats, 'active', f.price || 0, f.departure_time, f.arrival_time]
     );
     res.json({ success: true, flightId: result.insertId });
   } catch (error) {
@@ -834,8 +1206,8 @@ app.put('/api/flights/:id', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
     await connection.execute(
-      'UPDATE flights SET flight_number = ?, airline_code = ?, airportOrigin_code = ?, airportDestination_code = ?, departure_time = ?, arrival_time = ?, aircraft_type = ?, total_seats = ?, available_seats = ?, price = ?, duration = TIMESTAMPDIFF(MINUTE, ?, ?), `update` = NOW() WHERE id_flights = ?',
-      [f.flight_number, f.airline_code, f.airportOrigin_code, f.airportDestination_code, f.departure_time, f.arrival_time, f.aircraft_type, f.total_seats, f.available_seats, f.price, f.departure_time, f.arrival_time, id]
+      'UPDATE flights SET flight_number = ?, airline_code = ?, airline_id = ?, airportOrigin_code = ?, airportDestination_code = ?, departure_time = ?, arrival_time = ?, aircraft_type = ?, total_seats = ?, available_seats = ?, price = ?, duration = TIMESTAMPDIFF(MINUTE, ?, ?), `update` = NOW() WHERE id_flights = ?',
+      [f.flight_number, f.airline_code, f.airline_id || 1, f.airportOrigin_code, f.airportDestination_code, f.departure_time, f.arrival_time, f.aircraft_type, f.total_seats, f.available_seats, f.price, f.departure_time, f.arrival_time, id]
     );
     res.json({ success: true });
   } catch (error) {
@@ -866,8 +1238,39 @@ app.post('/api/bookings', async (req, res) => {
   };
   const paymentMethod = methodMap[rawMethod] || 'credit_card';
 
-  const bookingStatus = (rawMethod === 'branch' || rawMethod === 'transfer') ? 'temporary' : 'certain';
+  // Enforce 'Pending' status (temporary in DB) for all bookings for admin review
+  const bookingStatus = 'temporary';
   const paymentStatus = (rawMethod === 'branch' || rawMethod === 'transfer') ? 'pending' : 'success';
+
+  // Process and save payment receipt image (base64 or URL/path)
+  let proofPath = null;
+  if (req.body.paymentProof) {
+    try {
+      if (typeof req.body.paymentProof === 'string' && (req.body.paymentProof.startsWith('http') || req.body.paymentProof.startsWith('/'))) {
+        proofPath = req.body.paymentProof;
+      } else {
+        const matches = req.body.paymentProof.match(/^data:image\/([a-zA-Z+]+);base64,(.+)$/);
+        if (matches && matches.length === 3) {
+          const extension = matches[1];
+          const base64Data = matches[2];
+          const buffer = Buffer.from(base64Data, 'base64');
+          
+          const allowedExtensions = ['png', 'jpg', 'jpeg', 'webp'];
+          if (allowedExtensions.includes(extension.toLowerCase())) {
+            const uploadDir = path.join(process.cwd(), 'public', 'receipts');
+            if (!fs.existsSync(uploadDir)) {
+              fs.mkdirSync(uploadDir, { recursive: true });
+            }
+            const fileName = `proof-${reference}-${Date.now()}.${extension}`;
+            fs.writeFileSync(path.join(uploadDir, fileName), buffer);
+            proofPath = `/receipts/${fileName}`;
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error processing payment proof:', err);
+    }
+  }
 
   let connection;
   try {
@@ -882,6 +1285,8 @@ app.post('/api/bookings', async (req, res) => {
     const bookingId = bookingResult.insertId;
 
     // 2. Process each passenger
+    let leadPassengerId = null;
+    let index = 0;
     for (const p of passengers) {
       // Handle different field naming conventions from frontend
       const pName = p.name || p.fullName || 'مسافر';
@@ -905,6 +1310,12 @@ app.post('/api/bookings', async (req, res) => {
         );
         passengerId = passResult.insertId;
       }
+      
+      if (index === 0) {
+        leadPassengerId = passengerId;
+      }
+      index++;
+
       await connection.execute(
         'INSERT INTO bookings_passengers (booking_id, passenger_id) VALUES (?, ?)',
         [bookingId, passengerId]
@@ -935,11 +1346,30 @@ app.post('/api/bookings', async (req, res) => {
       }
     }
 
+    const gatewayResponse = JSON.stringify({
+      paymentProof: proofPath,
+      selectedBranchId: req.body.selectedBranchId || null
+    });
+
     // 5. Create payment record
     await connection.execute(
-      'INSERT INTO payments (booking_id, amount, payment_method, payment_status, payment_date) VALUES (?, ?, ?, ?, NOW())',
-      [bookingId, totalPrice, paymentMethod, paymentStatus]
+      'INSERT INTO payments (booking_id, amount, payment_method, payment_status, gateway_response, payment_date) VALUES (?, ?, ?, ?, ?, NOW())',
+      [bookingId, totalPrice, paymentMethod, paymentStatus, gatewayResponse]
     );
+
+    // 6. Create notification for lead passenger
+    if (leadPassengerId) {
+      await connection.execute(
+        'INSERT INTO notifications (passenger_id, booking_id, title, message, type, is_read, created_at) VALUES (?, ?, ?, ?, ?, 0, NOW())',
+        [
+          leadPassengerId,
+          bookingId,
+          'طلب حجز جديد معلق',
+          `تم تقديم طلب حجزك برقم المرجع ${reference}. يرجى الانتظار لحين مراجعة سند الدفع وتأكيد الحجز.`,
+          'booking'
+        ]
+      );
+    }
 
     await connection.commit();
     res.json({ success: true, bookingId, reference });
@@ -961,7 +1391,11 @@ app.get('/api/notifications/:userId', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
     const [rows] = await connection.execute(
-      'SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 20',
+      `SELECT n.id_notifications, n.passenger_id, n.booking_id, n.title, n.message, n.type, n.is_read, n.created_at
+       FROM notifications n
+       JOIN passengers p ON n.passenger_id = p.id_passengers
+       WHERE p.user_id = ?
+       ORDER BY n.created_at DESC LIMIT 20`,
       [userId]
     );
     res.json({ success: true, notifications: rows });
@@ -995,7 +1429,10 @@ app.patch('/api/notifications/read-all/:userId', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
     await connection.execute(
-      'UPDATE notifications SET is_read = 1 WHERE user_id = ?',
+      `UPDATE notifications n
+       JOIN passengers p ON n.passenger_id = p.id_passengers
+       SET n.is_read = 1
+       WHERE p.user_id = ?`,
       [userId]
     );
     res.json({ success: true });

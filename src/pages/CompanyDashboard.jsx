@@ -57,6 +57,20 @@ const airlineCode = localStorage.getItem('airlineCode') || (user.airline_id === 
 
     const [flights, setFlights] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [pendingCount, setPendingCount] = useState(0);
+
+    useEffect(() => {
+        if (companyId) {
+            fetch(`http://localhost:8080/api/bookings/pending?airline_id=${companyId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        setPendingCount(data.bookings ? data.bookings.length : 0);
+                    }
+                })
+                .catch(err => console.error('Error fetching pending count:', err));
+        }
+    }, [companyId]);
 
     const getCompanyLogo = () => {
         if (user.logo_url) return user.logo_url;
@@ -319,8 +333,18 @@ case 'QA': return balqisLogo;
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <button className="h-10 w-10 flex items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all shadow-sm">
+                        <button 
+                            onClick={() => navigate('/company/notifications')}
+                            className="h-10 w-10 flex items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all shadow-sm relative"
+                            title="الإشعارات والحجوزات المعلقة"
+                        >
                             <Bell size={18} />
+                            {pendingCount > 0 && (
+                                <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-900 animate-ping"></span>
+                            )}
+                            {pendingCount > 0 && (
+                                <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-900"></span>
+                            )}
                         </button>
                         <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-2 hidden sm:block" />
                         <button

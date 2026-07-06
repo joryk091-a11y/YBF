@@ -11,7 +11,8 @@ const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+const stripe = stripeSecretKey ? new Stripe(stripeSecretKey) : null;
 const app = express();
 const PORT = 8080;
 
@@ -1121,6 +1122,9 @@ app.post('/api/bookings', async (req, res) => {
 // Create Stripe Checkout Session
 app.post('/api/create-checkout-session', async (req, res) => {
   const { bookingId, reference, amount, flightNumber, origin, destination } = req.body;
+  if (!stripe) {
+    return res.status(400).json({ success: false, error: 'Stripe is not configured on this server. Please set STRIPE_SECRET_KEY.' });
+  }
   try {
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],

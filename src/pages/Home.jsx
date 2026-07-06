@@ -398,7 +398,7 @@ function HomePage() {
         </div>
       </section>
 
-      <div id="search-panel" className="relative z-30 -mt-60 pb-12 sm:-mt-64 sm:pb-16">
+      <div id="search-panel" className="relative z-30 -mt-28 pb-12 sm:-mt-64 sm:pb-16">
         <ScrollReveal animation="fade-up" duration={800} delay={100}>
           <div className="pt-4">
             <HeroSearchPanel />
@@ -406,14 +406,14 @@ function HomePage() {
         </ScrollReveal>
 
         {/* الوجهات الأكثر طلباً */}
-        <section className="mx-auto mt-24 max-w-7xl px-4 sm:px-6 lg:px-8 relative" dir="rtl">
+        <section className="mx-auto mt-16 max-w-7xl px-4 sm:px-6 lg:px-8 relative" dir="rtl">
           <ScrollReveal animation="fade-down" duration={700}>
             <div className="text-center mb-16 relative flex flex-col items-center">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-4 py-1.5 text-[10px] font-black tracking-wider text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 uppercase mb-4 shadow-sm">
                 <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
                 الوجهات المفضلة
               </span>
-              <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white sm:text-4xl md:text-5xl leading-tight">
+              <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white sm:text-4xl md:text-5xl leading-tight">
                 الوجهات <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">الأكثر طلباً</span>
               </h2>
               <div className="relative mt-4 mb-6 flex items-center justify-center w-32">
@@ -498,7 +498,7 @@ function HomePage() {
         </section>
 
         {/* Services Bento Grid Section */}
-        <section id="services" className="mx-auto mt-32 max-w-7xl px-4 sm:px-6 lg:px-8 relative" dir="rtl">
+        <section id="services" className="mx-auto mt-20 max-w-7xl px-4 sm:px-6 lg:px-8 relative" dir="rtl">
           <ScrollReveal animation="fade-down" duration={700}>
             <div className="text-center mb-16 relative flex flex-col items-center">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-4 py-1.5 text-[10px] font-black tracking-wider text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 uppercase mb-4 shadow-sm">
@@ -646,7 +646,7 @@ function HomePage() {
         </section>
 
         {/* Interactive Split-Screen 'Flight Journey' Section */}
-        <section id="how-it-works" className="mx-auto mt-40 max-w-7xl px-4 sm:px-6 lg:px-8 relative" dir="rtl">
+        <section id="how-it-works" className="mx-auto mt-20 max-w-7xl px-4 sm:px-6 lg:px-8 relative" dir="rtl">
           <ScrollReveal animation="fade-down" duration={700}>
             <div className="relative mb-20 text-center flex flex-col items-center">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-4 py-1.5 text-[10px] font-black tracking-wider text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 uppercase mb-4 shadow-sm">
@@ -666,7 +666,7 @@ function HomePage() {
             </div>
           </ScrollReveal>
 
-          <div className="grid gap-12 lg:grid-cols-12 items-center">
+          <div className="grid gap-8 lg:grid-cols-12 items-center">
             {/* Steps Left Interactive Showcase (5 Columns) */}
             <ScrollReveal
               animation="fade-right"
@@ -739,7 +739,7 @@ function HomePage() {
         </section>
 
         {/* Modernized FAQ Section */}
-        <section id="faq" className="mx-auto mt-40 max-w-4xl px-4 pb-32 sm:px-6 lg:px-8" dir="rtl">
+        <section id="faq" className="mx-auto mt-20 max-w-4xl px-4 pb-20 sm:px-6 lg:px-8" dir="rtl">
           <ScrollReveal animation="fade-down" duration={700}>
             <div className="relative mb-24 text-center flex flex-col items-center">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-4 py-1.5 text-[10px] font-black tracking-wider text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 uppercase mb-4 shadow-sm">

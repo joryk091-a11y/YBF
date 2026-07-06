@@ -43,7 +43,7 @@ function LoginPage() {
     }
 
     return (
-        <main className="min-h-screen flex items-start justify-center bg-gradient-to-br from-white via-blue-100 to-blue-200 px-4 pt-36 pb-20 sm:pt-44 md:pt-48 relative overflow-hidden" dir="rtl">
+        <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-blue-100 to-blue-200 px-4 py-8 pt-24 sm:pt-44 md:pt-48 relative overflow-hidden" dir="rtl">
             {/* Modern subtle ambient glows within brand blue identity */}
             <div className="absolute inset-0 pointer-events-none opacity-70 z-0">
                 <div className="absolute -top-20 -right-20 h-[600px] w-[600px] rounded-full bg-blue-350/40 blur-[120px]" />

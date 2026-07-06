@@ -106,7 +106,7 @@ function RegisterPage() {
     }
 
     return (
-        <main className="min-h-screen flex items-start justify-center bg-gradient-to-br from-white via-blue-100 to-blue-200 px-4 pt-28 pb-20 sm:pt-36 md:pt-40 relative overflow-hidden" dir="rtl">
+        <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-blue-100 to-blue-200 px-4 py-8 pt-24 sm:pt-36 md:pt-40 relative overflow-hidden" dir="rtl">
             {/* Modern subtle ambient glows within brand blue identity */}
             <div className="absolute inset-0 pointer-events-none opacity-70 z-0">
                 <div className="absolute -top-20 -right-20 h-[600px] w-[600px] rounded-full bg-blue-350/40 blur-[120px]" />
@@ -114,7 +114,7 @@ function RegisterPage() {
             </div>
 
             {/* Split Screen Layout Container */}
-            <div className="relative z-10 w-full max-w-6xl grid gap-8 lg:grid-cols-[0.7fr_1.3fr] items-center">
+            <div className="relative z-10 w-full max-w-6xl flex flex-col lg:grid gap-8 lg:grid-cols-[0.7fr_1.3fr] items-center">
                 
                 {/* Right side: Welcome Text (Visible on lg screens) */}
                 <div className={`hidden lg:flex flex-col text-right text-slate-800 space-y-6 pr-0 lg:pl-12 self-start pt-10 transition-all duration-1000 delay-100 ease-out transform ${mounted ? 'translate-x-0 opacity-100' : 'translate-x-12 opacity-0'}`}>
@@ -131,7 +131,7 @@ function RegisterPage() {
                 </div>
 
                 {/* Left side: Register Form Card */}
-                <div className={`w-full max-w-[580px] lg:mr-4 lg:ml-auto bg-white rounded-[2.5rem] border border-slate-200/50 p-8 sm:p-10 shadow-[0_20px_50px_rgba(15,23,42,0.08)] transition-all duration-1000 delay-300 ease-out transform ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
+                <div className={`w-full max-w-[580px] mx-auto lg:mr-4 lg:ml-auto bg-white rounded-[2.5rem] border border-slate-200/50 p-6 sm:p-10 shadow-[0_20px_50px_rgba(15,23,42,0.08)] transition-all duration-1000 delay-300 ease-out transform ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
                 {/* Logo & Header */}
                 <div className="flex flex-col items-center mb-8">
                     <div className="relative mb-4 flex items-center justify-center h-16 w-16">

@@ -144,12 +144,12 @@ function HeroSearchPanel() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 sm:px-6" dir="rtl">
-      <div className="relative rounded-[32px] border border-slate-200/60 bg-white/90 backdrop-blur-md px-6 pb-6 pt-8 shadow-[0_30px_80px_rgba(0,0,0,0.08)] sm:px-8">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+      <div className="mx-auto w-full max-w-7xl px-2 sm:px-6" dir="rtl">
+      <div className="relative rounded-[24px] sm:rounded-[32px] border border-slate-200/60 bg-white/90 backdrop-blur-md px-4 pb-5 pt-6 shadow-[0_30px_80px_rgba(0,0,0,0.08)] sm:px-8 sm:pb-6 sm:pt-8">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           
           {/* Path switcher container */}
-          <div className="inline-flex items-center gap-1.5 p-1 rounded-2xl bg-slate-50 border border-slate-200/60 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]">
+          <div className="inline-flex items-center gap-1 p-1 rounded-2xl bg-slate-50 border border-slate-200/60 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] overflow-x-auto max-w-full flex-shrink-0">
             {tabs.map((tab) => {
               const Icon = tab.icon
               const isActive = tab.id === activeTab
@@ -165,7 +165,7 @@ function HeroSearchPanel() {
                       current.length ? current : [{ from: localAirports[0].value, to: localAirports[1].value, date: '' }],
                     )
                   }}
-                  className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black transition-all duration-300 hover:scale-102 active:scale-98 cursor-pointer focus:outline-none ${isActive
+                  className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-black transition-all duration-300 hover:scale-102 active:scale-98 cursor-pointer focus:outline-none whitespace-nowrap ${isActive
                       ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
                       : 'text-slate-650 hover:text-blue-600 hover:bg-white/70'
                     }`}
@@ -177,12 +177,12 @@ function HeroSearchPanel() {
             })}
           </div>
 
-          <div className="inline-flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white p-1 px-4 shadow-sm transition-all duration-200 hover:border-blue-500/30 hover:shadow-md">
-            <div className="flex items-center gap-2 border-l border-slate-100 pl-3 py-1">
-              <Users className="h-4 w-4 text-blue-600" />
-              <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">المسافرين</span>
+          <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-200/80 bg-white p-1 px-3 shadow-sm transition-all duration-200 hover:border-blue-500/30 hover:shadow-md flex-shrink-0">
+            <div className="flex items-center gap-1.5 border-l border-slate-100 pl-2 py-1">
+              <Users className="h-3.5 w-3.5 text-blue-600" />
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 hidden sm:inline">المسافرين</span>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => setPassengerCount(Math.max(1, passengerCount - 1))}
@@ -368,7 +368,7 @@ function HeroSearchPanel() {
         <button
           type="button"
           onClick={goToSearch}
-          className="mt-6 h-14 w-full rounded-2xl bg-blue-600 text-base font-black text-white shadow-xl shadow-blue-600/30 transition-all duration-300 hover:-translate-y-0.5 hover:bg-blue-500 hover:shadow-2xl hover:shadow-blue-600/40 active:translate-y-[1px] cursor-pointer"
+          className="mt-5 h-13 w-full rounded-2xl bg-blue-600 text-sm font-black text-white shadow-xl shadow-blue-600/30 transition-all duration-300 hover:-translate-y-0.5 hover:bg-blue-500 hover:shadow-2xl hover:shadow-blue-600/40 active:translate-y-[1px] cursor-pointer sm:h-14 sm:text-base"
         >
           ابحث عن أفضل الرحلات الآن
         </button>

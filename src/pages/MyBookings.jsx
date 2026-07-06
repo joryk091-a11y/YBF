@@ -135,6 +135,9 @@ function BoardingPass({ passenger, booking, index }) {
                             size: letter landscape;
                             margin: 0;
                         }
+                        .download-bar-pdf, [data-html2canvas-ignore="true"] {
+                            display: none !important;
+                        }
                     </style>
                 </head>
                 <body>
@@ -186,43 +189,48 @@ function BoardingPass({ passenger, booking, index }) {
     return (
         <div 
             id={`ticket-${passenger.id_passengers || index}`}
-            className="overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-sm hover:shadow-md transition-shadow duration-300"
+            className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-md hover:shadow-lg transition-all duration-300 relative"
         >
             {/* Header strip */}
-            <div className={`bg-gradient-to-r ${airline.color} px-5 py-2.5 flex items-center justify-between`} dir="rtl">
-                <div className="flex items-center gap-3 text-white">
+            <div className={`bg-gradient-to-r ${airline.color} px-6 py-4 flex items-center justify-between text-white`} dir="rtl">
+                <div className="flex items-center gap-3">
                     {airline.logo ? (
-                        <div className="h-7 w-7 rounded-full bg-white/10 backdrop-blur-sm p-1 flex items-center justify-center shrink-0 border border-white/15">
+                        <div className="h-9 w-9 rounded-full bg-white/10 backdrop-blur-sm p-1.5 flex items-center justify-center shrink-0 border border-white/20">
                             <img src={airline.logo} alt={airline.name} className="h-full w-full object-contain filter brightness-0 invert" />
                         </div>
                     ) : (
-                        <Plane size={14} className="rotate-45" />
+                        <div className="h-9 w-9 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center shrink-0 border border-white/20">
+                            <Plane size={16} className="rotate-45" />
+                        </div>
                     )}
                     <div className="flex flex-col text-right">
-                        <span className="text-xs font-black tracking-widest leading-none">{booking.airline_code} · {booking.flight_number}</span>
-                        <span className="text-[9px] font-bold text-white/70 mt-0.5">{airline.name}</span>
+                        <span className="text-sm font-black tracking-wider leading-none">{booking.airline_code} {booking.flight_number}</span>
+                        <span className="text-[10px] font-medium text-white/85 mt-0.5">{airline.name}</span>
                     </div>
                 </div>
-                <span className="text-[10px] font-black text-white/80 tracking-widest">BOARDING PASS</span>
+                <div className="flex flex-col items-end">
+                    <span className="text-[9px] font-black tracking-widest text-white/60 uppercase">بطاقة صعود الطائرة</span>
+                    <span className="text-xs font-black tracking-widest mt-0.5">BOARDING PASS</span>
+                </div>
             </div>
 
-            <div className="flex flex-col md:flex-row">
+            <div className="flex flex-col md:flex-row relative">
                 {/* Main section (Consistent RTL) */}
-                <div className="flex-1 p-6 flex flex-col justify-between gap-4" dir="rtl">
+                <div className="flex-1 p-6 flex flex-col justify-between gap-5" dir="rtl">
                     {/* Top Row: Passenger & PNR */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-right">
+                    <div className="bg-slate-50/60 rounded-2xl p-4 border border-slate-100 grid grid-cols-2 sm:grid-cols-3 gap-4 text-right">
                         <div>
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">اسم المسافر</p>
-                            <p className="text-base font-black text-slate-900 uppercase">{passenger.name}</p>
-                            <p className="text-[10px] font-bold text-slate-500">{passenger.passport_number}</p>
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">اسم المسافر / Passenger</p>
+                            <p className="text-sm font-black text-slate-800 uppercase">{passenger.name}</p>
+                            <p className="text-[9px] font-bold text-slate-500">{passenger.passport_number}</p>
                         </div>
                         <div>
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">رقم الرحلة</p>
-                            <p className="text-base font-black text-[#4974f9]">{booking.airline_code} {booking.flight_number}</p>
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">رقم الرحلة / Flight</p>
+                            <p className="text-sm font-black text-brand-blue">{booking.airline_code} {booking.flight_number}</p>
                         </div>
                         <div className="col-span-2 sm:col-span-1">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">رمز الحجز PNR</p>
-                            <p className="text-base font-black text-slate-900 tracking-wider">{booking.booking_reference}</p>
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">رمز الحجز / PNR</p>
+                            <p className="text-sm font-black text-slate-800 tracking-wider">{booking.booking_reference}</p>
                         </div>
                     </div>
 
@@ -230,32 +238,34 @@ function BoardingPass({ passenger, booking, index }) {
                     <div className="flex items-center justify-between gap-1.5 pt-3.5 pb-1 border-t border-slate-100">
                         {/* Origin (Departure) - Aligned Right */}
                         <div className="text-right shrink-0 w-fit max-w-[110px] sm:max-w-[160px]">
-                            <span className="text-3xl font-black text-slate-900 tracking-tight">{booking.airportOrigin_code}</span>
-                            <h4 className="text-sm font-black text-slate-700 mt-0.5 truncate">{originInfo.city}</h4>
-                            <p className="text-[10px] font-bold text-slate-400 truncate" title={originInfo.airport}>{originInfo.airport}</p>
-                            <div className="mt-2 flex items-center gap-1 text-xs font-black text-[#4974f9]">
-                                <Clock size={11} className="shrink-0" />
+                            <span className="text-4xl font-black text-slate-900 tracking-tight">{booking.airportOrigin_code}</span>
+                            <h4 className="text-xs font-black text-slate-700 mt-0.5 truncate">{originInfo.city}</h4>
+                            <p className="text-[9px] font-bold text-slate-400 truncate" title={originInfo.airport}>{originInfo.airport}</p>
+                            <div className="mt-2.5 flex items-center gap-1 text-[11px] font-black text-brand-blue">
+                                <Clock size={12} className="shrink-0" />
                                 <span className="truncate">الإقلاع: {formatTime(booking.departure_time)}</span>
                             </div>
                         </div>
 
                         {/* Center Path - Stretches to maximum */}
-                        <div className="flex-1 flex flex-col items-center gap-1 mx-1 text-center select-none">
-                            <span className="text-sm font-black text-slate-700 tracking-wide">{formatDuration(booking.duration)}</span>
+                        <div className="flex-1 flex flex-col items-center gap-1.5 mx-2 text-center select-none">
+                            <span className="text-xs font-black text-slate-500 tracking-wide">{formatDuration(booking.duration)}</span>
                             <div className="relative flex w-full items-center justify-center">
-                                <div className="h-[2px] w-full bg-slate-200" />
-                                <Plane size={13} className="absolute left-1/2 -translate-x-1/2 text-[#4974f9] bg-white px-1.5 rotate-180" />
+                                <div className="h-[2px] w-full border-t-2 border-dashed border-slate-200" />
+                                <div className="absolute left-1/2 -translate-x-1/2 bg-white px-2 py-0.5 rounded-full border border-slate-100 shadow-sm flex items-center justify-center">
+                                    <Plane size={14} className="text-brand-blue rotate-180" />
+                                </div>
                             </div>
-                            <span className="text-[9px] font-black text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full mt-0.5">مباشر</span>
+                            <span className="text-[9px] font-black text-brand-blue bg-brand-blue/5 border border-brand-blue/10 px-3 py-0.5 rounded-full mt-0.5">مباشر / Direct</span>
                         </div>
 
                         {/* Destination (Arrival) - Aligned Left */}
                         <div className="text-left shrink-0 w-fit max-w-[110px] sm:max-w-[160px]" dir="ltr">
-                            <span className="text-3xl font-black text-slate-900 tracking-tight">{booking.airportDestination_code}</span>
-                            <h4 className="text-sm font-black text-slate-700 mt-0.5 truncate">{destinationInfo.city}</h4>
-                            <p className="text-[10px] font-bold text-slate-400 truncate" title={destinationInfo.airport}>{destinationInfo.airport}</p>
-                            <div className="mt-2 flex items-center gap-1 text-xs font-black text-slate-500 justify-end shrink-0" dir="rtl">
-                                <Clock size={11} className="shrink-0" />
+                            <span className="text-4xl font-black text-slate-900 tracking-tight">{booking.airportDestination_code}</span>
+                            <h4 className="text-xs font-black text-slate-700 mt-0.5 truncate">{destinationInfo.city}</h4>
+                            <p className="text-[9px] font-bold text-slate-400 truncate" title={destinationInfo.airport}>{destinationInfo.airport}</p>
+                            <div className="mt-2.5 flex items-center gap-1 text-[11px] font-black text-slate-500 justify-end shrink-0" dir="rtl">
+                                <Clock size={12} className="shrink-0" />
                                 <span className="truncate">الوصول: {formatTime(booking.arrival_time)}</span>
                             </div>
                         </div>
@@ -263,16 +273,20 @@ function BoardingPass({ passenger, booking, index }) {
                 </div>
 
                 {/* Stub (Consistent & balanced) */}
-                <div className="w-full md:w-56 p-6 flex flex-col items-center justify-between gap-4 bg-slate-50/40 border-t md:border-t-0 md:border-r border-slate-200/50 border-dashed" dir="rtl">
+                <div className="w-full md:w-56 p-6 flex flex-col items-center justify-between gap-4 bg-slate-50/30 border-t md:border-t-0 md:border-r border-slate-200/50 border-dashed relative" dir="rtl">
+                    {/* Top and Bottom punch holes for stub separation */}
+                    <div className="absolute -top-3 -right-3 w-6 h-6 rounded-full bg-[#f4f7fc] print:bg-white border border-slate-200/60 z-10 hidden md:block" />
+                    <div className="absolute -bottom-3 -right-3 w-6 h-6 rounded-full bg-[#f4f7fc] print:bg-white border border-slate-200/60 z-10 hidden md:block" />
+
                     {/* Top Seat and Status Info */}
                     <div className="w-full grid grid-cols-2 gap-2 text-center pb-3 border-b border-slate-200/40">
                         <div>
-                            <p className="text-[9px] font-black uppercase text-slate-400 mb-0.5">المسافر</p>
+                            <p className="text-[9px] font-black uppercase text-slate-400 mb-0.5">المسافر / Pax</p>
                             <p className="text-xs font-black text-slate-700">{index + 1} / {booking.total_passengers}</p>
                         </div>
                         <div>
-                            <p className="text-[9px] font-black uppercase text-slate-400 mb-0.5">حالة التذكرة</p>
-                            <span className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-0.5 text-[9px] font-black ${status.bg} ${status.text}`}>
+                            <p className="text-[9px] font-black uppercase text-slate-400 mb-0.5">الحالة / Status</p>
+                            <span className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[9px] font-black ${status.bg} ${status.text}`}>
                                 <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
                                 {status.label}
                             </span>
@@ -283,9 +297,8 @@ function BoardingPass({ passenger, booking, index }) {
                     <div className="flex flex-col items-center gap-2 py-1">
                         <div
                             onClick={() => setShowQrModal(true)}
-                            className="group relative cursor-pointer overflow-hidden rounded-2xl border-2 border-slate-200/80 p-1.5 bg-white hover:border-[#4974f9] hover:shadow-lg transition-all duration-300 w-28 h-28 flex items-center justify-center animate-pulse"
+                            className="group relative cursor-pointer overflow-hidden rounded-2xl border border-slate-200 p-2 bg-white hover:border-brand-blue hover:shadow-lg transition-all duration-300 w-28 h-28 flex items-center justify-center shadow-sm"
                             title="اضغط لتكبير رمز QR"
-                            style={{ animationDuration: '4s' }}
                         >
                             {qrCodeUrl ? (
                                 <img
@@ -294,10 +307,10 @@ function BoardingPass({ passenger, booking, index }) {
                                     className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                                 />
                             ) : (
-                                <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#4974f9] border-t-transparent" />
+                                <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-blue border-t-transparent" />
                             )}
-                            <div className="absolute inset-0 bg-[#4974f9]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                                <span className="text-[9px] font-black text-[#4974f9] bg-white px-2 py-1 rounded-xl shadow-md border border-slate-100">تكبير الرمز</span>
+                            <div className="absolute inset-0 bg-brand-blue/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                <span className="text-[9px] font-black text-brand-blue bg-white px-2 py-1 rounded-xl shadow-md border border-slate-100">تكبير الرمز</span>
                             </div>
                         </div>
                         <span className="text-[9px] font-black text-slate-400 tracking-wider">رمز الصعود QR</span>
@@ -311,13 +324,13 @@ function BoardingPass({ passenger, booking, index }) {
             </div>
 
             {/* Footer meta strip */}
-            <div className="grid grid-cols-3 gap-px bg-slate-100 border-t border-slate-100">
+            <div className="grid grid-cols-3 gap-px bg-slate-100 border-t border-slate-150">
                 {[
-                    { label: 'تاريخ السفر', value: formatDate(booking.departure_time) },
-                    { label: 'طريقة الدفع', value: paymentMethodLabel[booking.payment_method] || booking.payment_method || '—' },
-                    { label: 'سعر التذكرة', value: `$${ticketPrice.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}` },
+                    { label: 'تاريخ السفر / Date', value: formatDate(booking.departure_time) },
+                    { label: 'طريقة الدفع / Payment', value: paymentMethodLabel[booking.payment_method] || booking.payment_method || '—' },
+                    { label: 'سعر التذكرة / Fare', value: `$${ticketPrice.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}` },
                 ].map(({ label, value }) => (
-                    <div key={label} className="bg-white px-3 py-2.5 text-center">
+                    <div key={label} className="bg-slate-50/50 px-3 py-2.5 text-center">
                         <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">{label}</p>
                         <p className="text-xs font-black text-slate-700 mt-0.5">{value}</p>
                     </div>
@@ -325,7 +338,7 @@ function BoardingPass({ passenger, booking, index }) {
             </div>
 
             {/* Download PDF button bar */}
-            <div className="bg-slate-50 px-5 py-3.5 flex justify-between items-center border-t border-slate-150" data-html2canvas-ignore="true">
+            <div className="bg-slate-50 px-5 py-3.5 flex justify-between items-center border-t border-slate-150 download-bar-pdf" data-html2canvas-ignore="true">
                 <span className="text-[10px] font-bold text-slate-400">تذكرة صعود جاهزة للطباعة أو الحفظ</span>
                 <div className="flex gap-2">
                     {booking.status === 'certain' && (
@@ -380,7 +393,6 @@ function BoardingPass({ passenger, booking, index }) {
                             </button>
                         </div>
 
-
                         {/* Large QR Image */}
                         <div className="flex flex-col items-center justify-center p-4 border border-dashed border-slate-200 rounded-2xl bg-white shadow-inner">
                             {qrCodeUrl ? (
@@ -390,7 +402,7 @@ function BoardingPass({ passenger, booking, index }) {
                                     className="w-64 h-64 object-contain"
                                 />
                             ) : (
-                                <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#4974f9] border-t-transparent" />
+                                <div className="h-10 w-10 animate-spin rounded-full border-4 border-brand-blue border-t-transparent" />
                             )}
                             <p className="text-[10px] font-black text-slate-400 mt-3 text-center leading-relaxed">
                                 يرجى تقديم الرمز للمسح عند بوابة الصعود
@@ -400,7 +412,7 @@ function BoardingPass({ passenger, booking, index }) {
                         {/* Close button */}
                         <button
                             onClick={() => setShowQrModal(false)}
-                            className="mt-5 w-full py-3 bg-[#4974f9] text-white font-black text-sm rounded-2xl shadow-lg shadow-[#4974f9]/20 hover:bg-[#3a5fd4] hover:scale-[1.02] transition-all duration-200 cursor-pointer"
+                            className="mt-5 w-full py-3 bg-brand-blue text-white font-black text-sm rounded-2xl shadow-lg shadow-brand-blue/20 hover:bg-brand-blue-hover hover:scale-[1.02] transition-all duration-200 cursor-pointer"
                         >
                             إغلاق
                         </button>
@@ -455,7 +467,7 @@ function BookingGroup({ booking }) {
     };
 
     return (
-        <div className={`overflow-hidden rounded-3xl border bg-white shadow-sm transition-all duration-300 ${expanded ? 'border-[#4974f9]/30 shadow-lg' : 'border-slate-200/60 hover:shadow-md'}`}>
+        <div className={`overflow-hidden rounded-3xl border bg-white shadow-sm transition-all duration-300 ${expanded ? 'border-brand-blue/30 shadow-lg' : 'border-slate-200/60 hover:shadow-md'}`}>
             {/* Summary row */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 cursor-pointer select-none" onClick={loadPassengers}>
                 <div className="flex items-center gap-4">
@@ -474,7 +486,7 @@ function BookingGroup({ booking }) {
                             <span className="text-2xl font-black text-slate-900">{booking.airportOrigin_code}</span>
                             <div className="flex items-center gap-1 px-1">
                                 <div className="h-[1px] w-6 bg-slate-300" />
-                                <Plane size={10} className="text-[#4974f9]" />
+                                <Plane size={10} className="text-brand-blue" />
                                 <div className="h-[1px] w-6 bg-slate-300" />
                             </div>
                             <span className="text-2xl font-black text-slate-900">{booking.airportDestination_code}</span>
@@ -519,7 +531,7 @@ function BookingGroup({ booking }) {
                         {status.label}
                     </span>
 
-                    <div className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-300 ${expanded ? 'bg-[#4974f9] text-white' : 'bg-slate-100 text-slate-400'}`}>
+                    <div className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-300 ${expanded ? 'bg-brand-blue text-white' : 'bg-slate-100 text-slate-400'}`}>
                         {loadingPax
                             ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                             : <ChevronDown size={15} className={`transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`} />
@@ -546,7 +558,7 @@ function BookingGroup({ booking }) {
                 <div className="bg-slate-50/80 px-5 py-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs" dir="rtl">
                     {localBranch && (
                         <div className="flex items-center gap-1.5 text-slate-600">
-                            <MapPin size={13} className="text-[#4974f9]" />
+                            <MapPin size={13} className="text-brand-blue" />
                             <span className="font-bold">مكتب الدفع المختار:</span>
                             <span className="font-black text-slate-800">{localBranch.name} ({localBranch.city})</span>
                         </div>
@@ -640,14 +652,14 @@ export default function MyBookings() {
     return (
         <div className="min-h-screen bg-gradient-to-b from-[#f4f7fc] via-[#f8fafc] to-[#f4f7fc]" dir="rtl">
             <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-                <div className="absolute top-[-10%] right-[-10%] h-[500px] w-[500px] rounded-full bg-[#4974f9]/6 blur-[130px]" />
+                <div className="absolute top-[-10%] right-[-10%] h-[500px] w-[500px] rounded-full bg-brand-blue/6 blur-[130px]" />
                 <div className="absolute bottom-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-indigo-400/5 blur-[130px]" />
             </div>
 
             <main className="relative z-10 mx-auto max-w-4xl px-4 py-16 pt-32 sm:px-6">
                 {/* Header */}
                 <div className="mb-8 flex items-center gap-4">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#4974f9] to-[#3a5fd4] text-white shadow-xl shadow-[#4974f9]/30">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-blue to-brand-blue-hover text-white shadow-xl shadow-brand-blue/30">
                         <Ticket size={24} />
                     </div>
                     <div>
@@ -664,7 +676,7 @@ export default function MyBookings() {
                                 key={id}
                                 onClick={() => setActiveFilter(id)}
                                 className={`flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-black transition-all duration-200 border ${activeFilter === id
-                                    ? 'bg-[#4974f9] text-white border-[#4974f9] shadow-md shadow-[#4974f9]/20'
+                                    ? 'bg-brand-blue text-white border-brand-blue shadow-md shadow-brand-blue/20'
                                     : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
                                     }`}
                             >
@@ -681,12 +693,12 @@ export default function MyBookings() {
                 {/* Not logged in */}
                 {!user && (
                     <div className="flex flex-col items-center text-center py-28 bg-white rounded-3xl border border-slate-200/60 shadow-sm">
-                        <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-[#4974f9]/8 mb-6">
-                            <LogIn size={40} className="text-[#4974f9]" />
+                        <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-brand-blue/8 mb-6">
+                            <LogIn size={40} className="text-brand-blue" />
                         </div>
                         <h2 className="text-2xl font-black text-slate-900 mb-3">تسجيل الدخول مطلوب</h2>
                         <p className="text-slate-500 font-bold mb-8 max-w-xs">سجّل دخولك لتتمكن من عرض تذاكر الصعود الخاصة بك ومسافريك</p>
-                        <button onClick={() => navigate('/login')} className="inline-flex items-center gap-2 rounded-2xl bg-[#4974f9] px-8 py-3.5 text-sm font-black text-white shadow-xl shadow-[#4974f9]/30 hover:scale-105 transition-all">
+                        <button onClick={() => navigate('/login')} className="inline-flex items-center gap-2 rounded-2xl bg-brand-blue px-8 py-3.5 text-sm font-black text-white shadow-xl shadow-brand-blue/30 hover:scale-105 transition-all">
                             <LogIn size={18} /> تسجيل الدخول
                         </button>
                     </div>
@@ -698,8 +710,8 @@ export default function MyBookings() {
                         {loading ? (
                             <div className="flex flex-col items-center justify-center py-28 gap-5">
                                 <div className="relative">
-                                    <div className="h-16 w-16 animate-spin rounded-2xl border-4 border-[#4974f9] border-t-transparent" />
-                                    <Plane size={20} className="absolute inset-0 m-auto text-[#4974f9]" />
+                                    <div className="h-16 w-16 animate-spin rounded-2xl border-4 border-brand-blue border-t-transparent" />
+                                    <Plane size={20} className="absolute inset-0 m-auto text-brand-blue" />
                                 </div>
                                 <p className="text-slate-500 font-black">جاري تحميل تذاكرك...</p>
                             </div>
@@ -712,7 +724,7 @@ export default function MyBookings() {
                                             type="text" value={search}
                                             onChange={e => setSearch(e.target.value)}
                                             placeholder="بحث برقم الحجز، رمز المطار، أو رقم الرحلة..."
-                                            className="w-full bg-white border border-slate-200 rounded-2xl py-4 pr-12 pl-4 text-sm font-bold outline-none focus:border-[#4974f9] focus:ring-4 focus:ring-[#4974f9]/10 transition-all shadow-sm"
+                                            className="w-full bg-white border border-slate-200 rounded-2xl py-4 pr-12 pl-4 text-sm font-bold outline-none focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/10 transition-all shadow-sm"
                                         />
                                     </div>
                                 )}
@@ -732,7 +744,7 @@ export default function MyBookings() {
                                                 {search || activeFilter !== 'all' ? 'جرّب تغيير كلمة البحث أو التصنيف' : 'ابدأ رحلتك الأولى معنا الآن'}
                                             </p>
                                             {!search && activeFilter === 'all' && (
-                                                <button onClick={() => navigate('/')} className="inline-flex items-center gap-2 rounded-2xl bg-[#4974f9] px-8 py-3.5 text-sm font-black text-white shadow-xl shadow-[#4974f9]/30 hover:scale-105 transition-all">
+                                                <button onClick={() => navigate('/')} className="inline-flex items-center gap-2 rounded-2xl bg-brand-blue px-8 py-3.5 text-sm font-black text-white shadow-xl shadow-brand-blue/30 hover:scale-105 transition-all">
                                                     <Plane size={18} /> احجز رحلتك الأولى
                                                 </button>
                                             )}

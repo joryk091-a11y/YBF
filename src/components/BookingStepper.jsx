@@ -38,9 +38,9 @@ function BookingStepper({ current }) {
                   }}
                   className={`flex h-11 w-11 items-center justify-center rounded-2xl border-2 transition-all duration-500 ${
                     isDone
-                      ? 'border-[#4974f9] bg-white text-[#4974f9] hover:bg-blue-50/50 hover:scale-105 active:scale-95'
+                      ? 'border-brand-blue bg-white text-brand-blue hover:bg-blue-50/50 hover:scale-105 active:scale-95'
                       : isActive
-                        ? 'border-[#4974f9] bg-[#4974f9] text-white shadow-lg shadow-[#4974f9]/20 scale-110'
+                        ? 'border-brand-blue bg-brand-blue text-white shadow-lg shadow-brand-blue/20 scale-110'
                         : 'border-slate-200 bg-white text-slate-400 cursor-default'
                   }`}
                   title={step.label}
@@ -54,7 +54,7 @@ function BookingStepper({ current }) {
                 <span
                   className={`mt-2 text-[11px] font-black tracking-wide transition-colors duration-350 select-none ${
                     isActive
-                      ? 'text-[#4974f9]'
+                      ? 'text-brand-blue'
                       : isDone
                         ? 'text-slate-700'
                         : 'text-slate-400'
@@ -68,7 +68,7 @@ function BookingStepper({ current }) {
               {index < steps.length - 1 && (
                 <div className="flex-1 h-[2px] -mt-5 mx-2 bg-slate-100 rounded-full overflow-hidden">
                   <div
-                    className={`h-full bg-[#4974f9] transition-all duration-700 ${
+                    className={`h-full bg-brand-blue transition-all duration-700 ${
                       index < currentIndex ? 'w-full' : 'w-0'
                     }`}
                   />

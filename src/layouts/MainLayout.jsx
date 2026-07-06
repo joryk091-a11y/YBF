@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
 import { MessageSquare, Send, X, Mail, Sparkles, ShieldCheck } from 'lucide-react'
@@ -7,59 +7,107 @@ import { MessageSquare, Send, X, Mail, Sparkles, ShieldCheck } from 'lucide-reac
 function MainLayout() {
   const [isOpen, setIsOpen] = useState(false);
   const [inputText, setInputText] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
+  const [messages, setMessages] = useState([]);
   const location = useLocation();
+  const navigate = useNavigate();
   const chatEndRef = useRef(null);
 
   const isHomePage = location.pathname === '/' || location.pathname === '/home';
+  const loggedInUser = JSON.parse(localStorage.getItem('user') || 'null');
 
-  const [messages, setMessages] = useState(() => {
-    const saved = localStorage.getItem('admin_chat_history');
-    return saved ? JSON.parse(saved) : [
-      { id: 1, sender: 'admin', text: 'مرحباً بك! كيف يمكنني مساعدتك اليوم بخصوص استفساراتك أو حجوزاتك على المنصة؟ ✈️', time: new Date().toISOString() }
-    ];
-  });
+  // Get active chat user details
+  const getChatUser = () => {
+    const loggedIn = JSON.parse(localStorage.getItem('user') || 'null');
+    if (loggedIn) {
+      return {
+        id: loggedIn.id || null,
+        name: loggedIn.fullName || loggedIn.name || 'مستخدم',
+        email: loggedIn.email
+      };
+    }
+    return null;
+  };
 
-  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  const fetchChatHistory = async (email) => {
+    if (!email) return;
+    try {
+      const res = await fetch(`http://localhost:8080/api/chat/messages?email=${encodeURIComponent(email)}`);
+      const data = await res.json();
+      if (data.success) {
+        setMessages(data.messages || []);
+      }
+    } catch (error) {
+      console.error('Error fetching chat history:', error);
+    }
+  };
 
   // Auto-scroll to bottom of chat
   useEffect(() => {
     if (chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, isTyping, isOpen]);
+  }, [messages, isOpen]);
 
-  const handleSendMessage = (e) => {
+  // Polling for new messages
+  useEffect(() => {
+    let intervalId;
+    if (isOpen) {
+      const chatUser = getChatUser();
+      if (chatUser) {
+        fetchChatHistory(chatUser.email);
+
+        intervalId = setInterval(() => {
+          fetchChatHistory(chatUser.email);
+        }, 3000);
+      }
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isOpen]);
+
+  const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!inputText.trim()) return;
 
-    const userMessage = {
-      id: Date.now(),
-      sender: 'user',
-      text: inputText.trim(),
-      senderName: user?.name || 'زائر',
-      time: new Date().toISOString()
-    };
+    const chatUser = getChatUser();
+    if (!chatUser) return;
 
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
-    localStorage.setItem('admin_chat_history', JSON.stringify(updatedMessages));
+    const text = inputText.trim();
     setInputText('');
 
-    // Trigger admin typing and response simulation
-    setIsTyping(true);
-    setTimeout(() => {
-      setIsTyping(false);
-      const adminReply = {
-        id: Date.now() + 1,
-        sender: 'admin',
-        text: 'شكراً لتواصلك معنا. لقد تم استلام رسالتك وإرسالها فوراً إلى المسؤول عن المنصة، وسيقوم بمراجعة تفاصيل حسابك والتواصل معك في أقرب وقت ممكن.',
-        time: new Date().toISOString()
-      };
-      const finalMessages = [...updatedMessages, adminReply];
-      setMessages(finalMessages);
-      localStorage.setItem('admin_chat_history', JSON.stringify(finalMessages));
-    }, 1500);
+    // Optimistic UI update
+    const tempMessage = {
+      id_chat: Date.now(),
+      user_id: chatUser.id,
+      sender: 'user',
+      sender_name: chatUser.name,
+      sender_email: chatUser.email,
+      message: text,
+      created_at: new Date().toISOString()
+    };
+    setMessages(prev => [...prev, tempMessage]);
+
+    try {
+      const res = await fetch('http://localhost:8080/api/chat/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: chatUser.id,
+          sender: 'user',
+          sender_name: chatUser.name,
+          sender_email: chatUser.email,
+          message: text
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchChatHistory(chatUser.email);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
   };
 
   return (
@@ -89,57 +137,72 @@ function MainLayout() {
                 </div>
               </div>
 
-              {/* Chat Messages Area */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/20">
-                {messages.map((msg) => (
-                  <div 
-                    key={msg.id}
-                    className={`flex flex-col max-w-[80%] ${msg.sender === 'user' ? 'mr-auto items-end' : 'ml-auto items-start'}`}
+              {!loggedInUser ? (
+                /* Unauthenticated view */
+                <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-slate-50/20 select-none">
+                  <div className="h-14 w-14 bg-blue-50/60 dark:bg-blue-900/10 rounded-2xl flex items-center justify-center text-[#4974f9] mb-4 shadow-sm border border-blue-100/40">
+                    <MessageSquare size={24} />
+                  </div>
+                  <h5 className="text-xs font-black text-slate-800 mb-1.5">يرجى تسجيل الدخول أولاً</h5>
+                  <p className="text-[10px] text-slate-400 font-bold max-w-[200px] leading-relaxed mb-4">
+                    يجب أن يكون لديك حساب مسجل ومسجل الدخول لتتمكن من مراسلة الدعم الفني والحصول على المساعدة.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setIsOpen(false);
+                      navigate('/login');
+                    }}
+                    className="bg-gradient-to-tr from-[#4974f9] to-[#3a5fd4] text-white text-[10px] font-black py-2.5 px-6 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md shadow-[#4974f9]/20 cursor-pointer"
                   >
-                    <div 
-                      className={`rounded-2xl px-3.5 py-2.5 text-xs font-bold shadow-sm leading-relaxed ${
-                        msg.sender === 'user' 
-                          ? 'bg-gradient-to-tr from-[#4974f9] to-[#3a5fd4] text-white rounded-br-none' 
-                          : 'bg-white text-slate-800 border border-slate-100 rounded-bl-none'
-                      }`}
+                    تسجيل الدخول
+                  </button>
+                </div>
+              ) : (
+                /* Authenticated user chat view */
+                <>
+                  {/* Chat Messages Area */}
+                  <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/20">
+                    {messages.map((msg, index) => (
+                      <div 
+                        key={msg.id_chat || msg.id || index}
+                        className={`flex flex-col max-w-[80%] ${msg.sender === 'user' ? 'mr-auto items-end' : 'ml-auto items-start'}`}
+                      >
+                        <div 
+                          className={`rounded-2xl px-3.5 py-2.5 text-xs font-bold shadow-sm leading-relaxed ${
+                            msg.sender === 'user' 
+                              ? 'bg-gradient-to-tr from-[#4974f9] to-[#3a5fd4] text-white rounded-br-none' 
+                              : 'bg-white text-slate-800 border border-slate-100 rounded-bl-none'
+                          }`}
+                        >
+                          {msg.message || msg.text}
+                        </div>
+                        <span className="text-[8px] text-slate-400 mt-1 font-bold">
+                          {new Date(msg.created_at || msg.time).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    ))}
+                    <div ref={chatEndRef} />
+                  </div>
+
+                  {/* Chat Input Bar */}
+                  <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-100 flex items-center gap-2 bg-white">
+                    <input 
+                      type="text" 
+                      value={inputText}
+                      onChange={e => setInputText(e.target.value)}
+                      placeholder="اكتب استفسارك هنا..."
+                      className="flex-1 bg-slate-50 border border-slate-200/80 rounded-xl px-3.5 py-2.5 text-xs font-bold outline-none focus:border-[#4974f9] transition-all"
+                    />
+                    <button 
+                      type="submit"
+                      disabled={!inputText.trim()}
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-[#4974f9] to-[#3a5fd4] text-white shadow-md shadow-[#4974f9]/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 cursor-pointer"
                     >
-                      {msg.text}
-                    </div>
-                    <span className="text-[8px] text-slate-400 mt-1 font-bold">
-                      {new Date(msg.time).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
-                ))}
-
-                {isTyping && (
-                  <div className="flex flex-col items-start max-w-[80%] ml-auto">
-                    <div className="bg-white text-slate-400 border border-slate-100 rounded-2xl rounded-bl-none px-4 py-3 flex gap-1 items-center shadow-sm">
-                      <span className="h-1.5 w-1.5 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <span className="h-1.5 w-1.5 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <span className="h-1.5 w-1.5 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                    </div>
-                  </div>
-                )}
-                <div ref={chatEndRef} />
-              </div>
-
-              {/* Chat Input Bar */}
-              <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-100 flex items-center gap-2 bg-white">
-                <input 
-                  type="text" 
-                  value={inputText}
-                  onChange={e => setInputText(e.target.value)}
-                  placeholder="اكتب استفسارك هنا..."
-                  className="flex-1 bg-slate-50 border border-slate-200/80 rounded-xl px-3.5 py-2.5 text-xs font-bold outline-none focus:border-[#4974f9] transition-all"
-                />
-                <button 
-                  type="submit"
-                  disabled={!inputText.trim()}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-[#4974f9] to-[#3a5fd4] text-white shadow-md shadow-[#4974f9]/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 cursor-pointer"
-                >
-                  <Send size={14} className="rotate-180" />
-                </button>
-              </form>
+                      <Send size={14} className="rotate-180" />
+                    </button>
+                  </form>
+                </>
+              )}
 
               {/* Quick Contact Footer */}
               <div className="px-5 py-2 border-t border-slate-50 bg-slate-50/10 flex items-center justify-between text-[8px] text-slate-400 font-bold">

@@ -8,15 +8,14 @@ const defaultNavItems = [
   { label: 'الوجهات', href: '/search' },
   { label: 'حجوزاتي', href: '/my-bookings' },
   { label: 'الشروط والأحكام', href: '/terms' },
-  { label: 'تواصل معنا', href: '#footer' },
 ]
 
 const typeConfig = {
-  booking:      { color: 'bg-blue-500',    label: 'حجز',       icon: Plane },
-  reminder:     { color: 'bg-amber-500',   label: 'تذكير',     icon: Clock },
-  payment:      { color: 'bg-emerald-500', label: 'دفع',       icon: CreditCard },
-  cancellation: { color: 'bg-red-500',     label: 'إلغاء',     icon: XCircle },
-  general:      { color: 'bg-slate-400',   label: 'عام',       icon: Bell },
+  booking: { color: 'bg-blue-500', label: 'حجز', icon: Plane },
+  reminder: { color: 'bg-amber-500', label: 'تذكير', icon: Clock },
+  payment: { color: 'bg-emerald-500', label: 'دفع', icon: CreditCard },
+  cancellation: { color: 'bg-red-500', label: 'إلغاء', icon: XCircle },
+  general: { color: 'bg-slate-400', label: 'عام', icon: Bell },
 }
 
 function NotificationDropdown({ userId, onClose }) {
@@ -64,14 +63,14 @@ function NotificationDropdown({ userId, onClose }) {
   }
 
   return (
-    <div className="absolute left-0 top-14 z-50 w-96 overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.15)] animate-in fade-in slide-in-from-top-2 duration-200" dir="rtl">
+    <div className="absolute left-0 top-14 z-50 w-96 overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.1)] animate-in fade-in slide-in-from-top-2 duration-200" dir="rtl">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+      <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 bg-slate-50/50">
         <div className="flex items-center gap-2">
-          <BellRing className="h-4 w-4 text-[#4974f9]" />
+          <BellRing className="h-4 w-4 text-blue-500" />
           <span className="text-sm font-black text-slate-900">الإشعارات</span>
           {unread > 0 && (
-            <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#4974f9] px-1.5 text-[10px] font-black text-white">
+            <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-blue-500 px-1.5 text-[10px] font-black text-white">
               {unread}
             </span>
           )}
@@ -79,7 +78,7 @@ function NotificationDropdown({ userId, onClose }) {
         {unread > 0 && (
           <button
             onClick={markAllRead}
-            className="flex items-center gap-1.5 text-[11px] font-black text-[#4974f9] hover:underline"
+            className="flex items-center gap-1.5 text-[11px] font-black text-blue-500 hover:text-blue-600 hover:underline"
           >
             <CheckCheck className="h-3.5 w-3.5" />
             تحديد الكل كمقروء
@@ -88,17 +87,17 @@ function NotificationDropdown({ userId, onClose }) {
       </div>
 
       {/* List */}
-      <div className="max-h-[380px] overflow-y-auto divide-y divide-slate-50">
+      <div className="max-h-[380px] overflow-y-auto divide-y divide-slate-100">
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#4974f9] border-t-transparent" />
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
           </div>
         ) : notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 py-14">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-50">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-55">
               <Bell className="h-7 w-7 text-slate-300" />
             </div>
-            <p className="text-sm font-bold text-slate-400">لا توجد إشعارات</p>
+            <p className="text-sm font-bold text-slate-450">لا توجد إشعارات</p>
           </div>
         ) : (
           notifications.map(n => {
@@ -106,9 +105,8 @@ function NotificationDropdown({ userId, onClose }) {
             return (
               <div
                 key={n.id_notifications}
-                className={`group relative flex w-full gap-4 p-5 text-right transition-colors hover:bg-slate-50/80 ${!n.is_read ? 'bg-blue-50/30' : ''}`}
+                className={`group relative flex w-full gap-4 p-5 text-right transition-colors hover:bg-slate-50/60 ${!n.is_read ? 'bg-blue-500/[0.03]' : ''}`}
               >
-                {/* Clicking this area marks it as read */}
                 <button
                   onClick={() => markRead(n.id_notifications)}
                   className="flex flex-1 gap-4 text-right focus:outline-none cursor-pointer"
@@ -127,12 +125,10 @@ function NotificationDropdown({ userId, onClose }) {
                   </div>
                 </button>
 
-                {/* Status Dot / Unread */}
                 {!n.is_read && (
-                  <div className="absolute left-8 top-1/2 -translate-y-1/2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#4974f9]" />
+                  <div className="absolute left-8 top-1/2 -translate-y-1/2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
                 )}
 
-                {/* Dismiss (Delete) Button - X */}
                 <button
                   onClick={(e) => deleteNotification(e, n.id_notifications)}
                   className="absolute left-4 top-4 opacity-0 group-hover:opacity-100 flex h-5 w-5 items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:bg-red-50 hover:text-red-500 hover:scale-105 transition-all duration-200 cursor-pointer shadow-sm border border-slate-200/50"
@@ -147,11 +143,11 @@ function NotificationDropdown({ userId, onClose }) {
       </div>
 
       {/* Footer */}
-      <div className="border-t border-slate-100 px-5 py-3">
+      <div className="border-t border-slate-100 px-5 py-3 bg-slate-50/50">
         <Link
           to="/my-bookings"
           onClick={onClose}
-          className="block text-center text-[11px] font-black text-[#4974f9] hover:underline"
+          className="block text-center text-[11px] font-black text-blue-500 hover:text-blue-600 hover:underline"
         >
           عرض جميع الحجوزات ←
         </Link>
@@ -199,7 +195,7 @@ function Navbar({
       fetch(`http://localhost:8080/api/notifications/${user.id}`)
         .then(r => r.json())
         .then(d => { if (d.success) setUnreadCount(d.notifications.filter(n => !n.is_read).length) })
-        .catch(() => {})
+        .catch(() => { })
     fetch_()
     const interval = setInterval(fetch_, 30000)
     return () => clearInterval(interval)
@@ -238,193 +234,235 @@ function Navbar({
   }
 
   return (
-    <header className="-top-2 absolute inset-x-0 z-40 px-0 sm:-top-3" dir="rtl">
-      <nav className="[-webkit-tap-highlight-color:transparent] rounded-none border border-white/10 bg-[#0f172a] px-4 py-3 text-white sm:px-6">
-        {/* Desktop Menu */}
-        <div className="relative hidden md:flex md:items-center md:justify-between">
-          <div className="flex items-center justify-end gap-3">
-            <Link to="/" className="inline-flex items-center focus:outline-none">
-              <img
-                src={logoSrc}
-                alt={logoAlt}
-                className="h-18 w-18 object-contain drop-shadow-[0_6px_16px_rgba(56,189,248,0.35)]"
-              />
-            </Link>
-            <div className="hidden flex-col justify-center lg:flex">
-              <span className="font-brand text-[13px] font-bold tracking-[0.06em] text-white/85">
-                Yemen Booking Flight
-              </span>
-              <span className="mt-0.5 text-[10px] font-semibold tracking-[0.12em] text-white/60">
-                حجز رحلات اليمن
-              </span>
+    <header className="fixed top-0 inset-x-0 z-50 w-full px-4 pt-4 sm:px-6 lg:px-8 transition-all duration-300" dir="rtl">
+      <div className="mx-auto max-w-7xl">
+        <nav className="backdrop-blur-xl bg-white/85 dark:bg-slate-900/80 border border-slate-200/50 dark:border-slate-800/40 rounded-[2rem] px-6 py-2.5 text-slate-850 dark:text-slate-200 shadow-[0_10px_35px_rgba(0,0,0,0.08)] transition-all duration-300">
+          {/* Desktop Menu */}
+          <div className="relative hidden md:flex md:items-center md:justify-between">
+            <div className="flex items-center justify-end gap-3.5">
+              <Link to="/" className="inline-flex items-center focus:outline-none">
+                <img
+                  src={logoSrc}
+                  alt={logoAlt}
+                  className="h-14 w-14 object-contain brightness-0 dark:brightness-0 dark:invert transition-transform duration-300 hover:scale-105"
+                />
+              </Link>
+              <div className="hidden flex-col justify-center lg:flex">
+                <span className="font-brand text-[13px] font-black tracking-wide text-slate-800 dark:text-slate-100">
+                  Yemen Booking Flight
+                </span>
+                <span className="mt-0.5 text-[10px] font-bold tracking-wide text-slate-450 dark:text-slate-400">
+                  حجز رحلات اليمن
+                </span>
+              </div>
+            </div>
+
+            <div className="absolute left-1/2 -translate-x-1/2">
+              <ul className="flex items-center gap-6">
+                {links.map((item) => {
+                  const isActive = location.pathname === item.href || (item.href.startsWith('#') && location.pathname === '/');
+                  return (
+                    <li key={item.label}>
+                      {item.href.startsWith('#') ? (
+                        <a
+                          href={item.href}
+                          onClick={(event) => goTo(item.href, event)}
+                          className={`group relative inline-flex select-none py-1.5 px-3.5 text-xs font-black transition-all duration-300 rounded-xl ${isActive
+                              ? 'text-blue-500 bg-blue-500/5 dark:bg-blue-500/10'
+                              : 'text-slate-650 dark:text-slate-300 hover:text-blue-500 dark:hover:text-blue-400'
+                            } focus:outline-none`}
+                        >
+                          {item.label}
+                          <span className={`pointer-events-none absolute -bottom-0.5 left-1/2 h-[2px] w-0 -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-300 group-hover:w-1/2 ${isActive ? 'w-1/2' : ''}`} />
+                        </a>
+                      ) : (
+                        <Link
+                          to={item.href}
+                          state={item.label === 'الوجهات' ? { showAll: true } : undefined}
+                          className={`group relative inline-flex select-none py-1.5 px-3.5 text-xs font-black transition-all duration-300 rounded-xl ${location.pathname === item.href
+                              ? 'text-blue-500 bg-blue-500/5 dark:bg-blue-500/10'
+                              : 'text-slate-655 dark:text-slate-300 hover:text-blue-500 dark:hover:text-blue-400'
+                            } focus:outline-none`}
+                        >
+                          {item.label}
+                          <span className={`pointer-events-none absolute -bottom-0.5 left-1/2 h-[2px] w-0 -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-300 group-hover:w-1/2 ${location.pathname === item.href ? 'w-1/2' : ''}`} />
+                        </Link>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+
+            <div className="flex items-center justify-start gap-3">
+              {/* Bell Button with Dropdown */}
+              {user && (
+                <div ref={bellRef} className="relative flex items-center">
+                  <button
+                    onClick={() => setShowNotifications(v => !v)}
+                    className="relative flex items-center justify-center p-2 text-slate-600 hover:text-blue-500 hover:scale-105 transition-all duration-300 cursor-pointer focus:outline-none"
+                  >
+                    <Bell size={20} />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-1.5 right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[8px] font-black text-white ring-1 ring-white animate-bounce">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+                  {showNotifications && (
+                    <NotificationDropdown
+                      userId={user.id}
+                      onClose={() => setShowNotifications(false)}
+                    />
+                  )}
+                </div>
+              )}
+
+              {user ? (
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 px-4 py-2">
+                    <UserRound size={16} className="text-blue-600" />
+                    <span className="text-xs font-black text-blue-700">
+                      {user.fullName?.split(' ')[0]}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem('user')
+                      setUser(null)
+                      navigate('/')
+                    }}
+                    className="h-10 w-10 flex items-center justify-center text-slate-500 hover:text-red-500 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer focus:outline-none"
+                    title="تسجيل الخروج"
+                  >
+                    <LogOut size={16} />
+                  </button>
+                </div>
+              ) : (
+                <a
+                  href={loginHref}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={(event) => {
+                    if (onLoginClick) return onLoginClick(event)
+                    goTo(loginHref, event)
+                  }}
+                  className="inline-flex select-none items-center rounded-xl bg-blue-600 hover:bg-blue-500 px-5 py-2.5 text-xs font-black text-white shadow-lg shadow-blue-600/15 transition-all duration-300 hover:scale-105 hover:bg-blue-500/90 active:scale-95"
+                >
+                  {loginLabel}
+                </a>
+              )}
             </div>
           </div>
 
-          <div className="absolute left-1/2 -translate-x-1/2">
-            <ul className="flex items-center gap-8">
+          {/* Mobile Menu */}
+          <div className="flex items-center justify-between md:hidden">
+            <div className="flex items-center gap-2">
+              <Link to="/" className="inline-flex items-center focus:outline-none">
+                <img
+                  src={logoSrc}
+                  alt={logoAlt}
+                  className="h-12 w-12 object-contain brightness-0 dark:brightness-0 dark:invert"
+                />
+              </Link>
+            </div>
+
+            <div className="flex items-center gap-2.5">
+              {user && (
+                <button
+                  onClick={() => navigate('/my-bookings')}
+                  className="relative flex items-center justify-center p-1.5 text-slate-650 hover:text-blue-500 transition duration-300 focus:outline-none cursor-pointer"
+                >
+                  <Bell size={18} />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1.5 right-1.5 h-3.5 w-3.5 flex items-center justify-center rounded-full bg-red-500 text-[7px] font-black text-white ring-1 ring-white">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+              )}
+
+              <button
+                type="button"
+                aria-expanded={isMenuOpen}
+                aria-label="فتح قائمة التنقل"
+                onClick={() => setIsMenuOpen((current) => !current)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200/50 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-800 text-slate-650 dark:text-slate-300 transition duration-300 hover:bg-slate-100 dark:hover:bg-slate-700 focus:outline-none cursor-pointer"
+              >
+                <span className="relative block h-3.5 w-4">
+                  <span
+                    className={`absolute right-0 top-0 h-[2px] w-4 rounded bg-slate-700 dark:bg-slate-300 transition duration-300 ${isMenuOpen ? 'translate-y-[6px] rotate-45' : ''}`}
+                  />
+                  <span
+                    className={`absolute right-0 top-[6px] h-[2px] w-4 rounded bg-slate-700 dark:bg-slate-300 transition duration-300 ${isMenuOpen ? 'opacity-0' : ''}`}
+                  />
+                  <span
+                    className={`absolute right-0 top-[12px] h-[2px] w-4 rounded bg-slate-700 dark:bg-slate-300 transition duration-300 ${isMenuOpen ? '-translate-y-[6px] -rotate-45' : ''}`}
+                  />
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile Menu Dropdown */}
+          <div
+            className={`overflow-hidden transition-all duration-300 md:hidden ${isMenuOpen ? 'max-h-96 pt-4 opacity-100' : 'max-h-0 opacity-0'}`}
+          >
+            <ul className="space-y-1.5 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 bg-white/90 dark:bg-slate-900/95 backdrop-blur-md p-3 shadow-lg">
               {links.map((item) => (
-                <li key={item.label}>
+                <li key={`${item.label}-mobile`}>
                   {item.href.startsWith('#') ? (
                     <a
                       href={item.href}
                       onClick={(event) => goTo(item.href, event)}
-                      className="group relative inline-flex select-none py-1 text-sm font-semibold text-white/85 transition-all duration-300 hover:text-[#b4d3f8] focus:outline-none"
+                      className="block rounded-xl px-4 py-2.5 text-xs font-black text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850 hover:text-blue-500 transition duration-300 focus:outline-none"
                     >
                       {item.label}
-                      <span className="pointer-events-none absolute -bottom-1.5 left-1/2 h-[2px] w-full -translate-x-1/2 scale-x-0 rounded-full bg-[#b4d3f8] opacity-95 transition-transform duration-300 group-hover:scale-x-100" />
                     </a>
                   ) : (
                     <Link
                       to={item.href}
                       state={item.label === 'الوجهات' ? { showAll: true } : undefined}
-                      className="group relative inline-flex select-none py-1 text-sm font-semibold text-white/85 transition-all duration-300 hover:text-[#b4d3f8] focus:outline-none"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="block rounded-xl px-4 py-2.5 text-xs font-black text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850 hover:text-blue-500 transition duration-300 focus:outline-none"
                     >
                       {item.label}
-                      <span className="pointer-events-none absolute -bottom-1.5 left-1/2 h-[2px] w-full -translate-x-1/2 scale-x-0 rounded-full bg-[#b4d3f8] opacity-95 transition-transform duration-300 group-hover:scale-x-100" />
                     </Link>
                   )}
                 </li>
               ))}
-            </ul>
-          </div>
 
-          <div className="flex items-center justify-start gap-4">
-            {/* Bell Button with Dropdown */}
-            {user && (
-              <div ref={bellRef} className="relative">
-                <button
-                  onClick={() => setShowNotifications(v => !v)}
-                  className="relative h-10 w-10 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors"
-                >
-                  <Bell size={20} />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white ring-2 ring-[#0f172a]">
-                      {unreadCount > 9 ? '9+' : unreadCount}
+              {/* Login/Logout in Mobile Menu */}
+              <li className="pt-2 border-t border-slate-100">
+                {user ? (
+                  <div className="flex items-center justify-between px-4 py-2">
+                    <span className="text-xs font-black text-slate-800">
+                      مرحباً، {user.fullName?.split(' ')[0]}
                     </span>
-                  )}
-                </button>
-                {showNotifications && (
-                  <NotificationDropdown
-                    userId={user.id}
-                    onClose={() => setShowNotifications(false)}
-                  />
-                )}
-              </div>
-            )}
-
-            {user ? (
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-3 rounded-full bg-white/5 border border-white/10 px-4 py-2">
-                  <UserRound size={18} className="text-[#4974f9]" />
-                  <span className="text-sm font-black text-white">
-                    {user.fullName?.split(' ')[0]}
-                  </span>
-                </div>
-                <button
-                  onClick={() => {
-                    localStorage.removeItem('user')
-                    setUser(null)
-                    navigate('/')
-                  }}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors"
-                  title="تسجيل الخروج"
-                >
-                  <LogOut size={18} />
-                </button>
-              </div>
-            ) : (
-              <a
-                href={loginHref}
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={(event) => {
-                  if (onLoginClick) return onLoginClick(event)
-                  goTo(loginHref, event)
-                }}
-                className="inline-flex select-none items-center rounded-full border border-[#b4d3f8]/22 bg-[#b4d3f8]/12 px-5 py-2.5 text-sm font-bold text-white transition-all duration-300 hover:scale-105 hover:bg-[#b4d3f8]/24 focus:outline-none"
-              >
-                {loginLabel}
-              </a>
-            )}
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        <div className="flex items-center justify-between md:hidden">
-          <div className="flex items-center gap-2">
-            <Link to="/" className="inline-flex items-center focus:outline-none">
-              <img
-                src={logoSrc}
-                alt={logoAlt}
-                className="h-14 w-14 object-contain drop-shadow-[0_6px_16px_rgba(56,189,248,0.35)]"
-              />
-            </Link>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {user && (
-              <button
-                onClick={() => navigate('/my-bookings')}
-                className="relative h-10 w-10 flex items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white transition duration-300 hover:bg-white/20 focus:outline-none"
-              >
-                <Bell size={18} />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 h-4 w-4 flex items-center justify-center rounded-full bg-red-500 text-[9px] font-black text-white ring-1 ring-[#0f172a]">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                )}
-              </button>
-            )}
-            <button
-              type="button"
-              aria-expanded={isMenuOpen}
-              aria-label="فتح قائمة التنقل"
-              onClick={() => setIsMenuOpen((current) => !current)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white transition duration-300 hover:bg-white/20 focus:outline-none"
-            >
-              <span className="relative block h-4 w-5">
-                <span
-                  className={`absolute right-0 top-0 h-[2px] w-5 rounded bg-white transition duration-300 ${isMenuOpen ? 'translate-y-[7px] rotate-45' : ''}`}
-                />
-                <span
-                  className={`absolute right-0 top-[7px] h-[2px] w-5 rounded bg-white transition duration-300 ${isMenuOpen ? 'opacity-0' : ''}`}
-                />
-                <span
-                  className={`absolute right-0 top-[14px] h-[2px] w-5 rounded bg-white transition duration-300 ${isMenuOpen ? '-translate-y-[7px] -rotate-45' : ''}`}
-                />
-              </span>
-            </button>
-          </div>
-        </div>
-
-        <div
-          className={`overflow-hidden transition-all duration-300 md:hidden ${isMenuOpen ? 'max-h-80 pt-4 opacity-100' : 'max-h-0 opacity-0'}`}
-        >
-          <ul className="space-y-1 rounded-xl border border-white/15 bg-white/5 p-3">
-            {links.map((item) => (
-              <li key={`${item.label}-mobile`}>
-                {item.href.startsWith('#') ? (
-                  <a
-                    href={item.href}
-                    onClick={(event) => goTo(item.href, event)}
-                    className="block rounded-lg px-3 py-2 text-sm font-semibold text-white/90 transition duration-300 hover:bg-[#b4d3f8]/12 focus:outline-none"
-                  >
-                    {item.label}
-                  </a>
+                    <button
+                      onClick={() => {
+                        localStorage.removeItem('user')
+                        setUser(null)
+                        navigate('/')
+                      }}
+                      className="text-xs font-black text-red-500 hover:underline cursor-pointer"
+                    >
+                      تسجيل الخروج
+                    </button>
+                  </div>
                 ) : (
                   <Link
-                    to={item.href}
-                    state={item.label === 'الوجهات' ? { showAll: true } : undefined}
+                    to={loginHref}
                     onClick={() => setIsMenuOpen(false)}
-                    className="block rounded-lg px-3 py-2 text-sm font-semibold text-white/90 transition duration-300 hover:bg-[#b4d3f8]/12 focus:outline-none"
+                    className="block text-center rounded-xl bg-blue-500 py-2.5 text-xs font-black text-white hover:bg-blue-600 transition-colors duration-300 focus:outline-none"
                   >
-                    {item.label}
+                    {loginLabel}
                   </Link>
                 )}
               </li>
-            ))}
-          </ul>
-        </div>
-      </nav>
+            </ul>
+          </div>
+        </nav>
+      </div>
     </header>
   )
 }

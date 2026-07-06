@@ -7,6 +7,7 @@ import RegisterPage from './pages/Register.jsx'
 import SearchPage from './pages/Search.jsx'
 import TravelersPage from './pages/Travelers.jsx'
 import PaymentPage from './pages/Payment.jsx'
+import PaymentSuccessPage from './pages/PaymentSuccess.jsx'
 import CompanyLogin from './pages/CompanyLogin.jsx'
 import CompanyDashboard from './pages/CompanyDashboard.jsx'
 import CompanyFlights from './pages/CompanyFlights.jsx'
@@ -244,6 +245,7 @@ function App() {
               <Route path="/seats" element={<SeatsPage />} />
               <Route path="/travelers" element={<TravelersPage />} />
               <Route path="/payment" element={<PaymentPage />} />
+              <Route path="/payment-success" element={<PaymentSuccessPage />} />
               <Route path="/my-bookings" element={<MyBookings />} />
               <Route path="/terms" element={<TermsPage />} />
               <Route path="/login" element={<LoginPage />} />

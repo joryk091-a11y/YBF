@@ -1,125 +1,136 @@
 import logo from '../assets/logo.png';
-import { Link } from 'react-router-dom';
-import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, ArrowUpRight, ShieldCheck, Globe } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, ArrowUpRight, ShieldCheck, Globe, Shield, Lock, CreditCard, RefreshCw } from 'lucide-react';
 
 const Footer = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const goTo = (path, event) => {
+        if (path.includes('#')) {
+            event?.preventDefault();
+            const [url, hash] = path.split('#');
+            const targetUrl = url || '/';
+            
+            if (location.pathname === targetUrl) {
+                const target = document.getElementById(hash);
+                target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                navigate(targetUrl);
+                setTimeout(() => {
+                    const target = document.getElementById(hash);
+                    target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            }
+        }
+    };
+
     return (
-        <footer className="relative bg-[#0a1120] text-slate-400 py-16 overflow-hidden border-t border-white/5" dir="rtl">
-            {/* ─── Decorative Background Elements ───────────────────── */}
-            <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20">
-                <div className="absolute top-[-10%] left-[10%] h-64 w-64 rounded-full bg-blue-600/10 blur-[100px]" />
-                <div className="absolute bottom-[-10%] right-[10%] h-64 w-64 rounded-full bg-indigo-600/10 blur-[100px]" />
+        <footer className="relative bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800/60 text-slate-600 dark:text-slate-400 py-8 overflow-hidden" dir="rtl">
+            {/* ─── Premium Background Ambient Glows ───────────────────── */}
+            <div className="absolute inset-0 pointer-events-none opacity-40">
+                <div className="absolute -top-40 right-10 h-[300px] w-[300px] rounded-full bg-blue-500/5 blur-[80px]" />
+                <div className="absolute -bottom-40 left-10 h-[350px] w-[350px] rounded-full bg-sky-400/5 blur-[90px]" />
             </div>
 
             <div className="max-w-7xl mx-auto px-6 relative z-10">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 mb-16">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-10">
                     
-                    {/* Brand Section */}
+                    {/* Brand Column */}
                     <div className="space-y-6">
                         <div className="flex items-center gap-3">
-                            <img src={logo} alt="Logo" className="h-12 w-12 object-contain" />
-                            <span className="text-xl font-black text-white tracking-tight">Yemen Booking Flight</span>
+                            <img src={logo} alt="Logo" className="h-12 w-12 object-contain brightness-0 dark:invert" />
+                            <div className="flex flex-col">
+                                <span className="text-base font-black text-slate-900 dark:text-slate-100 tracking-wide">Yemen Booking Flight</span>
+                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-wider">بوابتك لحجز رحلات اليمن</span>
+                            </div>
                         </div>
-                        <p className="text-sm font-bold leading-7 text-slate-500 max-w-xs">
-                            نحن بوابتك الأولى لاستكشاف العالم. نقدم لك تجربة حجز طيران فريدة، آمنة، وسريعة بأسعار تنافسية.
+                        <p className="text-xs font-bold leading-6 text-slate-500 dark:text-slate-400 max-w-xs">
+                            بوابتكم الأولى والموثوقة لحجز الطيران وتسهيل المعاملات بأسعار منافسة وجودة خدمات استثنائية على مدار الساعة.
                         </p>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
                             {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
-                                <a key={i} href="#" className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 text-slate-400 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-300">
-                                    <Icon size={18} />
+                                <a 
+                                    key={i} 
+                                    href="#" 
+                                    className="h-9 w-9 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50 text-slate-500 dark:text-slate-400 hover:bg-blue-600 hover:text-white hover:border-blue-600 hover:scale-105 active:scale-95 transition-all duration-300 shadow-sm cursor-pointer"
+                                >
+                                    <Icon size={16} />
                                 </a>
                             ))}
                         </div>
                     </div>
 
-                    {/* Quick Links */}
+                    {/* Quick Navigation Links */}
                     <div>
-                        <h4 className="text-white font-black mb-8 text-lg flex items-center gap-2">
+                        <h4 className="text-slate-900 dark:text-slate-100 font-black mb-8 text-sm uppercase tracking-wider flex items-center gap-2">
                             روابط سريعة
-                            <div className="h-1 w-4 bg-blue-600 rounded-full" />
+                            <span className="h-1 w-3 rounded bg-blue-600" />
                         </h4>
-                        <ul className="space-y-4">
+                        <ul className="space-y-3.5">
                             {[
                                 { name: 'الرئيسية', path: '/' },
-                                { name: 'البحث عن رحلات', path: '/search' },
-                                { name: 'شركات الطيران', path: '/companies' },
-                                { name: 'من نحن', path: '/about' }
+                                { name: 'خدماتنا', path: '#services' },
+                                { name: 'كيف نعمل', path: '#how-it-works' },
+                                { name: 'الأسئلة الشائعة', path: '#faq' }
                             ].map((link, i) => (
                                 <li key={i}>
-                                    <Link to={link.path} className="group flex items-center gap-2 text-sm font-bold hover:text-white transition-colors">
-                                        <div className="h-1 w-0 group-hover:w-2 bg-blue-600 transition-all rounded-full" />
-                                        {link.name}
-                                    </Link>
+                                    {link.path.startsWith('#') ? (
+                                        <a 
+                                            href={link.path}
+                                            onClick={(e) => goTo(link.path, e)}
+                                            className="group inline-flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 hover:-translate-x-1"
+                                        >
+                                            <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700 group-hover:bg-blue-600 group-hover:dark:bg-blue-400 transition-colors" />
+                                            {link.name}
+                                        </a>
+                                    ) : (
+                                        <Link 
+                                            to={link.path} 
+                                            className="group inline-flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 hover:-translate-x-1"
+                                        >
+                                            <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700 group-hover:bg-blue-600 group-hover:dark:bg-blue-400 transition-colors" />
+                                            {link.name}
+                                        </Link>
+                                    )}
                                 </li>
                             ))}
                         </ul>
                     </div>
 
-                    {/* Support & Services */}
+                    {/* Terms & Policies Links */}
                     <div>
-                        <h4 className="text-white font-black mb-8 text-lg flex items-center gap-2">
-                            الدعم والخدمات
-                            <div className="h-1 w-4 bg-blue-600 rounded-full" />
+                        <h4 className="text-slate-900 dark:text-slate-100 font-black mb-8 text-sm uppercase tracking-wider flex items-center gap-2">
+                            الشروط والسياسات
+                            <span className="h-1 w-3 rounded bg-blue-600" />
                         </h4>
-                        <ul className="space-y-4">
+                        <ul className="space-y-3.5">
                             {[
-                                { name: 'مركز المساعدة', icon: Globe },
-                                { name: 'سياسة الخصوصية', icon: ShieldCheck },
-                                { name: 'الشروط والأحكام', icon: ArrowUpRight },
-                                { name: 'تواصل معنا', icon: Mail }
+                                { name: 'شروط الاستخدام العام', icon: Shield, path: '/terms#pol1' },
+                                { name: 'خصوصية بيانات السفر', icon: Lock, path: '/terms#pol2' },
+                                { name: 'سياسة الدفع والسداد', icon: CreditCard, path: '/terms#pol3' },
+                                { name: 'سياسة التعديل والاسترجاع', icon: RefreshCw, path: '/terms#pol4' }
                             ].map((item, i) => (
                                 <li key={i}>
-                                    <a href="#" className="flex items-center gap-3 text-sm font-bold hover:text-white transition-colors group">
-                                        <item.icon size={16} className="text-slate-600 group-hover:text-blue-500 transition-colors" />
+                                    <a 
+                                        href={item.path}
+                                        onClick={(e) => goTo(item.path, e)}
+                                        className="group inline-flex items-center gap-2.5 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 hover:-translate-x-1"
+                                    >
+                                        <item.icon size={14} className="text-slate-400 dark:text-slate-500 group-hover:text-blue-600 group-hover:dark:text-blue-400 transition-colors" />
                                         {item.name}
                                     </a>
                                 </li>
                             ))}
                         </ul>
                     </div>
-
-                    {/* Contact Info */}
-                    <div>
-                        <h4 className="text-white font-black mb-8 text-lg flex items-center gap-2">
-                            معلومات التواصل
-                            <div className="h-1 w-4 bg-blue-600 rounded-full" />
-                        </h4>
-                        <div className="space-y-6">
-                            <div className="flex items-start gap-4">
-                                <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 text-blue-500 shrink-0">
-                                    <MapPin size={20} />
-                                </div>
-                                <div className="text-sm font-bold leading-6">
-                                    الجمهورية اليمنية، صنعاء<br/>
-                                    شارع الزبيري، مجمع اليزن
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 text-blue-500 shrink-0">
-                                    <Phone size={18} />
-                                </div>
-                                <div className="text-sm font-black dir-ltr">+967 1 234 567</div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 text-blue-500 shrink-0">
-                                    <Mail size={18} />
-                                </div>
-                                <div className="text-sm font-black tracking-wide">ybf.support@gmail.com</div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
-                {/* Bottom Bar */}
-                <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
-                    <p className="text-xs font-bold text-slate-600">
-                        جميع الحقوق محفوظة © {new Date().getFullYear()} <span className="text-white">Yemen Booking Flight</span>
+                {/* Footer Bottom copyright */}
+                <div className="pt-6 border-t border-slate-100 dark:border-slate-800/60 flex justify-center text-center">
+                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 text-center w-full">
+                        جميع الحقوق محفوظة © {new Date().getFullYear()} <span className="text-slate-800 dark:text-slate-200 font-black">Yemen Booking Flight</span>
                     </p>
-                    <div className="flex items-center gap-8">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-3 opacity-20 hover:opacity-100 transition-opacity grayscale invert" />
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-6 opacity-20 hover:opacity-100 transition-opacity grayscale invert" />
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" className="h-4 opacity-20 hover:opacity-100 transition-opacity grayscale invert" />
-                    </div>
                 </div>
             </div>
         </footer>

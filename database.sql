@@ -306,6 +306,7 @@ CREATE TABLE `passengers` (
   `id_passengers` int NOT NULL,
   `name` varchar(100) NOT NULL,
   `passport_number` varchar(50) NOT NULL,
+  `passport_expiry` date DEFAULT NULL,
   `email` varchar(45) DEFAULT NULL,
   `phone` varchar(20) DEFAULT NULL,
   `date_of_birth` date DEFAULT NULL,

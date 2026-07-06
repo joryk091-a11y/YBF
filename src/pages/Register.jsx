@@ -1,20 +1,13 @@
-import { useState } from 'react'
-import { Eye, EyeOff, FileText, Lock, Mail, Phone, Shield, User, UserPlus, X, CheckCircle2, Plane } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Eye, EyeOff, FileText, Lock, Mail, User, UserPlus, X, CheckCircle2 } from 'lucide-react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import logo from '../assets/logo.png'
-
-
-const features = [
-    { icon: Plane, title: 'احجز رحلتك بسهولة', desc: 'اختر من بين مئات الرحلات الداخلية والدولية' },
-    { icon: Shield, title: 'حجز آمن ومضمون', desc: 'جميع بياناتك محمية بتشفير SSL عالي المستوى' },
-    { icon: CheckCircle2, title: 'تأكيد فوري', desc: 'احصل على تذكرتك فور إتمام عملية الحجز' },
-]
 
 const strengthLevels = [
     { label: 'ضعيفة', color: 'bg-red-500', width: 'w-1/4' },
     { label: 'مقبولة', color: 'bg-amber-500', width: 'w-2/4' },
-    { label: 'جيدة', color: 'bg-blue-500', width: 'w-3/4' },
-    { label: 'قوية', color: 'bg-emerald-500', width: 'w-full' },
+    { label: 'جيدة', color: 'bg-brand-blue', width: 'w-3/4' },
+    { label: 'قوية', color: 'bg-emerald-555', width: 'w-full' },
 ]
 
 const countries = [
@@ -39,6 +32,11 @@ function getStrength(password) {
 function RegisterPage() {
     const navigate = useNavigate()
     const location = useLocation()
+    const [mounted, setMounted] = useState(false)
+    
+    useEffect(() => {
+        setMounted(true)
+    }, [])
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [isTermsOpen, setIsTermsOpen] = useState(false)
@@ -92,9 +90,9 @@ function RegisterPage() {
                     email
                 }
                 localStorage.setItem('user', JSON.stringify(userInfo))
-                
+
                 alert('تم إنشاء الحساب بنجاح!')
-                
+
                 const from = location.state?.from || '/'
                 navigate(from, { state: location.state })
             } else {
@@ -108,276 +106,249 @@ function RegisterPage() {
     }
 
     return (
-        <main className="flex-1 flex flex-col lg:flex-row bg-white pt-20 lg:pt-0" dir="rtl">
-            {/* ─── Left decorative panel ──────────────────────────────── */}
-            <div className="relative hidden lg:flex lg:w-1/2 flex-col justify-between overflow-hidden bg-gradient-to-br from-[#0a1628] via-[#10203d] to-[#0f172a] p-12 text-white">
-                {/* Animated blobs */}
-                <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-[#4974f9]/20 blur-[80px] animate-pulse" />
-                <div className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-[#d9312b]/15 blur-[80px] animate-pulse" style={{ animationDelay: '1s' }} />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-64 w-64 rounded-full bg-[#4974f9]/10 blur-[60px]" />
-
-                {/* Grid overlay */}
-                <div
-                    className="absolute inset-0 opacity-[0.04]"
-                    style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '24px 24px' }}
-                />
-
-
-                {/* Center content */}
-                <div className="relative z-10 my-auto">
-                    <h2 className="text-4xl font-black leading-tight xl:text-5xl">
-                        سفرك يبدأ<br />
-                        <span className="bg-gradient-to-l from-[#93b4ff] to-[#4974f9] bg-clip-text text-transparent">
-                            من هنا
-                        </span>
-                    </h2>
-
-                    {/* Feature list */}
-                    <div className="mt-10 space-y-5">
-                        {features.map(({ icon: Icon, title, desc }) => (
-                            <div key={title} className="flex items-start gap-4">
-                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/5 border border-white/10">
-                                    <Icon className="h-5 w-5 text-[#4974f9]" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-black text-white">{title}</p>
-                                    <p className="text-xs font-bold text-slate-500 mt-0.5">{desc}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
+        <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-blue-100 to-blue-200 px-4 py-8 pt-24 sm:pt-36 md:pt-40 relative overflow-hidden" dir="rtl">
+            {/* Modern subtle ambient glows within brand blue identity */}
+            <div className="absolute inset-0 pointer-events-none opacity-70 z-0">
+                <div className="absolute -top-20 -right-20 h-[600px] w-[600px] rounded-full bg-blue-350/40 blur-[120px]" />
+                <div className="absolute -bottom-20 -left-20 h-[600px] w-[600px] rounded-full bg-indigo-300/30 blur-[120px]" />
             </div>
 
-            {/* ─── Right form panel ──────────────────────────────────── */}
-            <div className="flex flex-1 flex-col justify-center px-6 pt-32 pb-16 sm:px-10 lg:px-16 xl:px-24">
-                {/* Mobile logo */}
-                <div className="mb-8 flex items-center gap-3 lg:hidden">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 border border-slate-200 shadow-sm p-2">
-                        <img src={logo} alt="Logo" className="w-full h-full object-contain brightness-0" />
-                    </div>
+            {/* Split Screen Layout Container */}
+            <div className="relative z-10 w-full max-w-6xl flex flex-col lg:grid gap-8 lg:grid-cols-[0.7fr_1.3fr] items-center">
+                
+                {/* Right side: Welcome Text (Visible on lg screens) */}
+                <div className={`hidden lg:flex flex-col text-right text-slate-800 space-y-6 pr-0 lg:pl-12 self-start pt-10 transition-all duration-1000 delay-100 ease-out transform ${mounted ? 'translate-x-0 opacity-100' : 'translate-x-12 opacity-0'}`}>
+                    <h2 className="text-5xl lg:text-6xl font-black leading-[1.2] bg-gradient-to-b from-brand-blue to-[#13287a] bg-clip-text text-transparent tracking-tight">
+                        <span className="whitespace-nowrap">اكتشف طريقة</span> <br />
+                        <span className="whitespace-nowrap">أسرع وأسهل</span> <br />
+                        <span className="whitespace-nowrap">لحجز رحلاتك</span>
+                    </h2>
+                    <p className="text-base lg:text-lg font-bold text-slate-550 leading-relaxed max-w-md">
+                        انضم إلينا الآن واستمتع بتجربة سفر رقمية متكاملة. <br />
+                        نحن نتيح لك تخطيط رحلاتك، إدارة حجوزاتك، <br />
+                        والتواصل المباشر مع شركات الطيران المفضلة لديك.
+                    </p>
                 </div>
 
-                <div className="mx-auto w-full max-w-[580px]">
-                    {/* Header */}
-                    <div className="mb-8">
-                        <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#4974f9] to-[#7c3aed] shadow-xl shadow-[#4974f9]/25 mb-5">
-                            <UserPlus className="h-7 w-7 text-white" />
+                {/* Left side: Register Form Card */}
+                <div className={`w-full max-w-[580px] mx-auto lg:mr-4 lg:ml-auto bg-white rounded-[2.5rem] border border-slate-200/50 p-6 sm:p-10 shadow-[0_20px_50px_rgba(15,23,42,0.08)] transition-all duration-1000 delay-300 ease-out transform ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
+                {/* Logo & Header */}
+                <div className="flex flex-col items-center mb-8">
+                    <div className="relative mb-4 flex items-center justify-center h-16 w-16">
+                        <div className="absolute inset-0 rounded-full bg-brand-blue/20 blur-md animate-pulse" />
+                        <img src={logo} alt="Logo" className="relative z-10 h-12 w-12 object-contain brightness-0" />
+                    </div>
+                    <h1 className="text-2xl font-black text-slate-900">إنشاء حساب جديد</h1>
+                    <p className="mt-2 text-xs font-semibold text-slate-550 text-center leading-relaxed">
+                        أدخل بياناتك لتبدأ رحلتك معنا.
+                    </p>
+                </div>
+
+                <form className="space-y-5" onSubmit={handleSubmit}>
+                    {error && (
+                        <div className="rounded-2xl bg-red-50 p-4 border border-red-100 flex items-center gap-3 text-red-650 text-xs sm:text-sm font-bold animate-shake">
+                            <X className="h-4 w-4 shrink-0" />
+                            {error}
                         </div>
-                        <h1 className="text-4xl font-black tracking-tight text-slate-900">إنشاء حساب جديد</h1>
-                        <p className="mt-3 text-base font-bold text-slate-500">
-                            أدخل بياناتك لتبدأ رحلتك معنا.
-                        </p>
+                    )}
+
+                    {/* Full name */}
+                    <div className="space-y-2">
+                        <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400">الاسم الكامل</label>
+                        <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'name' ? 'border-brand-blue bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
+                            <User className="pointer-events-none absolute right-4 h-4 w-4 text-slate-400" />
+                            <input
+                                className="w-full bg-transparent py-4 pr-12 pl-4 text-sm sm:text-base font-bold text-slate-900 placeholder:text-slate-350 outline-none"
+                                placeholder="مثال: محمد أحمد علي"
+                                required
+                                value={fullName}
+                                onChange={(e) => setFullName(e.target.value)}
+                                onFocus={() => setFocused('name')}
+                                onBlur={() => setFocused(null)}
+                            />
+                        </div>
                     </div>
 
-                    <form className="space-y-5" onSubmit={handleSubmit}>
-                        {error && (
-                            <div className="rounded-2xl bg-red-50 p-4 border border-red-100 flex items-center gap-3 text-red-600 text-sm font-bold animate-shake">
-                                <X className="h-4 w-4" />
-                                {error}
-                            </div>
-                        )}
-                        {/* Full name */}
+                    {/* Email + Phone */}
+                    <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
-                            <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400">الاسم الكامل</label>
-                            <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'name' ? 'border-[#4974f9] bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
-                                <User className="pointer-events-none absolute right-4 h-4 w-4 text-slate-400" />
+                            <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400">البريد الإلكتروني</label>
+                            <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'email' ? 'border-brand-blue bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
+                                <Mail className="pointer-events-none absolute right-4 h-4 w-4 text-slate-400" />
                                 <input
-                                    className="w-full bg-transparent py-5 pr-12 pl-4 text-base font-bold text-slate-900 placeholder:text-slate-300 outline-none"
-                                    placeholder="مثال: محمد أحمد علي"
+                                    type="email"
+                                    className="w-full bg-transparent py-4 pr-12 pl-4 text-sm sm:text-base font-bold text-slate-900 placeholder:text-slate-350 outline-none"
+                                    placeholder=""
                                     required
-                                    value={fullName}
-                                    onChange={(e) => setFullName(e.target.value)}
-                                    onFocus={() => setFocused('name')}
+                                    dir="ltr"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    onFocus={() => setFocused('email')}
                                     onBlur={() => setFocused(null)}
                                 />
                             </div>
                         </div>
-
-                        {/* Email + Phone */}
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            <div className="space-y-2">
-                                <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400">البريد الإلكتروني</label>
-                                <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'email' ? 'border-[#4974f9] bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
-                                    <Mail className="pointer-events-none absolute right-4 h-4 w-4 text-slate-400" />
-                                    <input
-                                        type="email"
-                                        className="w-full bg-transparent py-5 pr-12 pl-4 text-base font-bold text-slate-900 placeholder:text-slate-300 outline-none"
-                                        placeholder="example@email.com"
-                                        required
-                                        dir="ltr"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        onFocus={() => setFocused('email')}
-                                        onBlur={() => setFocused(null)}
-                                    />
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400">رقم الهاتف</label>
-                                <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'phone' ? 'border-[#4974f9] bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`} dir="ltr">
-                                    {/* Country Selector */}
-                                    <div className="relative flex items-center pl-4">
-                                        <select
-                                            value={countryCode}
-                                            onChange={(e) => setCountryCode(e.target.value)}
-                                            className="appearance-none bg-transparent pr-6 pl-1 text-sm font-black text-slate-700 outline-none cursor-pointer z-10"
-                                        >
-                                            {countries.map(c => (
-                                                <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
-                                            ))}
-                                        </select>
-                                        <div className="pointer-events-none absolute right-0 h-4 w-[1px] bg-slate-200" />
-                                    </div>
-
-                                    <input
-                                        type="tel"
-                                        className="w-full bg-transparent py-5 pl-4 pr-4 text-base font-bold text-slate-900 placeholder:text-slate-300 outline-none"
-                                        placeholder="7XX XXX XXX"
-                                        required
-                                        value={phone}
-                                        onChange={(e) => setPhone(e.target.value)}
-                                        onFocus={() => setFocused('phone')}
-                                        onBlur={() => setFocused(null)}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Password */}
                         <div className="space-y-2">
-                            <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400">كلمة المرور</label>
-                            <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'pass' ? 'border-[#4974f9] bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
-                                <Lock className="pointer-events-none absolute right-4 h-4 w-4 text-slate-400" />
-                                <input
-                                    type={showPassword ? 'text' : 'password'}
-                                    className="w-full bg-transparent py-5 pr-12 pl-14 text-base font-bold text-slate-900 placeholder:text-slate-300 outline-none"
-                                    placeholder="••••••••"
-                                    required
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    onFocus={() => setFocused('pass')}
-                                    onBlur={() => setFocused(null)}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword((v) => !v)}
-                                    className="absolute left-3 flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-                                >
-                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                </button>
-                            </div>
-
-                            {/* Strength meter */}
-                            {password.length > 0 && (
-                                <div className="mt-2 space-y-1.5">
-                                    <div className="flex h-1.5 gap-1 overflow-hidden rounded-full bg-slate-100">
-                                        {[1, 2, 3, 4].map((level) => (
-                                            <div
-                                                key={level}
-                                                className={`flex-1 rounded-full transition-all duration-300 ${strength >= level ? strengthInfo?.color : 'bg-slate-200'}`}
-                                            />
+                            <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400">رقم الهاتف</label>
+                            <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'phone' ? 'border-brand-blue bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`} dir="ltr">
+                                <div className="relative flex items-center pl-4">
+                                    <select
+                                        value={countryCode}
+                                        onChange={(e) => setCountryCode(e.target.value)}
+                                        className="appearance-none bg-transparent pr-6 pl-1 text-xs sm:text-sm font-black text-slate-700 outline-none cursor-pointer z-10"
+                                    >
+                                        {countries.map(c => (
+                                            <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
                                         ))}
-                                    </div>
-                                    <p className={`text-[11px] font-black ${strengthInfo?.color?.replace('bg-', 'text-')}`}>
-                                        قوة كلمة المرور: {strengthInfo?.label}
-                                    </p>
+                                    </select>
+                                    <div className="pointer-events-none absolute right-0 h-4 w-[1px] bg-slate-200" />
                                 </div>
-                            )}
-                        </div>
-
-                        {/* Confirm password */}
-                        <div className="space-y-2">
-                            <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400">تأكيد كلمة المرور</label>
-                            <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'confirm' ? 'border-[#4974f9] bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
-                                <Lock className="pointer-events-none absolute right-4 h-4 w-4 text-slate-400" />
                                 <input
-                                    type={showConfirmPassword ? 'text' : 'password'}
-                                    className="w-full bg-transparent py-5 pr-12 pl-14 text-base font-bold text-slate-900 placeholder:text-slate-300 outline-none"
-                                    placeholder="••••••••"
+                                    type="tel"
+                                    className="w-full bg-transparent py-4 pl-4 pr-4 text-sm sm:text-base font-bold text-slate-900 placeholder:text-slate-350 outline-none"
+                                    placeholder=""
                                     required
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    onFocus={() => setFocused('confirm')}
+                                    value={phone}
+                                    onChange={(e) => setPhone(e.target.value)}
+                                    onFocus={() => setFocused('phone')}
                                     onBlur={() => setFocused(null)}
                                 />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowConfirmPassword((v) => !v)}
-                                    className="absolute left-3 flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-                                >
-                                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                </button>
                             </div>
                         </div>
+                    </div>
 
-                        {/* Terms */}
-                        <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                    {/* Password */}
+                    <div className="space-y-2">
+                        <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400">كلمة المرور</label>
+                        <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'pass' ? 'border-brand-blue bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
+                            <Lock className="pointer-events-none absolute right-4 h-4 w-4 text-slate-400" />
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                className="w-full bg-transparent py-4 pr-12 pl-14 text-sm sm:text-base font-bold text-slate-900 placeholder:text-slate-350 outline-none"
+                                placeholder=""
+                                required
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                onFocus={() => setFocused('pass')}
+                                onBlur={() => setFocused(null)}
+                            />
                             <button
                                 type="button"
-                                onClick={() => setAgreed((v) => !v)}
-                                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-all ${agreed ? 'border-[#4974f9] bg-[#4974f9]' : 'border-slate-300 bg-white hover:border-[#4974f9]'}`}
+                                onClick={() => setShowPassword((v) => !v)}
+                                className="absolute left-3 flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
                             >
-                                {agreed && <CheckCircle2 className="h-3.5 w-3.5 text-white" />}
+                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                             </button>
-                            <p className="text-xs font-bold leading-6 text-slate-600">
-                                أوافق على{' '}
-                                <button
-                                    type="button"
-                                    onClick={() => setIsTermsOpen(true)}
-                                    className="font-black text-[#4974f9] underline-offset-2 hover:underline transition"
-                                >
-                                    الشروط والأحكام
-                                </button>
-                                {' '}وسياسة الخصوصية.
-                            </p>
                         </div>
 
-                        {/* Submit */}
+                        {/* Strength meter */}
+                        {password.length > 0 && (
+                            <div className="mt-2 space-y-1.5">
+                                <div className="flex h-1.5 gap-1 overflow-hidden rounded-full bg-slate-100">
+                                    {[1, 2, 3, 4].map((level) => (
+                                        <div
+                                            key={level}
+                                            className={`flex-1 rounded-full transition-all duration-350 ${strength >= level ? strengthInfo?.color : 'bg-slate-200'}`}
+                                        />
+                                    ))}
+                                </div>
+                                <p className={`text-[10px] sm:text-[11px] font-black ${strengthInfo?.color?.replace('bg-', 'text-')}`}>
+                                    قوة كلمة المرور: {strengthInfo?.label}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Confirm password */}
+                    <div className="space-y-2">
+                        <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400">تأكيد كلمة المرور</label>
+                        <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'confirm' ? 'border-brand-blue bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
+                            <Lock className="pointer-events-none absolute right-4 h-4 w-4 text-slate-400" />
+                            <input
+                                type={showConfirmPassword ? 'text' : 'password'}
+                                className="w-full bg-transparent py-4 pr-12 pl-14 text-sm sm:text-base font-bold text-slate-900 placeholder:text-slate-350 outline-none"
+                                placeholder=""
+                                required
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                onFocus={() => setFocused('confirm')}
+                                onBlur={() => setFocused(null)}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword((v) => !v)}
+                                className="absolute left-3 flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                            >
+                                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Terms */}
+                    <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-55 p-4">
                         <button
-                            type="submit"
-                            disabled={loading}
-                            className="group relative flex h-16 w-full items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-l from-[#4974f9] to-[#3b5fe0] text-base font-black text-white shadow-xl shadow-[#4974f9]/25 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-[#4974f9]/35 active:translate-y-[1px] active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed"
+                            type="button"
+                            onClick={() => setAgreed((v) => !v)}
+                            className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-all ${agreed ? 'border-brand-blue bg-brand-blue' : 'border-slate-300 bg-white hover:border-brand-blue'}`}
                         >
-                            <div className="absolute inset-0 bg-gradient-to-l from-[#3b5fe0] to-[#4974f9] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                            {loading ? (
-                                <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            ) : (
-                                <>
-                                    <UserPlus className="relative ml-2 h-5 w-5" />
-                                    <span className="relative">إنشاء حسابي الآن</span>
-                                </>
-                            )}
+                            {agreed && <CheckCircle2 className="h-3.5 w-3.5 text-white" />}
                         </button>
-
-                        {/* Divider */}
-                        <div className="flex items-center gap-4">
-                            <div className="h-px flex-1 bg-slate-100" />
-                            <span className="text-[11px] font-black text-slate-400">أو</span>
-                            <div className="h-px flex-1 bg-slate-100" />
-                        </div>
-
-                        {/* Login link */}
-                        <p className="text-center text-sm font-bold text-slate-500">
-                            لديك حساب بالفعل؟{' '}
-                            <Link to="/login" state={location.state} className="font-black text-[#4974f9] transition hover:text-[#1e40af]">
-                                تسجيل الدخول
-                            </Link>
+                        <p className="text-xs font-bold leading-6 text-slate-600">
+                            أوافق على{' '}
+                            <button
+                                type="button"
+                                onClick={() => setIsTermsOpen(true)}
+                                className="font-black text-brand-blue underline-offset-2 hover:underline transition"
+                            >
+                                الشروط والأحكام
+                            </button>
+                            {' '}وسياسة الخصوصية.
                         </p>
-                    </form>
+                    </div>
+
+                    {/* Submit */}
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="group relative flex h-14 w-full items-center justify-center overflow-hidden rounded-2xl bg-brand-blue text-sm sm:text-base font-black text-white shadow-lg shadow-brand-blue/20 transition-all duration-300 hover:bg-brand-blue-hover active:scale-98 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                        {loading ? (
+                            <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                            <>
+                                <UserPlus className="relative ml-2 h-5 w-5" />
+                                <span className="relative">إنشاء حسابي الآن</span>
+                            </>
+                        )}
+                    </button>
+
+                    {/* Divider */}
+                    <div className="flex items-center gap-4 py-1">
+                        <div className="h-px flex-1 bg-slate-100" />
+                        <span className="text-[11px] font-black text-slate-400">أو</span>
+                        <div className="h-px flex-1 bg-slate-100" />
+                    </div>
+
+                    {/* Login link */}
+                    <p className="text-center text-xs sm:text-sm font-bold text-slate-500">
+                        لديك حساب بالفعل؟{' '}
+                        <Link to="/login" state={location.state} className="font-black text-brand-blue transition hover:text-brand-blue-hover">
+                            تسجيل الدخول
+                        </Link>
+                    </p>
+                </form>
                 </div>
             </div>
 
-            {/* ─── Terms Modal ──────────────────────────────────────── */}
+            {/* Terms Modal */}
             {isTermsOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" dir="rtl">
                     <div className="relative w-full max-w-lg overflow-hidden rounded-[32px] bg-white shadow-2xl">
                         {/* Modal header */}
                         <div className="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-5">
                             <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#4974f9]/10">
-                                    <FileText className="h-5 w-5 text-[#4974f9]" />
+                                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-blue/10">
+                                    <FileText className="h-5 w-5 text-brand-blue" />
                                 </div>
                                 <h2 className="text-lg font-black text-slate-900">الشروط والأحكام</h2>
                             </div>
@@ -410,7 +381,7 @@ function RegisterPage() {
                         <div className="border-t border-slate-100 bg-slate-50 px-6 py-4">
                             <button
                                 onClick={() => { setAgreed(true); setIsTermsOpen(false) }}
-                                className="flex h-12 w-full items-center justify-center rounded-2xl bg-gradient-to-l from-[#4974f9] to-[#3b5fe0] text-sm font-black text-white shadow-lg shadow-[#4974f9]/20 transition-all hover:shadow-xl hover:shadow-[#4974f9]/30"
+                                className="flex h-12 w-full items-center justify-center rounded-2xl bg-brand-blue hover:bg-brand-blue-hover text-sm font-black text-white shadow-lg shadow-brand-blue/20 transition-all cursor-pointer"
                             >
                                 <CheckCircle2 className="ml-2 h-4 w-4" />
                                 لقد قرأت الشروط وأوافق عليها

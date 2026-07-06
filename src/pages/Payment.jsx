@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState, useRef } from 'react'
-import { Building2, CheckCircle2, CreditCard, Landmark, Lock, ShieldCheck, Plane, MoveLeft, ChevronDown, Luggage, HeartPulse, Accessibility, Wind, Salad, BadgeCheck, Headphones, Camera, Upload, MapPin, Phone, Trash2, AlertCircle, Building, Clock } from 'lucide-react'
-import { useLocation, Link } from 'react-router-dom'
+import { Building2, CheckCircle2, CreditCard, Landmark, Lock, ShieldCheck, Plane, MoveLeft, ChevronDown, Luggage, HeartPulse, Accessibility, Wind, Salad, BadgeCheck, Headphones, Camera, Upload, MapPin, Phone, Trash2, AlertCircle, Building, Clock, RefreshCcw } from 'lucide-react'
+import { useLocation, Link, useSearchParams } from 'react-router-dom'
 import { useSearch } from '../utils/SearchContext'
 import { useAuth } from '../utils/AuthContext'
 import BookingStepper from '../components/BookingStepper.jsx'
 
 import creditCardTemplate from '../assets/credite card.png'
 import masterCardLogo from '../assets/mastercard logo.png'
-import paypalLogo from '../assets/paypal.png'
 import visaLogo from '../assets/visa.png'
 
 const CARD_COUNTDOWN = 10 * 60 // 10 minutes for card payment
@@ -16,8 +15,8 @@ const CONFIRMATION_COUNTDOWN = 3 * 24 * 60 * 60
 const SERVICES = [
   { id: 'wheelchair', icon: Accessibility, label: 'مساعدة بالكرسي المتحرك', desc: 'خدمة مرافقة وكرسي متحرك داخل المطار والطائرة', price: 20, color: 'blue' },
   { id: 'oxygen', icon: Wind, label: 'أكسجين طبي على المتن', desc: 'توفير أسطوانة أكسجين طبية معتمدة خلال الرحلة', price: 55, color: 'sky' },
-  { id: 'medical', icon: HeartPulse, label: 'مساعدة طبية متخصصة', desc: 'طاقم طبي مدرّب لمرافقة المريض طوال الرحلة', price: 80, color: 'red' },
-  { id: 'medmeal', icon: Salad, label: 'وجبة غذائية طبية', desc: 'وجبة مخصصة وفق الحالة الصحية (سكري، ضغط...)', price: 18, color: 'emerald' },
+  { id: 'medical', icon: HeartPulse, label: 'مساعدة طبية متخصصة', desc: 'طاقم طبي مدرّب لمرافقة المريض طوال الرحلة', price: 80, color: 'orange' },
+  { id: 'medmeal', icon: HeartPulse, label: 'سيارة إسعاف', desc: 'تأمين سيارة إسعاف مجهزة لنقل المريض من/إلى الطائرة', price: 18, color: 'emerald' },
 ]
 
 const paymentMethods = [
@@ -26,12 +25,6 @@ const paymentMethods = [
     label: 'بطاقة ائتمانية / خصم',
     description: 'Visa, Mastercard',
     logos: [visaLogo, masterCardLogo],
-  },
-  {
-    id: 'paypal',
-    label: 'PayPal',
-    description: 'دفع سريع وآمن',
-    logos: [paypalLogo],
   },
   {
     id: 'branch',
@@ -97,7 +90,7 @@ function PaymentProofUpload({
   return (
     <div className="rounded-xl border border-slate-200/60 bg-slate-50/10 p-5">
       <h4 className="text-xs font-black text-slate-800 mb-3 flex items-center gap-2 justify-start" dir="rtl">
-        <Camera className="h-4 w-4 text-[#4974f9]" />
+        <Camera className="h-4 w-4 text-brand-blue" />
         <span>إثبات عملية الدفع ({label})</span>
       </h4>
 
@@ -132,7 +125,7 @@ function PaymentProofUpload({
             <button
               type="button"
               onClick={capturePhoto}
-              className="bg-[#4974f9] text-white font-black px-6 py-2.5 rounded-xl shadow-lg hover:bg-[#3b63db] active:scale-95 transition-all text-xs cursor-pointer"
+              className="bg-brand-blue text-white font-black px-6 py-2.5 rounded-xl shadow-lg hover:bg-[#3b63db] active:scale-95 transition-all text-xs cursor-pointer"
             >
               التقاط الصورة
             </button>
@@ -156,7 +149,7 @@ function PaymentProofUpload({
 
           <div className="grid gap-3 sm:grid-cols-2">
             {/* File Upload Button */}
-            <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 hover:border-[#4974f9] hover:bg-[#4974f9]/5 rounded-xl p-5 cursor-pointer transition-all text-center">
+            <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 hover:border-brand-blue hover:bg-brand-blue/5 rounded-xl p-5 cursor-pointer transition-all text-center">
               <Upload className="h-6 w-6 text-slate-400 mb-2" />
               <span className="text-xs font-black text-slate-700">تحميل إيصال الدفع</span>
               <span className="text-[10px] text-slate-400 font-bold mt-1">تصفح ملفات جهازك (PNG, JPG)</span>
@@ -172,7 +165,7 @@ function PaymentProofUpload({
             <button
               type="button"
               onClick={startCamera}
-              className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 hover:border-[#4974f9] hover:bg-[#4974f9]/5 rounded-xl p-5 transition-all text-center cursor-pointer"
+              className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 hover:border-brand-blue hover:bg-brand-blue/5 rounded-xl p-5 transition-all text-center cursor-pointer"
             >
               <Camera className="h-6 w-6 text-slate-400 mb-2" />
               <span className="text-xs font-black text-slate-700">التقاط صورة إثبات الدفع</span>
@@ -228,7 +221,7 @@ function PaymentPage() {
     else adults++
   })
 
-  const EXTRA_BAG_PRICE = 35
+  const EXTRA_BAG_PRICE = 2
   const bagsTotal = Object.values(extraBags).reduce((s, n) => s + n * EXTRA_BAG_PRICE, 0)
   const servicesTotal = SERVICES.filter(s => selectedServices.includes(s.id)).reduce((s, srv) => s + srv.price, 0)
 
@@ -248,13 +241,16 @@ function PaymentPage() {
   const totalPrice = ticketsTotal
   const finalTotal = ticketsTotal + businessSurchargeTotal + extrasTotal
 
-  const [cardHolderName, setCardHolderName] = useState('')
-  const [cardNumber, setCardNumber] = useState('')
-  const [cvv, setCvv] = useState('')
-  const [expMonth, setExpMonth] = useState('')
-  const [expYear, setExpYear] = useState('')
+  const [searchParams] = useSearchParams()
+
   const [paymentMethod, setPaymentMethod] = useState('card')
   const [secondsLeft, setSecondsLeft] = useState(CARD_COUNTDOWN)
+
+  useEffect(() => {
+    if (searchParams.get('cancel') === 'true') {
+      alert('تم إلغاء عملية الدفع، يرجى المحاولة مرة أخرى.');
+    }
+  }, [searchParams])
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
 
   // Branch and Payment Proof states
@@ -398,7 +394,7 @@ function PaymentPage() {
           extraBags,
           selectedServices,
           extrasTotal,
-          paymentMethod,
+          paymentMethod: paymentMethod === 'card' ? 'card' : paymentMethod,
           userId: userObj.id,
           reference: refVal,
           selectedSeats,
@@ -411,7 +407,30 @@ function PaymentPage() {
       if (data.success) {
         setBookingRef(data.reference)
         addMockBookingLocal(data.reference)
-        setIsPaymentModalOpen(true)
+
+        if (paymentMethod === 'card') {
+          const stripeResponse = await fetch('http://localhost:8080/api/create-checkout-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              bookingId: data.bookingId,
+              reference: data.reference,
+              amount: finalTotal,
+              flightNumber: selectedFlight?.flight_number || 'IY-601',
+              origin: selectedFlight?.airportOrigin_code || 'ADE',
+              destination: selectedFlight?.airportDestination_code || 'CAI'
+            })
+          })
+          const stripeData = await stripeResponse.json()
+          if (stripeData.success && stripeData.url) {
+            window.location.href = stripeData.url
+            return
+          } else {
+            alert('حدث خطأ أثناء تشغيل الدفع بواسطة Stripe: ' + stripeData.error)
+          }
+        } else {
+          setIsPaymentModalOpen(true)
+        }
       } else {
         alert('حدث خطأ أثناء تأكيد الحجز: ' + data.error)
       }
@@ -444,16 +463,12 @@ function PaymentPage() {
     price: 856,
   }
 
-  const cardDigits = cardNumber.replace(/\D/g, '').slice(0, 16)
-  const displayCardNumber =
-    `${cardDigits}${'•'.repeat(Math.max(0, 16 - cardDigits.length))}`.match(/.{1,4}/g)?.join(' ') ??
-    '•••• •••• •••• ••••'
-  const displayExpiry = `${expMonth.padEnd(2, '•')}/${expYear.padEnd(2, '•')}`
+
 
   return (
-    <main className="min-h-[100svh] bg-[#f8f9fc] pb-16 pt-24 sm:pt-28" dir="rtl">
+    <main className="min-h-[100svh] bg-[#f3f4f6] pb-16 pt-24 sm:pt-28" dir="rtl">
       {/* Sticky Stepper Bar */}
-      <div className="sticky top-16 z-40 w-full border-b border-slate-200/60 bg-white/80 py-4 backdrop-blur-xl sm:top-20">
+      <div className="sticky top-16 z-40 w-full border-b border-slate-200 bg-white/90 py-4 backdrop-blur-xl sm:top-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <BookingStepper current="payment" />
         </div>
@@ -473,14 +488,14 @@ function PaymentPage() {
               </div>
               <div>
                 <p className="text-[10px] font-black uppercase text-slate-400">الوقت المتبقي</p>
-                <p className="font-black text-[#d9312b]" dir="ltr">{formatTime(secondsLeft)}</p>
+                <p className="font-black text-orange-600" dir="ltr">{formatTime(secondsLeft)}</p>
               </div>
             </div>
           </div>
 
           <div className="space-y-6">
             {/* Payment Method Selector */}
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-3">
               {paymentMethods.map((method) => {
                 const isActive = paymentMethod === method.id
                 const Icon = method.icon
@@ -490,13 +505,13 @@ function PaymentPage() {
                     type="button"
                     onClick={() => handlePaymentMethodChange(method.id)}
                     className={`flex items-center justify-between rounded-2xl border p-4 text-right transition-all duration-200 ${isActive
-                        ? 'border-[#4974f9] bg-[#4974f9]/5 shadow-[0_4px_20px_rgba(73,116,249,0.06)]'
+                        ? 'border-brand-blue bg-brand-blue/5 shadow-[0_4px_20px_rgba(73,116,249,0.06)]'
                         : 'border-slate-200/80 bg-white hover:border-slate-300 hover:bg-slate-50/30'
                       }`}
                   >
                     <div className="flex items-center gap-3.5 min-w-0">
                       {/* Radio dot */}
-                      <div className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full border transition-all ${isActive ? 'border-[#4974f9] bg-[#4974f9]' : 'border-slate-300 bg-white'
+                      <div className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full border transition-all ${isActive ? 'border-brand-blue bg-brand-blue' : 'border-slate-300 bg-white'
                         }`}>
                         {isActive && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
                       </div>
@@ -523,7 +538,7 @@ function PaymentPage() {
                           ))}
                         </div>
                       ) : (
-                        <div className={`flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 ${isActive ? 'text-[#4974f9]' : 'text-slate-400'}`}>
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-blue/5 text-brand-blue">
                           <Icon className="h-4 w-4" />
                         </div>
                       )}
@@ -536,124 +551,23 @@ function PaymentPage() {
             {/* Dynamic Payment Form */}
             <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm sm:p-8">
               {paymentMethod === 'card' && (
-                <div className="grid gap-10 lg:grid-cols-[1fr_minmax(0,1.2fr)]">
-                  {/* Visual Card Preview */}
-                  <div className="relative aspect-[1.6/1] w-full overflow-hidden rounded-[24px] bg-gradient-to-br from-slate-950 via-[#0d1527] to-[#1e293b] p-6 text-white shadow-2xl border border-white/5">
-                    {/* Glowing glassmorphic orbs in the background */}
-                    <div className="absolute -left-10 -top-10 h-36 w-36 rounded-full bg-[#4974f9]/15 blur-2xl pointer-events-none" />
-                    <div className="absolute -right-10 -bottom-10 h-36 w-36 rounded-full bg-emerald-500/10 blur-2xl pointer-events-none" />
-                    <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
-
-                    <div className="relative z-10 flex h-full flex-col justify-between">
-                      {/* Top row: Premium metallic chip & Glass badge logos */}
-                      <div className="flex items-start justify-between">
-                        {/* Real-looking metallic Microchip */}
-                        <div className="relative h-8 w-10 overflow-hidden rounded-md border border-amber-300/40 bg-gradient-to-r from-amber-100 via-amber-200 to-amber-400 p-1 shadow-sm">
-                          <div className="absolute inset-x-0 top-1/2 h-[1px] -translate-y-1/2 bg-amber-600/30" />
-                          <div className="absolute inset-y-0 left-1/2 w-[1px] -translate-x-1/2 bg-amber-600/30" />
-                          <div className="absolute inset-1.5 rounded-sm border border-amber-500/20 bg-amber-300/20" />
-                        </div>
-                        
-                        {/* Brand logos directly */}
-                        <div className="flex gap-2">
-                          <img src={visaLogo} alt="" className="h-4.5 w-auto object-contain" />
-                          <img src={masterCardLogo} alt="" className="h-4.5 w-auto object-contain" />
-                        </div>
-                      </div>
-
-                      {/* Bottom/Middle rows: Live dynamic values */}
-                      <div className="space-y-3.5">
-                        {/* Monospaced realistic Card Number */}
-                        <p className="text-[17px] font-black tracking-[0.25em] font-mono text-white/95 drop-shadow-[0_2px_10px_rgba(255,255,255,0.08)]" dir="ltr">
-                          {displayCardNumber}
-                        </p>
-                        
-                        <div className="flex justify-between items-end">
-                          <div className="space-y-0.5 text-right">
-                            <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400">حامل البطاقة</span>
-                            <p className="text-[11px] font-black uppercase tracking-wider text-slate-100">{cardHolderName || 'اسم حامل البطاقة'}</p>
-                          </div>
-                          <div className="space-y-0.5 text-left">
-                            <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400">ينتهي في</span>
-                            <p className="text-[11px] font-black text-slate-100" dir="ltr">{displayExpiry}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Card Form */}
-                  <div className="space-y-5">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block text-right">اسم حامل البطاقة</label>
-                      <input
-                        className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50/20 px-4 text-xs font-black text-slate-800 transition-all duration-200 placeholder-slate-300 focus:border-[#4974f9] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#4974f9]/10"
-                        placeholder="أدخل الاسم كما في البطاقة"
-                        value={cardHolderName}
-                        onChange={(e) => setCardHolderName(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block text-right">رقم البطاقة</label>
-                      <div className="relative">
-                        <input
-                          className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50/20 pl-10 pr-4 text-xs font-black text-slate-800 transition-all duration-200 placeholder-slate-300 focus:border-[#4974f9] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#4974f9]/10"
-                          placeholder="0000 0000 0000 0000"
-                          value={cardNumber}
-                          onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, '').slice(0, 16))}
-                          dir="ltr"
-                        />
-                        <CreditCard className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-300" />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block text-right">تاريخ الانتهاء</label>
-                        <div className="flex items-center gap-2" dir="ltr">
-                          <input
-                            className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50/20 px-2 text-center text-xs font-black text-slate-800 transition-all duration-200 placeholder-slate-300 focus:border-[#4974f9] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#4974f9]/10"
-                            placeholder="MM"
-                            value={expMonth}
-                            onChange={(e) => setExpMonth(e.target.value.replace(/\D/g, '').slice(0, 2))}
-                          />
-                          <span className="font-black text-slate-300">/</span>
-                          <input
-                            className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50/20 px-2 text-center text-xs font-black text-slate-800 transition-all duration-200 placeholder-slate-300 focus:border-[#4974f9] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#4974f9]/10"
-                            placeholder="YY"
-                            value={expYear}
-                            onChange={(e) => setExpYear(e.target.value.replace(/\D/g, '').slice(0, 2))}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block text-right">رمز التحقق (CVV)</label>
-                        <input
-                          className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50/20 px-4 text-center text-xs font-black text-slate-800 transition-all duration-200 placeholder-slate-300 focus:border-[#4974f9] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#4974f9]/10"
-                          placeholder="***"
-                          type="password"
-                          value={cvv}
-                          onChange={(e) => setCvv(e.target.value.replace(/\D/g, '').slice(0, 3))}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {paymentMethod === 'paypal' && (
                 <div className="flex flex-col items-center py-10 text-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#003087]/5 mb-6 text-[#003087]">
-                    <img src={paypalLogo} alt="PayPal" className="h-6 w-auto object-contain" />
+                  <div className="flex gap-4 items-center justify-center mb-6">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-blue/5 text-brand-blue">
+                      <img src={visaLogo} alt="Visa" className="h-4.5 w-auto object-contain" />
+                    </div>
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/5 text-amber-600">
+                      <img src={masterCardLogo} alt="Mastercard" className="h-6 w-auto object-contain" />
+                    </div>
                   </div>
-                  <h3 className="text-sm font-black text-slate-800">تأكيد الدفع عبر PayPal</h3>
-                  <p className="mt-2 max-w-sm text-[11px] font-bold leading-relaxed text-slate-400">
-                    بمجرد النقر على "إتمام الحجز"، سنقوم بتوجيهك بشكل آمن إلى بوابة PayPal لإتمام عملية الدفع بسرعة وأمان.
+                  <h3 className="text-sm font-black text-slate-800">الدفع الآمن عبر بطاقة الائتمان (Visa / Mastercard)</h3>
+                  <p className="mt-2 max-w-md text-[11px] font-bold leading-relaxed text-slate-400">
+                    عند النقر على "إتمام الحجز والدفع"، سنقوم بتوجيهك بشكل آمن إلى بوابة الدفع المعتمدة لدى Stripe لإدخال بيانات بطاقتك وإتمام العملية بأقصى درجات الأمان.
                   </p>
                 </div>
               )}
+
+
 
               {paymentMethod === 'branch' && (
                 <div className="py-2">
@@ -669,7 +583,7 @@ function PaymentPage() {
                   <div className="space-y-6">
                     <div>
                       <h3 className="text-xs font-black text-slate-800 mb-3 flex items-center gap-2 justify-start" dir="rtl">
-                        <Building className="h-4 w-4 text-[#4974f9]" />
+                        <Building className="h-4 w-4 text-brand-blue" />
                         <span>مواقع المكاتب والفروع المعتمدة للدفع</span>
                       </h3>
                       <p className="text-[11px] font-bold text-slate-400 mb-4 text-right">
@@ -685,7 +599,7 @@ function PaymentPage() {
                             onClick={() => setSelectedBranchCity(city)}
                             className={`px-3.5 py-1.5 text-xs font-black rounded-xl border transition-all duration-200 cursor-pointer ${
                               selectedBranchCity === city
-                                ? 'bg-[#4974f9] text-white border-[#4974f9] shadow-md shadow-[#4974f9]/20'
+                                ? 'bg-brand-blue text-white border-brand-blue shadow-md shadow-brand-blue/20'
                                 : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
                             }`}
                           >
@@ -706,14 +620,14 @@ function PaymentPage() {
                               onClick={() => setSelectedBranch(branch)}
                               className={`flex flex-col text-right p-4 rounded-xl border-2 transition-all cursor-pointer ${
                                 isSelected
-                                  ? 'border-[#4974f9] bg-[#4974f9]/5 shadow-sm'
+                                  ? 'border-brand-blue bg-brand-blue/5 shadow-sm'
                                   : 'border-slate-100 bg-slate-50/50 hover:border-slate-200'
                               }`}
                             >
                               <div className="flex items-start justify-between w-full">
                                 <span className="font-black text-xs text-slate-800">{branch.name}</span>
                                 {isSelected && (
-                                  <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-[#4974f9] text-white">
+                                  <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-brand-blue text-white">
                                     <CheckCircle2 className="h-3 w-3" />
                                   </span>
                                 )}
@@ -820,7 +734,7 @@ function PaymentPage() {
               <button
                 onClick={handleConfirmBooking}
                 disabled={isSubmitting}
-                className={`inline-flex h-14 min-w-[200px] items-center justify-center rounded-2xl bg-emerald-600 px-10 text-sm font-black text-white shadow-[0_12px_24px_rgba(16,185,129,0.3)] transition-all hover:bg-emerald-700 hover:shadow-[0_16px_32px_rgba(16,185,129,0.4)] active:scale-[0.98] ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                className={`inline-flex h-14 min-w-[200px] items-center justify-center rounded-2xl bg-brand-blue px-10 text-sm font-black text-white shadow-[0_12px_24px_rgba(37,99,235,0.25)] transition-all hover:bg-blue-700 hover:shadow-[0_16px_32px_rgba(37,99,235,0.35)] active:scale-[0.98] ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
                 {isSubmitting ? 'جاري التأكيد...' : 'إتمام الحجز والدفع'}
               </button>
@@ -833,16 +747,16 @@ function PaymentPage() {
           <div className="space-y-6">
             {/* Boarding Pass Style Summary */}
             <section className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_20px_50px_rgba(15,23,42,0.04)]">
-              <div className="bg-[#10203d] p-6 text-white">
+              <div className="bg-gradient-to-br from-brand-blue to-indigo-900 p-6 text-white">
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-2xl font-black">{summaryFlight.fromCode}</h2>
-                    <p className="text-[10px] font-bold text-slate-400">{summaryFlight.fromCity}</p>
+                    <p className="text-[10px] font-bold text-blue-200/70">{summaryFlight.fromCity}</p>
                   </div>
-                  <MoveLeft className="h-6 w-6 text-[#4974f9]" />
+                  <MoveLeft className="h-6 w-6 text-blue-300" />
                   <div className="text-left">
                     <h2 className="text-2xl font-black">{summaryFlight.toCode}</h2>
-                    <p className="text-[10px] font-bold text-slate-400 text-left">{summaryFlight.toCity}</p>
+                    <p className="text-[10px] font-bold text-blue-200/70 text-left">{summaryFlight.toCity}</p>
                   </div>
                 </div>
               </div>
@@ -917,14 +831,14 @@ function PaymentPage() {
                 {/* Extra Bags & Services Section */}
                 {(bagsTotal > 0 || servicesTotal > 0) && (
                   <div className="mt-4 space-y-3 border-b border-slate-100 pb-4">
-                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">الخدمات والحقائب الإضافية</p>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">الخدمات والوزن الإضافي</p>
 
                     {/* Extra Bags */}
                     {bagsTotal > 0 && (
                       <div className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2 text-slate-600">
-                          <Luggage className="h-4 w-4 text-[#4974f9]" />
-                          <span className="font-semibold text-xs">حقائب إضافية مدفوعة</span>
+                          <Luggage className="h-4 w-4 text-brand-blue" />
+                          <span className="font-semibold text-xs">وزن إضافي مدفوع</span>
                         </div>
                         <span className="font-black text-slate-900">+${bagsTotal}</span>
                       </div>
@@ -936,7 +850,7 @@ function PaymentPage() {
                       return (
                         <div key={srv.id} className="flex items-center justify-between text-sm">
                           <div className="flex items-center gap-2 text-slate-600">
-                            <Icon className="h-4 w-4 text-red-500" />
+                            <Icon className="h-4 w-4 text-orange-500" />
                             <span className="font-semibold text-xs">{srv.label}</span>
                           </div>
                           <span className="font-black text-slate-900">+${srv.price}</span>
@@ -954,46 +868,62 @@ function PaymentPage() {
               </div>
             </section>
 
-            {/* Trust Badges */}
-            <section className="rounded-2xl border border-slate-200/60 bg-slate-50/30 p-5">
-              <h3 className="mb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">ضمانات الأمان والخدمة</h3>
+            {/* Payment Steps */}
+            <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-sm transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)]">
+              <h3 className="mb-5 text-[11px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 border-b border-slate-100 pb-3 justify-start" dir="rtl">
+                <ShieldCheck className="h-4 w-4 text-brand-blue" />
+                <span>إجراءات الدفع وتأكيد الحجز</span>
+              </h3>
 
               <div className="space-y-4">
-                {/* Guarantee 1: Instant Confirmation */}
-                <div className="flex items-start gap-3">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
-                    <BadgeCheck className="h-4 w-4" />
+                {/* Step 1 */}
+                <div className="group flex items-start gap-3.5 p-3 rounded-2xl border border-transparent hover:border-slate-100 hover:bg-slate-50/50 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-blue/5 text-brand-blue transition-all duration-300 group-hover:bg-brand-blue group-hover:text-white group-hover:shadow-[0_4px_12px_rgba(73,116,249,0.2)] shadow-sm">
+                    <CreditCard className="h-5 w-5" />
                   </div>
-                  <div>
-                    <h4 className="text-xs font-black text-slate-800">تأكيد حجز فوري ومضمون</h4>
-                    <p className="mt-1 text-[9px] font-bold leading-relaxed text-slate-400">
-                      يتم إصدار التذاكر وحجز مقعدك على الطائرة فور إتمام العملية مباشرة.
+                  <div className="text-right">
+                    <h4 className="text-xs font-black text-slate-800 transition-colors group-hover:text-slate-900">1. اختيار وسيلة الدفع</h4>
+                    <p className="mt-1 text-[10px] font-bold leading-relaxed text-slate-400 transition-colors group-hover:text-slate-500">
+                      يمكنك اختيار الدفع الفوري بالبطاقة الإلكترونية، أو الدفع لاحقاً حوالة بنكية/نقداً في فروعنا.
                     </p>
                   </div>
                 </div>
 
-                {/* Guarantee 2: SSL Encryption */}
-                <div className="flex items-start gap-3">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600">
-                    <Lock className="h-4 w-4" />
+                {/* Step 2 */}
+                <div className="group flex items-start gap-3.5 p-3 rounded-2xl border border-transparent hover:border-slate-100 hover:bg-slate-50/50 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-blue/5 text-brand-blue transition-all duration-300 group-hover:bg-brand-blue group-hover:text-white group-hover:shadow-[0_4px_12px_rgba(73,116,249,0.2)] shadow-sm">
+                    <Camera className="h-5 w-5" />
                   </div>
-                  <div>
-                    <h4 className="text-xs font-black text-slate-800">تشفير SSL بالمعايير العالمية</h4>
-                    <p className="mt-1 text-[9px] font-bold leading-relaxed text-slate-400">
-                      تشفير بياناتك الشخصية والمالية وفق أعلى المعايير الأمنية العالمية لمنع أي اختراق.
+                  <div className="text-right">
+                    <h4 className="text-xs font-black text-slate-800 transition-colors group-hover:text-slate-900">2. إرفاق إثبات السداد</h4>
+                    <p className="mt-1 text-[10px] font-bold leading-relaxed text-slate-400 transition-colors group-hover:text-slate-500">
+                      في حال الدفع عبر الحوالات أو الفروع، يرجى تصوير ورفع إيصال السداد لتسريع عملية تفعيل حجزك.
                     </p>
                   </div>
                 </div>
 
-                {/* Guarantee 3: 24/7 Support */}
-                <div className="flex items-start gap-3">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600">
-                    <Headphones className="h-4 w-4" />
+                {/* Step 3 */}
+                <div className="group flex items-start gap-3.5 p-3 rounded-2xl border border-transparent hover:border-slate-100 hover:bg-slate-50/50 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-blue/5 text-brand-blue transition-all duration-300 group-hover:bg-brand-blue group-hover:text-white group-hover:shadow-[0_4px_12px_rgba(73,116,249,0.2)] shadow-sm">
+                    <Clock className="h-5 w-5" />
                   </div>
-                  <div>
-                    <h4 className="text-xs font-black text-slate-800">دعم متواصل على مدار الساعة</h4>
-                    <p className="mt-1 text-[9px] font-bold leading-relaxed text-slate-400">
-                      فريق الدعم الفني وخدمة العملاء متواجد دائماً لمساعدتك طوال أيام الأسبوع.
+                  <div className="text-right">
+                    <h4 className="text-xs font-black text-slate-800 transition-colors group-hover:text-slate-900">3. التحقق والمراجعة</h4>
+                    <p className="mt-1 text-[10px] font-bold leading-relaxed text-slate-400 transition-colors group-hover:text-slate-500">
+                      سيقوم النظام أو موظفينا بالتحقق من الحوالة وتأكيد مقاعدك مباشرة فور استلام القيمة.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 4 */}
+                <div className="group flex items-start gap-3.5 p-3 rounded-2xl border border-transparent hover:border-slate-100 hover:bg-slate-50/50 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-blue/5 text-brand-blue transition-all duration-300 group-hover:bg-brand-blue group-hover:text-white group-hover:shadow-[0_4px_12px_rgba(73,116,249,0.2)] shadow-sm">
+                    <BadgeCheck className="h-5 w-5" />
+                  </div>
+                  <div className="text-right">
+                    <h4 className="text-xs font-black text-slate-800 transition-colors group-hover:text-slate-900">4. إصدار التذكرة الرسمية</h4>
+                    <p className="mt-1 text-[10px] font-bold leading-relaxed text-slate-400 transition-colors group-hover:text-slate-500">
+                      بمجرد تأكيد الدفع، سيتم إرسال تذكرتك الإلكترونية (E-Ticket) المعتمدة على البريد الإلكتروني وواتساب.
                     </p>
                   </div>
                 </div>
@@ -1014,7 +944,7 @@ function PaymentPage() {
             <p className="mt-3 text-sm font-bold text-slate-500 leading-7">تم إرسال تفاصيل الحجز وتذكرة الطيران إلى بريدك الإلكتروني بنجاح.</p>
             <div className="mt-6 rounded-2xl bg-slate-50 p-4 border border-dashed border-slate-300">
               <p className="text-[10px] font-black uppercase text-slate-400">رقم مرجع الحجز</p>
-              <p className="text-xl font-black text-[#4974f9] tracking-widest">{bookingRef}</p>
+              <p className="text-xl font-black text-brand-blue tracking-widest">{bookingRef}</p>
             </div>
             <Link
               to="/"

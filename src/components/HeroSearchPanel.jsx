@@ -18,6 +18,8 @@ const localAirports = [
   { value: 'ataq', city: 'عتق', airport: 'مطار عتق', region: 'شبوة' },
   { value: 'jeddah', city: 'جدة', airport: 'مطار الملك عبدالعزيز', region: 'السعودية' },
   { value: 'riyadh', city: 'الرياض', airport: 'مطار الملك خالد', region: 'السعودية' },
+  { value: 'dubai', city: 'دبي', airport: 'مطار دبي الدولي', region: 'الإمارات' },
+  { value: 'doha', city: 'الدوحة', airport: 'مطار حمد الدولي', region: 'قطر' },
   { value: 'kuwait', city: 'الكويت', airport: 'مطار الكويت الدولي', region: 'الكويت' },
   { value: 'amman', city: 'عمّان', airport: 'مطار الملكة علياء', region: 'الأردن' },
   { value: 'cairo', city: 'القاهرة', airport: 'مطار القاهرة الدولي', region: 'مصر' },
@@ -36,7 +38,7 @@ function AirportField({ label, value, onChange, ariaLabel, extraPaddingLeft = fa
   const airport = useMemo(() => getAirport(value), [value])
 
   return (
-    <label className="grid gap-1 px-6 py-5 text-right transition-colors hover:bg-slate-50/50">
+    <label className="grid gap-1 px-6 py-5 text-right transition-colors hover:bg-slate-50/50 cursor-pointer">
       <span className="text-[12px] font-black uppercase tracking-wider text-slate-400">{label}</span>
       <div className="relative mt-1">
         <div className={`grid gap-0.5 pr-0 ${extraPaddingLeft ? 'pl-10' : 'pl-6'}`}>
@@ -67,7 +69,7 @@ function DateField({ label, value, onChange, ariaLabel, helper }) {
   const display = formatDate(value)
 
   return (
-    <label className="grid gap-1 px-6 py-5 text-right transition-colors hover:bg-slate-50/50">
+    <label className="grid gap-1 px-6 py-5 text-right transition-colors hover:bg-slate-50/50 cursor-pointer">
       <span className="text-[12px] font-black uppercase tracking-wider text-slate-400">{label}</span>
       <div className="relative mt-1">
         <div className="grid gap-0.5 pr-0 pl-10">
@@ -142,10 +144,12 @@ function HeroSearchPanel() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 sm:px-6" dir="rtl">
-      <div className="relative rounded-[32px] border border-slate-200 bg-white px-6 pb-6 pt-8 shadow-[0_20px_50px_rgba(15,23,42,0.12)] sm:px-8">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-          <div className="inline-flex items-center gap-1 rounded-full bg-[#0f172a] p-1 shadow-lg shadow-slate-200">
+      <div className="mx-auto w-full max-w-7xl px-2 sm:px-6" dir="rtl">
+      <div className="relative rounded-[24px] sm:rounded-[32px] border border-slate-200/60 bg-white/90 backdrop-blur-md px-4 pb-5 pt-6 shadow-[0_30px_80px_rgba(0,0,0,0.08)] sm:px-8 sm:pb-6 sm:pt-8">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          
+          {/* Path switcher container */}
+          <div className="inline-flex items-center gap-1 p-1 rounded-2xl bg-slate-50 border border-slate-200/60 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] overflow-x-auto max-w-full flex-shrink-0">
             {tabs.map((tab) => {
               const Icon = tab.icon
               const isActive = tab.id === activeTab
@@ -161,29 +165,29 @@ function HeroSearchPanel() {
                       current.length ? current : [{ from: localAirports[0].value, to: localAirports[1].value, date: '' }],
                     )
                   }}
-                  className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-bold transition-all ${isActive
-                      ? 'border-white bg-white text-slate-900 shadow-sm'
-                      : 'border-transparent bg-transparent text-white/80 hover:bg-white/10 hover:text-white'
+                  className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-black transition-all duration-300 hover:scale-102 active:scale-98 cursor-pointer focus:outline-none whitespace-nowrap ${isActive
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
+                      : 'text-slate-650 hover:text-blue-600 hover:bg-white/70'
                     }`}
                 >
-                  <Icon className="h-3.5 w-3.5" />
+                  <Icon className={`h-3.5 w-3.5 transition-transform duration-300 ${isActive ? 'rotate-3 scale-110' : ''}`} />
                   {tab.label}
                 </button>
               )
             })}
           </div>
 
-          <div className="inline-flex items-center gap-3 rounded-full border border-slate-200 bg-white p-1 px-4 shadow-sm transition-all hover:border-slate-300 hover:shadow-md">
-            <div className="flex items-center gap-2 border-l border-slate-100 pl-3 py-1">
-              <Users className="h-4 w-4 text-[#4974f9]" />
-              <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">المسافرين</span>
+          <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-200/80 bg-white p-1 px-3 shadow-sm transition-all duration-200 hover:border-blue-500/30 hover:shadow-md flex-shrink-0">
+            <div className="flex items-center gap-1.5 border-l border-slate-100 pl-2 py-1">
+              <Users className="h-3.5 w-3.5 text-blue-600" />
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 hidden sm:inline">المسافرين</span>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => setPassengerCount(Math.max(1, passengerCount - 1))}
                 aria-label="تقليل عدد المسافرين"
-                className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-50 text-slate-400 transition-all hover:bg-slate-100 hover:text-[#4974f9] active:scale-90"
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-50 text-slate-400 transition-all hover:bg-blue-50 hover:text-blue-600 active:scale-90"
               >
                 <Minus className="h-3.5 w-3.5" />
               </button>
@@ -194,7 +198,7 @@ function HeroSearchPanel() {
                 type="button"
                 onClick={() => setPassengerCount(Math.min(9, passengerCount + 1))}
                 aria-label="زيادة عدد المسافرين"
-                className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-50 text-slate-400 transition-all hover:bg-slate-100 hover:text-[#4974f9] active:scale-90"
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-50 text-slate-400 transition-all hover:bg-blue-50 hover:text-blue-600 active:scale-90"
               >
                 <Plus className="h-3.5 w-3.5" />
               </button>
@@ -220,7 +224,7 @@ function HeroSearchPanel() {
                         type="button"
                         onClick={() => deleteSegment(index)}
                         aria-label={`حذف الرحلة رقم ${index + 1}`}
-                        className="absolute left-3 top-3 z-20 inline-flex items-center justify-center text-slate-400 transition hover:text-[#4974f9]"
+                        className="absolute left-3 top-3 z-20 inline-flex items-center justify-center text-slate-400 transition hover:text-blue-600"
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -243,7 +247,7 @@ function HeroSearchPanel() {
                           type="button"
                           onClick={() => swapSegment(index)}
                           aria-label={`تبديل من وإلى للرحلة ${index + 1}`}
-                          className="absolute left-1/2 top-1/2 z-10 hidden h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 active:translate-y-[-46%] sm:inline-flex"
+                          className="absolute left-1/2 top-1/2 z-10 hidden h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-slate-250 bg-white text-blue-600 shadow-md transition-all duration-300 hover:rotate-180 hover:bg-blue-50 active:translate-y-[-46%] sm:inline-flex"
                         >
                           <ArrowLeftRight className="h-4 w-4" />
                         </button>
@@ -278,7 +282,7 @@ function HeroSearchPanel() {
               <button
                 type="button"
                 onClick={addSegment}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50 cursor-pointer"
               >
                 <Plus className="h-4 w-4" />
                 إضافة رحلة أخرى
@@ -293,7 +297,7 @@ function HeroSearchPanel() {
               </div>
             ) : null}
             <div
-              className={`grid gap-0 rounded-xl border border-slate-200 bg-white ${activeTab === 'round-trip' ? 'lg:grid-cols-4' : 'lg:grid-cols-3'
+              className={`grid gap-0 rounded-2xl border border-slate-200 bg-white overflow-hidden ${activeTab === 'round-trip' ? 'lg:grid-cols-4' : 'lg:grid-cols-3'
                 }`}
             >
               <div className="relative sm:col-span-2 sm:grid sm:grid-cols-2">
@@ -312,7 +316,7 @@ function HeroSearchPanel() {
                   type="button"
                   onClick={swapFromTo}
                   aria-label="تبديل من وإلى"
-                  className="absolute left-1/2 top-1/2 z-10 hidden h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 active:translate-y-[-46%] sm:inline-flex"
+                  className="absolute left-1/2 top-1/2 z-10 hidden h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-slate-250 bg-white text-blue-600 shadow-md transition-all duration-300 hover:rotate-180 hover:bg-blue-50 active:translate-y-[-46%] sm:inline-flex"
                 >
                   <ArrowLeftRight className="h-4 w-4" />
                 </button>
@@ -364,7 +368,7 @@ function HeroSearchPanel() {
         <button
           type="button"
           onClick={goToSearch}
-          className="mt-6 h-14 w-full rounded-2xl bg-[#4974f9] text-base font-black text-white shadow-xl shadow-[#4974f9]/30 transition-all hover:-translate-y-0.5 hover:bg-[#355ecb] hover:shadow-2xl hover:shadow-[#4974f9]/40 active:translate-y-[1px]"
+          className="mt-5 h-13 w-full rounded-2xl bg-blue-600 text-sm font-black text-white shadow-xl shadow-blue-600/30 transition-all duration-300 hover:-translate-y-0.5 hover:bg-blue-500 hover:shadow-2xl hover:shadow-blue-600/40 active:translate-y-[1px] cursor-pointer sm:h-14 sm:text-base"
         >
           ابحث عن أفضل الرحلات الآن
         </button>

@@ -166,6 +166,7 @@ model Passenger {
   id_passengers       Int                @id @default(autoincrement())
   name                String             @db.VarChar(100)
   passport_number     String             @unique @db.VarChar(50)
+  passport_expiry     DateTime?          @db.Date
   date_of_birth       DateTime?          @db.Date
   nationality         String?            @db.VarChar(45)
   gander              Gender

@@ -8,8 +8,10 @@ import puppeteer from 'puppeteer';
 
 dotenv.config();
 
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+const stripe = stripeSecretKey ? new Stripe(stripeSecretKey) : null;
 const app = express();
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 
 app.use(cors());
 app.use(express.json());
@@ -62,6 +64,7 @@ app.post('/api/passengers', async (req, res) => {
 
     for (const p of passengers) {
       const birthDate = p.birthDate || null;
+      const passportExpiry = p.passportExpiry || null;
 
       // Upsert logic using MySQL
       const [existing] = await connection.execute(
@@ -71,14 +74,14 @@ app.post('/api/passengers', async (req, res) => {
 
       if (existing.length > 0) {
         await connection.execute(
-          'UPDATE passengers SET name = ?, date_of_birth = ?, nationality = ?, gander = ?, user_id = ? WHERE passport_number = ?',
-          [p.fullName, birthDate, p.nationality || null, p.gender, userId || null, p.passportNumber]
+          'UPDATE passengers SET name = ?, date_of_birth = ?, passport_expiry = ?, nationality = ?, gander = ?, user_id = ? WHERE passport_number = ?',
+          [p.fullName, birthDate, passportExpiry, p.nationality || null, p.gender, userId || null, p.passportNumber]
         );
         results.push({ id: existing[0].id_passengers, status: 'updated' });
       } else {
         const [insertResult] = await connection.execute(
-          'INSERT INTO passengers (name, passport_number, date_of_birth, nationality, gander, user_id) VALUES (?, ?, ?, ?, ?, ?)',
-          [p.fullName, p.passportNumber, birthDate, p.nationality || null, p.gender, userId || null]
+          'INSERT INTO passengers (name, passport_number, date_of_birth, passport_expiry, nationality, gander, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          [p.fullName, p.passportNumber, birthDate, passportExpiry, p.nationality || null, p.gender, userId || null]
         );
         results.push({ id: insertResult.insertId, status: 'created' });
       }
@@ -234,6 +237,137 @@ app.delete('/api/admin/users/:id', async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('Error deleting user:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+
+// ===== LIVE SUPPORT CHAT API ENDPOINTS =====
+
+// 1. GET chat history for a specific conversation thread (by email)
+app.get('/api/chat/messages', async (req, res) => {
+  const { email } = req.query;
+  if (!email) {
+    return res.status(400).json({ success: false, error: 'البريد الإلكتروني مطلوب' });
+  }
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    const [messages] = await connection.execute(
+      'SELECT * FROM chat_messages WHERE sender_email = ? ORDER BY created_at ASC',
+      [email]
+    );
+    res.json({ success: true, messages });
+  } catch (error) {
+    console.error('Error fetching chat messages:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// 2. POST a message in a conversation thread (used by both users and admin)
+app.post('/api/chat/messages', async (req, res) => {
+  const { user_id, sender, sender_name, sender_email, message } = req.body;
+  if (!sender || !sender_name || !sender_email || !message) {
+    return res.status(400).json({ success: false, error: 'البيانات غير مكتملة لإرسال الرسالة' });
+  }
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    const [result] = await connection.execute(
+      'INSERT INTO chat_messages (user_id, sender, sender_name, sender_email, message, is_read) VALUES (?, ?, ?, ?, ?, ?)',
+      [user_id || null, sender, sender_name, sender_email, message, sender === 'admin' ? 1 : 0]
+    );
+    res.json({ success: true, id_chat: result.insertId });
+  } catch (error) {
+    console.error('Error sending chat message:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// 3. GET all active conversations for the Admin Dashboard (WhatsApp style list)
+app.get('/api/admin/chat/conversations', async (req, res) => {
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    const [conversations] = await connection.execute(`
+      SELECT 
+        c.sender_email,
+        COALESCE(
+          (
+            SELECT sender_name 
+            FROM chat_messages 
+            WHERE sender_email = c.sender_email AND sender = 'user' 
+            ORDER BY id_chat DESC 
+            LIMIT 1
+          ),
+          c.sender_name
+        ) AS sender_name,
+        c.user_id,
+        c.message AS last_message,
+        c.created_at AS last_message_time,
+        (
+          SELECT COUNT(*) 
+          FROM chat_messages 
+          WHERE sender_email = c.sender_email AND sender = 'user' AND is_read = 0
+        ) AS unread_count
+      FROM chat_messages c
+      INNER JOIN (
+        SELECT sender_email, MAX(id_chat) AS max_id
+        FROM chat_messages
+        GROUP BY sender_email
+      ) m ON c.id_chat = m.max_id
+      ORDER BY c.created_at DESC
+    `);
+    res.json({ success: true, conversations });
+  } catch (error) {
+    console.error('Error fetching admin chat conversations:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// 4. PUT mark all messages in a conversation as read
+app.put('/api/admin/chat/read', async (req, res) => {
+  const { email } = req.query;
+  if (!email) {
+    return res.status(400).json({ success: false, error: 'البريد الإلكتروني مطلوب' });
+  }
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    await connection.execute(
+      "UPDATE chat_messages SET is_read = 1 WHERE sender_email = ? AND sender = 'user'",
+      [email]
+    );
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error marking messages as read:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// 5. DELETE a full conversation thread
+app.delete('/api/admin/chat/conversations', async (req, res) => {
+  const { email } = req.query;
+  if (!email) {
+    return res.status(400).json({ success: false, error: 'البريد الإلكتروني مطلوب' });
+  }
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    await connection.execute('DELETE FROM chat_messages WHERE sender_email = ?', [email]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting conversation:', error);
     res.status(500).json({ success: false, error: error.message });
   } finally {
     if (connection) await connection.end();
@@ -453,28 +587,37 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
     res.json({
       success: true,
       stats: {
-        totalTickets: totalTickets || 0,
+        totalTickets: Number(totalTickets) || 0,
         totalRevenue: Number(totalRevenue) || 0,
-        pendingPayments: pendingPayments || 0,
-        totalUsers: totalUsers || 0,
-        activePassengers: activePassengers || 0,
+        pendingPayments: Number(pendingPayments) || 0,
+        totalUsers: Number(totalUsers) || 0,
+        activePassengers: Number(activePassengers) || 0,
         recentBookings,
-        destinationsStats,
-        monthlySales,
-        dailySales,
-        airlineStats,
-        cancellationRate,
+        destinationsStats: (destinationsStats || []).map(d => ({ ...d, count: Number(d.count) || 0 })),
+        monthlySales: (monthlySales || []).map(m => ({ ...m, sales: Number(m.sales) || 0, passengers: Number(m.passengers) || 0 })),
+        dailySales: (dailySales || []).map(d => ({ ...d, sales: Number(d.sales) || 0, passengers: Number(d.passengers) || 0 })),
+        airlineStats: (airlineStats || []).map(a => ({ ...a, value: Number(a.value) || 0 })),
+        cancellationRate: Number(cancellationRate) || 0,
         statusStats,
-        companyBreakdown,
-        classStats: classStats.length > 0 ? classStats : [
-          { name: 'economy', value: totalTickets ? Math.round(totalTickets * 0.7) : 0 },
-          { name: 'business', value: totalTickets ? Math.round(totalTickets * 0.2) : 0 },
-          { name: 'first', value: totalTickets ? Math.round(totalTickets * 0.1) : 0 }
-        ],
-        aircraftStats: aircraftStats.length > 0 ? aircraftStats : [
-          { name: 'Boeing 787', price: 548 },
-          { name: 'Airbus A350', price: 620 }
-        ]
+        companyBreakdown: (companyBreakdown || []).map(c => ({
+          ...c,
+          tickets: Number(c.tickets) || 0,
+          revenue: Number(c.revenue) || 0,
+          cancelled_bookings: Number(c.cancelled_bookings) || 0
+        })),
+        classStats: classStats.length > 0 
+          ? classStats.map(c => ({ ...c, value: Number(c.value) || 0 })) 
+          : [
+            { name: 'economy', value: totalTickets ? Math.round(Number(totalTickets) * 0.7) : 0 },
+            { name: 'business', value: totalTickets ? Math.round(Number(totalTickets) * 0.2) : 0 },
+            { name: 'first', value: totalTickets ? Math.round(Number(totalTickets) * 0.1) : 0 }
+          ],
+        aircraftStats: aircraftStats.length > 0 
+          ? aircraftStats.map(a => ({ ...a, price: Number(a.price) || 0 })) 
+          : [
+            { name: 'Boeing 787', price: 548 },
+            { name: 'Airbus A350', price: 620 }
+          ]
       }
     });
   } catch (error) {
@@ -541,7 +684,7 @@ app.get('/api/bookings/pending', async (req, res) => {
 
 // GET all bookings for admin
 app.get('/api/admin/bookings', async (req, res) => {
-  const { date } = req.query;
+  const { date, year, month } = req.query;
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
@@ -555,11 +698,26 @@ app.get('/api/admin/bookings', async (req, res) => {
       LEFT JOIN payments p ON p.booking_id = b.id_bookings
     `;
     const params = [];
+    const conditions = [];
+
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (date && dateRegex.test(date)) {
-      query += ` WHERE DATE(b.booking_date) = ?`;
+      conditions.push(`DATE(b.booking_date) = ?`);
       params.push(date);
     }
+    if (year) {
+      conditions.push(`YEAR(b.booking_date) = ?`);
+      params.push(year);
+    }
+    if (month) {
+      conditions.push(`MONTH(b.booking_date) = ?`);
+      params.push(month);
+    }
+
+    if (conditions.length > 0) {
+      query += ` WHERE ` + conditions.join(' AND ');
+    }
+
     query += ` ORDER BY b.booking_date DESC`;
 
     const [rows] = await connection.execute(query, params);
@@ -752,6 +910,7 @@ async function getBookingPassengersHandler(req, res) {
         p.id_passengers,
         p.name,
         p.passport_number,
+        p.passport_expiry AS passportExpiry,
         p.date_of_birth,
         p.nationality,
         p.gander AS gender
@@ -1139,6 +1298,8 @@ async function searchFlightsHandler(req, res) {
     'cairo': 'CAI',
     'riyadh': 'RUH',
     'jeddah': 'JED',
+    'dubai': 'DXB',
+    'doha': 'DOH',
     'mukalla': 'RIY',
     'seiyun': 'GXF',
     'socotra': 'SCT',
@@ -1381,6 +1542,81 @@ app.post('/api/bookings', async (req, res) => {
     if (connection) await connection.end();
   }
 });
+
+// Create Stripe Checkout Session
+app.post('/api/create-checkout-session', async (req, res) => {
+  const { bookingId, reference, amount, flightNumber, origin, destination } = req.body;
+  if (!stripe) {
+    return res.status(400).json({ success: false, error: 'Stripe is not configured on this server. Please set STRIPE_SECRET_KEY.' });
+  }
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `حجز رحلة طيران ${flightNumber}`,
+              description: `من ${origin} إلى ${destination} (رمز الحجز: ${reference})`,
+            },
+            unit_amount: Math.round(amount * 100), // convert to cents
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `http://localhost:5173/payment-success?reference=${reference}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `http://localhost:5173/payment?cancel=true`,
+    });
+
+    res.json({ success: true, url: session.url });
+  } catch (error) {
+    console.error('Stripe Session Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Confirm Booking Payment status
+app.post('/api/bookings/confirm-payment', async (req, res) => {
+  const { reference } = req.body;
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    await connection.beginTransaction();
+
+    const [bookings] = await connection.execute(
+      'SELECT id_bookings FROM bookings WHERE booking_reference = ?',
+      [reference]
+    );
+
+    if (bookings.length === 0) {
+      return res.status(404).json({ success: false, error: 'Booking not found' });
+    }
+
+    const bookingId = bookings[0].id_bookings;
+
+    await connection.execute(
+      "UPDATE bookings SET status = 'certain' WHERE id_bookings = ?",
+      [bookingId]
+    );
+
+    await connection.execute(
+      "UPDATE payments SET payment_status = 'success' WHERE booking_id = ?",
+      [bookingId]
+    );
+
+    await connection.commit();
+    res.json({ success: true });
+  } catch (error) {
+    if (connection) await connection.rollback();
+    console.error('Confirm Payment Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
 
 // ─── Notifications API ─────────────────────────────────────────────────────
 
@@ -2382,7 +2618,179 @@ async function cancelBookingHandler(req, res) {
 app.patch('/api/bookings/:id/cancel', cancelBookingHandler);
 app.post('/api/bookings/cancel', cancelBookingHandler);
 
+
+// ─── Chat / Support API ──────────────────────────────────────────────────────
+
+// GET /api/chat/sessions — Admin: get all chat sessions
+app.get('/api/chat/sessions', async (req, res) => {
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    const [sessions] = await connection.execute(`
+      SELECT 
+        cs.id, cs.session_key, cs.user_name, cs.user_email, cs.status, cs.created_at, cs.updated_at,
+        (SELECT COUNT(*) FROM chat_messages cm WHERE cm.session_id = cs.id AND cm.sender = 'user' AND cm.is_read = 0) as unread_count,
+        (SELECT cm2.text FROM chat_messages cm2 WHERE cm2.session_id = cs.id ORDER BY cm2.created_at DESC LIMIT 1) as last_message,
+        (SELECT cm3.created_at FROM chat_messages cm3 WHERE cm3.session_id = cs.id ORDER BY cm3.created_at DESC LIMIT 1) as last_message_time
+      FROM chat_sessions cs
+      ORDER BY cs.updated_at DESC
+    `);
+    res.json({ success: true, sessions });
+  } catch (error) {
+    console.error('Chat sessions error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// GET /api/chat/sessions/:key/messages — get messages for a session
+app.get('/api/chat/sessions/:key/messages', async (req, res) => {
+  const { key } = req.params;
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    // Mark messages as read
+    await connection.execute(
+      `UPDATE chat_messages cm JOIN chat_sessions cs ON cm.session_id = cs.id SET cm.is_read = 1 WHERE cs.session_key = ? AND cm.sender = 'user'`,
+      [key]
+    );
+    const [messages] = await connection.execute(`
+      SELECT cm.* FROM chat_messages cm 
+      JOIN chat_sessions cs ON cm.session_id = cs.id 
+      WHERE cs.session_key = ? 
+      ORDER BY cm.created_at ASC
+    `, [key]);
+    res.json({ success: true, messages });
+  } catch (error) {
+    console.error('Chat messages error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// POST /api/chat/send — user sends a message
+app.post('/api/chat/send', async (req, res) => {
+  const { session_key, text, sender, user_name, user_email } = req.body;
+  if (!session_key || !text || !sender) {
+    return res.status(400).json({ success: false, error: 'Missing required fields' });
+  }
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+
+    // Upsert session
+    await connection.execute(`
+      INSERT INTO chat_sessions (session_key, user_name, user_email, status, created_at, updated_at)
+      VALUES (?, ?, ?, 'open', NOW(), NOW())
+      ON DUPLICATE KEY UPDATE updated_at = NOW(), user_name = COALESCE(?, user_name), user_email = COALESCE(?, user_email)
+    `, [session_key, user_name || 'زائر', user_email || null, user_name || null, user_email || null]);
+
+    // Get session id
+    const [[session]] = await connection.execute('SELECT id FROM chat_sessions WHERE session_key = ?', [session_key]);
+    const session_id = session.id;
+
+    // Insert message
+    const [result] = await connection.execute(
+      'INSERT INTO chat_messages (session_id, sender, text, is_read, created_at) VALUES (?, ?, ?, ?, NOW())',
+      [session_id, sender, text, sender === 'admin' ? 1 : 0]
+    );
+
+    // Update session updated_at
+    await connection.execute('UPDATE chat_sessions SET updated_at = NOW(), status = ? WHERE id = ?', [
+      sender === 'admin' ? 'replied' : 'open', session_id
+    ]);
+
+    res.json({ success: true, messageId: result.insertId });
+  } catch (error) {
+    console.error('Chat send error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// GET /api/chat/poll/:key — long-poll for new messages after a given id
+app.get('/api/chat/poll/:key', async (req, res) => {
+  const { key } = req.params;
+  const { after } = req.query; // message id to poll after
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    const [messages] = await connection.execute(`
+      SELECT cm.* FROM chat_messages cm
+      JOIN chat_sessions cs ON cm.session_id = cs.id
+      WHERE cs.session_key = ? AND cm.id > ?
+      ORDER BY cm.created_at ASC
+    `, [key, after || 0]);
+    res.json({ success: true, messages });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// PATCH /api/chat/sessions/:key/close — Admin closes a session
+app.patch('/api/chat/sessions/:key/close', async (req, res) => {
+  const { key } = req.params;
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    await connection.execute("UPDATE chat_sessions SET status = 'closed' WHERE session_key = ?", [key]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// ─── Auto-create chat tables if not exist ────────────────────────────────────
+const ensureChatTables = async () => {
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS chat_sessions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        session_key VARCHAR(64) UNIQUE NOT NULL,
+        user_name VARCHAR(100) DEFAULT 'زائر',
+        user_email VARCHAR(150),
+        status ENUM('open','replied','closed') DEFAULT 'open',
+        created_at DATETIME DEFAULT NOW(),
+        updated_at DATETIME DEFAULT NOW()
+      )
+    `);
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS chat_messages (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        session_id INT NOT NULL,
+        sender ENUM('user','admin') NOT NULL,
+        text TEXT NOT NULL,
+        is_read TINYINT(1) DEFAULT 0,
+        created_at DATETIME DEFAULT NOW(),
+        FOREIGN KEY (session_id) REFERENCES chat_sessions(id) ON DELETE CASCADE
+      )
+    `);
+    console.log('✅ Chat tables ready.');
+  } catch (err) {
+    console.error('Chat table creation error:', err.message);
+  } finally {
+    if (connection) await connection.end();
+  }
+};
+
+// ─── Serve Frontend (React/Vite dist) ────────────────────────────────────────
+app.use(express.static(path.join(__dirname, 'dist')));
+
+app.get('*splat', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
   seedAdmin();
+  ensureChatTables();
 });

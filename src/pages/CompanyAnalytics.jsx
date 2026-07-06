@@ -40,7 +40,7 @@ const defaultStats = {
     { name: 'كرسي متحرك', value: 220 },
     { name: 'أكسجين طبي', value: 130 },
     { name: 'مرافقة طبية', value: 110 },
-    { name: 'وجبة طبية', value: 83 },
+    { name: 'سيارة إسعاف', value: 83 },
   ],
   recentBookings: [
     { id: 'BK-9021', route: 'صنعاء - القاهرة', passenger: 'علي منصور', total: '$1,850.00', status: 'مؤكد', badgeColor: 'green' },

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Eye, EyeOff, FileText, Lock, Mail, User, UserPlus, X, CheckCircle2 } from 'lucide-react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import logo from '../assets/logo.png'
@@ -32,6 +32,11 @@ function getStrength(password) {
 function RegisterPage() {
     const navigate = useNavigate()
     const location = useLocation()
+    const [mounted, setMounted] = useState(false)
+    
+    useEffect(() => {
+        setMounted(true)
+    }, [])
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [isTermsOpen, setIsTermsOpen] = useState(false)
@@ -101,15 +106,32 @@ function RegisterPage() {
     }
 
     return (
-        <main className="min-h-screen flex items-start justify-center bg-gradient-to-br from-brand-blue via-brand-blue-hover to-[#1e3bb3] px-4 pt-28 pb-20 sm:pt-36 md:pt-40 relative overflow-hidden" dir="rtl">
+        <main className="min-h-screen flex items-start justify-center bg-gradient-to-br from-white via-blue-100 to-blue-200 px-4 pt-28 pb-20 sm:pt-36 md:pt-40 relative overflow-hidden" dir="rtl">
             {/* Modern subtle ambient glows within brand blue identity */}
-            <div className="absolute inset-0 pointer-events-none opacity-40 z-0">
-                <div className="absolute -top-20 -right-20 h-[600px] w-[600px] rounded-full bg-white/10 blur-[120px]" />
-                <div className="absolute -bottom-20 -left-20 h-[600px] w-[600px] rounded-full bg-brand-pearl/20 blur-[120px]" />
+            <div className="absolute inset-0 pointer-events-none opacity-70 z-0">
+                <div className="absolute -top-20 -right-20 h-[600px] w-[600px] rounded-full bg-blue-350/40 blur-[120px]" />
+                <div className="absolute -bottom-20 -left-20 h-[600px] w-[600px] rounded-full bg-indigo-300/30 blur-[120px]" />
             </div>
 
-            {/* Centralized Register Card */}
-            <div className="relative z-10 w-full max-w-[580px] bg-white rounded-[2.5rem] border border-slate-200/10 p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.2)]">
+            {/* Split Screen Layout Container */}
+            <div className="relative z-10 w-full max-w-6xl grid gap-8 lg:grid-cols-[0.7fr_1.3fr] items-center">
+                
+                {/* Right side: Welcome Text (Visible on lg screens) */}
+                <div className={`hidden lg:flex flex-col text-right text-slate-800 space-y-6 pr-0 lg:pl-12 self-start pt-10 transition-all duration-1000 delay-100 ease-out transform ${mounted ? 'translate-x-0 opacity-100' : 'translate-x-12 opacity-0'}`}>
+                    <h2 className="text-5xl lg:text-6xl font-black leading-[1.2] bg-gradient-to-b from-brand-blue to-[#13287a] bg-clip-text text-transparent tracking-tight">
+                        <span className="whitespace-nowrap">اكتشف طريقة</span> <br />
+                        <span className="whitespace-nowrap">أسرع وأسهل</span> <br />
+                        <span className="whitespace-nowrap">لحجز رحلاتك</span>
+                    </h2>
+                    <p className="text-base lg:text-lg font-bold text-slate-550 leading-relaxed max-w-md">
+                        انضم إلينا الآن واستمتع بتجربة سفر رقمية متكاملة. <br />
+                        نحن نتيح لك تخطيط رحلاتك، إدارة حجوزاتك، <br />
+                        والتواصل المباشر مع شركات الطيران المفضلة لديك.
+                    </p>
+                </div>
+
+                {/* Left side: Register Form Card */}
+                <div className={`w-full max-w-[580px] lg:mr-4 lg:ml-auto bg-white rounded-[2.5rem] border border-slate-200/50 p-8 sm:p-10 shadow-[0_20px_50px_rgba(15,23,42,0.08)] transition-all duration-1000 delay-300 ease-out transform ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
                 {/* Logo & Header */}
                 <div className="flex flex-col items-center mb-8">
                     <div className="relative mb-4 flex items-center justify-center h-16 w-16">
@@ -156,7 +178,7 @@ function RegisterPage() {
                                 <input
                                     type="email"
                                     className="w-full bg-transparent py-4 pr-12 pl-4 text-sm sm:text-base font-bold text-slate-900 placeholder:text-slate-350 outline-none"
-                                    placeholder="example@email.com"
+                                    placeholder=""
                                     required
                                     dir="ltr"
                                     value={email}
@@ -184,7 +206,7 @@ function RegisterPage() {
                                 <input
                                     type="tel"
                                     className="w-full bg-transparent py-4 pl-4 pr-4 text-sm sm:text-base font-bold text-slate-900 placeholder:text-slate-350 outline-none"
-                                    placeholder="7XX XXX XXX"
+                                    placeholder=""
                                     required
                                     value={phone}
                                     onChange={(e) => setPhone(e.target.value)}
@@ -203,7 +225,7 @@ function RegisterPage() {
                             <input
                                 type={showPassword ? 'text' : 'password'}
                                 className="w-full bg-transparent py-4 pr-12 pl-14 text-sm sm:text-base font-bold text-slate-900 placeholder:text-slate-350 outline-none"
-                                placeholder="••••••••"
+                                placeholder=""
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
@@ -245,7 +267,7 @@ function RegisterPage() {
                             <input
                                 type={showConfirmPassword ? 'text' : 'password'}
                                 className="w-full bg-transparent py-4 pr-12 pl-14 text-sm sm:text-base font-bold text-slate-900 placeholder:text-slate-350 outline-none"
-                                placeholder="••••••••"
+                                placeholder=""
                                 required
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -315,6 +337,7 @@ function RegisterPage() {
                         </Link>
                     </p>
                 </form>
+                </div>
             </div>
 
             {/* Terms Modal */}

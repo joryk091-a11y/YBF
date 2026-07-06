@@ -43,15 +43,15 @@ function LoginPage() {
     }
 
     return (
-        <main className="min-h-screen flex items-start justify-center bg-gradient-to-br from-brand-blue via-brand-blue-hover to-[#1e3bb3] px-4 pt-36 pb-20 sm:pt-44 md:pt-48 relative overflow-hidden" dir="rtl">
+        <main className="min-h-screen flex items-start justify-center bg-gradient-to-br from-white via-blue-100 to-blue-200 px-4 pt-36 pb-20 sm:pt-44 md:pt-48 relative overflow-hidden" dir="rtl">
             {/* Modern subtle ambient glows within brand blue identity */}
-            <div className="absolute inset-0 pointer-events-none opacity-40 z-0">
-                <div className="absolute -top-20 -right-20 h-[600px] w-[600px] rounded-full bg-white/10 blur-[120px]" />
-                <div className="absolute -bottom-20 -left-20 h-[600px] w-[600px] rounded-full bg-brand-pearl/20 blur-[120px]" />
+            <div className="absolute inset-0 pointer-events-none opacity-70 z-0">
+                <div className="absolute -top-20 -right-20 h-[600px] w-[600px] rounded-full bg-blue-350/40 blur-[120px]" />
+                <div className="absolute -bottom-20 -left-20 h-[600px] w-[600px] rounded-full bg-indigo-300/30 blur-[120px]" />
             </div>
 
             {/* Centralized Login Card */}
-            <div className="relative z-10 w-full max-w-[540px] bg-white rounded-[2.5rem] border border-slate-200/10 p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.2)]">
+            <div className="relative z-10 w-full max-w-[540px] bg-white rounded-[2.5rem] border border-slate-200/50 p-8 sm:p-10 shadow-[0_20px_50px_rgba(15,23,42,0.08)]">
                 {/* Logo & Header */}
                 <div className="flex flex-col items-center mb-8">
                     <div className="relative mb-4 flex items-center justify-center h-16 w-16">
@@ -80,7 +80,7 @@ function LoginPage() {
                             <input
                                 type="email"
                                 className="w-full bg-transparent py-4.5 pr-12 pl-4 text-sm sm:text-base font-bold text-slate-900 placeholder:text-slate-350 outline-none"
-                                placeholder="example@email.com"
+                                placeholder=""
                                 required
                                 dir="ltr"
                                 value={email}
@@ -102,7 +102,7 @@ function LoginPage() {
                             <input
                                 type={showPassword ? 'text' : 'password'}
                                 className="w-full bg-transparent py-4.5 pr-12 pl-14 text-sm sm:text-base font-bold text-slate-900 placeholder:text-slate-350 outline-none"
-                                placeholder="••••••••"
+                                placeholder=""
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}

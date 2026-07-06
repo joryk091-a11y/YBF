@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Car, Hotel, Plane, MapPin, LayoutGrid, ClipboardList, Ticket, Shield, Package, Clock, Globe, Award, ShieldCheck, HeartPulse, Headphones, Check } from 'lucide-react'
+import { Car, Hotel, Plane, MapPin, LayoutGrid, ClipboardList, Ticket, Shield, Package, Clock, Globe, Award, ShieldCheck, HeartPulse, Headphones, Check, LayoutDashboard, FileText } from 'lucide-react'
 
 import HeroSearchPanel from '../components/HeroSearchPanel.jsx'
 import heroPlane from '../assets/image1.png'
@@ -12,60 +12,54 @@ import dubaiImg from '../assets/dubai.png'
 import riyadhImg from '../assets/riyadh.png'
 import ammanImg from '../assets/amman.png'
 
-const serviceTabs = [
-  { id: 'flight', label: 'رحلات', icon: Plane },
-  { id: 'hotel', label: 'فنادق', icon: Hotel },
-  { id: 'car', label: 'تأجير سيارات', icon: Car },
-]
-
 const servicesList = [
   {
-    title: 'حجز رحلات طيران',
-    description: 'ابحث وقارن بين مئات خيارات الطيران من وإلى اليمن مع كبرى شركات الطيران المحلية والدولية بأفضل الأسعار وأقل جهد.',
+    title: 'حجز وإصدار التذاكر الرقمية',
+    description: 'ابحث وقارن بين خيارات الطيران من وإلى اليمن ووفر عناء الحجز مع تأكيد فوري وتذكرة إلكترونية مؤمنة.',
     icon: Plane,
-    badge: 'الأكثر شعبية',
-    features: ['تأكيد فوري للحجز', 'مخطط مقاعد تفاعلي', 'إدارة مرنة للمسافرين'],
+    badge: 'النظام الأساسي',
+    features: ['تأكيد فوري وتصميم QR', 'أسعار تنافسية وحصرية', 'مزامنة فورية مع شركات الطيران'],
     gradient: 'from-blue-600 to-indigo-650',
     glowColor: 'rgba(59,130,246,0.15)'
   },
   {
-    title: 'فنادق وأماكن إقامة',
-    description: 'اعثر على الفندق المثالي لإقامتك القادمة من بين آلاف الفنادق والشقق المفروشة بأسعار تنافسية.',
-    icon: Hotel,
-    features: ['إلغاء مجاني متوفر', 'تقييمات نزلاء حقيقية'],
+    title: 'مخطط المقاعد التفاعلي',
+    description: 'اختر مقعدك المفضل (بجوار النافذة، الممر، أو مساحة إضافية) مباشرة عبر مخطط تفاعلي حقيقي للطائرة أثناء الحجز.',
+    icon: LayoutGrid,
+    features: ['تحديد فوري للمقاعد', 'رؤية واضحة لتوزيع الصفوف', 'خيارات لدرجة الأعمال والدرجة السياحية'],
     gradient: 'from-purple-550 to-indigo-600',
     glowColor: 'rgba(168,85,247,0.1)'
   },
   {
-    title: 'تأجير سيارات',
-    description: 'استأجر سيارتك المفضلة لتتنقل بحرية وراحة تامة طوال رحلتك.',
-    icon: Car,
-    features: ['مواقع استلام متعددة', 'تأمين شامل متوفر'],
+    title: 'إدارة وتعديل الحجوزات',
+    description: 'لوحة تحكم خاصة بالمسافر لاستعراض التذاكر النشطة، طباعتها، طلب إلغاء الحجز أو تعديل موعد الرحلة بسهولة.',
+    icon: ClipboardList,
+    features: ['استعراض وتعديل بيانات المسافرين', 'إلغاء واسترجاع مرن للتذاكر', 'تحميل وحفظ التذكرة بصيغة PDF'],
     gradient: 'from-emerald-500 to-teal-650',
     glowColor: 'rgba(16,185,129,0.1)'
   },
   {
-    title: 'شحن وأمتعة إضافية',
-    description: 'احجز وزناً إضافياً مسبقاً بأسعار مخفضة وتجنب الرسوم المرتفعة في المطار.',
-    icon: Package,
-    features: ['توفير حتى 40%', 'تتبع فوري للشحنات'],
-    gradient: 'from-amber-500 to-orange-600',
-    glowColor: 'rgba(245,158,11,0.1)'
-  },
-  {
-    title: 'خدمات ورعاية خاصة',
-    description: 'نوفر رعاية طبية متكاملة ومرافقة خاصة للأطفال والمسنين لضمان رحلة مريحة وآمنة للجميع.',
+    title: 'الخدمات الطبية والرعاية الخاصة',
+    description: 'طلب خدمات رعاية إضافية مثل الكراسي المتحركة، مرافق طبي للرحلة، أو رعاية خاصة للأطفال والمسافرين كبار السن.',
     icon: HeartPulse,
-    features: ['مرافقة طبية مؤهلة', 'كراسي متحركة ووجبات خاصة'],
+    features: ['تنسيق مسبق للخدمات الطبية', 'تأمين كراسي ومعدات حركة بالمطارات', 'متابعة وتأكيد من شركة الطيران'],
     gradient: 'from-rose-500 to-pink-650',
     glowColor: 'rgba(244,63,94,0.1)'
   },
   {
-    title: 'دعم ومساندة 24/7',
-    description: 'فريق خدمة العملاء متواجد على مدار الساعة طوال أيام الأسبوع للإجابة على استفساراتك ومساعدتك في أي طارئ.',
+    title: 'بوابة شركات الطيران الشريكة',
+    description: 'لوحة عمل متكاملة لشركاء الطيران تتيح لهم جدولة وتعديل الرحلات، مراجعة قوائم المسافرين، والاطلاع على التحليلات المالية.',
+    icon: LayoutDashboard,
+    features: ['إدارة وجدولة الرحلات للشركاء', 'متابعة وتأكيد قوائم الركاب', 'تقارير مالية وتحليلية للوجهات'],
+    gradient: 'from-amber-500 to-orange-600',
+    glowColor: 'rgba(245,158,11,0.1)'
+  },
+  {
+    title: 'دعم وحل مشكلات الحجوزات 24/7',
+    description: 'فريق دعم فني متواجد على مدار الساعة لمساعدتك في أي استفسارات تخص مواعيد الرحلات أو الحجوزات الطارئة.',
     icon: Headphones,
-    badge: 'متواجدون دائماً',
-    features: ['استجابة في أقل من دقيقة', 'دعم عبر الهاتف والواتساب'],
+    badge: 'دعم متكامل',
+    features: ['دعم سريع عبر الواتساب والهاتف', 'مساعدة في حالات التغيير الاضطراري', 'استجابة سريعة للشكاوى والمقترحات'],
     gradient: 'from-blue-600 to-indigo-750',
     glowColor: 'rgba(59,130,246,0.15)'
   }
@@ -168,9 +162,30 @@ const popularDestinations = [
   },
 ]
 
+const qrGrid = [
+  1, 1, 1, 0, 1, 0, 0, 1, 1, 1,
+  1, 0, 1, 0, 0, 1, 0, 1, 0, 1,
+  1, 1, 1, 0, 1, 1, 0, 1, 1, 1,
+  0, 0, 0, 1, 0, 0, 1, 0, 0, 0,
+  1, 0, 1, 0, 1, 1, 0, 1, 0, 1,
+  0, 1, 0, 1, 0, 0, 1, 0, 1, 0,
+  0, 0, 1, 0, 1, 1, 0, 1, 0, 0,
+  1, 1, 1, 0, 0, 1, 0, 1, 1, 0,
+  1, 0, 1, 0, 1, 0, 1, 0, 0, 1,
+  1, 1, 1, 0, 1, 1, 0, 1, 1, 0
+]
+
+const qrGridMini = [
+  1, 1, 0, 1, 1, 1,
+  1, 1, 1, 0, 0, 1,
+  0, 1, 0, 1, 1, 0,
+  1, 0, 1, 1, 0, 1,
+  1, 1, 0, 0, 1, 0,
+  1, 1, 1, 0, 0, 1
+]
+
 function HomePage() {
   const [showHeroText, setShowHeroText] = useState(false)
-  const [activeService, setActiveService] = useState('flight')
   const [activeStep, setActiveStep] = useState(0)
   const [openFaq, setOpenFaq] = useState(0)
   const navigate = useNavigate()
@@ -206,7 +221,7 @@ function HomePage() {
         <div className="flex items-center justify-between gap-2">
           <div className="flex-1 bg-slate-50 dark:bg-slate-950 rounded-xl p-2 text-right">
             <span className="block text-[8px] text-slate-400">من</span>
-            <span className="text-xs font-black text-slate-700 dark:text-slate-200">صنعاء (SAH)</span>
+            <span className="text-xs font-black text-slate-700 dark:text-slate-200">عدن (ADE)</span>
           </div>
           <div className="h-6 w-6 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 shrink-0 select-none text-[10px] font-black">⇄</div>
           <div className="flex-1 bg-slate-50 dark:bg-slate-950 rounded-xl p-2 text-right">
@@ -308,8 +323,8 @@ function HomePage() {
       {/* Flight locations details */}
       <div className="relative z-10 flex justify-between items-center bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 mb-5">
         <div>
-          <span className="text-lg font-black block tracking-wider">SAH</span>
-          <span className="text-[9px] text-white/70 block">صنعاء</span>
+          <span className="text-lg font-black block tracking-wider">ADE</span>
+          <span className="text-[9px] text-white/70 block">عدن</span>
         </div>
         <div className="flex flex-col items-center flex-1 mx-2">
           <span className="text-[8px] text-indigo-250 font-bold mb-1">مباشر</span>
@@ -324,24 +339,21 @@ function HomePage() {
         </div>
       </div>
 
-      {/* Barcode mock */}
+      {/* QR Code mock */}
       <div className="relative z-10 flex items-center justify-between border-t border-white/10 pt-4">
         <div className="space-y-1">
           <span className="text-[8px] text-white/60 block">اسم الراكب</span>
           <span className="text-xs font-black block">Ahmed Mohamed</span>
         </div>
-        <div className="bg-white p-1 rounded-md">
-          {/* Mock QR / Barcode */}
-          <div className="h-8 w-24 bg-slate-900 flex flex-col gap-[2px] p-0.5 justify-between">
-            <div className="flex gap-[3px] h-full">
-              <div className="w-1.5 bg-white h-full" />
-              <div className="w-0.5 bg-white h-full" />
-              <div className="w-1 bg-white h-full" />
-              <div className="w-2 bg-white h-full" />
-              <div className="w-0.5 bg-white h-full" />
-              <div className="w-1.5 bg-white h-full" />
-              <div className="w-1 bg-white h-full" />
-            </div>
+        <div className="bg-white p-1 rounded-xl shadow-lg border border-slate-100/10 flex items-center justify-center shrink-0">
+          {/* Detailed Premium QR Code */}
+          <div className="grid grid-cols-10 gap-[1px] w-12 h-12 bg-white p-[2px] rounded-lg select-none">
+            {qrGrid.map((cell, idx) => (
+              <div
+                key={idx}
+                className={`rounded-[0.5px] ${cell ? 'bg-slate-900' : 'bg-slate-100'}`}
+              />
+            ))}
           </div>
         </div>
       </div>
@@ -388,29 +400,6 @@ function HomePage() {
 
       <div id="search-panel" className="relative z-30 -mt-60 pb-12 sm:-mt-64 sm:pb-16">
         <ScrollReveal animation="fade-up" duration={800} delay={100}>
-          <div className="absolute -top-8 left-1/2 z-40 -translate-x-1/2 sm:-top-10" dir="rtl">
-            <div className="inline-flex items-center gap-1.5 p-1.5 rounded-2xl bg-white/90 backdrop-blur-md border border-slate-200/60 shadow-[0_12px_30px_rgba(0,0,0,0.08)]">
-              {serviceTabs.map((tab) => {
-                const Icon = tab.icon
-                const isActive = activeService === tab.id
-                return (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setActiveService(tab.id)}
-                    className={`inline-flex items-center gap-2 px-4 py-2.5 text-xs font-black rounded-xl transition-all duration-300 hover:scale-102 active:scale-98 cursor-pointer focus:outline-none ${isActive
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                        : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
-                      }`}
-                  >
-                    <Icon className={`h-4 w-4 transition-transform duration-300 ${isActive ? 'rotate-3 scale-110' : ''}`} />
-                    {tab.label}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
           <div className="pt-4">
             <HeroSearchPanel />
           </div>
@@ -586,7 +575,7 @@ function HomePage() {
                       </ul>
 
                       {/* Mockup for Flight Service */}
-                      {isFeatured && service.title === 'حجز رحلات طيران' && (
+                      {isFeatured && service.title === 'حجز وإصدار التذاكر الرقمية' && (
                         <div className="hidden md:flex flex-col bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-5 text-white w-64 shrink-0 shadow-lg relative overflow-hidden group/pass translate-y-2">
                           <div className="absolute right-0 top-0 h-16 w-16 bg-white/5 rounded-full blur-xl" />
                           <div className="flex justify-between items-center text-[9px] font-bold mb-4">
@@ -595,30 +584,41 @@ function HomePage() {
                           </div>
                           <div className="flex justify-between items-center mb-4">
                             <div>
-                              <span className="text-xs font-black block">SAH</span>
-                              <span className="text-[8px] opacity-75">صنعاء</span>
-                            </div>
-                            <Plane className="h-4 w-4 text-blue-300 transform rotate-90" />
-                            <div className="text-left">
                               <span className="text-xs font-black block">ADE</span>
                               <span className="text-[8px] opacity-75">عدن</span>
+                            </div>
+                            <div className="flex-1 flex flex-col items-center mx-4">
+                              <span className="text-[7px] text-blue-200/80 font-bold mb-0.5">مباشر</span>
+                              <div className="w-full h-0.5 relative flex items-center justify-center">
+                                <div className="w-full h-[1px] bg-white/20 border-t border-dashed border-white/40" />
+                                <div className="absolute left-0 h-1 w-1 rounded-full bg-white/60" />
+                                <div className="absolute right-0 h-1 w-1 rounded-full bg-white/60" />
+                              </div>
+                              <span className="text-[6px] text-white/50 mt-0.5">3 س 15 د</span>
+                            </div>
+                            <div className="text-left">
+                              <span className="text-xs font-black block">CAI</span>
+                              <span className="text-[8px] opacity-75">القاهرة</span>
                             </div>
                           </div>
                           <div className="border-t border-white/10 pt-3 flex justify-between items-center">
                             <span className="text-[8px] opacity-70">رقم البوابة 04</span>
-                            <div className="h-3 w-16 bg-white/20 rounded flex items-center justify-between px-1 gap-[2px]">
-                              <div className="w-1 bg-white h-full" />
-                              <div className="w-0.5 bg-white h-full" />
-                              <div className="w-1.5 bg-white h-full" />
-                              <div className="w-0.5 bg-white h-full" />
-                              <div className="w-1 bg-white h-full" />
+                            <div className="bg-white p-0.5 rounded flex items-center justify-center shrink-0">
+                              <div className="grid grid-cols-6 gap-[0.5px] w-6 h-6 bg-white p-[0.5px] rounded select-none">
+                                {qrGridMini.map((cell, idx) => (
+                                  <div
+                                    key={idx}
+                                    className={`rounded-[0.25px] ${cell ? 'bg-slate-900' : 'bg-slate-150'}`}
+                                  />
+                                ))}
+                              </div>
                             </div>
                           </div>
                         </div>
                       )}
 
                       {/* Mockup for Support Service */}
-                      {isFeatured && service.title === 'دعم ومساندة 24/7' && (
+                      {isFeatured && service.title === 'دعم وحل مشكلات الحجوزات 24/7' && (
                         <div className="hidden md:flex flex-col bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-3xl p-4 w-64 shrink-0 shadow-sm translate-y-2">
                           <div className="flex items-center gap-2.5 mb-3">
                             <div className="h-7 w-7 rounded-full bg-blue-500 flex items-center justify-center text-[10px] text-white font-black">م</div>

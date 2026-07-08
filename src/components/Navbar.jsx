@@ -93,11 +93,14 @@ function NotificationDropdown({ userId, onClose }) {
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
           </div>
         ) : notifications.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 py-14">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-55">
-              <Bell className="h-7 w-7 text-slate-300" />
+          <div className="flex flex-col items-center justify-center gap-4 py-14 select-none">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800 ring-8 ring-slate-100/50 dark:ring-slate-900/10 transition-transform duration-300 hover:scale-105">
+              <Bell className="h-6 w-6 text-slate-400 dark:text-slate-500 animate-pulse" />
             </div>
-            <p className="text-sm font-bold text-slate-450">لا توجد إشعارات</p>
+            <div className="text-center px-4">
+              <p className="text-xs font-black text-slate-800 dark:text-slate-200">لا توجد إشعارات جديدة</p>
+              <p className="text-[10px] font-bold text-slate-400 mt-1 max-w-[240px] mx-auto leading-relaxed">سنقوم بإخطارك فور تلقي تحديثات جديدة بخصوص حجوزاتك</p>
+            </div>
           </div>
         ) : (
           notifications.map(n => {

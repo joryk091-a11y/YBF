@@ -743,11 +743,17 @@ const AdminDashboard = () => {
 
             {/* TOAST NOTIFICATION */}
             {notificationMsg && (
-                <div className="fixed top-6 left-6 z-50 animate-bounce bg-blue-600 text-white py-3 px-6 rounded-2xl shadow-xl font-bold flex items-center gap-3">
-                    <Info size={18} />
-                    <span>{notificationMsg}</span>
+                <div className="fixed top-6 left-6 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 text-slate-900 dark:text-white py-3.5 px-5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] font-bold flex items-center gap-3 animate-fade-in max-w-sm border-r-4 border-r-blue-600 dark:border-r-blue-500 select-none">
+                    <div className="h-8 w-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                        <Check size={18} />
+                    </div>
+                    <div className="flex-1 text-right">
+                        <p className="text-xs font-black text-slate-800 dark:text-slate-100 leading-snug">{notificationMsg}</p>
+                        <p className="text-[9px] font-bold text-slate-400 mt-0.5">تحديث فوري من قاعدة البيانات</p>
+                    </div>
                 </div>
             )}
+
 
             {/* ===== 1. SIDEBAR ===== */}
             <aside className="w-80 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-l border-slate-200/60 dark:border-slate-800/60 flex flex-col justify-between shrink-0 z-30 select-none relative">
@@ -2127,9 +2133,12 @@ const AdminDashboard = () => {
                                                                                     setIsEditingCompany(true);
                                                                                     setCompanyForm({
                                                                                         id_admin: company.id_admin,
+                                                                                        company_name: company.company_name || '',
+                                                                                        airline_code: company.airline_code || '',
                                                                                         email: company.email || '',
                                                                                         password: '',
-                                                                                        airline_code: company.airline_code || 'IY'
+                                                                                        employee_id: company.employee_id || '',
+                                                                                        department: company.department || ''
                                                                                     });
                                                                                     setIsCompanyModalOpen(true);
                                                                                 }}
@@ -2443,7 +2452,7 @@ const AdminDashboard = () => {
                             </button>
                         </div>
 
-                        <form onSubmit={isEditingCompany ? handleUpdateCompany : handleCreateCompany} className="space-y-4">
+                        <form onSubmit={isEditingCompany ? handleUpdateCompany : handleCreateCompany} className="space-y-4" autoComplete="off">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
                                     <label className="text-[10px] font-black text-slate-700">اسم الشركة</label>
@@ -2454,6 +2463,7 @@ const AdminDashboard = () => {
                                         onChange={(e) => setCompanyForm({ ...companyForm, company_name: e.target.value })}
                                         className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none text-slate-800 dark:text-slate-100"
                                         required
+                                        autoComplete="off"
                                     />
                                 </div>
 
@@ -2466,6 +2476,7 @@ const AdminDashboard = () => {
                                         onChange={(e) => setCompanyForm({ ...companyForm, airline_code: e.target.value.toUpperCase() })}
                                         className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none text-slate-800 dark:text-slate-100"
                                         required
+                                        autoComplete="off"
                                     />
                                 </div>
                             </div>
@@ -2480,6 +2491,7 @@ const AdminDashboard = () => {
                                         onChange={(e) => setCompanyForm({ ...companyForm, email: e.target.value })}
                                         className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none text-slate-800 dark:text-slate-100"
                                         required
+                                        autoComplete="off"
                                     />
                                 </div>
 
@@ -2492,6 +2504,7 @@ const AdminDashboard = () => {
                                         onChange={(e) => setCompanyForm({ ...companyForm, password: e.target.value })}
                                         className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none text-slate-800 dark:text-slate-100"
                                         required={!isEditingCompany}
+                                        autoComplete="new-password"
                                     />
                                 </div>
                             </div>
@@ -2506,6 +2519,7 @@ const AdminDashboard = () => {
                                         onChange={(e) => setCompanyForm({ ...companyForm, employee_id: e.target.value })}
                                         className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none text-slate-800 dark:text-slate-100"
                                         required
+                                        autoComplete="off"
                                     />
                                 </div>
 
@@ -2518,6 +2532,7 @@ const AdminDashboard = () => {
                                         onChange={(e) => setCompanyForm({ ...companyForm, department: e.target.value })}
                                         className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none text-slate-800 dark:text-slate-100"
                                         required
+                                        autoComplete="off"
                                     />
                                 </div>
                             </div>

@@ -15,7 +15,8 @@ import {
   ArrowUpRight,
   CheckCircle2,
   Activity,
-  ArrowRightLeft
+  ArrowRightLeft,
+  Printer
 } from 'lucide-react';
 
 // استيراد الشعارات ديناميكياً
@@ -56,6 +57,12 @@ const defaultStats = {
     { pv: 1200000 },
     { pv: 1234567.89 }
   ]
+};
+
+const toEnglishDigits = (str) => {
+  if (!str) return '';
+  const strStr = String(str);
+  return strStr.replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
 };
 
 export default function CompanyAnalytics() {
@@ -137,11 +144,11 @@ export default function CompanyAnalytics() {
   const tooltipBorder = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
 
   return (
-    <div className="flex min-h-screen bg-[#f8f9fc] dark:bg-[#080d19] text-slate-900 dark:text-slate-100 transition-colors duration-300 relative overflow-hidden" dir="rtl">
+    <div className="flex min-h-screen bg-[#f8faff] dark:bg-[#080d19] text-slate-900 dark:text-slate-100 transition-colors duration-300 relative overflow-hidden" dir="rtl">
       {/* تأثيرات التوهج الشبكي (Mesh Gradients) */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-[-20%] left-[-10%] h-[800px] w-[800px] rounded-full bg-blue-500/5 dark:bg-blue-500/10 blur-[120px] transition-all duration-300" />
-        <div className="absolute bottom-[-20%] right-[-10%] h-[800px] w-[800px] rounded-full bg-purple-500/5 dark:bg-purple-500/10 blur-[120px] transition-all duration-300" />
+        <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-blue-500/5 dark:bg-blue-500/10 blur-[120px] transition-all" />
+        <div className="absolute bottom-[-10%] right-[-10%] h-[600px] w-[600px] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-[120px] transition-all" />
       </div>
 
       {/* القائمة الجانبية */}
@@ -149,35 +156,35 @@ export default function CompanyAnalytics() {
 
       {/* المحتوى الرئيسي */}
       <main className="flex-1 mr-72 p-8 relative z-10 min-h-screen">
-        
-        {/* الترويسة (Dashboard Header) */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-          {/* اليمين: عنوان وتفاصيل الصفحة */}
+
+        {/* الترويسة (Header) */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 print:hidden animate-in fade-in slide-in-from-top-4 duration-500">
           <div>
-            <h1 className="text-3xl font-black tracking-tight bg-gradient-to-r from-slate-950 via-slate-800 to-slate-600 dark:from-white dark:via-slate-200 dark:to-slate-400 bg-clip-text text-transparent">
-              تحليلات شركة الطيران
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+              التحليلات والإحصائيات الشاملة
             </h1>
             <p className="text-slate-500 dark:text-slate-400 text-xs font-bold mt-1">
-              لوحة مراقبة الأداء التفاعلية وحركة الركاب لرحلات {user?.airline_name || 'الشركة'}
+              رصد وتتبع مؤشرات الأداء، الأرباح، حركة الحجوزات ونسب نمو الشركة التشغيلية لشركة {user?.airline_name || 'الشركة'}.
             </p>
           </div>
-
-          {/* اليسار: شعار شركة الطيران ونص الترويسة */}
-          <div className="flex items-center gap-3 bg-white/60 dark:bg-slate-900/40 border border-slate-200/50 dark:border-white/10 px-4 py-2.5 rounded-2xl backdrop-blur-xl shadow-lg transition-all">
-            <div className="h-8 w-8 rounded-lg bg-slate-50 dark:bg-slate-950 p-1 flex items-center justify-center border border-slate-200/20 dark:border-white/5 shadow-inner">
-              <img src={getCompanyLogo()} alt="Airline Logo" className="h-full w-full object-contain" />
-            </div>
-            <span className="text-xs font-black tracking-widest text-slate-700 dark:text-slate-200 uppercase">
-              لوحة تحليلات الشركة
-            </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => window.print()}
+              className="flex items-center gap-2 px-4 py-2 border border-slate-250 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-500 rounded-xl shadow-sm hover:shadow transition-all duration-200 text-xs font-bold cursor-pointer"
+            >
+              <Printer size={16} />
+              طباعة التقرير / PDF
+            </button>
           </div>
         </div>
 
+
+
         {/* الصف العلوي (4 بطاقات KPI) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          
+
           {/* بطاقة 1: الإيرادات */}
-          <div className="group relative overflow-hidden rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-200/50 dark:border-white/10 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:border-emerald-500/30 dark:hover:border-emerald-500/20">
+          <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-b from-white to-slate-50/40 dark:from-slate-900/60 dark:to-slate-950/60 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-emerald-500/30 dark:hover:border-emerald-500/20">
             <div className="flex items-start justify-between mb-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
                 <DollarSign size={22} />
@@ -193,7 +200,7 @@ export default function CompanyAnalytics() {
             </div>
             <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">إجمالي الإيرادات</p>
             <h3 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">
-              ${finalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ${finalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </h3>
             <div className="flex items-center gap-1.5 mt-2 text-emerald-600 dark:text-emerald-400 text-xs font-black">
               <TrendingUp size={14} className="animate-pulse" />
@@ -202,21 +209,21 @@ export default function CompanyAnalytics() {
           </div>
 
           {/* بطاقة 2: الحجوزات النشطة */}
-          <div className="group relative overflow-hidden rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-200/50 dark:border-white/10 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:border-blue-500/30 dark:hover:border-blue-500/20">
+          <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-b from-white to-slate-50/40 dark:from-slate-900/60 dark:to-slate-950/60 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-blue-500/30 dark:hover:border-blue-500/20">
             <div className="flex items-center justify-between mb-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
                 <Ticket size={22} />
               </div>
             </div>
             <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">الحجوزات النشطة</p>
-            <h3 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">{finalActiveBookings.toLocaleString()}</h3>
+            <h3 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">{finalActiveBookings.toLocaleString('en-US')}</h3>
             <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-2">
               حالة الحجوزات: <span className="text-blue-600 dark:text-blue-400 font-extrabold">مؤكدة ونشطة</span>
             </p>
           </div>
 
           {/* بطاقة 3: الرحلات المتاحة */}
-          <div className="group relative overflow-hidden rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-200/50 dark:border-white/10 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:border-cyan-500/30 dark:hover:border-cyan-500/20">
+          <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-b from-white to-slate-50/40 dark:from-slate-900/60 dark:to-slate-950/60 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-cyan-500/30 dark:hover:border-cyan-500/20">
             <div className="flex items-center justify-between mb-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
                 <Plane size={22} className="rotate-90" />
@@ -231,14 +238,14 @@ export default function CompanyAnalytics() {
           </div>
 
           {/* بطاقة 4: إجمالي المسافرين */}
-          <div className="group relative overflow-hidden rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-200/50 dark:border-white/10 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:border-purple-500/30 dark:hover:border-purple-500/20">
+          <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-b from-white to-slate-50/40 dark:from-slate-900/60 dark:to-slate-950/60 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-purple-500/30 dark:hover:border-purple-500/20">
             <div className="flex items-center justify-between mb-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
                 <Users size={22} />
               </div>
             </div>
             <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">إجمالي المسافرين</p>
-            <h3 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">{finalTotalPassengers.toLocaleString()}</h3>
+            <h3 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">{finalTotalPassengers.toLocaleString('en-US')}</h3>
             <div className="flex items-center gap-1 mt-2 text-purple-600 dark:text-purple-400 text-xs font-black">
               <ArrowUpRight size={14} />
               <span>مستمر بالارتفاع هذا الأسبوع</span>
@@ -248,9 +255,9 @@ export default function CompanyAnalytics() {
 
         {/* الصف الأوسط (تقسيم 2-Column Layout) */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-          
-          {/* اليسار: الطلب على الوجهات - حاوية أعرض */}
-          <div className="lg:col-span-2 group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-8 border border-slate-200/50 dark:border-white/10 backdrop-blur-xl shadow-xl transition-all hover:shadow-2xl">
+
+          {/* اليسار: الطلب على الوجهات - حاوية أعرد */}
+          <div className="lg:col-span-2 group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-8 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl">
             <h3 className="text-xs font-black tracking-widest text-slate-400 dark:text-slate-500 mb-6 uppercase">
               الطلب على الوجهات (عدد الحجوزات)
             </h3>
@@ -264,34 +271,34 @@ export default function CompanyAnalytics() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
-                  <XAxis 
-                    dataKey="name" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fontSize: 11, fontWeight: 900, fill: labelColor }} 
-                    dy={10} 
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fontWeight: 900, fill: labelColor }}
+                    dy={10}
                   />
-                  <YAxis 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fontSize: 11, fontWeight: 900, fill: labelColor }} 
-                    dx={-10} 
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fontWeight: 900, fill: labelColor }}
+                    dx={-10}
                   />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: tooltipBg, 
-                      borderColor: tooltipBorder, 
-                      borderRadius: '16px', 
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: tooltipBg,
+                      borderColor: tooltipBorder,
+                      borderRadius: '16px',
                       boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
                       color: isDarkMode ? '#fff' : '#0f172a'
                     }}
                     cursor={{ fill: isDarkMode ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.01)' }}
                   />
-                  <Bar 
-                    dataKey="bookings" 
-                    fill="url(#barGradient)" 
-                    radius={[8, 8, 0, 0]} 
-                    barSize={45} 
+                  <Bar
+                    dataKey="bookings"
+                    fill="url(#barGradient)"
+                    radius={[8, 8, 0, 0]}
+                    barSize={45}
                     name="الحجوزات"
                   />
                 </BarChart>
@@ -300,7 +307,7 @@ export default function CompanyAnalytics() {
           </div>
 
           {/* اليمين: تفاصيل الخدمات الخاصة - حاوية أضيق */}
-          <div className="group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-8 border border-slate-200/50 dark:border-white/10 backdrop-blur-xl shadow-xl transition-all hover:shadow-2xl flex flex-col justify-between">
+          <div className="group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-8 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl flex flex-col justify-between">
             <div>
               <h3 className="text-xs font-black tracking-widest text-slate-400 dark:text-slate-500 mb-6 uppercase">
                 تفاصيل الخدمات الأرضية الخاصة
@@ -322,11 +329,11 @@ export default function CompanyAnalytics() {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: tooltipBg, 
-                        borderColor: tooltipBorder, 
-                        borderRadius: '16px', 
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: tooltipBg,
+                        borderColor: tooltipBorder,
+                        borderRadius: '16px',
                         boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
                         color: isDarkMode ? '#fff' : '#0f172a'
                       }}
@@ -347,7 +354,7 @@ export default function CompanyAnalytics() {
                 <div key={item.name} className="flex items-center justify-between border-b border-slate-200/30 dark:border-slate-800/40 pb-2 last:border-0 last:pb-0">
                   <div className="flex items-center gap-2">
                     <div className="h-3 w-3 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.2)]" style={{ backgroundColor: item.color }} />
-                    <span className="text-xs font-black text-slate-700 dark:text-slate-300">{item.name}</span>
+                    <span className="text-xs font-black text-slate-700 dark:text-slate-305">{item.name}</span>
                   </div>
                   <span className="text-xs font-extrabold text-slate-900 dark:text-white">
                     {item.value} <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">({totalServicesRequests > 0 ? Math.round(item.value / totalServicesRequests * 100) : 0}%)</span>
@@ -362,7 +369,7 @@ export default function CompanyAnalytics() {
         </div>
 
         {/* الصف السفلي (جدول الحجوزات) */}
-        <div className="group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-8 border border-slate-200/50 dark:border-white/10 backdrop-blur-xl shadow-xl transition-all hover:shadow-2xl">
+        <div className="group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xs font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase">
               آخر الحجوزات عالية القيمة
@@ -375,35 +382,43 @@ export default function CompanyAnalytics() {
           <div className="overflow-x-auto">
             <table className="w-full text-right border-collapse">
               <thead>
-                <tr className="border-b border-slate-200/60 dark:border-slate-800/60 text-slate-400 dark:text-slate-500 text-xs font-black uppercase">
-                  <th className="pb-4 font-black">رقم المرجع</th>
-                  <th className="pb-4 font-black">المسار</th>
-                  <th className="pb-4 font-black">اسم المسافر</th>
-                  <th className="pb-4 font-black">الإجمالي</th>
-                  <th className="pb-4 font-black text-center">الحالة</th>
+                <tr className="border-b border-slate-200/50 dark:border-slate-800/50 text-slate-400 dark:text-slate-500 text-[10px] font-black uppercase tracking-wider">
+                  <th className="pb-3 px-4 font-black">رقم المرجع</th>
+                  <th className="pb-3 px-4 font-black">المسار</th>
+                  <th className="pb-3 px-4 font-black">اسم المسافر</th>
+                  <th className="pb-3 px-4 font-black">الإجمالي</th>
+                  <th className="pb-3 px-4 font-black text-center">الحالة</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200/40 dark:divide-slate-800/40 text-xs font-bold text-slate-700 dark:text-slate-300">
+              <tbody className="divide-y divide-slate-100/50 dark:divide-slate-800/30 text-xs font-bold text-slate-700 dark:text-slate-350">
                 {recentBookingsData.map((booking, idx) => (
-                  <tr key={idx} className="hover:bg-slate-100/30 dark:hover:bg-slate-800/20 transition-all group/row">
-                    <td className="py-4 font-extrabold text-blue-600 dark:text-blue-400">{booking.id}</td>
-                    <td className="py-4">
-                      <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-                        <span>{booking.route.split(' - ')[0]}</span>
-                        <ArrowRightLeft size={12} className="text-slate-400 group-hover/row:scale-x-110 transition-transform" />
-                        <span>{booking.route.split(' - ')[1]}</span>
+                  <tr key={idx} className="group hover:bg-slate-50/40 dark:hover:bg-slate-850/10 transition-colors">
+                    <td className="py-5 px-4">
+                      <span className="font-extrabold text-xs text-blue-600 dark:text-blue-400 bg-blue-500/5 dark:bg-blue-500/15 px-2.5 py-1 rounded-lg border border-blue-500/15 font-mono tracking-wide">
+                        {booking.id}
+                      </span>
+                    </td>
+                    <td className="py-5 px-4">
+                      <div className="flex items-center gap-2">
+                        <span className="font-black text-[11px] bg-blue-500/5 text-blue-650 dark:text-blue-400 px-2 py-1 rounded-lg border border-blue-500/10 font-mono">{booking.route.split(' - ')[0]}</span>
+                        <div className="w-6 h-[1px] bg-slate-200 dark:bg-slate-800" />
+                        <span className="font-black text-[11px] bg-emerald-500/5 text-emerald-650 dark:text-emerald-400 px-2 py-1 rounded-lg border border-emerald-500/10 font-mono">{booking.route.split(' - ')[1]}</span>
                       </div>
                     </td>
-                    <td className="py-4 text-slate-800 dark:text-white font-extrabold">{booking.passenger}</td>
-                    <td className="py-4 text-slate-900 dark:text-white font-extrabold text-sm">{booking.total}</td>
-                    <td className="py-4 text-center">
+                    <td className="py-5 px-4 text-slate-850 dark:text-white font-extrabold">{booking.passenger}</td>
+                    <td className="py-5 px-4">
+                      <span className="font-extrabold text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 dark:bg-emerald-500/15 px-2.5 py-1 rounded-lg border border-emerald-500/15 font-mono tracking-wide">
+                        {toEnglishDigits(booking.total)}
+                      </span>
+                    </td>
+                    <td className="py-5 px-4 text-center">
                       {booking.badgeColor === 'green' || booking.status === 'مؤكد' ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-455 border border-emerald-100 dark:border-emerald-900/30">
                           <CheckCircle2 size={12} />
                           {booking.status}
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 shadow-[0_0_10px_rgba(168,85,247,0.1)]">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black bg-purple-50 dark:bg-purple-950/20 text-purple-650 dark:text-purple-400 border border-purple-100 dark:border-purple-900/30">
                           <CheckCircle2 size={12} />
                           {booking.status}
                         </span>

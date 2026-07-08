@@ -103,7 +103,7 @@ export default function FinancialReport() {
   const finalRevenue = activeStats.totalRevenue > 0 ? activeStats.totalRevenue : defaultStats.totalRevenue;
   const currentMonthRevenue = activeStats.currentMonthRevenue !== undefined ? activeStats.currentMonthRevenue : 0;
   const revenueGrowth = activeStats.revenueGrowth !== undefined ? activeStats.revenueGrowth : 0;
-  
+
   const monthlyRevenueData = (activeStats.monthlyRevenue && activeStats.monthlyRevenue.length > 0) ? activeStats.monthlyRevenue : defaultStats.monthlyRevenue;
   const weeklyRevenueData = (activeStats.weeklyRevenue && activeStats.weeklyRevenue.length > 0) ? activeStats.weeklyRevenue : defaultStats.weeklyRevenue;
   const classStatsData = (activeStats.classStats && activeStats.classStats.length > 0) ? activeStats.classStats : defaultStats.classStats;
@@ -128,7 +128,13 @@ export default function FinancialReport() {
   const tooltipBorder = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0';
 
   return (
-    <div className="flex min-h-screen bg-[#f8fafc] dark:bg-[#080d19] text-[#0f172a] dark:text-slate-100 transition-colors duration-300 relative" dir="rtl">
+    <div className="flex min-h-screen bg-[#f8faff] dark:bg-[#080d19] text-slate-900 dark:text-slate-100 transition-colors duration-300 relative overflow-hidden" dir="rtl">
+      {/* تأثيرات التوهج الشبكي (Mesh Gradients) */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-blue-500/5 dark:bg-blue-500/10 blur-[120px] transition-all" />
+        <div className="absolute bottom-[-10%] right-[-10%] h-[600px] w-[600px] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-[120px] transition-all" />
+      </div>
+
       {/* القائمة الجانبية */}
       <div className="print:hidden">
         <Sidebar />
@@ -136,93 +142,83 @@ export default function FinancialReport() {
 
       {/* المحتوى الرئيسي */}
       <main className="flex-1 mr-72 print:mr-0 p-8 print:p-0 relative z-10 min-h-screen">
-        
+
         {/* الترويسة (Header) */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-          <div className="flex flex-col md:flex-row md:items-center gap-4">
-            <div>
-              <h1 className="text-3xl font-black tracking-tight text-[#0f172a]">
-                التقرير المالي والأرباح
-              </h1>
-              <p className="text-slate-500 text-xs font-bold mt-1">
-                تحليل شامل للإيرادات الكلية، توزيع درجات السفر، والأرباح التشغيلية لرحلات {user?.airline_name || 'الشركة'}
-              </p>
-            </div>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 print:hidden animate-in fade-in slide-in-from-top-4 duration-500">
+          <div>
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+              التقرير المالي والأداء
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 text-xs font-bold mt-1">
+              تحليل الإيرادات الشهرية والأسبوعية، ربحية الرحلات الفردية وتوزيع مبيعات درجات السفر لشركة {user?.airline_name || 'الشركة'}.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => window.print()}
-              className="flex items-center gap-2 px-4 py-2 border border-slate-200 bg-white text-slate-700 hover:text-blue-900 hover:border-blue-900 rounded-xl shadow-sm hover:shadow transition-all duration-200 print:hidden text-xs font-bold"
+              className="flex items-center gap-2 px-4 py-2 border border-slate-250 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-500 rounded-xl shadow-sm hover:shadow transition-all duration-200 text-xs font-bold cursor-pointer"
             >
               <Printer size={16} />
-              طباعة التقرير / حفظ كـ PDF
+              طباعة التقرير / PDF
             </button>
           </div>
-
-          <div className="flex items-center gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-2.5 rounded-2xl shadow-sm print:hidden">
-            <div className="h-8 w-8 rounded-lg bg-slate-50 dark:bg-slate-800 p-1 flex items-center justify-center border border-slate-100 dark:border-slate-700">
-              <img src={getCompanyLogo()} alt="Airline Logo" className="h-full w-full object-contain" />
-            </div>
-            <span className="text-xs font-black tracking-widest text-slate-700 dark:text-slate-350 uppercase">
-              الأداء المالي
-            </span>
-          </div>
         </div>
+
         {/* قسم الإيرادات: بطاقة KPI مع مخطط AreaChart */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
           {/* بطاقة KPI الفاتحة والمهنية */}
-          <div className="group relative rounded-3xl bg-white dark:bg-slate-900 p-8 border border-slate-200/60 dark:border-slate-800/80 shadow-sm transition-all duration-300 hover:shadow-md flex flex-col justify-between min-h-[320px]">
-            <div>
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20 shadow-sm">
-                <DollarSign size={28} />
+          <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-b from-white to-slate-50/40 dark:from-slate-900/60 dark:to-slate-950/60 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl flex flex-col justify-between min-h-[220px]">
+            {/* Decorative corner glow */}
+            <div className="absolute -right-12 -top-12 h-28 w-28 rounded-full bg-gradient-to-br from-emerald-500 to-teal-650 opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 blur-lg transition-opacity duration-355" />
+
+            <div className="flex items-center gap-4 relative z-10">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-sm transition-all duration-355 group-hover:scale-105">
+                <DollarSign size={22} />
               </div>
-              <div className="mt-6">
-                <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">إجمالي إيرادات الشهر الحالي</p>
-                <h3 className="text-4xl font-black text-[#0f172a] dark:text-white tracking-tight">
-                  ${currentMonthRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-0.5">إجمالي إيرادات الشهر الحالي</p>
+                <h3 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white transition-all duration-355 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                  ${currentMonthRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </h3>
               </div>
             </div>
-            
-            <div className="border-t border-slate-100 dark:border-slate-800 pt-6 mt-6">
-              <div className={`flex items-center gap-2 text-sm font-black px-3 py-1.5 rounded-xl border w-fit ${
-                revenueGrowth >= 0 
-                  ? 'text-emerald-600 bg-emerald-50/50 border-emerald-100/30' 
-                  : 'text-red-600 bg-red-50/50 border-red-100/30'
-              }`}>
-                {revenueGrowth >= 0 ? <TrendingUp size={18} /> : <TrendingDown size={18} />}
+
+            <div className="border-t border-slate-100 dark:border-slate-800 pt-4 mt-4 relative z-10 flex items-center justify-between">
+              <div className={`flex items-center gap-1.5 text-xs font-black px-2.5 py-1 rounded-lg border ${revenueGrowth >= 0
+                ? 'text-emerald-600 bg-emerald-50/50 border-emerald-100/30'
+                : 'text-red-600 bg-red-50/50 border-red-100/30'
+                }`}>
+                {revenueGrowth >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
                 <span>{revenueGrowth >= 0 ? '+' : ''}{revenueGrowth}%</span>
               </div>
-              <p className="text-[10px] text-slate-400 font-bold mt-2">
-                مقارنة بالشهر التشغيلي الفائت
-              </p>
+              <p className="text-[9px] text-slate-400 font-bold">مقارنة بالشهر التشغيلي الفائت</p>
             </div>
           </div>
 
           {/* مخطط نمو الأرباح شهرياً وسنوياً (AreaChart) */}
-          <div className="lg:col-span-2 group rounded-3xl bg-white dark:bg-slate-900 p-8 border border-slate-200/60 dark:border-slate-800/80 shadow-sm transition-all hover:shadow-md">
+          <div className="lg:col-span-2 group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <h3 className="text-xs font-black tracking-widest text-slate-500 dark:text-slate-400 uppercase flex items-center gap-2">
                 <Coins size={16} className="text-blue-500" />
                 {revenueView === 'monthly' ? 'نمو الأرباح والإيرادات الشهري' : 'نمو الأرباح والإيرادات الأسبوعي'}
               </h3>
-              
+
               <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 print:hidden">
                 <button
                   onClick={() => setRevenueView('monthly')}
-                  className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all duration-200 ${
-                    revenueView === 'monthly'
-                      ? 'bg-blue-900 dark:bg-blue-600 text-white shadow-sm'
-                      : 'text-slate-600 dark:text-slate-350 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700/50'
-                  }`}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all duration-200 ${revenueView === 'monthly'
+                    ? 'bg-blue-900 dark:bg-blue-600 text-white shadow-sm'
+                    : 'text-slate-600 dark:text-slate-350 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700/50'
+                    }`}
                 >
                   شهري
                 </button>
                 <button
                   onClick={() => setRevenueView('weekly')}
-                  className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all duration-200 ${
-                    revenueView === 'weekly'
-                      ? 'bg-blue-900 text-white shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all duration-200 ${revenueView === 'weekly'
+                    ? 'bg-blue-900 text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                    }`}
                 >
                   أسبوعي
                 </button>
@@ -239,39 +235,39 @@ export default function FinancialReport() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
-                  <XAxis 
-                    dataKey="name" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fontSize: 11, fontWeight: 700, fill: labelColor }} 
-                    dy={10} 
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fontWeight: 700, fill: labelColor }}
+                    dy={10}
                   />
-                  <YAxis 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fontSize: 11, fontWeight: 700, fill: labelColor }} 
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fontWeight: 700, fill: labelColor }}
                     dx={-10}
                     tickFormatter={(tick) => `$${tick >= 1000 ? (tick / 1000) + 'k' : tick}`}
                   />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: tooltipBg, 
-                      borderColor: tooltipBorder, 
-                      borderRadius: '12px', 
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: tooltipBg,
+                      borderColor: tooltipBorder,
+                      borderRadius: '12px',
                       boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                       color: isDarkMode ? '#ffffff' : '#0f172a',
                       fontFamily: 'inherit',
                       direction: 'rtl'
                     }}
-                    formatter={(value) => [`$${value.toLocaleString()}`, 'الإيرادات']}
+                    formatter={(value) => [`$${value.toLocaleString('en-US')}`, 'الإيرادات']}
                   />
-                  <Area 
-                    type="monotone" 
-                    dataKey="revenue" 
-                    stroke="#10b981" 
-                    strokeWidth={3} 
-                    fillOpacity={1} 
-                    fill="url(#financialRevenueGradient)" 
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#10b981"
+                    strokeWidth={3}
+                    fillOpacity={1}
+                    fill="url(#financialRevenueGradient)"
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -281,15 +277,15 @@ export default function FinancialReport() {
 
         {/* قسم درجات السفر والجدول */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           {/* مخطط درجات السفر (PieChart) */}
-          <div className="group rounded-3xl bg-white dark:bg-slate-900 p-8 border border-slate-200/60 dark:border-slate-800/80 shadow-sm transition-all hover:shadow-md flex flex-col justify-between">
+          <div className="group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl flex flex-col justify-between">
             <div>
               <h3 className="text-xs font-black tracking-widest text-slate-500 dark:text-slate-400 mb-6 uppercase flex items-center gap-2">
                 <PieIcon size={16} className="text-purple-500" />
                 نسبة الحجوزات موزعة على درجات السفر
               </h3>
-              
+
               <div className="h-[200px] w-full relative flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -309,11 +305,11 @@ export default function FinancialReport() {
                         return <Cell key={`cell-${index}`} fill={color} />;
                       })}
                     </Pie>
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: tooltipBg, 
-                        borderColor: tooltipBorder, 
-                        borderRadius: '12px', 
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: tooltipBg,
+                        borderColor: tooltipBorder,
+                        borderRadius: '12px',
                         boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                         color: isDarkMode ? '#ffffff' : '#0f172a',
                         fontFamily: 'inherit',
@@ -352,7 +348,7 @@ export default function FinancialReport() {
           </div>
 
           {/* جدول صافي الأرباح لكل رحلة */}
-          <div className="lg:col-span-2 group rounded-3xl bg-white dark:bg-slate-900 p-8 border border-slate-200/60 dark:border-slate-800/80 shadow-sm transition-all hover:shadow-md">
+          <div className="lg:col-span-2 group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xs font-black tracking-widest text-slate-500 dark:text-slate-400 uppercase flex items-center gap-2">
                 <TableProperties size={16} className="text-[#0f172a] dark:text-white" />
@@ -381,18 +377,18 @@ export default function FinancialReport() {
                       <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all border-b border-slate-50 dark:border-slate-800/50 last:border-0">
                         <td className="py-4 font-extrabold text-blue-600 dark:text-blue-400">{item.flightNumber}</td>
                         <td className="py-4 text-[#0f172a] dark:text-white font-extrabold">{item.route}</td>
-                        <td className="py-4 text-slate-400">${item.costs.toLocaleString()}</td>
-                        <td className="py-4 text-slate-500">${item.revenue.toLocaleString()}</td>
+                        <td className="py-4 text-slate-400">${item.costs.toLocaleString('en-US')}</td>
+                        <td className="py-4 text-slate-500">${item.revenue.toLocaleString('en-US')}</td>
                         <td className="py-4 font-bold">
                           {isProfitNegative ? (
                             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold bg-red-50 text-red-700 border border-red-100 shadow-[0_2px_8px_rgba(239,68,68,0.04)]">
                               <TrendingDown size={12} />
-                              -${Math.abs(item.netProfit).toLocaleString()}
+                              -${Math.abs(item.netProfit).toLocaleString('en-US')}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-[0_2px_8px_rgba(16,185,129,0.04)]">
                               <TrendingUp size={12} />
-                              +${item.netProfit.toLocaleString()}
+                              +${item.netProfit.toLocaleString('en-US')}
                             </span>
                           )}
                         </td>

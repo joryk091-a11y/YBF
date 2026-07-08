@@ -63,14 +63,6 @@ const AdminLogin = () => {
             </div>
 
             <div className="relative z-10 w-full max-w-md">
-                
-                {/* Back button to homepage */}
-                <div className="mb-6 flex justify-start">
-                    <Link to="/" className="flex items-center gap-2 text-xs font-black text-slate-400 hover:text-blue-600 transition-colors">
-                        <ArrowLeft size={16} className="rotate-180" />
-                        <span>العودة للموقع الرئيسي</span>
-                    </Link>
-                </div>
 
                 {/* Login Card */}
                 <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-10 shadow-xl shadow-slate-100 dark:shadow-none">
@@ -116,7 +108,7 @@ const AdminLogin = () => {
                                     onFocus={() => setFocusedField('email')}
                                     onBlur={() => setFocusedField(null)}
                                     className="w-full bg-transparent py-4 pr-12 pl-4 text-sm font-bold outline-none text-slate-900 dark:text-white"
-                                    placeholder="أدخل البريد الإلكتروني"
+                                    placeholder=""
                                     required
                                     dir="ltr"
                                     autoComplete="off"
@@ -143,7 +135,7 @@ const AdminLogin = () => {
                                     onFocus={() => setFocusedField('password')}
                                     onBlur={() => setFocusedField(null)}
                                     className="w-full bg-transparent py-4 pr-12 pl-12 text-sm font-bold outline-none text-slate-900 dark:text-white"
-                                    placeholder="أدخل كلمة المرور"
+                                    placeholder=""
                                     required
                                     autoComplete="new-password"
                                 />

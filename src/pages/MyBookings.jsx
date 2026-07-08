@@ -45,8 +45,8 @@ const paymentMethodLabel = {
     paypal: 'PayPal', bank_transfer: 'تحويل بنكي', office: 'فروعنا',
 };
 
-const formatDate = (d) => d ? new Date(d).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
-const formatTime = (d) => d ? new Date(d).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '—';
+const formatDate = (d) => d ? new Date(d).toLocaleDateString('ar-EG-u-nu-latn', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
+const formatTime = (d) => d ? new Date(d).toLocaleTimeString('ar-EG-u-nu-latn', { hour: '2-digit', minute: '2-digit' }) : '—';
 const formatDuration = (m) => m ? `${Math.floor(m / 60)}س ${m % 60}د` : '—';
 
 /* ── Individual Boarding Pass for one passenger ── */
@@ -506,7 +506,7 @@ function BookingGroup({ booking }) {
                     </div>
                     <div className="text-right border-r border-slate-100 pr-3">
                         <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">السعر</p>
-                        <p className="text-xs font-black text-slate-700">${Number(booking.final_price).toLocaleString()}</p>
+                        <p className="text-xs font-black text-slate-700">${Number(booking.final_price).toLocaleString('en-US')}</p>
                     </div>
 
                     {localCancelRequest ? (

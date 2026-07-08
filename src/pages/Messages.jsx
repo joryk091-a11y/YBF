@@ -197,7 +197,7 @@ const Messages = ({ token, showToast }) => {
         if (!isoString) return '';
         try {
             const date = new Date(isoString);
-            return date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+            return date.toLocaleTimeString('ar-EG-u-nu-latn', { hour: '2-digit', minute: '2-digit' });
         } catch {
             return '';
         }

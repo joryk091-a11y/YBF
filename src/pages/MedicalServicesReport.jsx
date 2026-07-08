@@ -92,7 +92,13 @@ export default function MedicalServicesReport() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#f8fafc] dark:bg-[#080d19] text-[#0f172a] dark:text-slate-100 transition-colors duration-300 relative" dir="rtl">
+    <div className="flex min-h-screen bg-[#f8faff] dark:bg-[#080d19] text-slate-900 dark:text-slate-100 transition-colors duration-300 relative overflow-hidden" dir="rtl">
+      {/* تأثيرات التوهج الشبكي (Mesh Gradients) */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-blue-500/5 dark:bg-blue-500/10 blur-[120px] transition-all" />
+        <div className="absolute bottom-[-10%] right-[-10%] h-[600px] w-[600px] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-[120px] transition-all" />
+      </div>
+
       {/* القائمة الجانبية */}
       <div className="print:hidden">
         <Sidebar />
@@ -100,42 +106,33 @@ export default function MedicalServicesReport() {
 
       {/* المحتوى الرئيسي */}
       <main className="flex-1 mr-72 print:mr-0 p-8 print:p-0 relative z-10 min-h-screen">
-        
+
         {/* الترويسة (Header) */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-          <div className="flex flex-col md:flex-row md:items-center gap-4">
-            <div>
-              <h1 className="text-3xl font-black tracking-tight text-[#0f172a] dark:text-white">
-                الخدمات الطبية والتنسيق الأرضي
-              </h1>
-              <p className="text-slate-500 dark:text-slate-400 text-xs font-bold mt-1">
-                متابعة وتنسيق الخدمات الطبية الخاصة وحالات التجهيز الأرضي الطارئة لشركة {user?.airline_name || 'الشركة'}
-              </p>
-            </div>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 print:hidden animate-in fade-in slide-in-from-top-4 duration-500">
+          <div>
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+              الخدمات الطبية والتنسيق الأرضي
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 text-xs font-bold mt-1">
+              متابعة وتنسيق الخدمات الطبية الخاصة وحالات التجهيز الأرضي الطارئة لشركة {user?.airline_name || 'الشركة'}.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => window.print()}
-              className="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 hover:text-blue-900 dark:hover:text-blue-400 hover:border-blue-900 rounded-xl shadow-sm hover:shadow transition-all duration-200 print:hidden text-xs font-bold"
+              className="flex items-center gap-2 px-4 py-2 border border-slate-250 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-500 rounded-xl shadow-sm hover:shadow transition-all duration-200 text-xs font-bold cursor-pointer print:hidden"
             >
               <Printer size={16} />
-              طباعة التقرير / حفظ كـ PDF
+              طباعة التقرير / PDF
             </button>
-          </div>
-
-          <div className="flex items-center gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-2.5 rounded-2xl shadow-sm print:hidden">
-            <div className="h-8 w-8 rounded-lg bg-slate-50 dark:bg-slate-800 p-1 flex items-center justify-center border border-slate-100 dark:border-slate-700">
-              <img src={getCompanyLogo()} alt="Airline Logo" className="h-full w-full object-contain" />
-            </div>
-            <span className="text-xs font-black tracking-widest text-slate-700 dark:text-slate-350 uppercase">
-              التجهيز الطبي
-            </span>
           </div>
         </div>
 
         {/* المخططات والتقارير */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           {/* مخطط حجم الخدمات الطبية المطلوبة */}
-          <div className="lg:col-span-1 group rounded-3xl bg-white dark:bg-slate-900 p-8 border border-slate-200/60 dark:border-slate-800/80 shadow-sm transition-all hover:shadow-md flex flex-col justify-between">
+          <div className="lg:col-span-1 group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl flex flex-col justify-between">
             <div>
               <h3 className="text-xs font-black tracking-widest text-slate-500 dark:text-slate-400 mb-6 uppercase flex items-center gap-2">
                 <Heart size={16} className="text-rose-500" />
@@ -159,11 +156,11 @@ export default function MedicalServicesReport() {
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: tooltipBg, 
-                          borderColor: tooltipBorder, 
-                          borderRadius: '12px', 
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: tooltipBg,
+                          borderColor: tooltipBorder,
+                          borderRadius: '12px',
                           color: isDarkMode ? '#ffffff' : '#0f172a',
                           fontFamily: 'inherit',
                           direction: 'rtl'
@@ -200,7 +197,7 @@ export default function MedicalServicesReport() {
           </div>
 
           {/* جدول الحالات الحرجة والتجهيز الأرضي الطارئ */}
-          <div className="lg:col-span-2 group rounded-3xl bg-white dark:bg-slate-900 p-8 border border-slate-200/60 dark:border-slate-800/80 shadow-sm transition-all hover:shadow-md">
+          <div className="lg:col-span-2 group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xs font-black tracking-widest text-slate-500 dark:text-slate-400 uppercase flex items-center gap-2">
                 <AlertTriangle size={16} className="text-amber-500" />

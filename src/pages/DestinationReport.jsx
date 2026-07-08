@@ -44,12 +44,12 @@ export default function DestinationReport() {
   const handleSearchFlight = async (e) => {
     e.preventDefault();
     if (!searchFlightNumber.trim()) return;
-    
+
     setFlightDetailsLoading(true);
     setFlightDetailsError('');
     setFlightDetails(null);
     setActivePopoverSeat(null);
-    
+
     try {
       const formattedFlightNumber = searchFlightNumber.trim().toUpperCase().replace(/\s+/g, '');
       const response = await fetch(`http://localhost:8080/api/flight-details/${formattedFlightNumber}`);
@@ -74,10 +74,10 @@ export default function DestinationReport() {
   const renderSeat = (rowNum, col) => {
     const seatId = `${rowNum}${col}`;
     const isBusiness = BUSINESS_ROWS.includes(rowNum);
-    
+
     const passenger = flightDetails?.bookedSeats?.find(b => b.seatNumber === seatId);
     const isOccupied = !!passenger;
-    
+
     let seatColorClass = "";
     if (isOccupied) {
       if (passenger.seatClass === 'first') {
@@ -108,9 +108,9 @@ export default function DestinationReport() {
             <div className="relative w-72 overflow-hidden rounded-2xl bg-white dark:bg-slate-800 p-5 shadow-[0_15px_30px_rgba(0,0,0,0.15)] border border-slate-200 dark:border-slate-700 text-right" dir="rtl">
               {/* Accent header */}
               <div className={`absolute top-0 left-0 right-0 h-1.5 ${passenger.seatClass === 'first' ? 'bg-purple-600' : isBusiness ? 'bg-amber-500' : 'bg-blue-600'}`} />
-              
+
               {/* Close button */}
-              <button 
+              <button
                 onClick={(e) => { e.stopPropagation(); setActivePopoverSeat(null); }}
                 className="absolute top-3 left-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
               >
@@ -230,7 +230,13 @@ export default function DestinationReport() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#f8fafc] dark:bg-[#080d19] text-[#0f172a] dark:text-slate-100 transition-colors duration-300 relative" dir="rtl">
+    <div className="flex min-h-screen bg-[#f8faff] dark:bg-[#080d19] text-slate-900 dark:text-slate-100 transition-colors duration-300 relative overflow-hidden" dir="rtl">
+      {/* تأثيرات التوهج الشبكي (Mesh Gradients) */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-blue-500/5 dark:bg-blue-500/10 blur-[120px] transition-all" />
+        <div className="absolute bottom-[-10%] right-[-10%] h-[600px] w-[600px] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-[120px] transition-all" />
+      </div>
+
       {/* القائمة الجانبية */}
       <div className="print:hidden">
         <Sidebar />
@@ -238,42 +244,33 @@ export default function DestinationReport() {
 
       {/* المحتوى الرئيسي */}
       <main className="flex-1 mr-72 print:mr-0 p-8 print:p-0 relative z-10 min-h-screen">
-        
+
         {/* الترويسة (Header) */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-          <div className="flex flex-col md:flex-row md:items-center gap-4">
-            <div>
-              <h1 className="text-3xl font-black tracking-tight text-[#0f172a] dark:text-white">
-                تحليل الوجهات وحركة الطيران
-              </h1>
-              <p className="text-slate-500 dark:text-slate-400 text-xs font-bold mt-1">
-                إحصائيات تفصيلية حول المدن الأكثر طلباً ومعدلات إشغال المقاعد للرحلات الجوية لشركة {user?.airline_name || 'الشركة'}
-              </p>
-            </div>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 print:hidden animate-in fade-in slide-in-from-top-4 duration-500">
+          <div>
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+              تحليل الوجهات ونسب الإشغال
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 text-xs font-bold mt-1">
+              متابعة أكثر الوجهات طلباً ومعدلات إشغال مقاعد الطائرات ومخطط المقاعد التفاعلي لشركة {user?.airline_name || 'الشركة'}.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => window.print()}
-              className="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 hover:text-blue-900 dark:hover:text-blue-400 hover:border-blue-900 rounded-xl shadow-sm hover:shadow transition-all duration-200 print:hidden text-xs font-bold"
+              className="flex items-center gap-2 px-4 py-2 border border-slate-250 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-500 rounded-xl shadow-sm hover:shadow transition-all duration-200 text-xs font-bold cursor-pointer"
             >
               <Printer size={16} />
-              طباعة التقرير / حفظ كـ PDF
+              طباعة التقرير / PDF
             </button>
-          </div>
-
-          <div className="flex items-center gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-2.5 rounded-2xl shadow-sm print:hidden">
-            <div className="h-8 w-8 rounded-lg bg-slate-50 dark:bg-slate-800 p-1 flex items-center justify-center border border-slate-100 dark:border-slate-700">
-              <img src={getCompanyLogo()} alt="Airline Logo" className="h-full w-full object-contain" />
-            </div>
-            <span className="text-xs font-black tracking-widest text-slate-700 dark:text-slate-350 uppercase">
-              حركة الطيران
-            </span>
           </div>
         </div>
 
         {/* المخطط البياني والجدول */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           {/* المخطط البياني: الوجهات الأكثر طلباً */}
-          <div className="lg:col-span-1 group rounded-3xl bg-white dark:bg-slate-900 p-8 border border-slate-200/60 dark:border-slate-800/80 shadow-sm transition-all hover:shadow-md flex flex-col justify-between">
+          <div className="lg:col-span-1 group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl flex flex-col justify-between">
             <div>
               <h3 className="text-xs font-black tracking-widest text-slate-500 dark:text-slate-400 mb-6 uppercase flex items-center gap-2">
                 <MapPin size={16} className="text-blue-600 dark:text-blue-400" />
@@ -284,22 +281,22 @@ export default function DestinationReport() {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={topDestinationsData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
-                    <XAxis 
-                      dataKey="name" 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fontSize: 11, fontWeight: 700, fill: labelColor }} 
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fontWeight: 700, fill: labelColor }}
                     />
-                    <YAxis 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fontSize: 11, fontWeight: 700, fill: labelColor }} 
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fontWeight: 700, fill: labelColor }}
                     />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: tooltipBg, 
-                        borderColor: tooltipBorder, 
-                        borderRadius: '12px', 
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: tooltipBg,
+                        borderColor: tooltipBorder,
+                        borderRadius: '12px',
                         boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                         color: isDarkMode ? '#ffffff' : '#0f172a',
                         fontFamily: 'inherit',
@@ -336,7 +333,7 @@ export default function DestinationReport() {
           </div>
 
           {/* جدول معدلات إشغال المقاعد */}
-          <div className="lg:col-span-2 group rounded-3xl bg-white dark:bg-slate-900 p-8 border border-slate-200/60 dark:border-slate-800/80 shadow-sm transition-all hover:shadow-md">
+          <div className="lg:col-span-2 group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xs font-black tracking-widest text-slate-500 dark:text-slate-400 uppercase flex items-center gap-2">
                 <Users size={16} className="text-emerald-600 dark:text-emerald-400" />
@@ -371,7 +368,7 @@ export default function DestinationReport() {
                             {item.rate}%
                           </span>
                           <div className="w-24 bg-slate-100 dark:bg-slate-850 rounded-full h-2 overflow-hidden border border-slate-200/40 dark:border-slate-800">
-                            <div 
+                            <div
                               className={`h-full rounded-full transition-all duration-500 ${getProgressBarColor(item.rate)}`}
                               style={{ width: `${item.rate}%` }}
                             />
@@ -395,7 +392,7 @@ export default function DestinationReport() {
         </div>
 
         {/* قسم مخطط المقاعد التفاعلي */}
-        <div className="mt-8 rounded-3xl bg-white dark:bg-slate-900 p-8 border border-slate-200/60 dark:border-slate-800 shadow-sm print:hidden">
+        <div className="mt-8 rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl print:hidden">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-6 border-b border-slate-100 dark:border-slate-800">
             <div>
               <h3 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
@@ -456,10 +453,10 @@ export default function DestinationReport() {
           {/* عرض تفاصيل الرحلة ومخطط المقاعد عند العثور على البيانات */}
           {flightDetails && !flightDetailsLoading && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              
+
               {/* البيانات والإحصائيات */}
               <div className="lg:col-span-1 space-y-6">
-                
+
                 {/* بطاقة تفاصيل الرحلة */}
                 <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 p-5">
                   <span className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider">تفاصيل الرحلة</span>
@@ -505,7 +502,7 @@ export default function DestinationReport() {
                 {/* بطاقات السعة والإشغال */}
                 <div className="space-y-3">
                   <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">سعة وإشغال الدرجات</span>
-                  
+
                   {/* درجة رجال الأعمال */}
                   <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 p-4 bg-white dark:bg-slate-900 flex justify-between items-center shadow-sm">
                     <div>
@@ -575,7 +572,7 @@ export default function DestinationReport() {
               {/* مخطط الطائرة */}
               <div className="lg:col-span-2 flex flex-col items-center">
                 <div className="relative w-full max-w-[420px] bg-slate-50 dark:bg-slate-900/40 rounded-3xl p-6 border border-slate-100 dark:border-slate-800/60 shadow-inner overflow-hidden">
-                  
+
                   {/* Cockpit Visual */}
                   <div className="w-full flex flex-col items-center mb-8 border-b border-dashed border-slate-200 dark:border-slate-800 pb-6">
                     <div className="w-24 h-12 bg-slate-200 dark:bg-slate-800 rounded-t-full flex items-center justify-center relative shadow-sm border border-slate-300/50 dark:border-slate-700/50">
@@ -603,7 +600,7 @@ export default function DestinationReport() {
                           <div className="flex gap-2.5">
                             {leftCols.map(col => renderSeat(rowNum, col))}
                           </div>
-                          
+
                           <div className="w-10 h-9 rounded-xl flex items-center justify-center bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-800 text-[10px] font-black text-slate-400 shadow-sm">
                             {rowNum}
                           </div>

@@ -5,8 +5,13 @@ import mysql from 'mysql2/promise';
 import fs from 'fs';
 import path from 'path';
 import puppeteer from 'puppeteer';
+import Stripe from 'stripe';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const stripe = stripeSecretKey ? new Stripe(stripeSecretKey) : null;
@@ -682,6 +687,58 @@ app.get('/api/bookings/pending', async (req, res) => {
   }
 });
 
+// GET dashboard stats for a specific company (strict Data Isolation)
+app.get('/api/company/dashboard-stats', async (req, res) => {
+  const { airline_code } = req.query;
+  
+  if (!airline_code || airline_code === 'undefined' || airline_code === 'null' || airline_code.toString().trim() === '') {
+    return res.status(400).json({ success: false, error: 'airline_code query parameter is required for data isolation.' });
+  }
+
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    
+    // 1. Total flights count
+    const [[{ totalFlights }]] = await connection.execute(
+      'SELECT COUNT(*) as totalFlights FROM flights WHERE airline_code = ?',
+      [airline_code]
+    );
+
+    // 2. Total bookings count (not canceled)
+    const [[{ totalBookingsCount }]] = await connection.execute(`
+      SELECT COUNT(*) as totalBookingsCount 
+      FROM bookings b
+      JOIN flights f ON b.flight_id = f.id_flights
+      WHERE f.airline_code = ? AND b.status != 'canceled'
+    `, [airline_code]);
+
+    // 3. Total revenue sum (successful payments)
+    const [[{ totalRevenueSum }]] = await connection.execute(`
+      SELECT COALESCE(SUM(p.amount), 0) as totalRevenueSum 
+      FROM payments p
+      JOIN bookings b ON p.booking_id = b.id_bookings
+      JOIN flights f ON b.flight_id = f.id_flights
+      WHERE f.airline_code = ? AND p.payment_status = 'success'
+    `, [airline_code]);
+
+    res.json({
+      success: true,
+      stats: {
+        totalFlights: Number(totalFlights) || 0,
+        totalBookingsCount: Number(totalBookingsCount) || 0,
+        totalRevenueSum: Number(totalRevenueSum) || 0
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching company stats:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+
 // GET all bookings for admin
 app.get('/api/admin/bookings', async (req, res) => {
   const { date, year, month } = req.query;
@@ -820,9 +877,9 @@ async function companyLoginHandler(req, res) {
   try {
     connection = await mysql.createConnection(getDbConfig());
     const [rows] = await connection.execute(
-      `SELECT a.*, c.airline_name, c.logo_url, c.id_airline
+      `SELECT a.*, c.company_name AS airline_name, NULL AS logo_url, c.id_company AS id_airline
        FROM admins a
-       LEFT JOIN airline_companies c ON a.airlineId_airline = c.id_airline
+       LEFT JOIN companies c ON a.airline_code = c.airline_code
        WHERE a.email = ? AND a.password = ?`,
       [email, password]
     );
@@ -940,7 +997,7 @@ app.get('/api/bookings/:id/ticket', async (req, res) => {
     const [rows] = await connection.execute(
       `SELECT b.id_bookings, b.booking_reference, b.status AS booking_status, b.booking_date, b.final_price,
               f.flight_number, f.airline_code, f.airportOrigin_code, f.airportDestination_code, f.departure_time, f.arrival_time, f.aircraft_type,
-              c.airline_name,
+              c.company_name AS airline_name,
               p.payment_method, p.payment_status, p.gateway_response,
               pass.name AS passenger_name, pass.passport_number,
               s.seat_class, s.seat_number,
@@ -949,7 +1006,7 @@ app.get('/api/bookings/:id/ticket', async (req, res) => {
        JOIN bookings_passengers bp ON b.id_bookings = bp.booking_id
        JOIN passengers pass ON bp.passenger_id = pass.id_passengers
        JOIN flights f ON b.flight_id = f.id_flights
-       LEFT JOIN airline_companies c ON f.airline_id = c.id_airline
+       LEFT JOIN companies c ON f.airline_code = c.airline_code
        LEFT JOIN payments p ON p.booking_id = b.id_bookings
        LEFT JOIN seats s ON bp.seat_id = s.id_seats
        LEFT JOIN baggage bg ON (bp.baggage_id = bg.id_baggage OR (bg.booking_id = b.id_bookings AND bg.passenger_id = pass.id_passengers))
@@ -1359,16 +1416,16 @@ async function searchFlightsHandler(req, res) {
   }
 }
 
-// PUT /api/flights/:id — RESTful (replaces legacy POST)
-app.put('/api/flights/:id', async (req, res) => {
+// PUT/POST /api/flights/:id — RESTful (supports legacy POST and updates status)
+const handleFlightUpdate = async (req, res) => {
   const f = req.body;
   const { id } = req.params;
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
     await connection.execute(
-      'UPDATE flights SET flight_number = ?, airline_code = ?, airline_id = ?, airportOrigin_code = ?, airportDestination_code = ?, departure_time = ?, arrival_time = ?, aircraft_type = ?, total_seats = ?, available_seats = ?, price = ?, duration = TIMESTAMPDIFF(MINUTE, ?, ?), `update` = NOW() WHERE id_flights = ?',
-      [f.flight_number, f.airline_code, f.airline_id || 1, f.airportOrigin_code, f.airportDestination_code, f.departure_time, f.arrival_time, f.aircraft_type, f.total_seats, f.available_seats, f.price, f.departure_time, f.arrival_time, id]
+      'UPDATE flights SET flight_number = ?, airline_code = ?, airline_id = ?, airportOrigin_code = ?, airportDestination_code = ?, departure_time = ?, arrival_time = ?, aircraft_type = ?, total_seats = ?, available_seats = ?, price = ?, status = ?, duration = TIMESTAMPDIFF(MINUTE, ?, ?), `update` = NOW() WHERE id_flights = ?',
+      [f.flight_number, f.airline_code, f.airline_id || 1, f.airportOrigin_code, f.airportDestination_code, f.departure_time, f.arrival_time, f.aircraft_type, f.total_seats, f.available_seats, f.price, f.status || 'active', f.departure_time, f.arrival_time, id]
     );
     res.json({ success: true });
   } catch (error) {
@@ -1377,7 +1434,10 @@ app.put('/api/flights/:id', async (req, res) => {
   } finally {
     if (connection) await connection.end();
   }
-});
+};
+
+app.put('/api/flights/:id', handleFlightUpdate);
+app.post('/api/flights/:id', handleFlightUpdate);
 
 // Create a new booking
 app.post('/api/bookings', async (req, res) => {
@@ -1832,7 +1892,7 @@ app.get('/api/company/analytics-stats', async (req, res) => {
       id: r.booking_reference,
       route: `${arabicCityMap[r.airportOrigin_code] || r.airportOrigin_code} - ${arabicCityMap[r.airportDestination_code] || r.airportDestination_code}`,
       passenger: r.passenger || 'مسافر',
-      total: `$${Number(r.final_price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      total: `$${Number(r.final_price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       status: r.status === 'certain' ? 'مؤكد' : r.status === 'temporary' ? 'مؤقت' : 'ملغي',
       badgeColor: r.status === 'certain' ? 'green' : r.status === 'temporary' ? 'yellow' : 'red'
     }));

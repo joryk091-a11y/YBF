@@ -880,13 +880,13 @@ const AdminDashboard = () => {
                                         {[
                                             { 
                                                 label: selectedDashboardMonth ? `تذاكر شهر ${getArabicMonthName(selectedDashboardMonth)}` : `تذاكر سنة ${selectedDashboardYear}`, 
-                                                value: stats.totalTickets.toLocaleString(), 
+                                                value: stats.totalTickets.toLocaleString('en-US'), 
                                                 icon: Ticket, 
                                                 color: 'text-blue-600 bg-blue-500/10' 
                                             },
                                             { 
                                                 label: selectedDashboardMonth ? `إيرادات شهر ${getArabicMonthName(selectedDashboardMonth)}` : `إيرادات سنة ${selectedDashboardYear}`, 
-                                                value: `$${stats.totalRevenue.toLocaleString()}`, 
+                                                value: `$${stats.totalRevenue.toLocaleString('en-US')}`, 
                                                 icon: DollarSign, 
                                                 color: 'text-emerald-600 bg-emerald-500/10' 
                                             },
@@ -898,7 +898,7 @@ const AdminDashboard = () => {
                                             },
                                             { 
                                                 label: selectedDashboardMonth ? `الركاب النشطين بالشهر` : `الركاب النشطين بالسنة`, 
-                                                value: stats.activePassengers.toLocaleString(), 
+                                                value: stats.activePassengers.toLocaleString('en-US'), 
                                                 icon: Users, 
                                                 color: 'text-violet-600 bg-violet-500/10' 
                                             }
@@ -953,7 +953,7 @@ const AdminDashboard = () => {
                                                         />
                                                         <Tooltip 
                                                             formatter={(value, name) => {
-                                                                if (name === 'revenue') return [`$${Number(value).toLocaleString()}`, 'إجمالي المبيعات'];
+                                                                if (name === 'revenue') return [`$${Number(value).toLocaleString('en-US')}`, 'إجمالي المبيعات'];
                                                                 if (name === 'tickets') return [`${value} تذكرة`, 'إجمالي الحجوزات'];
                                                                 return [value, name];
                                                             }}
@@ -1124,7 +1124,7 @@ const AdminDashboard = () => {
                                                                     <div className={`h-full rounded-full ${item.color.split(' ')[0]}`} style={{ width: `${pct}%` }} />
                                                                 </div>
                                                                 <div className="text-[10px] font-bold text-slate-400 text-left">
-                                                                    الحجم المالي: ${Number(item.amount).toLocaleString()}
+                                                                    الحجم المالي: ${Number(item.amount).toLocaleString('en-US')}
                                                                 </div>
                                                             </div>
                                                         );
@@ -1302,13 +1302,13 @@ const AdminDashboard = () => {
                                                                         <span className="bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg text-indigo-600 dark:text-indigo-400 text-[10px] font-black">{flight.airportDestination_code}</span>
                                                                     </td>
                                                                     <td className="py-5 px-4 font-bold text-slate-500">
-                                                                        {new Date(flight.departure_time).toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' })}
+                                                                        {new Date(flight.departure_time).toLocaleString('ar-EG-u-nu-latn', { dateStyle: 'short', timeStyle: 'short' })}
                                                                     </td>
                                                                     <td className="py-5 px-4 font-bold text-slate-500">{flight.aircraft_type || 'غير محدد'}</td>
                                                                     <td className="py-5 px-4 text-center font-black text-slate-700 dark:text-slate-200">
                                                                         {flight.available_seats} / {flight.total_seats}
                                                                     </td>
-                                                                    <td className="py-5 px-4 font-black text-blue-600 dark:text-blue-400">${Number(flight.price || 0).toLocaleString()}</td>
+                                                                    <td className="py-5 px-4 font-black text-blue-600 dark:text-blue-400">${Number(flight.price || 0).toLocaleString('en-US')}</td>
                                                                 </tr>
                                                             ))
                                                         ) : (
@@ -1474,9 +1474,9 @@ const AdminDashboard = () => {
                                                     {/* 1. Revenue */}
                                                     <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
                                                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedReportMonth ? `إيرادات شهر ${getArabicMonthName(selectedReportMonth)} ${selectedReportYear}` : `إيرادات سنة ${selectedReportYear}`}</p>
-                                                        <h4 className="text-3xl font-black text-emerald-500">${stats.totalRevenue.toLocaleString()}</h4>
+                                                        <h4 className="text-3xl font-black text-emerald-500">${stats.totalRevenue.toLocaleString('en-US')}</h4>
                                                         <p className="text-[11px] font-bold text-slate-500 border-b border-slate-200/60 dark:border-slate-700/60 pb-3">
-                                                            يعادل: <strong className="text-slate-700 dark:text-slate-350">{(stats.totalRevenue * Number(exchangeRate)).toLocaleString()} ريال يمني</strong>
+                                                            يعادل: <strong className="text-slate-700 dark:text-slate-350">{(stats.totalRevenue * Number(exchangeRate)).toLocaleString('en-US')} ريال يمني</strong>
                                                         </p>
                                                         {stats.companyBreakdown && stats.companyBreakdown.length > 0 && (
                                                             <div className="space-y-2 pt-1">
@@ -1486,10 +1486,10 @@ const AdminDashboard = () => {
                                                                     const compRevenueYer = Math.round(compRevenue * Number(exchangeRate));
                                                                     return (
                                                                         <div key={comp.airline_code} className="flex justify-between items-center text-xs border-b border-dashed border-slate-200/40 dark:border-slate-800/40 pb-1.5 last:border-0 last:pb-0">
-                                                                            <span className="font-bold text-slate-650 dark:text-slate-350">{comp.company_name || comp.airline_code}</span>
+                                                                            <span className="font-bold text-slate-655 dark:text-slate-355">{comp.company_name || comp.airline_code}</span>
                                                                             <div className="text-left font-black text-slate-800 dark:text-slate-100">
-                                                                                <span>${compRevenue.toLocaleString()}</span>
-                                                                                <span className="text-[9px] font-bold text-slate-455 mr-2">({compRevenueYer.toLocaleString()} ر.ي)</span>
+                                                                                <span>${compRevenue.toLocaleString('en-US')}</span>
+                                                                                <span className="text-[9px] font-bold text-slate-455 mr-2">({compRevenueYer.toLocaleString('en-US')} ر.ي)</span>
                                                                             </div>
                                                                         </div>
                                                                     );
@@ -1501,9 +1501,9 @@ const AdminDashboard = () => {
                                                     {/* 2. Tickets */}
                                                     <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
                                                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedReportMonth ? `تذاكر شهر ${getArabicMonthName(selectedReportMonth)} ${selectedReportYear}` : `تذاكر سنة ${selectedReportYear}`}</p>
-                                                        <h4 className="text-3xl font-black text-blue-500">{stats.totalTickets.toLocaleString()} تذكرة</h4>
+                                                        <h4 className="text-3xl font-black text-blue-500">{stats.totalTickets.toLocaleString('en-US')} تذكرة</h4>
                                                         <p className="text-[11px] font-bold text-slate-500 border-b border-slate-200/60 dark:border-slate-700/60 pb-3">
-                                                            الركاب النشطين بالفترة: <strong className="text-slate-700 dark:text-slate-350">{stats.activePassengers.toLocaleString()} مسافر</strong>
+                                                            الركاب النشطين بالفترة: <strong className="text-slate-700 dark:text-slate-350">{stats.activePassengers.toLocaleString('en-US')} مسافر</strong>
                                                         </p>
                                                         {stats.companyBreakdown && stats.companyBreakdown.length > 0 && (
                                                             <div className="space-y-2 pt-1">
@@ -1512,8 +1512,8 @@ const AdminDashboard = () => {
                                                                     const compTickets = Number(comp.tickets) || 0;
                                                                     return (
                                                                         <div key={comp.airline_code} className="flex justify-between items-center text-xs border-b border-dashed border-slate-200/40 dark:border-slate-800/40 pb-1.5 last:border-0 last:pb-0">
-                                                                            <span className="font-bold text-slate-655 dark:text-slate-350">{comp.company_name || comp.airline_code}</span>
-                                                                            <span className="font-black text-slate-850 dark:text-slate-100">{compTickets.toLocaleString()} تذكرة</span>
+                                                                            <span className="font-bold text-slate-655 dark:text-slate-355">{comp.company_name || comp.airline_code}</span>
+                                                                            <span className="font-black text-slate-850 dark:text-slate-100">{compTickets.toLocaleString('en-US')} تذكرة</span>
                                                                         </div>
                                                                     );
                                                                 })}
@@ -1524,9 +1524,9 @@ const AdminDashboard = () => {
                                                     {/* 3. Estimated profit */}
                                                     <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
                                                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedReportMonth ? `أرباح شهر ${getArabicMonthName(selectedReportMonth)} ${selectedReportYear} (عمولة ${markupRate}%)` : `أرباح سنة ${selectedReportYear} (عمولة ${markupRate}%)`}</p>
-                                                        <h4 className="text-3xl font-black text-indigo-500">${(stats.totalRevenue * (Number(markupRate) / 100)).toLocaleString()}</h4>
+                                                        <h4 className="text-3xl font-black text-indigo-500">${(stats.totalRevenue * (Number(markupRate) / 100)).toLocaleString('en-US')}</h4>
                                                         <p className="text-[11px] font-bold text-slate-500 border-b border-slate-200/60 dark:border-slate-700/60 pb-3">
-                                                            يعادل: <strong className="text-slate-700 dark:text-slate-350">{Math.round((stats.totalRevenue * (Number(markupRate) / 100)) * Number(exchangeRate)).toLocaleString()} ريال يمني</strong>
+                                                            يعادل: <strong className="text-slate-700 dark:text-slate-350">{Math.round((stats.totalRevenue * (Number(markupRate) / 100)) * Number(exchangeRate)).toLocaleString('en-US')} ريال يمني</strong>
                                                         </p>
                                                         {stats.companyBreakdown && stats.companyBreakdown.length > 0 && (
                                                             <div className="space-y-2 pt-1">
@@ -1665,7 +1665,7 @@ const AdminDashboard = () => {
                                                                         <td className="py-3 px-2 font-black text-blue-600">#{booking.booking_reference}</td>
                                                                         <td className="py-3 px-2 font-bold text-slate-700 dark:text-white">{booking.lead_passenger || 'غير محدد'}</td>
                                                                         <td className="py-3 px-2 font-bold text-slate-500">{booking.flight_number}</td>
-                                                                        <td className="py-3 px-2 font-black text-slate-900 dark:text-white">${Number(booking.final_price).toLocaleString()}</td>
+                                                                        <td className="py-3 px-2 font-black text-slate-900 dark:text-white">${Number(booking.final_price).toLocaleString('en-US')}</td>
                                                                         <td className="py-3 px-2 font-bold text-slate-400">{new Date(booking.booking_date).toLocaleDateString('ar-YE')}</td>
                                                                         <td className="py-3 px-2 font-bold">
                                                                             <span className={`px-2 py-0.5 rounded text-[10px] ${
@@ -1718,7 +1718,7 @@ const AdminDashboard = () => {
                                                                         <td className="py-3 px-2 font-bold text-slate-400">
                                                                             {new Date(flight.departure_time).toLocaleString('ar-YE', { dateStyle: 'short', timeStyle: 'short' })}
                                                                         </td>
-                                                                        <td className="py-3 px-2 font-black text-blue-600 dark:text-blue-400">${Number(flight.price || 0).toLocaleString()}</td>
+                                                                        <td className="py-3 px-2 font-black text-blue-600 dark:text-blue-400">${Number(flight.price || 0).toLocaleString('en-US')}</td>
                                                                     </tr>
                                                                 ))}
                                                             </tbody>
@@ -1895,7 +1895,7 @@ const AdminDashboard = () => {
                                                                         </div>
                                                                     </td>
                                                                     <td className="py-5 px-4 font-bold text-slate-500">
-                                                                        {new Date(user.created_at).toLocaleDateString('ar-EG', { dateStyle: 'short' })}
+                                                                        {new Date(user.created_at).toLocaleDateString('ar-EG-u-nu-latn', { dateStyle: 'short' })}
                                                                     </td>
                                                                     <td className="py-5 px-4">
                                                                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black bg-emerald-500/10 text-emerald-600">
@@ -2034,10 +2034,10 @@ const AdminDashboard = () => {
                                                                         </span>
                                                                     </td>
                                                                     <td className="py-5 px-4 font-bold text-slate-500">
-                                                                        {company.created_at ? new Date(company.created_at).toLocaleDateString('ar-EG', { dateStyle: 'short' }) : 'غير متوفر'}
+                                                                        {company.created_at ? new Date(company.created_at).toLocaleDateString('ar-EG-u-nu-latn', { dateStyle: 'short' }) : 'غير متوفر'}
                                                                     </td>
                                                                     <td className="py-5 px-4 font-bold text-slate-500">
-                                                                        {company.last_login ? new Date(company.last_login).toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' }) : 'لم يسجل دخول بعد'}
+                                                                        {company.last_login ? new Date(company.last_login).toLocaleString('ar-EG-u-nu-latn', { dateStyle: 'short', timeStyle: 'short' }) : 'لم يسجل دخول بعد'}
                                                                     </td>
                                                                     <td className="py-5 px-4 text-left">
                                                                         <div className="flex items-center justify-end gap-2">
@@ -2213,7 +2213,7 @@ const AdminDashboard = () => {
                                                                             </p>
                                                                             <p className="text-[9px] text-slate-400 flex items-center gap-1">
                                                                                 <Calendar size={10} />
-                                                                                الإقلاع: {new Date(booking.departure_time).toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' })}
+                                                                                الإقلاع: {new Date(booking.departure_time).toLocaleString('ar-EG-u-nu-latn', { dateStyle: 'short', timeStyle: 'short' })}
                                                                             </p>
                                                                         </div>
                                                                     </td>
@@ -2232,12 +2232,12 @@ const AdminDashboard = () => {
 
                                                                     {/* Total Price */}
                                                                     <td className="py-5 px-4 font-black text-blue-600 dark:text-blue-400">
-                                                                        ${parseFloat(booking.final_price || 0).toLocaleString()}
+                                                                        ${parseFloat(booking.final_price || 0).toLocaleString('en-US')}
                                                                     </td>
 
                                                                     {/* Booking Date */}
                                                                     <td className="py-5 px-4 font-bold text-slate-500">
-                                                                        {new Date(booking.booking_date).toLocaleDateString('ar-EG', { dateStyle: 'medium' })}
+                                                                        {new Date(booking.booking_date).toLocaleDateString('ar-EG-u-nu-latn', { dateStyle: 'medium' })}
                                                                     </td>
 
                                                                     {/* Status Badges */}

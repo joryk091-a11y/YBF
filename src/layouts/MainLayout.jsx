@@ -177,7 +177,7 @@ function MainLayout() {
                           {msg.message || msg.text}
                         </div>
                         <span className="text-[8px] text-slate-400 mt-1 font-bold">
-                          {new Date(msg.created_at || msg.time).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                          {new Date(msg.created_at || msg.time).toLocaleTimeString('ar-EG-u-nu-latn', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
                     ))}

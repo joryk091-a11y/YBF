@@ -59,7 +59,7 @@ function NotificationDropdown({ userId, onClose }) {
     if (diff < 60) return 'الآن'
     if (diff < 3600) return `منذ ${Math.floor(diff / 60)} د`
     if (diff < 86400) return `منذ ${Math.floor(diff / 3600)} س`
-    return d.toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' })
+    return d.toLocaleDateString('ar-EG-u-nu-latn', { month: 'short', day: 'numeric' })
   }
 
   return (

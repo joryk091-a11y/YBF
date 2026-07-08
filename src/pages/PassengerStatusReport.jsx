@@ -149,7 +149,13 @@ export default function PassengerStatusReport() {
   const tooltipTextColor = isDark ? '#ffffff' : '#0f172a';
 
   return (
-    <div className="flex min-h-screen bg-[#f8fafc] dark:bg-slate-950 text-[#0f172a] dark:text-white transition-colors duration-300 relative" dir="rtl">
+    <div className="flex min-h-screen bg-[#f8faff] dark:bg-[#080d19] text-slate-900 dark:text-slate-100 transition-colors duration-300 relative overflow-hidden" dir="rtl">
+      {/* تأثيرات التوهج الشبكي (Mesh Gradients) */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-blue-500/5 dark:bg-blue-500/10 blur-[120px] transition-all" />
+        <div className="absolute bottom-[-10%] right-[-10%] h-[600px] w-[600px] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-[120px] transition-all" />
+      </div>
+
       {/* القائمة الجانبية */}
       <div className="print:hidden">
         <Sidebar />
@@ -157,42 +163,33 @@ export default function PassengerStatusReport() {
 
       {/* المحتوى الرئيسي */}
       <main className="flex-1 mr-72 print:mr-0 p-8 print:p-0 relative z-10 min-h-screen">
-        
+
         {/* الترويسة (Header) */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-          <div className="flex flex-col md:flex-row md:items-center gap-4">
-            <div>
-              <h1 className="text-3xl font-black tracking-tight text-[#0f172a] dark:text-white">
-                تقرير الحالة والركاب
-              </h1>
-              <p className="text-slate-500 dark:text-slate-400 text-xs font-bold mt-1">
-                متابعة وتحليل حالات الحجز وأوقات الذروة التسويقية لشركة {user?.airline_name || 'الشركة'}
-              </p>
-            </div>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 print:hidden animate-in fade-in slide-in-from-top-4 duration-500">
+          <div>
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+              حالة الركاب وحركة الحجوزات
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 text-xs font-bold mt-1">
+              تحليل تفصيلي لحالات الحجز (مؤكد/انتظار/ملغى)، أوقات الذروة وتفاصيل المسافرين الحية لشركة {user?.airline_name || 'الشركة'}.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => window.print()}
-              className="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:text-blue-900 dark:hover:text-blue-400 hover:border-blue-900 rounded-xl shadow-sm hover:shadow transition-all duration-200 print:hidden text-xs font-bold"
+              className="flex items-center gap-2 px-4 py-2 border border-slate-250 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-500 rounded-xl shadow-sm hover:shadow transition-all duration-200 text-xs font-bold cursor-pointer print:hidden"
             >
               <Printer size={16} />
-              طباعة التقرير / حفظ كـ PDF
+              طباعة التقرير / PDF
             </button>
-          </div>
-
-          <div className="flex items-center gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-2.5 rounded-2xl shadow-sm print:hidden">
-            <div className="h-8 w-8 rounded-lg bg-slate-50 dark:bg-slate-800 p-1 flex items-center justify-center border border-slate-100 dark:border-slate-800">
-              <img src={getCompanyLogo()} alt="Airline Logo" className="h-full w-full object-contain" />
-            </div>
-            <span className="text-xs font-black tracking-widest text-slate-700 dark:text-slate-350 uppercase">
-              إحصائيات الركاب
-            </span>
           </div>
         </div>
 
         {/* المخططات والرسوم البيانية */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           {/* مخطط حالات الحجز (Donut Chart) */}
-          <div className="lg:col-span-1 group rounded-3xl bg-white dark:bg-slate-900 p-8 border border-slate-200/60 dark:border-slate-800/80 shadow-sm transition-all hover:shadow-md flex flex-col justify-between">
+          <div className="lg:col-span-1 group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl flex flex-col justify-between">
             <div>
               <h3 className="text-xs font-black tracking-widest text-slate-500 dark:text-slate-400 mb-6 uppercase flex items-center gap-2">
                 <Users size={16} className="text-blue-600 dark:text-blue-400" />
@@ -216,11 +213,11 @@ export default function PassengerStatusReport() {
                           <Cell key={`cell-${index}`} fill={getStatusColor(entry.name)} />
                         ))}
                       </Pie>
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: tooltipBg, 
-                          borderColor: tooltipBorder, 
-                          borderRadius: '12px', 
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: tooltipBg,
+                          borderColor: tooltipBorder,
+                          borderRadius: '12px',
                           color: tooltipTextColor,
                           fontFamily: 'inherit',
                           direction: 'rtl'
@@ -257,7 +254,7 @@ export default function PassengerStatusReport() {
           </div>
 
           {/* مخطط أوقات الذروة (Line Chart) */}
-          <div className="lg:col-span-2 group rounded-3xl bg-white dark:bg-slate-900 p-8 border border-slate-200/60 dark:border-slate-800/80 shadow-sm transition-all hover:shadow-md flex flex-col justify-between">
+          <div className="lg:col-span-2 group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl flex flex-col justify-between">
             <div>
               <h3 className="text-xs font-black tracking-widest text-slate-500 dark:text-slate-400 mb-6 uppercase flex items-center gap-2">
                 <CalendarDays size={16} className="text-indigo-600 dark:text-indigo-400" />
@@ -266,39 +263,39 @@ export default function PassengerStatusReport() {
 
               <div className="h-[280px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart 
-                    data={peakData} 
+                  <LineChart
+                    data={peakData}
                     margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                     onClick={handleChartClick}
                     style={{ cursor: 'pointer' }}
                   >
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
-                    <XAxis 
-                      dataKey="day" 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fontSize: 11, fontWeight: 700, fill: labelColor }} 
+                    <XAxis
+                      dataKey="day"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fontWeight: 700, fill: labelColor }}
                     />
-                    <YAxis 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fontSize: 11, fontWeight: 700, fill: labelColor }} 
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fontWeight: 700, fill: labelColor }}
                     />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: tooltipBg, 
-                        borderColor: tooltipBorder, 
-                        borderRadius: '12px', 
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: tooltipBg,
+                        borderColor: tooltipBorder,
+                        borderRadius: '12px',
                         color: tooltipTextColor,
                         fontFamily: 'inherit',
                         direction: 'rtl'
                       }}
                       formatter={(value) => [`${value} حجز`, 'عدد الحجوزات']}
                     />
-                    <Line 
-                      type="monotone" 
-                      dataKey="bookings" 
-                      stroke="#2563eb" 
+                    <Line
+                      type="monotone"
+                      dataKey="bookings"
+                      stroke="#2563eb"
                       strokeWidth={3}
                       dot={{ r: 4, strokeWidth: 2, fill: isDark ? '#1e293b' : '#ffffff' }}
                       activeDot={{ r: 6 }}
@@ -316,13 +313,12 @@ export default function PassengerStatusReport() {
                     <button
                       key={d}
                       onClick={() => handleChartClick({ activeLabel: d })}
-                      className={`px-3 py-1.5 rounded-xl text-[10px] font-black transition-all ${
-                        isSelected 
-                          ? 'bg-blue-600 text-white shadow'
-                          : hasBookings 
-                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40'
-                            : 'bg-slate-50 dark:bg-slate-800/40 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
+                      className={`px-3 py-1.5 rounded-xl text-[10px] font-black transition-all ${isSelected
+                        ? 'bg-blue-600 text-white shadow'
+                        : hasBookings
+                          ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40'
+                          : 'bg-slate-50 dark:bg-slate-800/40 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+                        }`}
                     >
                       {d}
                     </button>
@@ -339,19 +335,19 @@ export default function PassengerStatusReport() {
 
         {/* المستوى الثاني والثالث: تفاصيل تحليل الركاب والرحلات (Drill-down) */}
         {(selectedDay || selectedFlight) && (
-          <div className="mt-8 rounded-3xl bg-white dark:bg-slate-900 p-8 border border-slate-200/60 dark:border-slate-800/80 shadow-sm transition-all animate-in fade-in slide-in-from-bottom-4 duration-300">
-            
+          <div className="mt-8 rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-300">
+
             {/* الترويسة الفرعية للتحليل */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-6 gap-4">
               <div>
                 <h3 className="text-lg font-black tracking-tight text-[#0f172a] dark:text-white flex items-center gap-2">
                   <TrendingUp className="text-blue-600 dark:text-blue-400" size={20} />
-                  {selectedFlight 
-                    ? `تفاصيل ركاب الرحلة ${selectedFlight.flightNumber}` 
+                  {selectedFlight
+                    ? `تفاصيل ركاب الرحلة ${selectedFlight.flightNumber}`
                     : `الرحلات المجدولة يوم ${selectedDay}`}
                 </h3>
                 <p className="text-slate-400 dark:text-slate-500 text-xs font-bold mt-1">
-                  {selectedFlight 
+                  {selectedFlight
                     ? `مسار الرحلة: ${selectedFlight.route} | إجمالي الركاب الفعليين: ${selectedFlight.totalPassengers}`
                     : `عرض وتتبع الرحلات المجدولة وتحليل حركة الركاب`}
                 </p>
@@ -399,7 +395,7 @@ export default function PassengerStatusReport() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {flights.map((flight) => (
-                      <div 
+                      <div
                         key={flight.id}
                         onClick={() => handleFlightClick(flight)}
                         className="group relative cursor-pointer overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850/20 p-5 transition-all hover:border-blue-500/50 dark:hover:border-blue-400/50 hover:shadow-md hover:bg-white dark:hover:bg-slate-800"
@@ -456,7 +452,7 @@ export default function PassengerStatusReport() {
                       </thead>
                       <tbody>
                         {passengers.map((passenger) => (
-                          <tr 
+                          <tr
                             key={passenger.id}
                             className="border-b border-slate-50 dark:border-slate-800/40 hover:bg-slate-50/40 dark:hover:bg-slate-800/40 transition-colors"
                           >
@@ -500,21 +496,21 @@ export default function PassengerStatusReport() {
         {selectedPassenger && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* خلفية معتمة ناعمة (Backdrop blur) */}
-            <div 
+            <div
               onClick={() => setSelectedPassenger(null)}
               className="absolute inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm transition-opacity duration-300"
             />
-            
+
             {/* بطاقة النافذة المنبثقة */}
             <div className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 transition-all duration-300 animate-in fade-in zoom-in-95">
-              
+
               {/* الترويسة */}
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
                 <h3 className="text-base font-black text-slate-950 dark:text-white flex items-center gap-2">
                   <Users size={18} className="text-blue-600" />
                   ملف تفاصيل المسافر
                 </h3>
-                <button 
+                <button
                   onClick={() => setSelectedPassenger(null)}
                   className="rounded-full p-1.5 bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-850 dark:hover:text-white transition-all"
                 >
@@ -526,7 +522,7 @@ export default function PassengerStatusReport() {
 
               {/* بيانات الراكب والخدمات المربوطة */}
               <div className="space-y-4">
-                
+
                 {/* الاسم */}
                 <div className="bg-slate-50 dark:bg-slate-850/30 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/80">
                   <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 block mb-1 uppercase">الاسم الكامل للمسافر</span>
@@ -578,8 +574,8 @@ export default function PassengerStatusReport() {
                   {selectedPassenger.services && selectedPassenger.services.length > 0 ? (
                     <div className="flex flex-wrap gap-2 mt-1">
                       {selectedPassenger.services.map((srv, idx) => (
-                        <span 
-                          key={idx} 
+                        <span
+                          key={idx}
                           className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-805/30 text-[10px] font-black px-2.5 py-1 rounded-xl"
                         >
                           {srv}

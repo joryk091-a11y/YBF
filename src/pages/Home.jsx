@@ -257,10 +257,10 @@ function HomePage() {
               key={seat}
               disabled={isBooked}
               className={`h-8 w-8 rounded-lg text-[9px] font-black transition-all flex items-center justify-center ${isSelected
-                  ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20 scale-105'
-                  : isBooked
-                    ? 'bg-slate-100 dark:bg-slate-950 text-slate-350 dark:text-slate-700 cursor-not-allowed'
-                    : 'bg-slate-50 dark:bg-slate-850 hover:bg-amber-50 dark:hover:bg-amber-950 text-slate-700 dark:text-slate-300 border border-slate-200/40 dark:border-slate-800'
+                ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20 scale-105'
+                : isBooked
+                  ? 'bg-slate-100 dark:bg-slate-950 text-slate-350 dark:text-slate-700 cursor-not-allowed'
+                  : 'bg-slate-50 dark:bg-slate-850 hover:bg-amber-50 dark:hover:bg-amber-950 text-slate-700 dark:text-slate-300 border border-slate-200/40 dark:border-slate-800'
                 }`}
             >
               {seat}
@@ -703,8 +703,8 @@ function HomePage() {
                       onMouseEnter={() => setActiveStep(index)}
                       onClick={() => setActiveStep(index)}
                       className={`w-full flex items-start text-right gap-5 p-6 rounded-[2rem] border transition-all duration-500 cursor-pointer ${isActive
-                          ? 'bg-white dark:bg-slate-900 border-blue-500/30 dark:border-blue-500/20 shadow-[0_20px_50px_rgba(73,116,249,0.06)] scale-[1.01]'
-                          : 'bg-white/40 dark:bg-slate-950/20 border-slate-100 dark:border-slate-900/50 hover:bg-white/60 dark:hover:bg-slate-900/40'
+                        ? 'bg-white dark:bg-slate-900 border-blue-500/30 dark:border-blue-500/20 shadow-[0_20px_50px_rgba(73,116,249,0.06)] scale-[1.01]'
+                        : 'bg-white/40 dark:bg-slate-950/20 border-slate-100 dark:border-slate-900/50 hover:bg-white/60 dark:hover:bg-slate-900/40'
                         }`}
                     >
                       {/* Step Icon Container */}
@@ -771,8 +771,8 @@ function HomePage() {
                 >
                   <div
                     className={`group overflow-hidden rounded-[2rem] border transition-all duration-300 bg-white dark:bg-slate-900 ${isOpen
-                        ? 'border-blue-500/30 dark:border-blue-500/20 shadow-[0_20px_50px_rgba(73,116,249,0.04)]'
-                        : 'border-slate-100 dark:border-slate-800/80 hover:border-slate-350 dark:hover:border-slate-700 shadow-sm'
+                      ? 'border-blue-500/30 dark:border-blue-500/20 shadow-[0_20px_50px_rgba(73,116,249,0.04)]'
+                      : 'border-slate-100 dark:border-slate-800/80 hover:border-slate-350 dark:hover:border-slate-700 shadow-sm'
                       }`}
                   >
                     {/* Question Summary (Trigger) */}
@@ -782,8 +782,8 @@ function HomePage() {
                     >
                       <div className="flex items-center gap-4">
                         <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-black transition-colors ${isOpen
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400'
                           }`}>
                           0{index + 1}
                         </span>

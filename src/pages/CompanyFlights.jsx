@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../utils/AuthContext';
 import Sidebar from '../components/Sidebar';
 import {
@@ -16,9 +17,14 @@ import {
   FileSpreadsheet,
   Loader2,
   Users,
-  TrendingUp
+  TrendingUp,
+  Bell
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import logo from '../assets/logo.png';
+import yemeniaLogo from '../assets/Y.png';
+import balqisLogo from '../assets/B.png';
+import adenLogo from '../assets/F.png';
 
 const airportOptions = [
   { code: 'ADE', name: 'عدن (ADE)' },
@@ -45,6 +51,7 @@ const aircraftOptions = [
 
 export default function CompanyFlights() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const fileInputRef = useRef(null);
 
@@ -53,11 +60,38 @@ export default function CompanyFlights() {
   const [isImporting, setIsImporting] = useState(false);
   const [toast, setToast] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+  const [pendingCount, setPendingCount] = useState(0);
+
   // الحصول على كود واسم الشركة بشكل آمن
   const companyName = user?.airline_name || localStorage.getItem('companyName') || 'الشركة';
   const airlineCode = localStorage.getItem('airlineCode') || (user?.airline_id === 1 ? 'IY' : user?.airline_id === 2 ? 'BS' : 'FA');
   const airlineId = localStorage.getItem('companyId') || user?.airline_id || '';
+
+  const getCompanyLogo = () => {
+    if (user?.logo_url) return user.logo_url;
+    switch (airlineCode) {
+      case 'IY': return yemeniaLogo;
+      case 'BS': return balqisLogo;
+      case 'QA': return balqisLogo;
+      case 'QY': return adenLogo;
+      case 'DH': return adenLogo;
+      case 'QTB': return adenLogo;
+      default: return logo;
+    }
+  };
+
+  useEffect(() => {
+    if (airlineId) {
+      fetch(`http://localhost:8080/api/bookings/pending?airline_id=${airlineId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setPendingCount(data.bookings ? data.bookings.length : 0);
+          }
+        })
+        .catch(err => console.error('Error fetching pending count:', err));
+    }
+  }, [airlineId]);
 
   // رحلات شركة الطيران النشطة من قاعدة البيانات
   const [flights, setFlights] = useState([]);
@@ -132,7 +166,7 @@ export default function CompanyFlights() {
   // معالجة اختيار الملف وقراءته وحفظه في قاعدة البيانات حقيقياً
   const handleFileImport = (file) => {
     if (!file) return;
-    
+
     const fileExtension = file.name.split('.').pop().toLowerCase();
     if (fileExtension !== 'xlsx' && fileExtension !== 'csv') {
       setToast({ type: 'error', message: 'عذراً، يجب اختيار ملف Excel (.xlsx) أو CSV (.csv)!' });
@@ -150,7 +184,7 @@ export default function CompanyFlights() {
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
         const jsonRows = XLSX.utils.sheet_to_json(sheet);
-        
+
         if (jsonRows.length === 0) {
           setToast({ type: 'error', message: 'الملف فارغ أو لا يحتوي على صفوف صالحة!' });
           setIsImporting(false);
@@ -219,9 +253,9 @@ export default function CompanyFlights() {
         }
 
         if (successCount > 0) {
-          setToast({ 
-            type: 'success', 
-            message: `تم بنجاح استيراد ${successCount} رحلة إلى جدول الرحلات! ${failCount > 0 ? `(فشل استيراد ${failCount} رحلة)` : ''}` 
+          setToast({
+            type: 'success',
+            message: `تم بنجاح استيراد ${successCount} رحلة إلى جدول الرحلات! ${failCount > 0 ? `(فشل استيراد ${failCount} رحلة)` : ''}`
           });
           fetchFlights();
         } else {
@@ -386,8 +420,8 @@ export default function CompanyFlights() {
     try {
       const statusStr = (editingFlight.status || 'active').toLowerCase();
       const dbStatus = statusStr === 'active' ? 'active' :
-                       statusStr === 'cancelled' ? 'cancelled' :
-                       statusStr === 'delayed' ? 'delayed' : statusStr;
+        statusStr === 'cancelled' ? 'cancelled' :
+          statusStr === 'delayed' ? 'delayed' : statusStr;
 
       const flightPayload = {
         flight_number: editingFlight.flight_number,
@@ -433,80 +467,87 @@ export default function CompanyFlights() {
   );
 
   return (
-    <div className="flex min-h-screen bg-[#f8f9fc] dark:bg-[#0b1120] text-slate-900 dark:text-white transition-colors duration-300 relative overflow-hidden" dir="rtl">
+    <div className="min-h-screen bg-[#f8faff] dark:bg-[#080d19] text-slate-900 dark:text-slate-100 transition-colors duration-300 relative overflow-hidden" dir="rtl">
       {/* ─── Aesthetic Mesh Decor ────────────────────────────── */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-[-20%] left-[-10%] h-[800px] w-[800px] rounded-full bg-blue-500/5 blur-[150px]" />
-        <div className="absolute bottom-[-20%] right-[-10%] h-[800px] w-[800px] rounded-full bg-purple-500/5 blur-[150px]" />
+        <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-blue-500/5 dark:bg-blue-500/10 blur-[120px] transition-all" />
+        <div className="absolute bottom-[-10%] right-[-10%] h-[600px] w-[600px] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-[120px] transition-all" />
       </div>
 
-      {/* القائمة الجانبية */}
       <Sidebar />
 
-      {/* المحتوى الرئيسي للمدير */}
-      <main className="flex-1 mr-72 p-10 relative z-10 min-h-screen">
-        
+      {/* ─── Premium Header ───────────────────────────────────── */}
+      <header
+        className="sticky top-4 z-50 transition-all duration-500 mx-6 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl py-3 px-6 rounded-2xl shadow-lg shadow-slate-100/40 dark:shadow-none border border-slate-150/70 dark:border-slate-800/40"
+        style={{ marginRight: 'calc(var(--sidebar-width, 288px) + 1.5rem)' }}
+      >
+        <div className="mx-auto flex max-w-7xl items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src={getCompanyLogo()} alt="Logo" className="h-9 w-auto object-contain" />
+            <div>
+              <h1 className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">{companyName}</h1>
+              <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">لوحة تحكم الشركاء</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/company/notifications')}
+              className="h-10 w-10 flex items-center justify-center text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all relative"
+              title="الإشعارات والحجوزات المعلقة"
+            >
+              <Bell size={18} />
+              {pendingCount > 0 && (
+                <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-950 animate-ping"></span>
+              )}
+              {pendingCount > 0 && (
+                <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-950"></span>
+              )}
+            </button>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex h-10 items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-505 text-white font-black px-4 text-xs shadow-md shadow-blue-600/20 transition-all hover:-translate-y-0.5 active:translate-y-0"
+            >
+              <Plus size={16} />
+              <span>إضافة رحلة جديدة</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* المحتوى الرئيسي */}
+      <main className="relative z-10 mx-auto max-w-7xl px-6 py-10 md:mr-72 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+
         {/* العناوين والترحيب */}
         <div className="mb-10">
-          <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-3 py-1 rounded-full uppercase tracking-wider mb-2 inline-block">
-            إدارة العمليات اليومية
-          </span>
-          <h1 className="text-3xl font-black tracking-tight">إدارة رحلات {companyName}</h1>
-          <p className="text-slate-400 dark:text-slate-500 text-xs font-bold mt-1">
+          <h1 className="text-3xl font-black tracking-tight mb-2">إدارة الرحلات</h1>
+          <p className="text-slate-500 dark:text-slate-400 font-bold text-sm">
             متابعة وجدولة وتعديل حالات رحلات الطيران واستيراد الجداول من ملفات Excel.
           </p>
         </div>
 
         {/* 1. بطاقات الأداء (KPI Cards) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
-          {/* بطاقة إجمالي الرحلات */}
-          <div className="group relative overflow-hidden rounded-[36px] bg-white dark:bg-slate-900 p-8 shadow-sm border border-slate-200/40 dark:border-slate-800/40 backdrop-blur-xl transition-all hover:shadow-xl hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
-                <Plane size={24} />
-              </div>
-              <div className="flex items-center gap-1 bg-green-500/10 text-green-500 px-3 py-1 rounded-full text-[10px] font-black">
-                <TrendingUp size={12} />
-                <span>+12.5%</span>
-              </div>
-            </div>
-            <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
-              رحلات الشركة هذا الشهر
-            </p>
-            <h3 className="text-3xl font-black tracking-tight">{totalFlights} رحلة</h3>
-          </div>
+        <div className="mb-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {[
+            { label: 'رحلات الشركة هذا الشهر', value: totalFlights, icon: Plane, color: 'from-blue-500 to-indigo-650', iconBg: 'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400', shadowGlow: 'hover:shadow-blue-500/10' },
+            { label: 'إجمالي ركاب الرحلات', value: totalPassengers, icon: Users, color: 'from-purple-500 to-indigo-650', iconBg: 'bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400', shadowGlow: 'hover:shadow-purple-500/10' },
+            { label: 'الرحلات الملغاة', value: cancelledFlights, icon: XCircle, color: 'from-red-500 to-rose-650', iconBg: 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400', shadowGlow: 'hover:shadow-red-500/10' },
+          ].map((stat, i) => (
+            <div key={i} className={`group relative overflow-hidden rounded-2xl bg-gradient-to-b from-white to-slate-50/40 dark:from-slate-900/60 dark:to-slate-950/60 p-6 shadow-sm border border-slate-150/70 dark:border-slate-800/40 backdrop-blur-md transition-all duration-350 hover:shadow-xl ${stat.shadowGlow} hover:-translate-y-1`}>
+              {/* Decorative corner glow */}
+              <div className={`absolute -right-12 -top-12 h-28 w-28 rounded-full bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 blur-lg transition-opacity duration-355`} />
 
-          {/* بطاقة إجمالي ركاب الرحلات */}
-          <div className="group relative overflow-hidden rounded-[36px] bg-white dark:bg-slate-900 p-8 shadow-sm border border-slate-200/40 dark:border-slate-800/40 backdrop-blur-xl transition-all hover:shadow-xl hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
-                <Users size={24} />
-              </div>
-              <div className="flex items-center gap-1 bg-purple-500/10 text-purple-500 px-3 py-1 rounded-full text-[10px] font-black">
-                <span>نشط حالياً</span>
-              </div>
-            </div>
-            <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
-              إجمالي ركاب الرحلات
-            </p>
-            <h3 className="text-3xl font-black tracking-tight text-purple-600 dark:text-purple-400">{totalPassengers} مسافر</h3>
-          </div>
-
-          {/* بطاقة الرحلات الملغاة */}
-          <div className="group relative overflow-hidden rounded-[36px] bg-white dark:bg-slate-900 p-8 shadow-sm border border-slate-200/40 dark:border-slate-800/40 backdrop-blur-xl transition-all hover:shadow-xl hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-red-500/10 text-red-600 dark:text-red-400">
-                <XCircle size={24} />
-              </div>
-              <div className="flex items-center gap-1 bg-red-500/10 text-red-500 px-3 py-1 rounded-full text-[10px] font-black">
-                <span>-50.0%</span>
+              <div className="flex items-center gap-4 relative z-10">
+                <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${stat.iconBg} transition-all duration-355 group-hover:scale-105`}>
+                  <stat.icon size={22} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-0.5">{stat.label}</p>
+                  <h3 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white transition-all duration-355 group-hover:text-blue-600 dark:group-hover:text-blue-400">{stat.value}</h3>
+                </div>
               </div>
             </div>
-            <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
-              الرحلات الملغاة
-            </p>
-            <h3 className="text-3xl font-black tracking-tight text-red-500">{cancelledFlights} رحلة</h3>
-          </div>
+          ))}
         </div>
 
         {/* 2. منطقة رفع واستيراد ملفات الإكسل (Excel Dropzone) */}
@@ -523,11 +564,10 @@ export default function CompanyFlights() {
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             onClick={triggerFileSelect}
-            className={`relative overflow-hidden rounded-[36px] border-2 border-dashed p-10 text-center transition-all duration-300 ${
-              isDragActive
+            className={`relative overflow-hidden rounded-[36px] border-2 border-dashed p-10 text-center transition-all duration-300 ${isDragActive
                 ? 'border-blue-500 bg-blue-500/5 shadow-2xl'
                 : 'border-slate-200/80 dark:border-slate-800/80 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl hover:bg-slate-50 dark:hover:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700'
-            }`}
+              }`}
           >
             {/* واجهة التحميل الوهمية */}
             {isImporting ? (
@@ -538,9 +578,7 @@ export default function CompanyFlights() {
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center cursor-pointer">
-                <div className="flex h-20 w-20 items-center justify-center rounded-[24px] bg-gradient-to-br from-green-500/10 to-emerald-500/10 text-green-600 dark:text-green-400 border border-green-500/20 mb-5 shadow-sm group-hover:scale-105 transition-transform duration-300">
-                  <FileSpreadsheet size={36} />
-                </div>
+                <FileSpreadsheet size={36} className="text-green-600 dark:text-green-400 mb-4" />
                 <h4 className="text-base font-black text-slate-800 dark:text-slate-100 mb-2">
                   قم بسحب وإسقاط ملف إكسل لجدول الرحلات هنا (.xlsx, .csv)
                 </h4>
@@ -562,51 +600,52 @@ export default function CompanyFlights() {
           </div>
         </div>
 
-        {/* 3. شريط الأدوات (Toolbar) */}
-        <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          {/* البحث */}
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="البحث برقم الرحلة أو كود المطار..."
-              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl py-3.5 pr-12 pl-4 text-xs font-bold outline-none focus:border-blue-500 transition-all shadow-sm shadow-blue-500/2"
-            />
+        {/* 4. الجدول المتجاوب */}
+        <div className="rounded-3xl bg-white dark:bg-slate-900/40 border border-slate-150/70 dark:border-slate-800/40 p-6 shadow-sm backdrop-blur-md overflow-hidden">
+          {/* رأس الجدول والبحث المدمج */}
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/10">
+                <Activity size={18} />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">جدول الرحلات الملغاه</h3>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="relative w-full sm:w-auto">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                <input
+                  type="text"
+                  placeholder="البحث برقم الرحلة أو كود المطار..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="bg-slate-50 dark:bg-slate-800/50 border border-slate-150 dark:border-slate-800 rounded-xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:border-blue-500 dark:focus:border-blue-400 dark:text-white transition-all w-full sm:w-64"
+                />
+              </div>
+            </div>
           </div>
 
-          {/* إضافة رحلة */}
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex h-13 items-center gap-2 rounded-2xl bg-blue-600 px-6 text-xs font-black text-white shadow-lg shadow-blue-600/20 hover:bg-blue-700 active:scale-95 transition-all"
-          >
-            <Plus size={16} />
-            إضافة رحلة جديدة
-          </button>
-        </div>
-
-        {/* 4. الجدول المتجاوب */}
-        <div className="rounded-[40px] border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 p-8 shadow-sm backdrop-blur-xl overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-right">
+            <table className="w-full text-right border-collapse">
               <thead>
-                <tr className="border-b border-slate-100 dark:border-slate-800">
-                  <th className="pb-6 text-xs font-black text-slate-400 uppercase tracking-widest px-4">رقم الرحلة</th>
-                  <th className="pb-6 text-xs font-black text-slate-400 uppercase tracking-widest px-4">مطار الإقلاع</th>
-                  <th className="pb-6 text-xs font-black text-slate-400 uppercase tracking-widest px-4">مطار الوصول</th>
-                  <th className="pb-6 text-xs font-black text-slate-400 uppercase tracking-widest px-4">التاريخ والوقت</th>
-                  <th className="pb-6 text-xs font-black text-slate-400 uppercase tracking-widest px-4">عدد الركاب</th>
-                  <th className="pb-6 text-xs font-black text-slate-400 uppercase tracking-widest px-4">الحالة</th>
-                  <th className="pb-6 text-xs font-black text-slate-400 uppercase tracking-widest px-4 text-left">العمليات</th>
+                <tr className="border-b border-slate-200/50 dark:border-slate-800/50 text-slate-400 dark:text-slate-500 text-[10px] font-black uppercase tracking-wider">
+                  <th className="pb-3 px-4 font-black">الرحلة</th>
+                  <th className="pb-3 px-4 font-black">مطار الإقلاع</th>
+                  <th className="pb-3 px-4 font-black">مطار الوصول</th>
+                  <th className="pb-3 px-4 font-black">التاريخ والوقت</th>
+                  <th className="pb-3 px-4 font-black">عدد الركاب</th>
+                  <th className="pb-3 px-4 font-black">الحالة</th>
+                  <th className="pb-3 px-4 font-black text-left">العمليات</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
+              <tbody className="divide-y divide-slate-100/50 dark:divide-slate-800/30 text-xs font-bold text-slate-700 dark:text-slate-300">
                 {loading ? (
                   <tr>
                     <td colSpan="7" className="py-20 text-center">
                       <div className="flex flex-col items-center justify-center gap-3">
-                        <Loader2 size={36} className="text-blue-600 dark:text-blue-400 animate-spin" />
+                        <Loader2 size={36} className="text-blue-650 dark:text-blue-400 animate-spin" />
                         <span className="text-xs font-bold text-slate-400">جاري تحميل الرحلات من قاعدة البيانات...</span>
                       </div>
                     </td>
@@ -619,23 +658,25 @@ export default function CompanyFlights() {
                   </tr>
                 ) : (
                   filteredFlights.map((flight) => (
-                    <tr key={flight.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                      <td className="py-6 px-4 font-black text-blue-600">{flight.flight_number}</td>
-                      <td className="py-6 px-4">
-                        <span className="inline-flex items-center rounded-lg bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-black text-slate-600 dark:text-slate-300">
+                    <tr key={flight.id} className="group hover:bg-slate-50/40 dark:hover:bg-slate-850/10 transition-colors">
+                      <td className="py-5 px-4">
+                        <span className="font-extrabold text-xs text-blue-600 dark:text-blue-400 bg-blue-500/5 dark:bg-blue-500/15 px-2.5 py-1 rounded-lg border border-blue-500/15 font-mono tracking-wide">{flight.flight_number}</span>
+                      </td>
+                      <td className="py-5 px-4">
+                        <span className="font-black text-[11px] bg-blue-500/5 text-blue-650 dark:text-blue-400 px-2 py-1 rounded-lg border border-blue-500/10 font-mono">
                           {flight.origin}
                         </span>
                       </td>
-                      <td className="py-6 px-4">
-                        <span className="inline-flex items-center rounded-lg bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-black text-slate-600 dark:text-slate-300">
+                      <td className="py-5 px-4">
+                        <span className="font-black text-[11px] bg-emerald-500/5 text-emerald-650 dark:text-emerald-400 px-2 py-1 rounded-lg border border-emerald-500/10 font-mono">
                           {flight.destination}
                         </span>
                       </td>
-                      <td className="py-6 px-4">
-                        <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
-                          <Clock size={14} className="text-slate-400" />
+                      <td className="py-5 px-4">
+                        <div className="flex items-center gap-1.5 whitespace-nowrap text-[11px] font-mono text-slate-800 dark:text-slate-200">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500/70 shrink-0" />
                           <span>
-                            {new Date(flight.departure_time).toLocaleString('ar-EG', {
+                            {new Date(flight.departure_time).toLocaleString('ar-EG-u-nu-latn', {
                               month: 'short',
                               day: 'numeric',
                               hour: '2-digit',
@@ -644,47 +685,45 @@ export default function CompanyFlights() {
                           </span>
                         </div>
                       </td>
-                      <td className="py-6 px-4">
-                        <span className="inline-flex items-center rounded-lg bg-blue-500/10 dark:bg-blue-900/20 px-2.5 py-1 text-xs font-black text-blue-600 dark:text-blue-400">
+                      <td className="py-5 px-4">
+                        <span className="inline-flex items-center rounded-lg bg-blue-500/5 dark:bg-blue-500/15 px-2.5 py-1 text-xs font-black text-blue-600 dark:text-blue-400 border border-blue-500/10">
                           {flight.passenger_count || 0} ركاب
                         </span>
                       </td>
-                      <td className="py-6 px-4">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-black ${
-                          flight.status === 'Active'
-                            ? 'bg-green-500/10 text-green-500'
+                      <td className="py-5 px-4">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black ${flight.status === 'Active'
+                            ? 'bg-green-500/5 text-green-600 border border-green-550/10'
                             : flight.status === 'Delayed'
-                            ? 'bg-amber-500/10 text-amber-500'
-                            : 'bg-red-500/10 text-red-500'
-                        }`}>
-                          <div className={`h-1.5 w-1.5 rounded-full ${
-                            flight.status === 'Active'
+                              ? 'bg-amber-500/5 text-amber-600 border border-amber-550/10'
+                              : 'bg-red-500/5 text-red-650 border border-red-550/10'
+                          }`}>
+                          <div className={`h-1.5 w-1.5 rounded-full ${flight.status === 'Active'
                               ? 'bg-green-500'
                               : flight.status === 'Delayed'
-                              ? 'bg-amber-500'
-                              : 'bg-red-500'
-                          }`} />
+                                ? 'bg-amber-500'
+                                : 'bg-red-500'
+                            }`} />
                           {flight.status === 'Active' ? 'نشطة' : flight.status === 'Delayed' ? 'متأخرة' : 'ملغاة'}
                         </span>
                       </td>
-                      <td className="py-6 px-4 text-left">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="py-5 px-4 text-left">
+                        <div className="flex items-center justify-end gap-1">
                           {/* تعديل */}
                           <button
                             onClick={() => openEditModal(flight)}
-                            className="h-9 w-9 flex items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white transition-all shadow-sm"
+                            className="h-9 w-9 flex items-center justify-center rounded-xl text-slate-400 dark:text-slate-500 hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 transition-all border border-transparent hover:border-blue-500/20"
                             title="تعديل الرحلة"
                           >
-                            <Pencil size={15} />
+                            <Pencil size={16} />
                           </button>
                           {/* إلغاء */}
                           {flight.status !== 'Cancelled' && (
                             <button
                               onClick={() => handleCancelFlight(flight)}
-                              className="h-9 w-9 flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white transition-all shadow-sm"
+                              className="h-9 w-9 flex items-center justify-center rounded-xl text-slate-400 dark:text-slate-500 hover:bg-red-500/10 hover:text-red-650 dark:hover:text-red-400 transition-all border border-transparent hover:border-red-500/20"
                               title="إلغاء الرحلة"
                             >
-                              <X size={15} />
+                              <X size={16} />
                             </button>
                           )}
                         </div>
@@ -699,8 +738,8 @@ export default function CompanyFlights() {
 
         {/* ─── 5. النافذة المنبثقة لإضافة رحلة (Add Flight Modal) ─── */}
         {showAddModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-md bg-slate-900/40 animate-in fade-in duration-300">
-            <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-slate-800">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 backdrop-blur-md bg-slate-900/40 overflow-y-auto animate-in fade-in duration-300">
+            <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-[32px] sm:rounded-[40px] shadow-2xl border border-slate-150 dark:border-slate-800 flex flex-col max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300">
               <div className="flex items-center justify-between p-8 border-b border-slate-50 dark:border-slate-800/50">
                 <h3 className="text-2xl font-black">إضافة رحلة جديدة</h3>
                 <button
@@ -724,7 +763,7 @@ export default function CompanyFlights() {
                       onChange={e => setNewFlight({ ...newFlight, flight_number: e.target.value })}
                     />
                   </div>
-                  
+
                   {/* السعر */}
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">السعر الأساسي ($)</label>
@@ -854,8 +893,8 @@ export default function CompanyFlights() {
 
         {/* ─── 6. النافذة المنبثقة لتعديل رحلة (Edit Flight Modal) ─── */}
         {showEditModal && editingFlight && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-md bg-slate-900/40 animate-in fade-in duration-300">
-            <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-slate-800">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 backdrop-blur-md bg-slate-900/40 overflow-y-auto animate-in fade-in duration-300">
+            <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-[32px] sm:rounded-[40px] shadow-2xl border border-slate-150 dark:border-slate-800 flex flex-col max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300">
               <div className="flex items-center justify-between p-8 border-b border-slate-50 dark:border-slate-800/50">
                 <h3 className="text-2xl font-black">تعديل الرحلة</h3>
                 <button
@@ -1024,11 +1063,10 @@ export default function CompanyFlights() {
         {/* ─── 7. إشعارات الـ Toast العائمة ─── */}
         {toast && (
           <div
-            className={`fixed bottom-6 right-6 z-[9999] flex items-center gap-3 rounded-[20px] px-6 py-4 shadow-2xl animate-in slide-in-from-bottom-5 duration-300 ${
-              toast.type === 'success'
+            className={`fixed bottom-6 right-6 z-[9999] flex items-center gap-3 rounded-[20px] px-6 py-4 shadow-2xl animate-in slide-in-from-bottom-5 duration-300 ${toast.type === 'success'
                 ? 'bg-emerald-500 text-white'
                 : 'bg-red-500 text-white'
-            }`}
+              }`}
           >
             {toast.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
             <span className="text-xs font-black">{toast.message}</span>

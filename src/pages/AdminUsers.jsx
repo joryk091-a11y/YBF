@@ -170,7 +170,7 @@ const AdminUsers = () => {
                                             </div>
                                         </td>
                                         <td className="py-6 px-4 font-bold text-sm text-slate-500">
-                                            {new Date(user.created_at).toLocaleDateString('ar-EG')}
+                                            {new Date(user.created_at).toLocaleDateString('ar-EG-u-nu-latn')}
                                         </td>
                                         <td className="py-6 px-4">
                                             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-black bg-green-500/10 text-green-500">

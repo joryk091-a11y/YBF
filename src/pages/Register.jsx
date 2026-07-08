@@ -159,7 +159,7 @@ function RegisterPage() {
                             <User className="pointer-events-none absolute right-4 h-4 w-4 text-slate-400" />
                             <input
                                 className="w-full bg-transparent py-4 pr-12 pl-4 text-sm sm:text-base font-bold text-slate-900 placeholder:text-slate-350 outline-none"
-                                placeholder="مثال: محمد أحمد علي"
+                                placeholder=""
                                 required
                                 value={fullName}
                                 onChange={(e) => setFullName(e.target.value)}

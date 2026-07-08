@@ -85,43 +85,8 @@ const CompanyLogin = () => {
 
     return (
         <div className="min-h-screen flex bg-[#f8faff] overflow-hidden" dir="rtl">
-            {/* ─── Decorative Side Panel ────────────────────────────── */}
-            <div className="relative hidden lg:flex lg:w-1/2 flex-col justify-center items-center p-12 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-white to-indigo-600/10 z-0" />
-                <div className="absolute top-[-10%] right-[-10%] h-[500px] w-[500px] rounded-full bg-blue-500/5 blur-[100px] animate-pulse" />
-                <div className="absolute bottom-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-indigo-500/5 blur-[100px] animate-pulse" style={{ animationDelay: '2s' }} />
-
-                <div className="relative z-10 text-center">
-                    <div className="mb-8">
-                        <img src={logo} alt="Logo" className="h-32 w-auto mx-auto object-contain brightness-0" />
-                    </div>
-                    <h2 className="text-5xl font-black mb-6 tracking-tight text-slate-900">
-                        شريك <span className="text-blue-600">النجاح</span>
-                    </h2>
-                    <p className="text-xl text-slate-500 font-bold max-w-md mx-auto leading-relaxed">
-                        قم بإدارة رحلاتك، حجوزاتك، وعملياتك بكل سهولة وذكاء من خلال منصة الإدارة المتكاملة.
-                    </p>
-
-                    <div className="mt-16 grid grid-cols-2 gap-6 w-full max-w-md">
-                        {[
-                            { icon: ShieldCheck, title: 'أمان كامل', desc: 'تشفير عالي للبيانات' },
-                            { icon: Activity, title: 'تحكم مباشر', desc: 'مراقبة فورية للعمليات' }
-                        ].map((item, i) => (
-                            <div key={i} className="p-6 rounded-3xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300">
-                                <item.icon className="h-8 w-8 text-blue-600 mb-3" />
-                                <h4 className="font-black text-slate-900">{item.title}</h4>
-                                <p className="text-xs text-slate-500 font-bold mt-1">{item.desc}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="absolute inset-0 opacity-20 pointer-events-none"
-                    style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, #4974f9 0%, transparent 50%)' }} />
-            </div>
-
             {/* ─── Login Form Panel ─────────────────────────────────── */}
-            <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 sm:p-12 relative z-10 bg-white lg:rounded-r-[60px] shadow-2xl">
+            <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 sm:p-12 relative z-10 bg-white lg:rounded-l-[60px] shadow-2xl">
                 <div className="w-full max-w-md">
 
                     {/* Header */}
@@ -161,8 +126,8 @@ const CompanyLogin = () => {
                                     onChange={(e) => setEmail(e.target.value)}
                                     onFocus={() => setFocusedField('email')}
                                     onBlur={() => setFocusedField(null)}
-                                    className="w-full bg-transparent py-5 pr-12 pl-4 text-base font-bold text-slate-900 placeholder:text-slate-300 outline-none"
-                                    placeholder="example@gmail.com"
+                                    className="w-full bg-transparent py-5 pr-12 pl-4 text-base font-bold text-slate-900 placeholder:text-slate-350 outline-none"
+                                    placeholder=""
                                     required
                                     dir="ltr"
                                 />
@@ -183,8 +148,8 @@ const CompanyLogin = () => {
                                     onChange={(e) => setPassword(e.target.value)}
                                     onFocus={() => setFocusedField('password')}
                                     onBlur={() => setFocusedField(null)}
-                                    className="w-full bg-transparent py-5 pr-12 pl-14 text-base font-bold text-slate-900 placeholder:text-slate-300 outline-none"
-                                    placeholder="••••••••"
+                                    className="w-full bg-transparent py-5 pr-12 pl-14 text-base font-bold text-slate-900 placeholder:text-slate-350 outline-none"
+                                    placeholder=""
                                     required
                                 />
                                 <button
@@ -218,14 +183,35 @@ const CompanyLogin = () => {
                     </form>
 
                     {/* Footer Links */}
-                    <div className="mt-10 pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <Link to="/" className="text-sm font-bold text-slate-500 hover:text-blue-600 transition-colors">العودة للرئيسية</Link>
+                    <div className="mt-10 pt-8 border-t border-slate-100 flex justify-center">
                         <a href="mailto:ybf.support@gmail.com" className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-blue-600 transition-colors">
                             <Mail size={16} />
                             الدعم الفني للشركاء
                         </a>
                     </div>
                 </div>
+            </div>
+
+            {/* ─── Decorative Side Panel ────────────────────────────── */}
+            <div className="relative hidden lg:flex lg:w-1/2 flex-col justify-center items-center p-12 overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-white to-indigo-600/10 z-0" />
+                <div className="absolute top-[-10%] right-[-10%] h-[500px] w-[500px] rounded-full bg-blue-500/5 blur-[100px] animate-pulse" />
+                <div className="absolute bottom-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-indigo-500/5 blur-[100px] animate-pulse" style={{ animationDelay: '2s' }} />
+
+                <div className="relative z-10 text-center">
+                    <div className="mb-8">
+                        <img src={logo} alt="Logo" className="h-32 w-auto mx-auto object-contain brightness-0" />
+                    </div>
+                    <h2 className="text-5xl font-black mb-6 tracking-tight text-slate-900">
+                        شريك <span className="text-blue-600">النجاح</span>
+                    </h2>
+                    <p className="text-xl text-slate-500 font-bold max-w-md mx-auto leading-relaxed">
+                        قم بإدارة رحلاتك، حجوزاتك، وعملياتك بكل سهولة وذكاء من خلال منصة الإدارة المتكاملة.
+                    </p>
+                </div>
+
+                <div className="absolute inset-0 opacity-20 pointer-events-none"
+                    style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, #4974f9 0%, transparent 50%)' }} />
             </div>
         </div>
     );

@@ -90,7 +90,7 @@ const AdminUsers = () => {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <button onClick={handleLogout} className="flex h-11 items-center gap-2 rounded-xl bg-red-50 dark:bg-red-500/10 px-5 text-xs font-black text-red-600 transition-all hover:bg-red-600 hover:text-white">
+                        <button onClick={handleLogout} className="flex h-11 items-center gap-2 rounded-xl bg-blue-50 dark:bg-blue-500/10 px-5 text-xs font-black text-blue-600 transition-all hover:bg-blue-600 hover:text-white">
                             <LogOut size={20} />
                             <span className="hidden sm:inline">خروج</span>
                         </button>

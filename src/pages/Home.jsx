@@ -398,7 +398,7 @@ function HomePage() {
         </div>
       </section>
 
-      <div id="search-panel" className="relative z-30 -mt-28 pb-12 sm:-mt-64 sm:pb-16">
+      <div id="search-panel" className="relative z-30 -mt-40 pb-12 sm:-mt-80 sm:pb-16">
         <ScrollReveal animation="fade-up" duration={800} delay={100}>
           <div className="pt-4">
             <HeroSearchPanel />

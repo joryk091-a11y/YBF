@@ -8,10 +8,11 @@ import {
     LogOut, Users, Ticket, DollarSign, TrendingUp,
     Calendar, CheckCircle, Clock, XCircle, Plane, ArrowUpRight, Search, Activity, Layers, BarChart3, MapPin,
     Globe, Bell, Settings, User, MoreHorizontal, ArrowLeft, Filter,
-    Moon, Sun, Shield, Wallet, BookOpen, Plus, Trash2, Check, X, CreditCard, ChevronRight, Info,
-    UserCheck, Mail, Phone, Building2, Printer
+    Moon, Sun, Shield, Wallet, BookOpen, Plus, Trash2, Pencil, Check, X, CreditCard, ChevronRight, Info,
+    UserCheck, Mail, Phone, Building2, Printer, RefreshCw
 } from 'lucide-react';
 import Messages from './Messages.jsx';
+import logoImg from '../assets/logo.png';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
@@ -83,6 +84,10 @@ const AdminDashboard = () => {
         phone: '',
         password: ''
     });
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState({ id: null, type: null, label: '' });
+    const [isCancelBookingModalOpen, setIsCancelBookingModalOpen] = useState(false);
+    const [cancelBookingTargetId, setCancelBookingTargetId] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedFlightDate, setSelectedFlightDate] = useState('');
     const [selectedFlightAirline, setSelectedFlightAirline] = useState('');
@@ -104,10 +109,38 @@ const AdminDashboard = () => {
     const [exchangeRate, setExchangeRate] = useState(() => localStorage.getItem('adminExchangeRate') || '530');
     const [supportEmail, setSupportEmail] = useState(() => localStorage.getItem('adminSupportEmail') || 'support@ybf.com');
     const [showSettingsAlert, setShowSettingsAlert] = useState(false);
-
-    // Alert states
     const [notificationMsg, setNotificationMsg] = useState(null);
     const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
+
+    const fetchSettings = useCallback(async () => {
+        try {
+            const response = await fetch('http://localhost:8080/api/admin/settings');
+            const data = await response.json();
+            if (data.success && data.settings) {
+                const s = data.settings;
+                if (s.markup_rate) {
+                    setMarkupRate(s.markup_rate);
+                    localStorage.setItem('adminMarkupRate', s.markup_rate);
+                }
+                if (s.exchange_rate) {
+                    setExchangeRate(s.exchange_rate);
+                    localStorage.setItem('adminExchangeRate', s.exchange_rate);
+                }
+                if (s.support_email) {
+                    setSupportEmail(s.support_email);
+                    localStorage.setItem('adminSupportEmail', s.support_email);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching settings:', error);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (token && role === 'admin') {
+            fetchSettings();
+        }
+    }, [token, role, fetchSettings]);
 
     // Check for unread messages
     const checkUnreadMessages = useCallback(async () => {
@@ -369,23 +402,48 @@ const AdminDashboard = () => {
         }
     };
 
-    // Delete company
-    const handleDeleteCompany = async (id) => {
-        if (!window.confirm('هل أنت متأكد من حذف حساب هذه الشركة؟ لا يمكن التراجع عن هذا الإجراء.')) return;
+    // Trigger delete company confirm
+    const triggerDeleteCompany = (id, name) => {
+        setDeleteTarget({ id, type: 'company', label: name });
+        setIsDeleteModalOpen(true);
+    };
+
+    // Global execution function for custom delete modal confirmation
+    const executeDelete = async () => {
+        if (!deleteTarget.id || !deleteTarget.type) return;
+        setIsDeleteModalOpen(false);
+        const { id, type } = deleteTarget;
+        
         try {
-            const res = await fetch(`http://localhost:8080/api/admin/companies/${id}`, {
-                method: 'DELETE'
-            });
-            const data = await res.json();
-            if (data.success) {
-                showToast('تم حذف حساب الشركة بنجاح.');
-                fetchCompanies();
-            } else {
-                showToast('حدث خطأ أثناء حذف الشركة.');
+            if (type === 'company') {
+                const res = await fetch(`http://localhost:8080/api/admin/companies/${id}`, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('تم حذف حساب الشركة بنجاح.');
+                    fetchCompanies();
+                } else {
+                    showToast('حدث خطأ أثناء حذف الشركة.');
+                }
+            } else if (type === 'user') {
+                const res = await fetch(`http://localhost:8080/api/admin/users/${id}`, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('تم حذف حساب المستخدم بنجاح.');
+                    fetchUsers();
+                    fetchDashboardStats();
+                } else {
+                    showToast('حدث خطأ أثناء حذف الحساب.');
+                }
             }
         } catch (error) {
             console.error(error);
             showToast('خطأ في الاتصال بالخادم.');
+        } finally {
+            setDeleteTarget({ id: null, type: null, label: '' });
         }
     };
 
@@ -429,27 +487,25 @@ const AdminDashboard = () => {
         return () => clearTimeout(timer);
     }, [fetchUsers, fetchCompanies]);
 
-    // Auto-refresh database data every 20 seconds for real-time reporting
-    useEffect(() => {
-        const interval = setInterval(() => {
-            if (activeTab === 'dashboard' || activeTab === 'reports') {
-                fetchDashboardStats();
-            }
-            if (activeTab === 'flights' || activeTab === 'reports') {
-                fetchFlights();
-            }
-            if (activeTab === 'users') {
-                fetchUsers();
-            }
-            if (activeTab === 'companies') {
-                fetchCompanies();
-            }
-            if (activeTab === 'bookings') {
-                fetchBookings();
-            }
-        }, 20000); // 20 seconds
-        return () => clearInterval(interval);
-    }, [activeTab, fetchDashboardStats, fetchFlights, fetchUsers, fetchCompanies, fetchBookings]);
+    // Manual refresh function to update data on user request
+    const handleManualRefresh = () => {
+        if (activeTab === 'dashboard' || activeTab === 'reports') {
+            fetchDashboardStats();
+        }
+        if (activeTab === 'flights' || activeTab === 'reports') {
+            fetchFlights();
+        }
+        if (activeTab === 'users') {
+            fetchUsers();
+        }
+        if (activeTab === 'companies') {
+            fetchCompanies();
+        }
+        if (activeTab === 'bookings') {
+            fetchBookings();
+        }
+        showToast('تم تحديث البيانات بنجاح!');
+    };
 
 
 
@@ -526,37 +582,41 @@ const AdminDashboard = () => {
         }
     };
 
-    // Delete User
-    const handleDeleteUser = async (id) => {
-        if (!window.confirm('هل أنت متأكد من حذف هذا الحساب؟ لا يمكن التراجع عن هذا الإجراء.')) return;
-        try {
-            const res = await fetch(`http://localhost:8080/api/admin/users/${id}`, {
-                method: 'DELETE'
-            });
-            const data = await res.json();
-            if (data.success) {
-                showToast('تم حذف حساب المستخدم بنجاح.');
-                fetchUsers();
-                fetchDashboardStats();
-            } else {
-                showToast('حدث خطأ أثناء حذف الحساب.');
-            }
-        } catch (error) {
-            console.error(error);
-            showToast('خطأ في الاتصال بالخادم.');
-        }
+    // Trigger delete user confirm
+    const triggerDeleteUser = (id, name) => {
+        setDeleteTarget({ id, type: 'user', label: name });
+        setIsDeleteModalOpen(true);
     };
 
 
 
     // Save Settings
-    const handleSaveSettings = (e) => {
+    const handleSaveSettings = async (e) => {
         e.preventDefault();
-        localStorage.setItem('adminMarkupRate', markupRate);
-        localStorage.setItem('adminExchangeRate', exchangeRate);
-        localStorage.setItem('adminSupportEmail', supportEmail);
-        setShowSettingsAlert(true);
-        setTimeout(() => setShowSettingsAlert(false), 3000);
+        try {
+            const response = await fetch('http://localhost:8080/api/admin/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    markup_rate: markupRate,
+                    exchange_rate: exchangeRate,
+                    support_email: supportEmail
+                })
+            });
+            const data = await response.json();
+            if (data.success) {
+                localStorage.setItem('adminMarkupRate', markupRate);
+                localStorage.setItem('adminExchangeRate', exchangeRate);
+                localStorage.setItem('adminSupportEmail', supportEmail);
+                setShowSettingsAlert(true);
+                setTimeout(() => setShowSettingsAlert(false), 3000);
+            } else {
+                showToast('فشل حفظ الإعدادات في قاعدة البيانات: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Error saving settings:', error);
+            showToast('خطأ في الاتصال بالخادم لحفظ الإعدادات.');
+        }
     };
 
     // Helper for toasts
@@ -673,8 +733,14 @@ const AdminDashboard = () => {
     }
 
     return (
-        <div className="h-screen overflow-hidden font-sans flex text-slate-800 dark:text-slate-100 transition-colors duration-300 bg-slate-50 dark:bg-[#0b1120]" dir="rtl">
+        <div className="h-screen overflow-hidden font-sans lining-nums flex text-slate-850 dark:text-slate-100 transition-colors duration-300 bg-[#f8faff] dark:bg-[#080d19]" dir="rtl">
             
+            {/* ─── Aesthetic Mesh Decor ────────────────────────────── */}
+            <div className="fixed inset-0 pointer-events-none z-0">
+                <div className="absolute top-[-10%] right-[-10%] h-[600px] w-[600px] rounded-full bg-blue-500/5 dark:bg-blue-500/10 blur-[120px] transition-all" />
+                <div className="absolute bottom-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-[120px] transition-all" />
+            </div>
+
             {/* TOAST NOTIFICATION */}
             {notificationMsg && (
                 <div className="fixed top-6 left-6 z-50 animate-bounce bg-blue-600 text-white py-3 px-6 rounded-2xl shadow-xl font-bold flex items-center gap-3">
@@ -684,26 +750,25 @@ const AdminDashboard = () => {
             )}
 
             {/* ===== 1. SIDEBAR ===== */}
-            <aside className="w-80 bg-white text-slate-800 border-l border-slate-200/80 dark:bg-slate-900 dark:text-white dark:border-none flex flex-col justify-between shrink-0 z-30 select-none shadow-2xl relative">
+            <aside className="w-80 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-l border-slate-200/60 dark:border-slate-800/60 flex flex-col justify-between shrink-0 z-30 select-none relative">
                 {/* Top Profile / Brand */}
                 <div>
-                    <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex items-center gap-4">
+                    <div className="p-8 border-b border-slate-100 dark:border-slate-900 flex items-center gap-4">
                         <div className="relative">
                             <div className="h-14 w-14 rounded-full bg-gradient-to-tr from-blue-600 to-sky-400 p-0.5 shadow-md">
-                                <div className="h-full w-full rounded-full bg-slate-100 dark:bg-slate-950 flex items-center justify-center text-xl font-black text-blue-500">
-                                    {adminInitials}
+                                <div className="h-full w-full rounded-full bg-slate-100 dark:bg-slate-950 flex items-center justify-center text-blue-500">
+                                    <User size={24} />
                                 </div>
                             </div>
                             <div className="absolute bottom-0 right-0 h-4 w-4 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900" />
                         </div>
                         <div>
                             <h4 className="font-black text-sm tracking-wide text-slate-800 dark:text-white">مدير النظام</h4>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{adminEmail}</p>
                         </div>
                     </div>
 
                     {/* Nav tabs */}
-                    <nav className="p-6 space-y-2">
+                    <nav className="p-6 space-y-1.5 overflow-y-auto max-h-[calc(100vh-270px)] scrollbar-thin">
                         {[
                             { id: 'dashboard', label: 'لوحة التحكم', icon: Activity },
                             { id: 'flights', label: 'إدارة الرحلات', icon: Plane },
@@ -723,57 +788,40 @@ const AdminDashboard = () => {
                                         setActiveTab(item.id);
                                         setSearchQuery('');
                                     }}
-                                    className={`w-full flex items-center gap-4 py-3.5 px-5 rounded-2xl text-sm font-black transition-all ${
+                                    className={`group w-full flex items-center justify-between rounded-xl px-4 py-3 text-xs font-bold transition-all duration-300 relative overflow-hidden ${
                                         isActive
-                                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                                            : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white'
+                                            ? 'bg-blue-600 text-white shadow-md shadow-blue-650/20'
+                                            : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-800 dark:hover:text-slate-200'
                                     }`}
                                 >
-                                    <IconComp size={20} className={isActive ? 'text-white' : 'text-slate-500 dark:text-slate-400'} />
-                                    <span>{item.label}</span>
+                                    <div className="flex items-center gap-3.5">
+                                        <IconComp 
+                                            size={16} 
+                                            className={`transition-transform duration-500 group-hover:scale-105 ${
+                                                isActive ? 'text-white' : 'text-slate-455 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300'
+                                            }`} 
+                                        />
+                                        <span>{item.label}</span>
+                                    </div>
                                 </button>
                             );
                         })}
                     </nav>
                 </div>
-
-                {/* Bottom Active Users & Map */}
-                <div className="p-6 border-t border-slate-100 dark:border-slate-800">
-                    <p className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">المستخدمين النشطين</p>
-                    <div className="flex items-center gap-2 mb-6">
-                        <div className="flex -space-x-2 space-x-reverse">
-                            <div className="h-8 w-8 rounded-full border-2 border-white dark:border-slate-900 bg-blue-500 flex items-center justify-center text-[10px] font-bold">أ</div>
-                            <div className="h-8 w-8 rounded-full border-2 border-white dark:border-slate-900 bg-sky-500 flex items-center justify-center text-[10px] font-bold">س</div>
-                            <div className="h-8 w-8 rounded-full border-2 border-white dark:border-slate-900 bg-indigo-500 flex items-center justify-center text-[10px] font-bold">م</div>
-                            <div className="h-8 w-8 rounded-full border-2 border-white dark:border-slate-900 bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500 dark:text-slate-400">+{usersList.length}</div>
-                        </div>
-                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">من مستخدمي الموقع</span>
-                    </div>
-
-                    {/* Stylized Outline Map */}
-                    <div className="opacity-15 relative">
-                        <svg className="w-full h-16 text-blue-500" fill="currentColor" viewBox="0 0 200 100">
-                            <path d="M20,40 Q40,10 80,30 T150,20 T190,50 L190,80 L20,80 Z" opacity="0.3" />
-                            <circle cx="50" cy="30" r="2" />
-                            <circle cx="90" cy="40" r="3" />
-                            <circle cx="130" cy="25" r="2" />
-                            <circle cx="160" cy="45" r="2" />
-                            <path d="M50,30 L90,40 M90,40 L130,25 M130,25 L160,45" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2,2" />
-                        </svg>
-                    </div>
-                </div>
             </aside>
 
             {/* ===== 2. MAIN CONTENT AREA ===== */}
-            <main className="flex-1 flex flex-col overflow-y-auto">
+            <main className="flex-1 flex flex-col overflow-y-auto relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-1000">
                 
                 {/* Header navbar */}
-                <header className="py-6 px-10 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0 select-none bg-white dark:bg-slate-900/40 backdrop-blur-md sticky top-0 z-20">
+                <header className="sticky top-4 z-20 mx-8 my-4 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl py-3 px-6 rounded-2xl shadow-xl shadow-slate-200/80 dark:shadow-black/50 flex items-center justify-between shrink-0 select-none">
                     <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 bg-blue-600/10 text-blue-600 rounded-xl flex items-center justify-center">
-                            <Activity size={20} />
-                        </div>
-                        <h2 className="text-xl font-black tracking-tight">
+                        <img
+                            src={logoImg}
+                            alt="YBF Logo"
+                            className="h-10 w-10 object-contain brightness-0 dark:brightness-0 dark:invert"
+                        />
+                        <h2 className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">
                             {activeTab === 'dashboard' && 'لوحة التحكم الرئيسية'}
                             {activeTab === 'flights' && 'جدول واستعراض الرحلات الجوية'}
                             {activeTab === 'bookings' && 'إدارة وحالة حجوزات الطيران'}
@@ -787,20 +835,27 @@ const AdminDashboard = () => {
 
                     <div className="flex items-center gap-6">
                         {/* Control buttons */}
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={handleManualRefresh}
+                                className="text-slate-550 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 transition-colors p-1.5 flex items-center justify-center"
+                                title="تحديث البيانات"
+                            >
+                                <RefreshCw size={19} />
+                            </button>
                             <button
                                 onClick={() => setActiveTab('messages')}
-                                className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-blue-500 transition-all relative"
+                                className="text-slate-550 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 transition-colors relative p-1.5"
                                 title="المحادثات والرسائل الواردة"
                             >
-                                <Bell size={18} />
+                                <Bell size={20} />
                                 {hasUnreadMessages && (
-                                    <span className="absolute top-2 left-2.5 h-2.5 w-2.5 bg-blue-500 rounded-full border border-slate-100 dark:border-slate-800 animate-pulse" />
+                                    <span className="absolute top-1 left-1.5 h-2 w-2 bg-blue-500 rounded-full border border-white dark:border-slate-950 animate-pulse" />
                                 )}
                             </button>
                             <button
                                 onClick={handleLogout}
-                                className="flex h-10 items-center gap-2 rounded-xl bg-rose-50 dark:bg-rose-950/30 px-4 text-xs font-black text-rose-600 hover:bg-rose-600 hover:text-white transition-all border border-rose-100 dark:border-rose-950"
+                                className="flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-500 dark:hover:text-blue-400 transition-colors p-1.5"
                             >
                                 <LogOut size={16} />
                                 <span>خروج</span>
@@ -810,7 +865,7 @@ const AdminDashboard = () => {
                 </header>
 
                 {/* View Content container */}
-                <div className="p-10 flex-1">
+                <div className="relative z-10 px-8 py-6 flex-1">
                     
                     {loading && activeTab === 'dashboard' ? (
                         <div className="h-full min-h-[400px] flex flex-col items-center justify-center">
@@ -882,43 +937,56 @@ const AdminDashboard = () => {
                                                 label: selectedDashboardMonth ? `تذاكر شهر ${getArabicMonthName(selectedDashboardMonth)}` : `تذاكر سنة ${selectedDashboardYear}`, 
                                                 value: stats.totalTickets.toLocaleString('en-US'), 
                                                 icon: Ticket, 
-                                                color: 'text-blue-600 bg-blue-500/10' 
+                                                color: 'text-blue-600 bg-blue-50 dark:bg-blue-950/30' 
                                             },
                                             { 
                                                 label: selectedDashboardMonth ? `إيرادات شهر ${getArabicMonthName(selectedDashboardMonth)}` : `إيرادات سنة ${selectedDashboardYear}`, 
                                                 value: `$${stats.totalRevenue.toLocaleString('en-US')}`, 
                                                 icon: DollarSign, 
-                                                color: 'text-emerald-600 bg-emerald-500/10' 
+                                                color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30' 
                                             },
                                             { 
                                                 label: selectedDashboardMonth ? `نسبة إلغاء الحجوزات للشهر` : `نسبة إلغاء الحجوزات للسنة`, 
                                                 value: `${stats.cancellationRate}%`, 
                                                 icon: XCircle, 
-                                                color: stats.cancellationRate > 15 ? 'text-rose-600 bg-rose-500/10' : 'text-amber-500 bg-amber-500/10' 
+                                                color: stats.cancellationRate > 15 ? 'text-rose-600 bg-rose-50 dark:bg-rose-950/30' : 'text-amber-600 bg-amber-50 dark:bg-amber-950/30' 
                                             },
                                             { 
                                                 label: selectedDashboardMonth ? `الركاب النشطين بالشهر` : `الركاب النشطين بالسنة`, 
                                                 value: stats.activePassengers.toLocaleString('en-US'), 
                                                 icon: Users, 
-                                                color: 'text-violet-600 bg-violet-500/10' 
+                                                color: 'text-violet-600 bg-violet-50 dark:bg-violet-950/30' 
                                             }
-                                        ].map((stat, i) => (
-                                            <div key={i} className="bg-white dark:bg-[#0b1120] border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-6 shadow-sm flex items-center justify-between">
-                                                <div>
-                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
-                                                    <h4 className="text-2xl font-black mt-2 tracking-tight">{stat.value}</h4>
+                                        ].map((stat, i) => {
+                                            const glowColors = [
+                                                'from-blue-500 to-indigo-600',
+                                                'from-emerald-500 to-teal-600',
+                                                stats.cancellationRate > 15 ? 'from-rose-500 to-red-600' : 'from-amber-500 to-orange-600',
+                                                'from-violet-500 to-purple-600'
+                                            ];
+                                            return (
+                                                <div key={i} className="group relative overflow-hidden rounded-2xl bg-gradient-to-b from-white to-slate-50/40 dark:from-slate-900/60 dark:to-slate-950/60 p-6 shadow-sm backdrop-blur-md transition-all duration-350 hover:shadow-xl hover:-translate-y-1">
+                                                    {/* Decorative corner glow */}
+                                                    <div className={`absolute -right-12 -top-12 h-28 w-28 rounded-full bg-gradient-to-br ${glowColors[i]} opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 blur-lg transition-opacity duration-355`} />
+
+                                                    <div className="flex items-center justify-between relative z-10">
+                                                        <div>
+                                                            <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{stat.label}</p>
+                                                            <h4 className="text-2xl font-black mt-2 tracking-tight text-slate-900 dark:text-white transition-all duration-355 group-hover:text-blue-600 dark:group-hover:text-blue-400">{stat.value}</h4>
+                                                        </div>
+                                                        <div className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 ${stat.color} transition-all duration-355 group-hover:scale-105`}>
+                                                            <stat.icon size={22} />
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${stat.color}`}>
-                                                    <stat.icon size={24} />
-                                                </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
 
 
 
                                     {/* Company Sales & Bookings Composed Chart */}
-                                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
+                                    <div className="bg-white/80 dark:bg-slate-900/40 rounded-3xl p-8 shadow-sm backdrop-blur-md">
                                         <div className="mb-6">
                                             <h3 className="text-lg font-black">أداء الشركات (المبيعات والحجوزات)</h3>
                                             <p className="text-xs text-slate-400 font-bold mt-1">تتبع حجم الحجوزات وإجمالي الإيرادات المحققة لكل شركة طيران للفترة المحددة</p>
@@ -963,7 +1031,7 @@ const AdminDashboard = () => {
                                                             verticalAlign="top" 
                                                             height={36} 
                                                             formatter={(value) => {
-                                                                if (value === 'revenue') return 'إجمالي المبيعات ($)';
+                                                                if (value === 'revenue') return 'إجمالي المبيعات';
                                                                 if (value === 'tickets') return 'إجمالي الحجوزات (تذكرة)';
                                                                 return value;
                                                             }}
@@ -984,7 +1052,7 @@ const AdminDashboard = () => {
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                         
                                         {/* Airline Share (تصنيف الحجوزات حسب شركة الطيران) */}
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
+                                        <div className="bg-white/80 dark:bg-slate-900/40 rounded-3xl p-8 shadow-sm backdrop-blur-md">
                                             <div className="mb-6">
                                                 <h3 className="text-sm font-black">تصنيف الحجوزات حسب شركات الطيران</h3>
                                                 <p className="text-xs text-slate-400 font-bold mt-1">توزيع إجمالي الحجوزات بناءً على شركة النقل</p>
@@ -1031,7 +1099,7 @@ const AdminDashboard = () => {
                                         </div>
 
                                         {/* Travel Class Share (تصنيف الحجوزات حسب درجة السفر) */}
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
+                                        <div className="bg-white/80 dark:bg-slate-900/40 rounded-3xl p-8 shadow-sm backdrop-blur-md">
                                             <div className="mb-6">
                                                 <h3 className="text-sm font-black">تصنيف الحجوزات حسب درجة السفر</h3>
                                                 <p className="text-xs text-slate-400 font-bold mt-1">توزيع الركاب والمقاعد حسب درجات الطيران</p>
@@ -1083,7 +1151,7 @@ const AdminDashboard = () => {
                                         </div>
 
                                         {/* 5. Payments & Cancellations Monitoring (متابعة الدفع وحالة الحجوزات ونسب الإلغاء) */}
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm flex flex-col justify-between">
+                                        <div className="bg-white/80 dark:bg-slate-900/40 rounded-3xl p-8 shadow-sm backdrop-blur-md flex flex-col justify-between">
                                             <div>
                                                 <h3 className="text-sm font-black">متابعة حالة الدفع والتحصيل</h3>
                                                 <p className="text-xs text-slate-400 font-bold mt-1 mb-6">الحالة المالية الفورية وعمليات الدفع والتحصيل من الداتابيس</p>
@@ -1143,7 +1211,7 @@ const AdminDashboard = () => {
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                         
                                         {/* Destination ticket count lists */}
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm lg:col-span-2">
+                                        <div className="bg-white/80 dark:bg-slate-900/40 rounded-3xl p-8 shadow-sm backdrop-blur-md lg:col-span-2">
                                             <div className="flex items-center justify-between mb-6">
                                                 <div>
                                                     <h3 className="text-sm font-black">عدد التذاكر المحجوزة حسب الوجهة</h3>
@@ -1181,7 +1249,7 @@ const AdminDashboard = () => {
                                         </div>
 
                                         {/* Top Destinations Stats Highlights (الوجهات الأكثر طلباً) */}
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm flex flex-col justify-between relative overflow-hidden group">
+                                        <div className="bg-white/80 dark:bg-slate-900/40 rounded-3xl p-8 shadow-sm backdrop-blur-md flex flex-col justify-between relative overflow-hidden group">
                                             <div className="absolute right-[-20px] bottom-[-20px] text-blue-600/5 group-hover:scale-110 transition-transform duration-700">
                                                 <Globe size={160} />
                                             </div>
@@ -1224,7 +1292,7 @@ const AdminDashboard = () => {
                                     </div>
 
                                     {/* Date and Airline Filters */}
-                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm">
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/80 dark:bg-slate-900/40 rounded-3xl p-6 shadow-sm backdrop-blur-md">
                                         <div className="flex items-center gap-6 flex-wrap w-full">
                                             {/* Airline Filter */}
                                             <div className="flex flex-col gap-1.5 w-full md:w-auto">
@@ -1248,10 +1316,20 @@ const AdminDashboard = () => {
                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">تصفية حسب تاريخ الرحلة</label>
                                                 <div className="flex items-center gap-2">
                                                     <input
-                                                        type="date"
+                                                        type={selectedFlightDate ? "date" : "text"}
+                                                        placeholder="اختر تاريخ الرحلة"
                                                         value={selectedFlightDate}
+                                                        onFocus={(e) => {
+                                                            e.target.type = 'date';
+                                                            e.target.showPicker?.();
+                                                        }}
+                                                        onBlur={(e) => {
+                                                            if (!e.target.value) {
+                                                                e.target.type = 'text';
+                                                            }
+                                                        }}
                                                         onChange={(e) => setSelectedFlightDate(e.target.value)}
-                                                        className="bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-blue-500 rounded-xl py-2.5 px-4 text-xs font-bold outline-none transition-all dark:text-white"
+                                                        className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2.5 px-4 text-xs font-bold outline-none transition-all dark:text-white min-w-[160px]"
                                                     />
                                                     {(selectedFlightDate || selectedFlightAirline) && (
                                                         <button
@@ -1270,7 +1348,7 @@ const AdminDashboard = () => {
                                     </div>
 
                                     {/* Flights Table */}
-                                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm p-8">
+                                    <div className="bg-white/80 dark:bg-slate-900/40 rounded-3xl shadow-sm p-8 backdrop-blur-md">
                                         {loadingList ? (
                                             <div className="py-20 text-center text-slate-400">جاري تحميل الرحلات...</div>
                                         ) : (
@@ -1291,8 +1369,7 @@ const AdminDashboard = () => {
                                                         {filteredFlights.length > 0 ? (
                                                             filteredFlights.map((flight) => (
                                                                 <tr key={flight.id_flights} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                                                                    <td className="py-5 px-4 font-black text-slate-900 dark:text-white flex items-center gap-2">
-                                                                        <Plane size={14} className="text-blue-500" />
+                                                                    <td className="py-5 px-4 font-black text-slate-900 dark:text-white">
                                                                         {flight.flight_number}
                                                                     </td>
                                                                     <td className="py-5 px-4 font-bold text-slate-500">{getAirlineName(flight.airline_code)}</td>
@@ -1412,7 +1489,7 @@ const AdminDashboard = () => {
                                                             onChange={(e) => {
                                                                 setSelectedReportMonth(e.target.value);
                                                             }}
-                                                            className="bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-blue-500 rounded-xl py-2.5 px-4 text-xs font-bold outline-none transition-all dark:text-white min-w-[160px]"
+                                                            className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2.5 px-4 text-xs font-bold outline-none transition-all dark:text-white min-w-[160px]"
                                                         >
                                                             <option value="">كل أشهر السنة</option>
                                                             <option value="01">01 - يناير</option>
@@ -1805,28 +1882,30 @@ const AdminDashboard = () => {
                                 <div className="space-y-6">
                                     {/* Stats Cards */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex items-center gap-4">
-                                            <div className="h-12 w-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
-                                                <User size={24} />
+                                        <div className="group relative overflow-hidden bg-white/80 dark:bg-slate-900/40 rounded-3xl p-6 shadow-sm flex items-center gap-4 backdrop-blur-md transition-all duration-350 hover:-translate-y-1 hover:shadow-md">
+                                            <div className="absolute -right-6 -top-6 h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-655 opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 blur-md transition-opacity duration-350" />
+                                            <div className="h-12 w-12 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center relative z-10">
+                                                <User size={22} />
                                             </div>
-                                            <div>
+                                            <div className="relative z-10">
                                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">إجمالي الحسابات المسجلة</p>
-                                                <h4 className="text-3xl font-black mt-1">{usersList.length}</h4>
+                                                <h4 className="text-3xl font-black mt-1 text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{usersList.length}</h4>
                                             </div>
                                         </div>
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex items-center gap-4">
-                                            <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
-                                                <UserCheck size={24} />
+                                        <div className="group relative overflow-hidden bg-white/80 dark:bg-slate-900/40 rounded-3xl p-6 shadow-sm flex items-center gap-4 backdrop-blur-md transition-all duration-350 hover:-translate-y-1 hover:shadow-md">
+                                            <div className="absolute -right-6 -top-6 h-16 w-16 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 blur-md transition-opacity duration-350" />
+                                            <div className="h-12 w-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center relative z-10">
+                                                <UserCheck size={22} />
                                             </div>
-                                            <div>
+                                            <div className="relative z-10">
                                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">الحسابات النشطة حالياً</p>
-                                                <h4 className="text-3xl font-black mt-1">{usersList.length}</h4>
+                                                <h4 className="text-3xl font-black mt-1 text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{usersList.length}</h4>
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Users List Table */}
-                                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm p-8">
+                                    <div className="bg-white/80 dark:bg-slate-900/40 rounded-3xl shadow-sm p-8 backdrop-blur-md">
                                         <div className="flex items-center justify-between mb-6">
                                             <div>
                                                 <h4 className="text-sm font-black">جميع المستخدمين في النظام</h4>
@@ -1917,17 +1996,17 @@ const AdminDashboard = () => {
                                                                                     });
                                                                                     setIsUserModalOpen(true);
                                                                                 }}
-                                                                                className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-blue-950/20 text-blue-600 hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center"
+                                                                                className="text-blue-650 hover:text-blue-700 dark:hover:text-blue-400 transition-all flex items-center justify-center p-1.5"
                                                                                 title="تعديل بيانات المستخدم"
                                                                             >
-                                                                                <Settings size={14} />
+                                                                                <Pencil size={15} />
                                                                             </button>
                                                                             <button
-                                                                                onClick={() => handleDeleteUser(user.id_users)}
-                                                                                className="h-8 w-8 rounded-lg bg-rose-50 dark:bg-rose-950/20 text-rose-600 hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center"
+                                                                                onClick={() => triggerDeleteUser(user.id_users, user.full_name)}
+                                                                                className="text-rose-600 hover:text-rose-700 dark:hover:text-rose-400 transition-all flex items-center justify-center p-1.5"
                                                                                 title="حذف الحساب"
                                                                             >
-                                                                                <Trash2 size={14} />
+                                                                                <Trash2 size={15} />
                                                                             </button>
                                                                         </div>
                                                                     </td>
@@ -1951,28 +2030,30 @@ const AdminDashboard = () => {
                                 <div className="space-y-6">
                                     {/* Stats Cards */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex items-center gap-4">
-                                            <div className="h-12 w-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
-                                                <Building2 size={24} />
+                                        <div className="group relative overflow-hidden bg-white/80 dark:bg-slate-900/40 rounded-3xl p-6 shadow-sm flex items-center gap-4 backdrop-blur-md transition-all duration-350 hover:-translate-y-1 hover:shadow-md">
+                                            <div className="absolute -right-6 -top-6 h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-650 opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 blur-md transition-opacity duration-350" />
+                                            <div className="h-12 w-12 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center relative z-10">
+                                                <Building2 size={22} />
                                             </div>
-                                            <div>
+                                            <div className="relative z-10">
                                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">إجمالي شركات الطيران</p>
-                                                <h4 className="text-3xl font-black mt-1">{companiesList.length}</h4>
+                                                <h4 className="text-3xl font-black mt-1 text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{companiesList.length}</h4>
                                             </div>
                                         </div>
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex items-center gap-4">
-                                            <div className="h-12 w-12 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
-                                                <Plane size={24} />
+                                        <div className="group relative overflow-hidden bg-white/80 dark:bg-slate-900/40 rounded-3xl p-6 shadow-sm flex items-center gap-4 backdrop-blur-md transition-all duration-350 hover:-translate-y-1 hover:shadow-md">
+                                            <div className="absolute -right-6 -top-6 h-16 w-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-650 opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 blur-md transition-opacity duration-350" />
+                                            <div className="h-12 w-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center relative z-10">
+                                                <Plane size={22} />
                                             </div>
-                                            <div>
+                                            <div className="relative z-10">
                                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">الشركات النشطة</p>
-                                                <h4 className="text-3xl font-black mt-1">{companiesList.length}</h4>
+                                                <h4 className="text-3xl font-black mt-1 text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{companiesList.length}</h4>
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Companies List Table */}
-                                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm p-8">
+                                    <div className="bg-white/80 dark:bg-slate-900/40 rounded-3xl shadow-sm p-8 backdrop-blur-md">
                                         <div className="flex items-center justify-between mb-6">
                                             <div>
                                                 <h4 className="text-sm font-black">قائمة شركات الطيران</h4>
@@ -2052,17 +2133,17 @@ const AdminDashboard = () => {
                                                                                     });
                                                                                     setIsCompanyModalOpen(true);
                                                                                 }}
-                                                                                className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-blue-950/20 text-blue-600 hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center"
+                                                                                className="text-blue-500 hover:text-blue-600 dark:text-blue-450 dark:hover:text-blue-350 transition-colors p-1.5 cursor-pointer"
                                                                                 title="تعديل بيانات الشركة"
                                                                             >
-                                                                                <Settings size={14} />
+                                                                                <Pencil size={16} />
                                                                             </button>
                                                                             <button
-                                                                                onClick={() => handleDeleteCompany(company.id_admin)}
-                                                                                className="h-8 w-8 rounded-lg bg-rose-50 dark:bg-rose-950/20 text-rose-600 hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center"
+                                                                                onClick={() => triggerDeleteCompany(company.id_admin, company.company_name)}
+                                                                                className="text-rose-500 hover:text-rose-600 dark:text-rose-450 dark:hover:text-rose-350 transition-colors p-1.5 cursor-pointer"
                                                                                 title="حذف الحساب"
                                                                             >
-                                                                                <Trash2 size={14} />
+                                                                                <Trash2 size={16} />
                                                                             </button>
                                                                         </div>
                                                                     </td>
@@ -2087,50 +2168,54 @@ const AdminDashboard = () => {
                                     {/* Stats Cards */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                                         {/* Total Bookings */}
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex items-center gap-4">
-                                            <div className="h-12 w-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
-                                                <Ticket size={24} />
+                                        <div className="group relative overflow-hidden bg-white/80 dark:bg-slate-900/40 rounded-3xl p-6 shadow-sm flex items-center gap-4 backdrop-blur-md transition-all duration-350 hover:-translate-y-1 hover:shadow-md">
+                                            <div className="absolute -right-6 -top-6 h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-650 opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 blur-md transition-opacity duration-350" />
+                                            <div className="h-12 w-12 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center relative z-10">
+                                                <Ticket size={22} />
                                             </div>
-                                            <div>
+                                            <div className="relative z-10">
                                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">إجمالي الحجوزات</p>
-                                                <h4 className="text-2xl font-black mt-1">{bookingsList.length}</h4>
+                                                <h4 className="text-2xl font-black mt-1 text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{bookingsList.length}</h4>
                                             </div>
                                         </div>
 
                                         {/* Certain Bookings */}
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex items-center gap-4">
-                                            <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
-                                                <CheckCircle size={24} />
+                                        <div className="group relative overflow-hidden bg-white/80 dark:bg-slate-900/40 rounded-3xl p-6 shadow-sm flex items-center gap-4 backdrop-blur-md transition-all duration-350 hover:-translate-y-1 hover:shadow-md">
+                                            <div className="absolute -right-6 -top-6 h-16 w-16 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 blur-md transition-opacity duration-350" />
+                                            <div className="h-12 w-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center relative z-10">
+                                                <CheckCircle size={22} />
                                             </div>
-                                            <div>
+                                            <div className="relative z-10">
                                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">الحجوزات المؤكدة</p>
-                                                <h4 className="text-2xl font-black mt-1">
+                                                <h4 className="text-2xl font-black mt-1 text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                                                     {bookingsList.filter(b => b.status === 'certain').length}
                                                 </h4>
                                             </div>
                                         </div>
 
                                         {/* Pending Bookings */}
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex items-center gap-4">
-                                            <div className="h-12 w-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
-                                                <Clock size={24} />
+                                        <div className="group relative overflow-hidden bg-white/80 dark:bg-slate-900/40 rounded-3xl p-6 shadow-sm flex items-center gap-4 backdrop-blur-md transition-all duration-350 hover:-translate-y-1 hover:shadow-md">
+                                            <div className="absolute -right-6 -top-6 h-16 w-16 rounded-full bg-gradient-to-br from-amber-500 to-orange-650 opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 blur-md transition-opacity duration-350" />
+                                            <div className="h-12 w-12 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center relative z-10">
+                                                <Clock size={22} />
                                             </div>
-                                            <div>
+                                            <div className="relative z-10">
                                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">الحجوزات المعلقة</p>
-                                                <h4 className="text-2xl font-black mt-1">
+                                                <h4 className="text-2xl font-black mt-1 text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
                                                     {bookingsList.filter(b => b.status === 'pending').length}
                                                 </h4>
                                             </div>
                                         </div>
 
                                         {/* Canceled Bookings */}
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex items-center gap-4">
-                                            <div className="h-12 w-12 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
-                                                <XCircle size={24} />
+                                        <div className="group relative overflow-hidden bg-white/80 dark:bg-slate-900/40 rounded-3xl p-6 shadow-sm flex items-center gap-4 backdrop-blur-md transition-all duration-350 hover:-translate-y-1 hover:shadow-md">
+                                            <div className="absolute -right-6 -top-6 h-16 w-16 rounded-full bg-gradient-to-br from-rose-500 to-red-650 opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 blur-md transition-opacity duration-350" />
+                                            <div className="h-12 w-12 rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center relative z-10">
+                                                <XCircle size={22} />
                                             </div>
-                                            <div>
+                                            <div className="relative z-10">
                                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">الحجوزات الملغاة</p>
-                                                <h4 className="text-2xl font-black mt-1">
+                                                <h4 className="text-2xl font-black mt-1 text-slate-900 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
                                                     {bookingsList.filter(b => b.status === 'canceled').length}
                                                 </h4>
                                             </div>
@@ -2138,7 +2223,7 @@ const AdminDashboard = () => {
                                     </div>
 
                                     {/* Bookings Table Container */}
-                                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm p-8">
+                                    <div className="bg-white/80 dark:bg-slate-900/40 rounded-3xl shadow-sm p-8 backdrop-blur-md">
                                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                                             <div>
                                                 <h4 className="text-sm font-black">جميع حجوزات النظام</h4>
@@ -2152,7 +2237,7 @@ const AdminDashboard = () => {
                                                     placeholder="البحث باسم المسافر، رقم الرحلة، أو كود الحجز المرجعي..."
                                                     value={bookingSearchQuery}
                                                     onChange={(e) => setBookingSearchQuery(e.target.value)}
-                                                    className="w-full bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-blue-500 rounded-2xl py-3 pr-10 pl-4 text-xs font-bold outline-none transition-all dark:text-white"
+                                                    className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-2xl py-3 pr-10 pl-4 text-xs font-bold outline-none transition-all dark:text-white"
                                                 />
                                                 <Search size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                                                 {bookingSearchQuery && (
@@ -2176,7 +2261,7 @@ const AdminDashboard = () => {
                                                             <th className="pb-4 px-4">الرمز المرجعي</th>
                                                             <th className="pb-4 px-4">الرحلة والمسار</th>
                                                             <th className="pb-4 px-4">المسافرون</th>
-                                                            <th className="pb-4 px-4">القيمة الإجمالية</th>
+                                                            <th className="pb-4 px-4 text-center">القيمة الإجمالية</th>
                                                             <th className="pb-4 px-4">تاريخ الحجز</th>
                                                             <th className="pb-4 px-4">حالة الحجز والدفع</th>
                                                             <th className="pb-4 px-4 text-left">إجراءات المسؤول</th>
@@ -2188,24 +2273,18 @@ const AdminDashboard = () => {
                                                                 <tr key={booking.id_bookings} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                                                                     {/* Booking Reference */}
                                                                     <td className="py-5 px-4 font-black text-slate-900 dark:text-white">
-                                                                        <div className="flex items-center gap-3">
-                                                                            <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-blue-600/10 to-indigo-600/10 dark:from-blue-900/20 dark:to-indigo-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center font-black">
-                                                                                <Ticket size={18} />
-                                                                            </div>
-                                                                            <div>
-                                                                                <p className="font-mono font-bold text-slate-800 dark:text-white tracking-wider">
-                                                                                    {booking.booking_reference}
-                                                                                </p>
-                                                                                <p className="text-[10px] text-slate-400">ID: #{booking.id_bookings}</p>
-                                                                            </div>
+                                                                        <div>
+                                                                            <p className="font-mono font-bold text-slate-800 dark:text-white tracking-wider">
+                                                                                {booking.booking_reference}
+                                                                            </p>
+                                                                            <p className="text-[10px] text-slate-405 dark:text-slate-400">ID: #{booking.id_bookings}</p>
                                                                         </div>
                                                                     </td>
 
                                                                     {/* Flight & Route */}
                                                                     <td className="py-5 px-4">
                                                                         <div className="space-y-1">
-                                                                            <p className="flex items-center gap-1.5 font-black text-slate-800 dark:text-white">
-                                                                                <Plane size={12} className="text-blue-500" />
+                                                                            <p className="font-black text-slate-800 dark:text-white">
                                                                                 {booking.flight_number}
                                                                             </p>
                                                                             <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
@@ -2231,7 +2310,7 @@ const AdminDashboard = () => {
                                                                     </td>
 
                                                                     {/* Total Price */}
-                                                                    <td className="py-5 px-4 font-black text-blue-600 dark:text-blue-400">
+                                                                    <td className="py-5 px-4 text-center font-black text-blue-600 dark:text-blue-400">
                                                                         ${parseFloat(booking.final_price || 0).toLocaleString('en-US')}
                                                                     </td>
 
@@ -2303,9 +2382,8 @@ const AdminDashboard = () => {
                                                                                     {(booking.status === 'pending' || booking.status === 'certain') && (
                                                                                         <button
                                                                                             onClick={() => {
-                                                                                                if (window.confirm('هل أنت متأكد من إلغاء هذا الحجز؟')) {
-                                                                                                    handleUpdateBookingStatus(booking.id_bookings, 'canceled', 'failed');
-                                                                                                }
+                                                                                                setCancelBookingTargetId(booking.id_bookings);
+                                                                                                setIsCancelBookingModalOpen(true);
                                                                                             }}
                                                                                             className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-rose-500/10 text-rose-600 hover:bg-rose-600 hover:text-white transition-all text-[11px] font-black border border-rose-500/20"
                                                                                             title="إلغاء الحجز وتغيير الدفع إلى فاشل"
@@ -2351,8 +2429,8 @@ const AdminDashboard = () => {
 
             {/* ===== COMPANY MODAL (ADD/EDIT COMPANY FORM) ===== */}
             {isCompanyModalOpen && (
-                <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-fade-in select-none">
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
+                <div className="fixed inset-0 bg-slate-950/10 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-fade-in select-none">
+                    <div className="bg-white modal-solid-bg dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
                         <div className="flex items-center justify-between mb-6">
                             <h4 className="text-base font-black">
                                 {isEditingCompany ? 'تعديل بيانات شركة الطيران' : 'إضافة حساب شركة طيران جديدة'}
@@ -2368,7 +2446,7 @@ const AdminDashboard = () => {
                         <form onSubmit={isEditingCompany ? handleUpdateCompany : handleCreateCompany} className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400">اسم الشركة</label>
+                                    <label className="text-[10px] font-black text-slate-700">اسم الشركة</label>
                                     <input
                                         type="text"
                                         placeholder="مثال: اليمنية، القطيبي"
@@ -2380,7 +2458,7 @@ const AdminDashboard = () => {
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400">رمز الطيران (airline_code)</label>
+                                    <label className="text-[10px] font-black text-slate-700">رمز الطيران (airline_code)</label>
                                     <input
                                         type="text"
                                         placeholder="مثال: IY, DH"
@@ -2394,7 +2472,7 @@ const AdminDashboard = () => {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400">البريد الإلكتروني للشركة</label>
+                                    <label className="text-[10px] font-black text-slate-700">البريد الإلكتروني للشركة</label>
                                     <input
                                         type="email"
                                         placeholder="example@gmail.com"
@@ -2406,7 +2484,7 @@ const AdminDashboard = () => {
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400">كلمة المرور</label>
+                                    <label className="text-[10px] font-black text-slate-700">كلمة المرور</label>
                                     <input
                                         type="password"
                                         placeholder={isEditingCompany ? 'اتركها فارغة للمحافظة عليها' : 'كلمة المرور'}
@@ -2420,7 +2498,7 @@ const AdminDashboard = () => {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400">رقم الموظف (employee_id)</label>
+                                    <label className="text-[10px] font-black text-slate-700">رقم الموظف (employee_id)</label>
                                     <input
                                         type="text"
                                         placeholder="مثال: 1"
@@ -2432,7 +2510,7 @@ const AdminDashboard = () => {
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400">القسم (department)</label>
+                                    <label className="text-[10px] font-black text-slate-700">القسم (department)</label>
                                     <input
                                         type="text"
                                         placeholder="مثال: قسم اضافة الرحلات"
@@ -2466,8 +2544,8 @@ const AdminDashboard = () => {
 
             {/* ===== USER MODAL (ADD/EDIT USER FORM) ===== */}
             {isUserModalOpen && (
-                <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-fade-in select-none">
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
+                <div className="fixed inset-0 bg-slate-950/10 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-fade-in select-none">
+                    <div className="bg-white modal-solid-bg dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
                         <div className="flex items-center justify-between mb-6">
                             <h4 className="text-base font-black">
                                 {isEditingUser ? 'تعديل بيانات المستخدم' : 'إضافة حساب مستخدم جديد'}
@@ -2480,51 +2558,55 @@ const AdminDashboard = () => {
                             </button>
                         </div>
 
-                        <form onSubmit={isEditingUser ? handleUpdateUser : handleCreateUser} className="space-y-4">
+                        <form onSubmit={isEditingUser ? handleUpdateUser : handleCreateUser} className="space-y-4" autoComplete="off">
                             <div className="space-y-1">
-                                <label className="text-[10px] font-black text-slate-400">الاسم الكامل</label>
+                                <label className="text-[10px] font-black text-slate-700">الاسم الكامل</label>
                                 <input
                                     type="text"
-                                    placeholder="أحمد محمد"
+                                    placeholder=""
                                     value={userForm.full_name}
                                     onChange={(e) => setUserForm({ ...userForm, full_name: e.target.value })}
                                     className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
                                     required
+                                    autoComplete="off"
                                 />
                             </div>
 
                             <div className="space-y-1">
-                                <label className="text-[10px] font-black text-slate-400">البريد الإلكتروني</label>
+                                <label className="text-[10px] font-black text-slate-700">البريد الإلكتروني</label>
                                 <input
                                     type="email"
-                                    placeholder="example@domain.com"
+                                    placeholder=""
                                     value={userForm.email}
                                     onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
                                     className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
                                     required
+                                    autoComplete="off"
                                 />
                             </div>
 
                             <div className="space-y-1">
-                                <label className="text-[10px] font-black text-slate-400">رقم الهاتف</label>
+                                <label className="text-[10px] font-black text-slate-700">رقم الهاتف</label>
                                 <input
                                     type="text"
-                                    placeholder="777777777"
+                                    placeholder=""
                                     value={userForm.phone}
                                     onChange={(e) => setUserForm({ ...userForm, phone: e.target.value })}
                                     className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
+                                    autoComplete="off"
                                 />
                             </div>
 
                             <div className="space-y-1">
-                                <label className="text-[10px] font-black text-slate-400">كلمة المرور</label>
+                                <label className="text-[10px] font-black text-slate-700">كلمة المرور</label>
                                 <input
                                     type="password"
-                                    placeholder={isEditingUser ? 'اتركها فارغة إذا لم تكن تريد تغييرها' : 'كلمة المرور'}
+                                    placeholder={isEditingUser ? 'اتركها فارغة إذا لم تكن تريد تغييرها' : ''}
                                     value={userForm.password}
                                     onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
                                     className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none"
                                     required={!isEditingUser}
+                                    autoComplete="new-password"
                                 />
                             </div>
 
@@ -2544,6 +2626,78 @@ const AdminDashboard = () => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ===== DELETE CONFIRMATION MODAL ===== */}
+            {isDeleteModalOpen && (
+                <div className="fixed inset-0 bg-slate-950/10 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-fade-in select-none">
+                    <div className="bg-white modal-solid-bg rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center">
+                        <div className="mx-auto h-12 w-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mb-4">
+                            <Trash2 size={24} />
+                        </div>
+                        <h4 className="text-base font-black text-slate-800 mb-2 font-brand">تأكيد حذف الحساب</h4>
+                        <p className="text-xs text-slate-500 mb-6 leading-relaxed">
+                            هل أنت متأكد من حذف الحساب الخاص بـ <span className="font-extrabold text-slate-850">"{deleteTarget.label}"</span>؟ لا يمكن التراجع عن هذا الإجراء.
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setIsDeleteModalOpen(false);
+                                    setDeleteTarget({ id: null, type: null, label: '' });
+                                }}
+                                className="py-2.5 px-4 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 text-xs font-bold w-full transition-colors"
+                            >
+                                إلغاء
+                            </button>
+                            <button
+                                type="button"
+                                onClick={executeDelete}
+                                className="py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-md shadow-rose-500/10 w-full transition-colors"
+                            >
+                                حذف نهائي
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ===== CANCEL BOOKING CONFIRMATION MODAL ===== */}
+            {isCancelBookingModalOpen && (
+                <div className="fixed inset-0 bg-slate-950/10 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-fade-in select-none" dir="rtl">
+                    <div className="bg-white modal-solid-bg rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center animate-zoom-in">
+                        <div className="mx-auto h-12 w-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mb-4">
+                            <X size={24} />
+                        </div>
+                        <h4 className="text-base font-black text-slate-800 mb-2 font-brand">تأكيد إلغاء الحجز</h4>
+                        <p className="text-xs text-slate-500 mb-6 leading-relaxed">
+                            هل أنت متأكد من إلغاء هذا الحجز وتغيير حالة الدفع إلى فاشل؟ لا يمكن التراجع عن هذا الإجراء.
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setIsCancelBookingModalOpen(false);
+                                    setCancelBookingTargetId(null);
+                                }}
+                                className="py-2.5 px-4 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 text-xs font-bold w-full transition-colors"
+                            >
+                                تراجع
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    handleUpdateBookingStatus(cancelBookingTargetId, 'canceled', 'failed');
+                                    setIsCancelBookingModalOpen(false);
+                                    setCancelBookingTargetId(null);
+                                }}
+                                className="py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-md shadow-rose-500/10 w-full transition-colors"
+                            >
+                                تأكيد الإلغاء
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

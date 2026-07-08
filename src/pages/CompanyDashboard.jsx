@@ -19,7 +19,7 @@ import adenLogo from '../assets/F.png';
 const airlineOptions = [
     { code: 'IY', name: 'اليمنية' },
     { code: 'BS', name: 'طيران بلقيس' },
-    { code: 'QY', name: 'طيران عدن' },
+    { code: 'QY', name: 'طيران فلاي عدن' },
 ];
 
 const airportOptions = [
@@ -355,7 +355,7 @@ const CompanyDashboard = () => {
 
             {/* ─── Premium Header ───────────────────────────────────── */}
             <header
-                className={`sticky top-4 z-50 transition-all duration-500 mx-6 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl py-3 px-6 rounded-2xl shadow-lg shadow-slate-100/40 dark:shadow-none border border-slate-150/70 dark:border-slate-800/40`}
+                className={`sticky top-4 z-50 transition-all duration-500 mx-6 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl py-3 px-6 rounded-2xl shadow-xl shadow-slate-200/60 dark:shadow-black/40 border border-slate-150/70 dark:border-slate-800/40`}
                 style={{ marginRight: 'calc(var(--sidebar-width, 288px) + 1.5rem)' }}
             >
                 <div className="mx-auto flex max-w-7xl items-center justify-between">

@@ -59,7 +59,7 @@ async function seed() {
     const companies = [
       ['الخطوط الجوية اليمنية', 'IY'],
       ['طيران بلقيس', 'BS'],
-      ['طيران عدن', 'QY']
+      ['طيران فلاي عدن', 'QY']
     ];
     for (const company of companies) {
       await connection.execute(

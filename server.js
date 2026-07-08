@@ -2716,7 +2716,7 @@ app.get('/api/chat/sessions/:key/messages', async (req, res) => {
       [key]
     );
     const [messages] = await connection.execute(`
-      SELECT cm.* FROM chat_messages cm 
+      SELECT cm.*, cm.id_chat AS id FROM chat_messages cm 
       JOIN chat_sessions cs ON cm.session_id = cs.id 
       WHERE cs.session_key = ? 
       ORDER BY cm.created_at ASC
@@ -2779,9 +2779,9 @@ app.get('/api/chat/poll/:key', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
     const [messages] = await connection.execute(`
-      SELECT cm.* FROM chat_messages cm
+      SELECT cm.*, cm.id_chat AS id FROM chat_messages cm
       JOIN chat_sessions cs ON cm.session_id = cs.id
-      WHERE cs.session_key = ? AND cm.id > ?
+      WHERE cs.session_key = ? AND cm.id_chat > ?
       ORDER BY cm.created_at ASC
     `, [key, after || 0]);
     res.json({ success: true, messages });
@@ -2807,11 +2807,111 @@ app.patch('/api/chat/sessions/:key/close', async (req, res) => {
   }
 });
 
+// ─── Auto-create settings table if not exist ────────────────────────────────
+const ensureSettingsTable = async () => {
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS system_settings (
+        setting_key VARCHAR(64) PRIMARY KEY,
+        setting_value VARCHAR(255) NOT NULL
+      )
+    `);
+    
+    // Seed default settings if they don't exist
+    await connection.execute(`
+      INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES 
+      ('markup_rate', '5'),
+      ('exchange_rate', '530'),
+      ('support_email', 'support@ybf.com')
+    `);
+    console.log('✅ Settings table ready.');
+  } catch (err) {
+    console.error('Settings table creation error:', err.message);
+  } finally {
+    if (connection) await connection.end();
+  }
+};
+
+// GET /api/admin/settings — Get system settings
+app.get('/api/admin/settings', async (req, res) => {
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    const [rows] = await connection.execute('SELECT * FROM system_settings');
+    const settings = {};
+    rows.forEach(row => {
+      settings[row.setting_key] = row.setting_value;
+    });
+    res.json({ success: true, settings });
+  } catch (error) {
+    console.error('Error fetching settings:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// POST /api/admin/settings — Save/Update system settings
+app.post('/api/admin/settings', async (req, res) => {
+  const { markup_rate, exchange_rate, support_email } = req.body;
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    
+    await connection.execute(
+      'INSERT INTO system_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = ?',
+      ['markup_rate', String(markup_rate), String(markup_rate)]
+    );
+    await connection.execute(
+      'INSERT INTO system_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = ?',
+      ['exchange_rate', String(exchange_rate), String(exchange_rate)]
+    );
+    await connection.execute(
+      'INSERT INTO system_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = ?',
+      ['support_email', String(support_email), String(support_email)]
+    );
+    
+    res.json({ success: true, message: 'Settings updated successfully' });
+  } catch (error) {
+    console.error('Error updating settings:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
 // ─── Auto-create chat tables if not exist ────────────────────────────────────
 const ensureChatTables = async () => {
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
+    
+    // Check if chat_messages exists and whether it has id_chat column
+    let hasIdChat = false;
+    try {
+      const [columns] = await connection.execute("SHOW COLUMNS FROM chat_messages LIKE 'id_chat'");
+      if (columns.length > 0) {
+        hasIdChat = true;
+      }
+    } catch (e) {
+      // Table might not exist yet
+    }
+
+    // If table exists but lacks id_chat, drop it to resolve collision
+    if (!hasIdChat) {
+      try {
+        const [tables] = await connection.execute("SHOW TABLES LIKE 'chat_messages'");
+        if (tables.length > 0) {
+          await connection.execute("DROP TABLE chat_messages");
+          console.log('⚠️ Dropped legacy chat_messages table to apply unified schema.');
+        }
+      } catch (e) {
+        console.error('Error dropping chat_messages:', e.message);
+      }
+    }
+
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS chat_sessions (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -2823,18 +2923,22 @@ const ensureChatTables = async () => {
         updated_at DATETIME DEFAULT NOW()
       )
     `);
+
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS chat_messages (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        session_id INT NOT NULL,
+        id_chat INT AUTO_INCREMENT PRIMARY KEY,
+        session_id INT DEFAULT NULL,
         sender ENUM('user','admin') NOT NULL,
-        text TEXT NOT NULL,
+        sender_name VARCHAR(100) DEFAULT NULL,
+        sender_email VARCHAR(150) DEFAULT NULL,
+        message TEXT DEFAULT NULL,
+        text TEXT DEFAULT NULL,
         is_read TINYINT(1) DEFAULT 0,
         created_at DATETIME DEFAULT NOW(),
         FOREIGN KEY (session_id) REFERENCES chat_sessions(id) ON DELETE CASCADE
       )
     `);
-    console.log('✅ Chat tables ready.');
+    console.log('✅ Chat tables ready (unified schema).');
   } catch (err) {
     console.error('Chat table creation error:', err.message);
   } finally {
@@ -2853,4 +2957,5 @@ app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
   seedAdmin();
   ensureChatTables();
+  ensureSettingsTable();
 });

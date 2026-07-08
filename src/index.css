@@ -9,6 +9,7 @@
   --color-brand-pearl: #b4d3f8;
   --color-brand-red: #d9312b;
   --color-brand-red-hover: #c52b26;
+  --font-sans: 'Cairo', 'Tajawal', system-ui, -apple-system, sans-serif;
 }
 
 
@@ -266,4 +267,111 @@
   .md\:mr-72 {
     margin-right: var(--sidebar-width, 288px) !important;
   }
+}
+
+/* Premium Admin Dashboard styling overrides */
+.lining-nums .bg-white.dark\:bg-slate-900.border,
+.lining-nums .bg-white.dark\:bg-slate-900\/40.border,
+.lining-nums .bg-white.dark\:bg-slate-900.border-slate-200,
+.lining-nums .bg-white.dark\:bg-slate-900.border-slate-200\/60 {
+  background-color: rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(226, 232, 240, 0.7) !important;
+}
+
+.dark .lining-nums .bg-white.dark\:bg-slate-900.border,
+.dark .lining-nums .bg-white.dark\:bg-slate-900\/40.border,
+.dark .lining-nums .bg-white.dark\:bg-slate-900.border-slate-200,
+.dark .lining-nums .bg-white.dark\:bg-slate-900.border-slate-200\/60 {
+  background-color: rgba(15, 23, 42, 0.4) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(30, 41, 59, 0.5) !important;
+}
+
+/* Let's style tables inside the Admin Dashboard to be ultra premium */
+.lining-nums table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.lining-nums th {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b !important;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.6) !important;
+  padding-bottom: 1rem;
+}
+
+.dark .lining-nums th {
+  color: #94a3b8 !important;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.4) !important;
+}
+
+.lining-nums tr:hover {
+  background-color: rgba(248, 250, 252, 0.5) !important;
+}
+
+.dark .lining-nums tr:hover {
+  background-color: rgba(30, 41, 59, 0.2) !important;
+}
+
+/* Also style selects and inputs inside the Admin Dashboard */
+.lining-nums select, 
+.lining-nums input[type="text"], 
+.lining-nums input[type="date"], 
+.lining-nums input[type="number"], 
+.lining-nums input[type="password"] {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(226, 232, 240, 0.7) !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02) !important;
+  transition: all 0.2s ease-in-out !important;
+  border-radius: 0.75rem !important; /* rounded-xl */
+}
+
+.dark .lining-nums select, 
+.dark .lining-nums input[type="text"], 
+.dark .lining-nums input[type="date"], 
+.dark .lining-nums input[type="number"], 
+.dark .lining-nums input[type="password"] {
+  background-color: rgba(15, 23, 42, 0.45) !important;
+  border: 1px solid rgba(51, 65, 85, 0.4) !important;
+  color: #f8fafc !important;
+}
+
+.lining-nums select:focus, 
+.lining-nums input:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+}
+
+/* Force modal to have solid non-transparent background */
+.lining-nums .modal-solid-bg {
+  background-color: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* ─── Premium Glassmorphic Cards & Soft Shadows for Company Dashboard ─── */
+.border-slate-150\/70,
+.border-slate-150\/50,
+.border-slate-150 {
+  border-color: rgba(226, 232, 240, 0.45) !important;
+  background-color: rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.02), 0 4px 12px -3px rgba(0, 0, 0, 0.01) !important;
+}
+
+.dark .border-slate-150\/70,
+.dark .border-slate-150\/50,
+.dark .border-slate-150,
+.dark .border-slate-800\/40 {
+  border-color: rgba(255, 255, 255, 0.04) !important;
+  background-color: rgba(15, 23, 42, 0.35) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.25) !important;
 }

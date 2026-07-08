@@ -244,16 +244,7 @@ export default function Sidebar() {
 
       {/* 1. الجزء العلوي: الهوية والشعار */}
       <div className="relative flex flex-col items-center gap-3 border-b border-slate-100 dark:border-slate-900 p-6">
-        {/* زر تبديل الوضع الداكن/الفاتح في الأعلى */}
-        {user.role !== 'company_admin' && user.role !== 'company' && (
-          <button
-            onClick={toggleDarkMode}
-            className="absolute left-4 top-4 h-8 w-8 flex items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/50 dark:border-slate-850 text-slate-500 dark:text-slate-400 transition-all shadow-sm"
-            title={isDarkMode ? 'الوضع الفاتح' : 'الوضع الداكن'}
-          >
-            {isDarkMode ? <Sun size={15} className="text-amber-500" /> : <Moon size={15} className="text-indigo-600" />}
-          </button>
-        )}
+
         <div className="relative flex h-16 w-16 items-center justify-center">
           <img
             src={logo}
@@ -405,7 +396,7 @@ export default function Sidebar() {
         {/* زر تسجيل الخروج */}
         <button
           onClick={handleLogout}
-          className="group flex w-full h-10 items-center justify-center gap-2 rounded-xl bg-slate-50 dark:bg-slate-900/30 text-slate-500 dark:text-slate-400 border border-slate-150/50 dark:border-slate-800/40 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-650 dark:hover:text-red-400 hover:border-red-200/50 dark:hover:border-red-500/20 px-4 text-xs font-bold transition-all duration-300 cursor-pointer"
+          className="group flex w-full h-10 items-center justify-center gap-2 rounded-xl bg-slate-50 dark:bg-slate-900/30 text-slate-500 dark:text-slate-400 border border-blue-500/40 dark:border-blue-500/25 hover:bg-blue-50 dark:hover:bg-blue-550/10 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-500/60 dark:hover:border-blue-500/40 px-4 text-xs font-bold transition-all duration-300 cursor-pointer"
         >
           <LogOut size={14} className="transition-transform group-hover:-translate-x-0.5" />
           <span>تسجيل الخروج</span>

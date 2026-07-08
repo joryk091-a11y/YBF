@@ -11,7 +11,7 @@ import flightLine from '../assets/line.jpeg'
 const airlinePanelItems = [
   { id: 'yemenia', name: 'اليمنية', logo: logoY },
   { id: 'balqis', name: 'طيران بلقيس', logo: logoB },
-  { id: 'aden', name: 'طيران عدن', logo: logoF },
+  { id: 'aden', name: 'طيران فلاي عدن', logo: logoF },
 ]
 
 const searchModeLabels = {
@@ -158,7 +158,7 @@ function SearchPage() {
     const groups = [
       { id: 'yemenia', name: 'الخطوط الجوية اليمنية', logo: logoY, flights: [] },
       { id: 'balqis', name: 'طيران الملكة بلقيس', logo: logoB, flights: [] },
-      { id: 'aden', name: 'طيران عدن', logo: logoF, flights: [] }
+      { id: 'aden', name: 'طيران فلاي عدن', logo: logoF, flights: [] }
     ];
 
     flights.forEach(flight => {

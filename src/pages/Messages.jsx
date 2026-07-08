@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-    Search, Trash2, Send, MessageSquare, User, RefreshCw, AlertCircle
+    Search, Trash2, Send, MessageSquare, User, AlertCircle
 } from 'lucide-react';
 
 const Messages = ({ token, showToast }) => {
@@ -204,27 +204,22 @@ const Messages = ({ token, showToast }) => {
     };
 
     return (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-xl flex h-[620px]" dir="rtl">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/85 rounded-3xl overflow-hidden shadow-2xl flex h-[640px]" dir="rtl">
             
             {/* Right Panel: Conversations List (Sidebar) */}
-            <div className="w-80 sm:w-96 border-l border-slate-200 dark:border-slate-800 flex flex-col bg-slate-50/50 dark:bg-slate-900/30">
+            <div className="w-80 sm:w-96 border-l border-slate-200/70 dark:border-slate-800/60 flex flex-col bg-slate-50/40 dark:bg-slate-950/20 backdrop-blur-md animate-fade-in">
                 {/* Sidebar Header */}
-                <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
-                    <div className="flex items-center gap-2">
-                        <MessageSquare className="text-blue-600" size={20} />
-                        <h4 className="text-sm font-black text-slate-800 dark:text-white">محادثات الدعم المباشر</h4>
+                <div className="p-5 border-b border-slate-200/70 dark:border-slate-800/60 flex items-center justify-between shrink-0">
+                    <div className="flex items-center gap-2.5">
+                        <div className="h-9 w-9 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                            <MessageSquare size={18} />
+                        </div>
+                        <h4 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider font-brand">محادثات الدعم المباشر</h4>
                     </div>
-                    <button 
-                        onClick={fetchConversations} 
-                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all"
-                        title="تحديث المحادثات"
-                    >
-                        <RefreshCw size={14} className="text-slate-500" />
-                    </button>
                 </div>
 
                 {/* Search Bar */}
-                <div className="p-3 border-b border-slate-200/60 dark:border-slate-800/60 shrink-0">
+                <div className="p-4 border-b border-slate-200/50 dark:border-slate-800/50 shrink-0">
                     <div className="relative">
                         <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
                         <input
@@ -232,17 +227,17 @@ const Messages = ({ token, showToast }) => {
                             placeholder="بحث بالاسم، البريد أو الرسالة..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 focus:border-blue-500 rounded-xl py-2 pr-9 pl-4 text-xs font-bold outline-none transition-all"
+                            className="w-full bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/50 focus:border-blue-500 rounded-xl py-2.5 pr-9 pl-4 text-xs font-bold outline-none transition-all focus:ring-2 focus:ring-blue-500/10 placeholder-slate-400"
                         />
                     </div>
                 </div>
 
                 {/* Conversations List Scrollable */}
-                <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/40">
+                <div className="flex-1 overflow-y-auto divide-y divide-slate-100/60 dark:divide-slate-800/20 scrollbar-thin">
                     {loadingConversations ? (
-                        <div className="py-20 text-center text-slate-400 font-bold text-xs flex flex-col items-center gap-2">
-                            <div className="h-6 w-6 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                            جاري التحميل...
+                        <div className="py-20 text-center text-slate-400 font-bold text-xs flex flex-col items-center gap-3">
+                            <div className="h-6 w-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                            <span>جاري التحميل...</span>
                         </div>
                     ) : filteredConversations.length === 0 ? (
                         <div className="py-20 text-center text-slate-400 font-bold text-xs">
@@ -255,30 +250,30 @@ const Messages = ({ token, showToast }) => {
                                 <div
                                     key={conv.sender_email}
                                     onClick={() => handleSelectConversation(conv)}
-                                    className={`flex items-center gap-3 p-4 cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/20 transition-all ${
-                                        isActive ? 'bg-blue-50/50 dark:bg-blue-950/20 border-r-4 border-blue-600' : ''
+                                    className={`flex items-center gap-3.5 p-4.5 cursor-pointer hover:bg-slate-100/65 dark:hover:bg-slate-805/20 transition-all ${
+                                        isActive ? 'bg-blue-50/70 dark:bg-blue-950/20 border-r-4 border-blue-600 shadow-sm' : ''
                                     }`}
                                 >
                                     {/* Avatar */}
-                                    <div className="h-11 w-11 rounded-full flex items-center justify-center font-black text-sm bg-gradient-to-tr from-blue-500 to-indigo-600 text-white shrink-0 shadow-sm">
+                                    <div className="h-11 w-11 rounded-full flex items-center justify-center font-black text-sm bg-gradient-to-tr from-blue-500 to-indigo-600 text-white shrink-0 shadow-md">
                                         {getInitials(conv.sender_name)}
                                     </div>
 
                                     {/* Conversation Snippet */}
                                     <div className="flex-1 min-w-0">
                                         <div className="flex justify-between items-center mb-1">
-                                            <h5 className="text-xs font-black text-slate-800 dark:text-white truncate">{conv.sender_name}</h5>
+                                            <h5 className="text-xs font-black text-slate-850 dark:text-white truncate">{conv.sender_name}</h5>
                                             <span className="text-[9px] text-slate-400 font-bold shrink-0">{formatTime(conv.last_message_time)}</span>
                                         </div>
-                                        <p className="text-[10px] text-slate-400 font-bold truncate mb-1">{conv.sender_email}</p>
-                                        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold truncate leading-relaxed">
+                                        <p className="text-[10px] text-slate-400/90 font-bold truncate mb-1">{conv.sender_email}</p>
+                                        <p className="text-[10px] text-slate-550 dark:text-slate-400 font-bold truncate leading-relaxed">
                                             {conv.last_message}
                                         </p>
                                     </div>
 
                                     {/* Unread badge */}
                                     {conv.unread_count > 0 && (
-                                        <div className="h-5 w-5 bg-emerald-500 text-white rounded-full flex items-center justify-center text-[9px] font-black shrink-0">
+                                        <div className="h-5 w-5 bg-emerald-500 text-white rounded-full flex items-center justify-center text-[9px] font-black shrink-0 animate-pulse">
                                             {conv.unread_count}
                                         </div>
                                     )}
@@ -295,19 +290,19 @@ const Messages = ({ token, showToast }) => {
                 {activeConversation ? (
                     <>
                         {/* Chat Header */}
-                        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-6 py-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shrink-0">
+                        <div className="flex items-center justify-between border-b border-slate-200/70 dark:border-slate-800/60 px-6 py-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shrink-0">
                             <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 rounded-full flex items-center justify-center font-black text-xs bg-gradient-to-tr from-blue-500 to-indigo-600 text-white shrink-0 shadow-sm">
+                                <div className="h-10 w-10 rounded-full flex items-center justify-center font-black text-xs bg-gradient-to-tr from-blue-500 to-indigo-600 text-white shrink-0 shadow-md">
                                     {getInitials(activeConversation.sender_name)}
                                 </div>
                                 <div>
-                                    <h4 className="text-xs font-black text-slate-800 dark:text-white">{activeConversation.sender_name}</h4>
+                                    <h4 className="text-xs font-black text-slate-855 dark:text-white">{activeConversation.sender_name}</h4>
                                     <p className="text-[9px] text-slate-400 font-bold mt-0.5">{activeConversation.sender_email}</p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => handleDeleteConversation(activeConversation.sender_email)}
-                                className="p-2.5 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
+                                className="p-2.5 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer"
                                 title="حذف المحادثة نهائياً"
                             >
                                 <Trash2 size={16} />
@@ -315,11 +310,11 @@ const Messages = ({ token, showToast }) => {
                         </div>
 
                         {/* Messages Area */}
-                        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/20 dark:bg-slate-950/20">
+                        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/10 dark:bg-slate-950/10 scrollbar-thin">
                             {loadingMessages ? (
-                                <div className="py-20 text-center text-slate-400 font-bold text-xs flex flex-col items-center gap-2">
-                                    <div className="h-6 w-6 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                                    جاري تحميل الرسائل...
+                                <div className="py-20 text-center text-slate-400 font-bold text-xs flex flex-col items-center gap-3">
+                                    <div className="h-6 w-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                    <span>جاري تحميل الرسائل...</span>
                                 </div>
                             ) : messages.length === 0 ? (
                                 <div className="py-20 text-center text-slate-400 font-bold text-xs">
@@ -331,13 +326,13 @@ const Messages = ({ token, showToast }) => {
                                     return (
                                         <div 
                                             key={msg.id_chat || index}
-                                            className={`flex flex-col max-w-[75%] ${isAdmin ? 'mr-auto items-end' : 'ml-auto items-start'}`}
+                                            className={`flex flex-col max-w-[75%] ${isAdmin ? 'mr-auto items-end animate-fade-in-left' : 'ml-auto items-start animate-fade-in-right'}`}
                                         >
                                             <div 
                                                 className={`rounded-2xl px-4 py-2.5 text-xs font-bold shadow-sm leading-relaxed ${
                                                     isAdmin 
-                                                        ? 'bg-gradient-to-tr from-blue-600 to-indigo-700 text-white rounded-bl-none' 
-                                                        : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-100 dark:border-slate-800/80 rounded-br-none'
+                                                        ? 'bg-gradient-to-tr from-blue-600 to-indigo-750 text-white rounded-bl-none shadow-md shadow-blue-500/5' 
+                                                        : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-105 border border-slate-100/80 dark:border-slate-800/80 rounded-br-none shadow-sm'
                                                 }`}
                                             >
                                                 {msg.message}
@@ -353,29 +348,29 @@ const Messages = ({ token, showToast }) => {
                         </div>
 
                         {/* Input Area */}
-                        <form onSubmit={handleSendReply} className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-3 shrink-0">
+                        <form onSubmit={handleSendReply} className="p-4 border-t border-slate-200/70 dark:border-slate-800/60 bg-white dark:bg-slate-900 flex items-center gap-3 shrink-0">
                             <input
                                 type="text"
                                 placeholder="اكتب ردك هنا..."
                                 value={replyText}
                                 onChange={(e) => setReplyText(e.target.value)}
-                                className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs font-bold outline-none focus:border-blue-500 transition-all"
+                                className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-blue-500 transition-all focus:ring-2 focus:ring-blue-500/10 placeholder-slate-400"
                             />
                             <button
                                 type="submit"
                                 disabled={!replyText.trim()}
-                                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-700 text-white shadow-md shadow-blue-600/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 cursor-pointer"
+                                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-700 text-white shadow-lg shadow-blue-600/15 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 cursor-pointer"
                             >
                                 <Send size={14} className="rotate-180" />
                             </button>
                         </form>
                     </>
                 ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 select-none">
+                    <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 select-none bg-slate-50/20 dark:bg-slate-950/5">
                         <div className="h-16 w-16 bg-blue-50 dark:bg-blue-900/10 rounded-2xl flex items-center justify-center text-blue-600 mb-4 shadow-inner">
                             <MessageSquare size={32} />
                         </div>
-                        <h4 className="text-sm font-black text-slate-700 dark:text-slate-200 mb-1">مركز الدعم والمحادثات الحية</h4>
+                        <h4 className="text-sm font-black text-slate-755 dark:text-slate-200 mb-1 font-brand">مركز الدعم والمحادثات الحية</h4>
                         <p className="text-xs text-slate-400 font-bold text-center max-w-sm leading-relaxed">
                             اختر إحدى المحادثات من القائمة الجانبية للتواصل مع المسافرين والزوار والرد على استفساراتهم بشكل فوري.
                         </p>

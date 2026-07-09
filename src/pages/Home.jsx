@@ -362,12 +362,13 @@ function HomePage() {
 
   return (
     <main>
-      <section className="relative min-h-[60svh] sm:min-h-[100svh] overflow-hidden bg-[#e9edf6]">
+      {/* Hero: Desktop only */}
+      <section className="relative hidden sm:block min-h-[100svh] overflow-hidden bg-[#e9edf6]">
         <img
           src={heroPlane}
           alt=""
           aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover object-center -translate-y-14 sm:-translate-y-20 lg:-translate-y-28"
+          className="absolute inset-0 h-full w-full object-cover object-center -translate-y-20 lg:-translate-y-28"
         />
 
         <div
@@ -380,14 +381,14 @@ function HomePage() {
         />
 
         <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-b from-transparent via-[#f4f3f9]/70 to-[#f4f3f9] sm:h-64"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-gradient-to-b from-transparent via-[#f4f3f9]/70 to-[#f4f3f9]"
           aria-hidden="true"
         />
 
-        <div className="relative mx-auto flex min-h-[60svh] sm:min-h-[100svh] max-w-7xl items-end sm:items-center px-4 pb-8 pt-20 sm:px-6 sm:pb-16 sm:pt-20">
-          <div className="relative z-10 w-full sm:max-w-xl text-right sm:-translate-y-[7.5rem] sm:-translate-x-3 lg:-translate-y-[8.5rem] lg:-translate-x-6">
+        <div className="relative mx-auto flex min-h-[100svh] max-w-7xl items-center px-6 pb-16 pt-20">
+          <div className="relative z-10 max-w-xl text-right -translate-y-[7.5rem] -translate-x-3 lg:-translate-y-[8.5rem] lg:-translate-x-6">
             <h1
-              className={`text-3xl sm:text-5xl lg:text-7xl font-black leading-[1.05] text-slate-900 transition-all duration-700 ${showHeroText ? 'translate-x-0 opacity-100' : 'translate-x-6 opacity-0'
+              className={`text-5xl font-black leading-[1.02] text-slate-900 transition-all duration-700 lg:text-7xl ${showHeroText ? 'translate-x-0 opacity-100' : 'translate-x-6 opacity-0'
                 }`}
             >
               هل أنت مستعد
@@ -398,9 +399,26 @@ function HomePage() {
         </div>
       </section>
 
-      <div id="search-panel" className="relative z-30 -mt-4 sm:-mt-80 pb-12 sm:pb-16">
+      {/* Search Panel */}
+      {/* On mobile: appears directly at top with padding for navbar + subtle bg */}
+      {/* On desktop: overlaps bottom of hero */}
+      <div id="search-panel" className="relative z-30 pt-24 sm:pt-0 sm:-mt-80 pb-12 sm:pb-16 bg-gradient-to-b from-[#dde4f5] via-[#e9edf6] to-transparent sm:bg-none">
+        {/* Mobile-only hero heading */}
+        <div className="sm:hidden text-center px-5 pb-5 pt-1" dir="rtl">
+          <h1
+            className={`text-[2rem] font-black leading-[1.15] text-slate-900 transition-all duration-700 ${showHeroText ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
+          >
+            هل أنت مستعد
+            <br />
+            <span className="text-[#4974f9]">للإقلاع؟</span>
+          </h1>
+          <p className={`mt-1.5 text-xs font-semibold text-slate-500 leading-relaxed transition-all duration-700 delay-100 ${showHeroText ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'}`}>
+            ابحث وقارن وأحجز رحلتك بأفضل الأسعار
+          </p>
+        </div>
+
         <ScrollReveal animation="fade-up" duration={800} delay={100}>
-          <div className="pt-4">
+          <div className="pt-0 sm:pt-4">
             <HeroSearchPanel />
           </div>
         </ScrollReveal>

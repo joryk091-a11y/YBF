@@ -359,33 +359,38 @@ function Navbar({
             </div>
           </div>
 
-          {/* Mobile Menu */}
-          <div className="flex items-center justify-between md:hidden">
-            <div className="flex items-center gap-2">
-              <Link to="/" className="inline-flex items-center focus:outline-none">
-                <img
-                  src={logoSrc}
-                  alt={logoAlt}
-                  className="h-12 w-12 object-contain brightness-0 dark:brightness-0 dark:invert"
-                />
-              </Link>
-            </div>
-
-            <div className="flex items-center gap-2.5">
-              {user && (
+          {/* Mobile Menu - perfect center logo via grid */}
+          <div className="grid grid-cols-3 items-center md:hidden">
+            {/* Right: bell (if logged in) or empty */}
+            <div className="flex items-center justify-start">
+              {user ? (
                 <button
                   onClick={() => navigate('/my-bookings')}
-                  className="relative flex items-center justify-center p-1.5 text-slate-650 hover:text-blue-500 transition duration-300 focus:outline-none cursor-pointer"
+                  className="relative flex items-center justify-center p-2 text-slate-600 hover:text-blue-500 transition duration-300 focus:outline-none cursor-pointer"
                 >
-                  <Bell size={18} />
+                  <Bell size={19} />
                   {unreadCount > 0 && (
-                    <span className="absolute top-1.5 right-1.5 h-3.5 w-3.5 flex items-center justify-center rounded-full bg-red-500 text-[7px] font-black text-white ring-1 ring-white">
+                    <span className="absolute top-1 right-1 h-3.5 w-3.5 flex items-center justify-center rounded-full bg-red-500 text-[7px] font-black text-white ring-1 ring-white">
                       {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                   )}
                 </button>
-              )}
+              ) : <span />}
+            </div>
 
+            {/* Center: Logo - always perfectly centered */}
+            <div className="flex justify-center">
+              <Link to="/" className="inline-flex items-center focus:outline-none">
+                <img
+                  src={logoSrc}
+                  alt={logoAlt}
+                  className="h-11 w-11 object-contain brightness-0 dark:brightness-0 dark:invert"
+                />
+              </Link>
+            </div>
+
+            {/* Left: hamburger */}
+            <div className="flex items-center justify-end">
               <button
                 type="button"
                 aria-expanded={isMenuOpen}
@@ -394,15 +399,9 @@ function Navbar({
                 className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200/50 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-800 text-slate-650 dark:text-slate-300 transition duration-300 hover:bg-slate-100 dark:hover:bg-slate-700 focus:outline-none cursor-pointer"
               >
                 <span className="relative block h-3.5 w-4">
-                  <span
-                    className={`absolute right-0 top-0 h-[2px] w-4 rounded bg-slate-700 dark:bg-slate-300 transition duration-300 ${isMenuOpen ? 'translate-y-[6px] rotate-45' : ''}`}
-                  />
-                  <span
-                    className={`absolute right-0 top-[6px] h-[2px] w-4 rounded bg-slate-700 dark:bg-slate-300 transition duration-300 ${isMenuOpen ? 'opacity-0' : ''}`}
-                  />
-                  <span
-                    className={`absolute right-0 top-[12px] h-[2px] w-4 rounded bg-slate-700 dark:bg-slate-300 transition duration-300 ${isMenuOpen ? '-translate-y-[6px] -rotate-45' : ''}`}
-                  />
+                  <span className={`absolute right-0 top-0 h-[2px] w-4 rounded bg-slate-700 dark:bg-slate-300 transition duration-300 ${isMenuOpen ? 'translate-y-[6px] rotate-45' : ''}`} />
+                  <span className={`absolute right-0 top-[6px] h-[2px] w-4 rounded bg-slate-700 dark:bg-slate-300 transition duration-300 ${isMenuOpen ? 'opacity-0' : ''}`} />
+                  <span className={`absolute right-0 top-[12px] h-[2px] w-4 rounded bg-slate-700 dark:bg-slate-300 transition duration-300 ${isMenuOpen ? '-translate-y-[6px] -rotate-45' : ''}`} />
                 </span>
               </button>
             </div>

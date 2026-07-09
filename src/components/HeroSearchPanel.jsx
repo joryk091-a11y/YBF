@@ -39,16 +39,16 @@ function AirportField({ label, value, onChange, ariaLabel, extraPaddingLeft = fa
   const airport = useMemo(() => getAirport(value), [value])
 
   return (
-    <label className="grid gap-1 px-6 py-5 text-right transition-colors hover:bg-slate-50/50 cursor-pointer">
-      <span className="text-[12px] font-black uppercase tracking-wider text-slate-400">{label}</span>
-      <div className="relative mt-1">
-        <div className={`grid gap-0.5 pr-0 ${extraPaddingLeft ? 'pl-10' : 'pl-6'}`}>
-          <div className="text-xl font-black text-slate-900 leading-tight">{airport.region}</div>
-          <div className="text-[11px] font-bold text-slate-400 mt-0.5">
+    <label className="grid gap-0.5 px-3 py-3 sm:px-6 sm:py-5 text-right transition-colors hover:bg-slate-50/50 cursor-pointer">
+      <span className="text-[10px] sm:text-[12px] font-black uppercase tracking-wider text-slate-400">{label}</span>
+      <div className="relative mt-0.5 sm:mt-1">
+        <div className={`grid gap-0.5 pr-0 ${extraPaddingLeft ? 'pl-8 sm:pl-10' : 'pl-5 sm:pl-6'}`}>
+          <div className="text-base sm:text-xl font-black text-slate-900 leading-tight">{airport.region}</div>
+          <div className="text-[10px] sm:text-[11px] font-bold text-slate-400 mt-0 sm:mt-0.5 truncate">
             {airport.airport} - {airport.city}
           </div>
         </div>
-        <ChevronDown className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+        <ChevronDown className="pointer-events-none absolute left-0 top-1/2 h-3.5 sm:h-4 w-3.5 sm:w-4 -translate-y-1/2 text-slate-500" />
         <select
           value={value}
           onChange={(event) => onChange(event.target.value)}
@@ -70,14 +70,14 @@ function DateField({ label, value, onChange, ariaLabel, helper }) {
   const display = formatDate(value)
 
   return (
-    <label className="grid gap-1 px-6 py-5 text-right transition-colors hover:bg-slate-50/50 cursor-pointer">
-      <span className="text-[12px] font-black uppercase tracking-wider text-slate-400">{label}</span>
-      <div className="relative mt-1">
-        <div className="grid gap-0.5 pr-0 pl-10">
-          <div className={`text-xl font-black leading-tight ${value ? 'text-slate-900' : 'text-slate-300'}`}>{display}</div>
-          <div className="text-[11px] font-bold text-slate-400 mt-0.5">{helper}</div>
+    <label className="grid gap-0.5 px-3 py-3 sm:px-6 sm:py-5 text-right transition-colors hover:bg-slate-50/50 cursor-pointer">
+      <span className="text-[10px] sm:text-[12px] font-black uppercase tracking-wider text-slate-400">{label}</span>
+      <div className="relative mt-0.5 sm:mt-1">
+        <div className="grid gap-0.5 pr-0 pl-8 sm:pl-10">
+          <div className={`text-base sm:text-xl font-black leading-tight ${value ? 'text-slate-900' : 'text-slate-300'}`}>{display}</div>
+          <div className="text-[10px] sm:text-[11px] font-bold text-slate-400 mt-0 sm:mt-0.5">{helper}</div>
         </div>
-        <CalendarDays className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+        <CalendarDays className="pointer-events-none absolute left-0 top-1/2 h-3.5 sm:h-4 w-3.5 sm:w-4 -translate-y-1/2 text-slate-500" />
         <input
           type="date"
           dir="ltr"
@@ -145,8 +145,8 @@ function HeroSearchPanel() {
   }
 
   return (
-      <div className="mx-auto w-full max-w-7xl px-2 sm:px-6" dir="rtl">
-      <div className="relative rounded-[24px] sm:rounded-[32px] border border-slate-200/60 bg-white/90 backdrop-blur-md px-4 pb-5 pt-6 shadow-[0_30px_80px_rgba(0,0,0,0.08)] sm:px-8 sm:pb-6 sm:pt-8">
+      <div className="mx-auto w-full max-w-7xl px-3 sm:px-6" dir="rtl">
+      <div className="relative rounded-[20px] sm:rounded-[32px] border border-slate-200/60 bg-white/95 backdrop-blur-md px-3 pb-4 pt-4 shadow-[0_20px_60px_rgba(0,0,0,0.1)] sm:px-8 sm:pb-6 sm:pt-8">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           
           {/* Path switcher container */}
@@ -293,16 +293,19 @@ function HeroSearchPanel() {
         ) : (
           <>
             {activeTab === 'round-trip' ? (
-              <div className="mb-2 px-1 text-right text-xs text-slate-500">
+              <div className="mb-2 px-1 text-right text-xs text-slate-500 hidden sm:block">
                 حدد رحلة الذهاب والعودة عبر اختيار (من/إلى/تاريخ الذهاب/تاريخ العودة)
               </div>
             ) : null}
             <div
-              className={`grid gap-0 rounded-2xl border border-slate-200 bg-white overflow-hidden ${activeTab === 'round-trip' ? 'lg:grid-cols-4' : 'lg:grid-cols-3'
-                }`}
+              className={`rounded-xl sm:rounded-2xl border border-slate-200 bg-white overflow-hidden grid ${
+                activeTab === 'round-trip'
+                  ? 'grid-cols-2 sm:grid-cols-none sm:grid-flow-col lg:grid-cols-4'
+                  : 'grid-cols-2 sm:grid-cols-none lg:grid-cols-3'
+              }`}
             >
-              <div className="relative sm:col-span-2 sm:grid sm:grid-cols-2">
-                <div className="border-b border-slate-200 sm:border-b-0 sm:border-l sm:pl-14">
+              <div className="relative col-span-2 sm:col-span-1 sm:col-auto grid grid-cols-2 sm:grid-cols-none sm:flex">
+                <div className="border-b sm:border-b-0 border-l border-slate-200 sm:border-l-0 sm:border-r">
                   <AirportField
                     label="من"
                     value={fromCity}
@@ -317,12 +320,12 @@ function HeroSearchPanel() {
                   type="button"
                   onClick={swapFromTo}
                   aria-label="تبديل من وإلى"
-                  className="absolute left-1/2 top-1/2 z-10 hidden h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-slate-250 bg-white text-blue-600 shadow-md transition-all duration-300 hover:rotate-180 hover:bg-blue-50 active:translate-y-[-46%] sm:inline-flex"
+                  className="absolute left-1/2 top-1/2 z-10 hidden h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-blue-600 shadow-md transition-all duration-300 hover:rotate-180 hover:bg-blue-50 active:translate-y-[-46%] sm:inline-flex"
                 >
-                  <ArrowLeftRight className="h-4 w-4" />
+                  <ArrowLeftRight className="h-3.5 w-3.5" />
                 </button>
 
-                <div className="border-b border-slate-200 sm:border-b-0 sm:border-l sm:pr-14">
+                <div className="border-b border-slate-200 sm:border-b-0 sm:flex-1">
                   <AirportField
                     label="إلى"
                     value={toCity}
@@ -333,33 +336,30 @@ function HeroSearchPanel() {
                 </div>
               </div>
 
-              <div className={`${activeTab === 'round-trip' ? 'sm:col-span-2' : 'sm:col-span-1'}`}>
-                <div className={`grid ${activeTab === 'round-trip' ? 'sm:grid-cols-2' : ''}`}>
-                  <div
-                    className={`border-t border-slate-200 sm:border-t-0 ${activeTab === 'round-trip' ? 'sm:border-l' : ''
-                      }`}
-                  >
+              <div className={`col-span-2 sm:col-span-1 grid ${activeTab === 'round-trip' ? 'grid-cols-2' : 'grid-cols-1 sm:grid-cols-none'}`}>
+                <div
+                  className={`border-t sm:border-t-0 border-slate-200 ${activeTab === 'round-trip' ? 'border-l sm:border-l-0' : ''}`}
+                >
+                  <DateField
+                    label="تاريخ السفر"
+                    value={travelDate}
+                    onChange={setTravelDate}
+                    ariaLabel="اختر تاريخ السفر"
+                    helper="اليوم الذي ستسافر فيه"
+                  />
+                </div>
+
+                {activeTab === 'round-trip' ? (
+                  <div className="border-t sm:border-t-0 border-slate-200">
                     <DateField
-                      label="تاريخ السفر"
-                      value={travelDate}
-                      onChange={setTravelDate}
-                      ariaLabel="اختر تاريخ السفر"
-                      helper="اليوم الذي ستسافر فيه"
+                      label="تاريخ العودة"
+                      value={returnDate}
+                      onChange={setReturnDate}
+                      ariaLabel="اختر تاريخ العودة"
+                      helper="تاريخ الرجوع"
                     />
                   </div>
-
-                  {activeTab === 'round-trip' ? (
-                    <div className="border-t border-slate-200 sm:border-t-0">
-                      <DateField
-                        label="تاريخ العودة"
-                        value={returnDate}
-                        onChange={setReturnDate}
-                        ariaLabel="اختر تاريخ العودة"
-                        helper="تاريخ الرجوع"
-                      />
-                    </div>
-                  ) : null}
-                </div>
+                ) : null}
               </div>
 
             </div>

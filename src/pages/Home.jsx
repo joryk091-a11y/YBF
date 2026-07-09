@@ -362,7 +362,7 @@ function HomePage() {
 
   return (
     <main>
-      <section className="relative min-h-[100svh] overflow-hidden bg-[#e9edf6]">
+      <section className="relative min-h-[60svh] sm:min-h-[100svh] overflow-hidden bg-[#e9edf6]">
         <img
           src={heroPlane}
           alt=""
@@ -384,10 +384,10 @@ function HomePage() {
           aria-hidden="true"
         />
 
-        <div className="relative mx-auto flex min-h-[100svh] max-w-7xl items-center px-4 pb-14 pt-16 sm:px-6 sm:pb-16 sm:pt-20">
-          <div className="relative z-10 max-w-xl text-right -translate-y-[6.75rem] sm:-translate-y-[7.5rem] sm:-translate-x-3 lg:-translate-y-[8.5rem] lg:-translate-x-6">
+        <div className="relative mx-auto flex min-h-[60svh] sm:min-h-[100svh] max-w-7xl items-end sm:items-center px-4 pb-8 pt-20 sm:px-6 sm:pb-16 sm:pt-20">
+          <div className="relative z-10 w-full sm:max-w-xl text-right sm:-translate-y-[7.5rem] sm:-translate-x-3 lg:-translate-y-[8.5rem] lg:-translate-x-6">
             <h1
-              className={`mt-8 text-4xl font-black leading-[1.02] text-slate-900 transition-all duration-700 sm:text-5xl lg:text-7xl ${showHeroText ? 'translate-x-0 opacity-100' : 'translate-x-6 opacity-0'
+              className={`text-3xl sm:text-5xl lg:text-7xl font-black leading-[1.05] text-slate-900 transition-all duration-700 ${showHeroText ? 'translate-x-0 opacity-100' : 'translate-x-6 opacity-0'
                 }`}
             >
               هل أنت مستعد
@@ -398,7 +398,7 @@ function HomePage() {
         </div>
       </section>
 
-      <div id="search-panel" className="relative z-30 -mt-40 pb-12 sm:-mt-80 sm:pb-16">
+      <div id="search-panel" className="relative z-30 -mt-4 sm:-mt-80 pb-12 sm:pb-16">
         <ScrollReveal animation="fade-up" duration={800} delay={100}>
           <div className="pt-4">
             <HeroSearchPanel />
@@ -406,7 +406,7 @@ function HomePage() {
         </ScrollReveal>
 
         {/* الوجهات الأكثر طلباً */}
-        <section id="popular-destinations" className="mx-auto mt-16 max-w-7xl px-4 sm:px-6 lg:px-8 relative" dir="rtl">
+        <section id="popular-destinations" className="mx-auto mt-10 sm:mt-16 max-w-7xl px-4 sm:px-6 lg:px-8 relative" dir="rtl">
           <ScrollReveal animation="fade-down" duration={700}>
             <div className="text-center mb-16 relative flex flex-col items-center">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-4 py-1.5 text-[10px] font-black tracking-wider text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 uppercase mb-4 shadow-sm">
@@ -436,7 +436,7 @@ function HomePage() {
               >
                 <div
                   onClick={() => handleDestinationSelect(dest.id)}
-                  className="group relative h-[380px] overflow-hidden rounded-[2.5rem] bg-white border border-slate-100 dark:border-slate-800/80 shadow-[0_15px_45px_rgba(0,0,0,0.02)] hover:shadow-[0_30px_60px_rgba(73,116,249,0.12)] hover:-translate-y-1.5 transition-all duration-300 overflow-hidden cursor-pointer"
+                  className="group relative h-[280px] sm:h-[380px] overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] bg-white border border-slate-100 dark:border-slate-800/80 shadow-[0_15px_45px_rgba(0,0,0,0.02)] hover:shadow-[0_30px_60px_rgba(73,116,249,0.12)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer"
                 >
                   {/* Image background with scale effect */}
                   <img
@@ -497,7 +497,7 @@ function HomePage() {
         </section>
 
         {/* Services Bento Grid Section */}
-        <section id="services" className="mx-auto mt-20 max-w-7xl px-4 sm:px-6 lg:px-8 relative" dir="rtl">
+        <section id="services" className="mx-auto mt-14 sm:mt-20 max-w-7xl px-4 sm:px-6 lg:px-8 relative" dir="rtl">
           <ScrollReveal animation="fade-down" duration={700}>
             <div className="text-center mb-16 relative flex flex-col items-center">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-4 py-1.5 text-[10px] font-black tracking-wider text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 uppercase mb-4 shadow-sm">

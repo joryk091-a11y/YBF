@@ -156,7 +156,7 @@ export default function FinancialReport() {
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => window.print()}
-              className="flex items-center gap-2 px-4 py-2 border border-slate-250 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-500 rounded-xl shadow-sm hover:shadow transition-all duration-200 text-xs font-bold cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm hover:shadow transition-all duration-200 text-xs font-bold cursor-pointer border-0"
             >
               <Printer size={16} />
               طباعة التقرير / PDF

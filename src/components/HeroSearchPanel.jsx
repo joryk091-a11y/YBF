@@ -18,6 +18,7 @@ const localAirports = [
   { value: 'ataq', city: 'عتق', airport: 'مطار عتق', region: 'شبوة' },
   { value: 'jeddah', city: 'جدة', airport: 'مطار الملك عبدالعزيز', region: 'السعودية' },
   { value: 'riyadh', city: 'الرياض', airport: 'مطار الملك خالد', region: 'السعودية' },
+  { value: 'dammam', city: 'الدمام', airport: 'مطار الملك فهد الدولي', region: 'السعودية' },
   { value: 'dubai', city: 'دبي', airport: 'مطار دبي الدولي', region: 'الإمارات' },
   { value: 'doha', city: 'الدوحة', airport: 'مطار حمد الدولي', region: 'قطر' },
   { value: 'kuwait', city: 'الكويت', airport: 'مطار الكويت الدولي', region: 'الكويت' },

@@ -14,6 +14,13 @@ import {
 import Messages from './Messages.jsx';
 import logoImg from '../assets/logo.png';
 
+const getApiUrl = (path) => {
+    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const isViteDevServer = isDev && window.location.port !== '8080';
+    const base = isViteDevServer ? 'http://localhost:8080' : '';
+    return `${base}${path}`;
+};
+
 const AdminDashboard = () => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -29,6 +36,7 @@ const AdminDashboard = () => {
         return 'dashboard';
     });
     const [loading, setLoading] = useState(true);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const isInitialMount = useRef(true);
     const [selectedDashboardYear, setSelectedDashboardYear] = useState(() => {
         const now = new Date();
@@ -114,19 +122,19 @@ const AdminDashboard = () => {
 
     const fetchSettings = useCallback(async () => {
         try {
-            const response = await fetch('http://localhost:8080/api/admin/settings');
+            const response = await fetch(getApiUrl('/api/admin/settings'));
             const data = await response.json();
             if (data.success && data.settings) {
                 const s = data.settings;
-                if (s.markup_rate) {
+                if (s.markup_rate !== undefined && s.markup_rate !== null) {
                     setMarkupRate(s.markup_rate);
                     localStorage.setItem('adminMarkupRate', s.markup_rate);
                 }
-                if (s.exchange_rate) {
+                if (s.exchange_rate !== undefined && s.exchange_rate !== null) {
                     setExchangeRate(s.exchange_rate);
                     localStorage.setItem('adminExchangeRate', s.exchange_rate);
                 }
-                if (s.support_email) {
+                if (s.support_email !== undefined && s.support_email !== null) {
                     setSupportEmail(s.support_email);
                     localStorage.setItem('adminSupportEmail', s.support_email);
                 }
@@ -142,10 +150,26 @@ const AdminDashboard = () => {
         }
     }, [token, role, fetchSettings]);
 
+    // Automatic logout when leaving the admin dashboard page or closing the tab
+    useEffect(() => {
+        const handleAutoLogout = () => {
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('adminEmail');
+        };
+
+        window.addEventListener('unload', handleAutoLogout);
+
+        return () => {
+            window.removeEventListener('unload', handleAutoLogout);
+            handleAutoLogout();
+        };
+    }, []);
+
     // Check for unread messages
     const checkUnreadMessages = useCallback(async () => {
         try {
-            const res = await fetch('http://localhost:8080/api/admin/chat/conversations');
+            const res = await fetch(getApiUrl('/api/admin/chat/conversations'));
             const data = await res.json();
             if (data.success && data.conversations) {
                 const anyUnread = data.conversations.some(c => c.unread_count > 0);
@@ -187,7 +211,7 @@ const AdminDashboard = () => {
             isInitialMount.current = false;
         }
         try {
-            let url = `http://localhost:8080/api/admin/dashboard-stats`;
+            let url = getApiUrl('/api/admin/dashboard-stats');
             const params = [];
 
             if (activeTab === 'reports') {
@@ -232,7 +256,7 @@ const AdminDashboard = () => {
             if (selectedFlightAirline) params.push(`airlineCode=${selectedFlightAirline}`);
             const queryStr = params.length > 0 ? `?${params.join('&')}` : '';
             
-            const url = `http://localhost:8080/api/flights${queryStr}`;
+            const url = getApiUrl(`/api/flights${queryStr}`);
             const res = await fetch(url);
             const data = await res.json();
             if (data.success) {
@@ -252,7 +276,7 @@ const AdminDashboard = () => {
         if (!token || role !== 'admin') return;
         setLoadingList(true);
         try {
-            const res = await fetch('http://localhost:8080/api/admin/users');
+            const res = await fetch(getApiUrl('/api/admin/users'));
             const data = await res.json();
             if (data.success) {
                 setUsersList(data.users);
@@ -269,7 +293,7 @@ const AdminDashboard = () => {
         if (!token || role !== 'admin') return;
         setLoadingList(true);
         try {
-            const res = await fetch('http://localhost:8080/api/admin/companies');
+            const res = await fetch(getApiUrl('/api/admin/companies'));
             const data = await res.json();
             if (data.success) {
                 setCompaniesList(data.companies);
@@ -286,7 +310,7 @@ const AdminDashboard = () => {
         if (!token || role !== 'admin') return;
         setLoadingBookings(true);
         try {
-            const res = await fetch('http://localhost:8080/api/admin/bookings');
+            const res = await fetch(getApiUrl('/api/admin/bookings'));
             const data = await res.json();
             if (data.success) {
                 setBookingsList(data.bookings);
@@ -303,7 +327,7 @@ const AdminDashboard = () => {
         if (updatingBookingId) return;
         setUpdatingBookingId(bookingId);
         try {
-            const res = await fetch(`http://localhost:8080/api/admin/bookings/${bookingId}/status`, {
+            const res = await fetch(getApiUrl(`/api/admin/bookings/${bookingId}/status`), {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status, payment_status: paymentStatus })
@@ -328,7 +352,7 @@ const AdminDashboard = () => {
     const handleCreateCompany = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetch('http://localhost:8080/api/admin/companies', {
+            const res = await fetch(getApiUrl('/api/admin/companies'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -367,7 +391,7 @@ const AdminDashboard = () => {
     const handleUpdateCompany = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetch(`http://localhost:8080/api/admin/companies/${companyForm.id_admin}`, {
+            const res = await fetch(getApiUrl(`/api/admin/companies/${companyForm.id_admin}`), {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -416,7 +440,7 @@ const AdminDashboard = () => {
         
         try {
             if (type === 'company') {
-                const res = await fetch(`http://localhost:8080/api/admin/companies/${id}`, {
+                const res = await fetch(getApiUrl(`/api/admin/companies/${id}`), {
                     method: 'DELETE'
                 });
                 const data = await res.json();
@@ -427,7 +451,7 @@ const AdminDashboard = () => {
                     showToast('حدث خطأ أثناء حذف الشركة.');
                 }
             } else if (type === 'user') {
-                const res = await fetch(`http://localhost:8080/api/admin/users/${id}`, {
+                const res = await fetch(getApiUrl(`/api/admin/users/${id}`), {
                     method: 'DELETE'
                 });
                 const data = await res.json();
@@ -515,7 +539,7 @@ const AdminDashboard = () => {
     const handleCreateUser = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetch('http://localhost:8080/api/admin/users', {
+            const res = await fetch(getApiUrl('/api/admin/users'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -551,7 +575,7 @@ const AdminDashboard = () => {
     const handleUpdateUser = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetch(`http://localhost:8080/api/admin/users/${userForm.id_users}`, {
+            const res = await fetch(getApiUrl(`/api/admin/users/${userForm.id_users}`), {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -594,7 +618,7 @@ const AdminDashboard = () => {
     const handleSaveSettings = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch('http://localhost:8080/api/admin/settings', {
+            const response = await fetch(getApiUrl('/api/admin/settings'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -756,10 +780,11 @@ const AdminDashboard = () => {
 
 
             {/* ===== 1. SIDEBAR ===== */}
-            <aside className="w-80 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-l border-slate-200/60 dark:border-slate-800/60 flex flex-col justify-between shrink-0 z-30 select-none relative">
-                {/* Top Profile / Brand */}
+            <aside className={`${isSidebarCollapsed ? 'w-24' : 'w-80'} bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-l border-slate-200/60 dark:border-slate-800/60 flex flex-col justify-between shrink-0 z-30 select-none relative transition-all duration-300`}>
+                {/* Top Section */}
                 <div>
-                    <div className="p-8 border-b border-slate-100 dark:border-slate-900 flex items-center gap-4">
+                    {/* Centered Profile */}
+                    <div className={`${isSidebarCollapsed ? 'p-4' : 'p-8'} border-b border-slate-100 dark:border-slate-900 flex flex-col items-center text-center gap-3 transition-all`}>
                         <div className="relative">
                             <div className="h-14 w-14 rounded-full bg-gradient-to-tr from-blue-600 to-sky-400 p-0.5 shadow-md">
                                 <div className="h-full w-full rounded-full bg-slate-100 dark:bg-slate-950 flex items-center justify-center text-blue-500">
@@ -768,13 +793,15 @@ const AdminDashboard = () => {
                             </div>
                             <div className="absolute bottom-0 right-0 h-4 w-4 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900" />
                         </div>
-                        <div>
-                            <h4 className="font-black text-sm tracking-wide text-slate-800 dark:text-white">مدير النظام</h4>
-                        </div>
+                        {!isSidebarCollapsed && (
+                            <div>
+                                <h4 className="font-black text-sm tracking-wide text-slate-800 dark:text-white">مدير النظام</h4>
+                            </div>
+                        )}
                     </div>
 
                     {/* Nav tabs */}
-                    <nav className="p-6 space-y-1.5 overflow-y-auto max-h-[calc(100vh-270px)] scrollbar-thin">
+                    <nav className={`${isSidebarCollapsed ? 'p-3' : 'p-6'} space-y-1.5 overflow-y-auto max-h-[calc(100vh-270px)] scrollbar-thin transition-all`}>
                         {[
                             { id: 'dashboard', label: 'لوحة التحكم', icon: Activity },
                             { id: 'flights', label: 'إدارة الرحلات', icon: Plane },
@@ -794,11 +821,12 @@ const AdminDashboard = () => {
                                         setActiveTab(item.id);
                                         setSearchQuery('');
                                     }}
-                                    className={`group w-full flex items-center justify-between rounded-xl px-4 py-3 text-xs font-bold transition-all duration-300 relative overflow-hidden ${
+                                    className={`group w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} rounded-xl px-4 py-3 text-xs font-bold transition-all duration-300 relative overflow-hidden ${
                                         isActive
                                             ? 'bg-blue-600 text-white shadow-md shadow-blue-650/20'
                                             : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-800 dark:hover:text-slate-200'
                                     }`}
+                                    title={isSidebarCollapsed ? item.label : ""}
                                 >
                                     <div className="flex items-center gap-3.5">
                                         <IconComp 
@@ -807,12 +835,24 @@ const AdminDashboard = () => {
                                                 isActive ? 'text-white' : 'text-slate-455 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300'
                                             }`} 
                                         />
-                                        <span>{item.label}</span>
+                                        {!isSidebarCollapsed && <span>{item.label}</span>}
                                     </div>
                                 </button>
                             );
                         })}
                     </nav>
+                </div>
+
+                {/* Bottom Toggle Button */}
+                <div className="p-4 border-t border-slate-100 dark:border-slate-900 flex justify-center no-print">
+                    <button
+                        onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                        className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-all flex items-center justify-center w-full shadow-sm hover:shadow-md"
+                        title={isSidebarCollapsed ? "توسيع القائمة" : "طي القائمة"}
+                    >
+                        {isSidebarCollapsed ? <ChevronRight size={18} className="transform rotate-180" /> : <ChevronRight size={18} />}
+                        {!isSidebarCollapsed && <span className="text-xs font-black mr-2">طي القائمة</span>}
+                    </button>
                 </div>
             </aside>
 
@@ -1416,10 +1456,10 @@ const AdminDashboard = () => {
                                         <div className="space-y-6">
                                             <style dangerouslySetInnerHTML={{__html: `
                                                 @media print {
-                                                    body, html {
-                                                        background: #ffffff !important;
-                                                        color: #0f172a !important;
-                                                        font-family: 'Inter', 'Outfit', sans-serif !important;
+                                                    body, html, #root, div[class*="h-screen"], main, .relative.z-10.px-8.py-6.flex-1 {
+                                                        height: auto !important;
+                                                        overflow: visible !important;
+                                                        position: static !important;
                                                     }
                                                     aside, header, nav, .no-print, button, input {
                                                         display: none !important;
@@ -1428,22 +1468,41 @@ const AdminDashboard = () => {
                                                         padding: 0 !important;
                                                         margin: 0 !important;
                                                         background: transparent !important;
-                                                        overflow: visible !important;
                                                         width: 100% !important;
                                                     }
                                                     .print-report-container {
                                                         display: block !important;
                                                         width: 100% !important;
                                                         margin: 0 !important;
-                                                        padding: 0 !important;
+                                                        padding: 12px !important;
                                                         background: #ffffff !important;
                                                         color: #0f172a !important;
                                                         direction: rtl !important;
+                                                        border: none !important;
+                                                        box-shadow: none !important;
+                                                    }
+                                                    .print-report-container.space-y-10 > :not([hidden]) ~ :not([hidden]) {
+                                                        margin-top: 16px !important;
+                                                    }
+                                                    .print-report-container th, .print-report-container td {
+                                                        padding-top: 6px !important;
+                                                        padding-bottom: 6px !important;
+                                                        padding-left: 8px !important;
+                                                        padding-right: 8px !important;
                                                     }
                                                     .print-card {
                                                         border: 1px solid #e2e8f0 !important;
                                                         background: #ffffff !important;
                                                         box-shadow: none !important;
+                                                        padding: 12px !important;
+                                                    }
+                                                    .print-card, tr, .print-section {
+                                                        page-break-inside: avoid !important;
+                                                    }
+                                                    .print-signatures {
+                                                        page-break-inside: avoid !important;
+                                                        margin-top: 24px !important;
+                                                        padding-top: 16px !important;
                                                     }
                                                     .page-break {
                                                         page-break-before: always;
@@ -1459,7 +1518,7 @@ const AdminDashboard = () => {
                                                 </div>
                                                 <button
                                                     onClick={() => window.print()}
-                                                    className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black py-3 px-6 rounded-2xl text-xs transition-all shadow-md shadow-emerald-500/20"
+                                                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-black py-3 px-6 rounded-2xl text-xs transition-all shadow-md shadow-blue-500/20 border-0"
                                                 >
                                                     <Printer size={16} />
                                                     <span>طباعة وحفظ كـ PDF</span>
@@ -1532,47 +1591,51 @@ const AdminDashboard = () => {
                                             </div>
 
                                             {/* Report Printable Document */}
-                                            <div className="print-report-container bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 md:p-12 shadow-sm space-y-10">
+                                            <div className="print-report-container relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 md:p-12 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-10">
+                                                <div className="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-r from-blue-600 via-indigo-500 to-violet-600" />
+                                                
                                                 {/* Report Header */}
-                                                <div className="border-b border-slate-200 dark:border-slate-800 pb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                                                <div className="border-b border-slate-100 dark:border-slate-800/80 pb-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                                                     <div className="space-y-2">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="h-10 w-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-black text-lg shadow-md shadow-blue-500/20">
-                                                                YBF
-                                                            </div>
-                                                            <h2 className="text-2xl font-black text-slate-900 dark:text-white">تقرير أداء نظام حجز الرحلات اليمني (YBF)</h2>
+                                                            <span className="text-3xl font-black text-blue-600 dark:text-blue-400 font-mono tracking-wider">YBF</span>
+                                                            <h2 className="text-xl md:text-2xl font-black text-slate-850 dark:text-white">تقرير أداء نظام حجز الرحلات اليمني (YBF)</h2>
                                                         </div>
                                                         <p className="text-xs text-slate-400 font-bold">وثيقة رسمية تلخص أداء المنصة التشغيلي والمالي مأخوذة مباشرة من قاعدة البيانات</p>
                                                     </div>
-                                                    <div className="text-right text-xs text-slate-500 dark:text-slate-400 font-bold space-y-1 bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
-                                                        <div>تاريخ التقرير: <span className="text-slate-900 dark:text-white font-black">{new Date().toLocaleString('ar-YE', { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
-                                                        <div>الفترة الزمنية للتقرير: <span className="text-blue-650 dark:text-blue-350 font-black">{selectedReportMonth ? `${getArabicMonthName(selectedReportMonth)} ${selectedReportYear}` : `سنة ${selectedReportYear}`}</span></div>
-                                                        <div>المسؤول المصدر: <span className="text-slate-900 dark:text-white font-black">{adminEmail}</span></div>
-                                                        
+                                                    <div className="text-right text-xs text-slate-500 dark:text-slate-400 font-bold space-y-1.5 bg-slate-50 dark:bg-slate-800/40 p-5 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 min-w-[280px]">
+                                                        <div className="flex justify-between items-center"><span className="text-slate-400">تاريخ التقرير:</span> <span className="text-slate-900 dark:text-white font-mono font-bold">{new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
+                                                        <div className="flex justify-between items-center"><span className="text-slate-400">الفترة الزمنية:</span> <span className="text-blue-600 dark:text-blue-400 font-bold">{selectedReportMonth ? `${getArabicMonthName(selectedReportMonth)} ${selectedReportYear}` : `سنة ${selectedReportYear}`}</span></div>
+                                                        <div className="flex justify-between items-center"><span className="text-slate-400">المسؤول المصدر:</span> <span className="text-slate-950 dark:text-white font-bold">{adminEmail}</span></div>
                                                     </div>
                                                 </div>
 
                                                 {/* KPIs Cards */}
-                                                <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                                     {/* 1. Revenue */}
-                                                    <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedReportMonth ? `إيرادات شهر ${getArabicMonthName(selectedReportMonth)} ${selectedReportYear}` : `إيرادات سنة ${selectedReportYear}`}</p>
-                                                        <h4 className="text-3xl font-black text-emerald-500">${stats.totalRevenue.toLocaleString('en-US')}</h4>
-                                                        <p className="text-[11px] font-bold text-slate-500 border-b border-slate-200/60 dark:border-slate-700/60 pb-3">
+                                                    <div className="print-card bg-gradient-to-br from-emerald-500/[0.03] to-teal-500/[0.01] dark:from-emerald-500/[0.06] dark:to-teal-500/[0.02] border border-emerald-500/20 dark:border-emerald-500/10 rounded-2xl p-6 space-y-4 shadow-sm relative overflow-hidden">
+                                                        <div className="absolute top-4 left-4 h-8 w-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                                                            <DollarSign size={16} />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-[10px] font-black text-slate-405 dark:text-slate-400 uppercase tracking-wider">{selectedReportMonth ? `إيرادات شهر ${getArabicMonthName(selectedReportMonth)}` : `إيرادات سنة ${selectedReportYear}`}</p>
+                                                            <h4 className="text-3xl font-black text-emerald-500 mt-1">${stats.totalRevenue.toLocaleString('en-US')}</h4>
+                                                        </div>
+                                                        <p className="text-[11px] font-bold text-slate-500 border-b border-slate-200/50 dark:border-slate-800/50 pb-3">
                                                             يعادل: <strong className="text-slate-700 dark:text-slate-350">{(stats.totalRevenue * Number(exchangeRate)).toLocaleString('en-US')} ريال يمني</strong>
                                                         </p>
                                                         {stats.companyBreakdown && stats.companyBreakdown.length > 0 && (
                                                             <div className="space-y-2 pt-1">
-                                                                <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 tracking-wider uppercase mb-2">تفصيل إيرادات الشركات:</p>
+                                                                <p className="text-[9px] font-black text-slate-405 dark:text-slate-550 tracking-wider uppercase mb-2">تفصيل إيرادات الشركات:</p>
                                                                 {stats.companyBreakdown.map((comp) => {
                                                                     const compRevenue = Number(comp.revenue) || 0;
                                                                     const compRevenueYer = Math.round(compRevenue * Number(exchangeRate));
                                                                     return (
-                                                                        <div key={comp.airline_code} className="flex justify-between items-center text-xs border-b border-dashed border-slate-200/40 dark:border-slate-800/40 pb-1.5 last:border-0 last:pb-0">
+                                                                        <div key={comp.airline_code} className="flex justify-between items-center text-xs border-b border-dashed border-slate-200/30 dark:border-slate-800/30 pb-2 last:border-0 last:pb-0">
                                                                             <span className="font-bold text-slate-655 dark:text-slate-355">{comp.company_name || comp.airline_code}</span>
                                                                             <div className="text-left font-black text-slate-800 dark:text-slate-100">
                                                                                 <span>${compRevenue.toLocaleString('en-US')}</span>
-                                                                                <span className="text-[9px] font-bold text-slate-455 mr-2">({compRevenueYer.toLocaleString('en-US')} ر.ي)</span>
+                                                                                <span className="text-[9px] font-bold text-slate-455 mr-1.5">({compRevenueYer.toLocaleString('en-US')} ر.ي)</span>
                                                                             </div>
                                                                         </div>
                                                                     );
@@ -1582,21 +1645,26 @@ const AdminDashboard = () => {
                                                     </div>
 
                                                     {/* 2. Tickets */}
-                                                    <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedReportMonth ? `تذاكر شهر ${getArabicMonthName(selectedReportMonth)} ${selectedReportYear}` : `تذاكر سنة ${selectedReportYear}`}</p>
-                                                        <h4 className="text-3xl font-black text-blue-500">{stats.totalTickets.toLocaleString('en-US')} تذكرة</h4>
-                                                        <p className="text-[11px] font-bold text-slate-500 border-b border-slate-200/60 dark:border-slate-700/60 pb-3">
+                                                    <div className="print-card bg-gradient-to-br from-blue-500/[0.03] to-indigo-500/[0.01] dark:from-blue-500/[0.06] dark:to-indigo-500/[0.02] border border-blue-500/20 dark:border-blue-500/10 rounded-2xl p-6 space-y-4 shadow-sm relative overflow-hidden">
+                                                        <div className="absolute top-4 left-4 h-8 w-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                                                            <Ticket size={16} />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-[10px] font-black text-slate-405 dark:text-slate-400 uppercase tracking-wider">{selectedReportMonth ? `تذاكر شهر ${getArabicMonthName(selectedReportMonth)}` : `تذاكر سنة ${selectedReportYear}`}</p>
+                                                            <h4 className="text-3xl font-black text-blue-600 dark:text-blue-450 mt-1">{stats.totalTickets.toLocaleString('en-US')} تذكرة</h4>
+                                                        </div>
+                                                        <p className="text-[11px] font-bold text-slate-500 border-b border-slate-200/50 dark:border-slate-800/50 pb-3">
                                                             الركاب النشطين بالفترة: <strong className="text-slate-700 dark:text-slate-350">{stats.activePassengers.toLocaleString('en-US')} مسافر</strong>
                                                         </p>
                                                         {stats.companyBreakdown && stats.companyBreakdown.length > 0 && (
                                                             <div className="space-y-2 pt-1">
-                                                                <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 tracking-wider uppercase mb-2">تفصيل تذاكر الشركات:</p>
+                                                                <p className="text-[9px] font-black text-slate-405 dark:text-slate-550 tracking-wider uppercase mb-2">تفصيل تذاكر الشركات:</p>
                                                                 {stats.companyBreakdown.map((comp) => {
                                                                     const compTickets = Number(comp.tickets) || 0;
                                                                     return (
-                                                                        <div key={comp.airline_code} className="flex justify-between items-center text-xs border-b border-dashed border-slate-200/40 dark:border-slate-800/40 pb-1.5 last:border-0 last:pb-0">
+                                                                        <div key={comp.airline_code} className="flex justify-between items-center text-xs border-b border-dashed border-slate-200/30 dark:border-slate-800/30 pb-2 last:border-0 last:pb-0">
                                                                             <span className="font-bold text-slate-655 dark:text-slate-355">{comp.company_name || comp.airline_code}</span>
-                                                                            <span className="font-black text-slate-850 dark:text-slate-100">{compTickets.toLocaleString('en-US')} تذكرة</span>
+                                                                            <span className="font-black text-slate-800 dark:text-slate-100">{compTickets.toLocaleString('en-US')} تذكرة</span>
                                                                         </div>
                                                                     );
                                                                 })}
@@ -1605,25 +1673,30 @@ const AdminDashboard = () => {
                                                     </div>
 
                                                     {/* 3. Estimated profit */}
-                                                    <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedReportMonth ? `أرباح شهر ${getArabicMonthName(selectedReportMonth)} ${selectedReportYear} (عمولة ${markupRate}%)` : `أرباح سنة ${selectedReportYear} (عمولة ${markupRate}%)`}</p>
-                                                        <h4 className="text-3xl font-black text-indigo-500">${(stats.totalRevenue * (Number(markupRate) / 100)).toLocaleString('en-US')}</h4>
-                                                        <p className="text-[11px] font-bold text-slate-500 border-b border-slate-200/60 dark:border-slate-700/60 pb-3">
+                                                    <div className="print-card bg-gradient-to-br from-violet-500/[0.03] to-purple-500/[0.01] dark:from-violet-500/[0.06] dark:to-purple-500/[0.02] border border-violet-500/20 dark:border-violet-500/10 rounded-2xl p-6 space-y-4 shadow-sm relative overflow-hidden">
+                                                        <div className="absolute top-4 left-4 h-8 w-8 rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400 flex items-center justify-center">
+                                                            <TrendingUp size={16} />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-[10px] font-black text-slate-405 dark:text-slate-400 uppercase tracking-wider">{selectedReportMonth ? `أرباح شهر ${getArabicMonthName(selectedReportMonth)}` : `أرباح سنة ${selectedReportYear}`} (عمولة {markupRate}%)</p>
+                                                            <h4 className="text-3xl font-black text-violet-600 dark:text-violet-400 mt-1">${(stats.totalRevenue * (Number(markupRate) / 100)).toLocaleString('en-US')}</h4>
+                                                        </div>
+                                                        <p className="text-[11px] font-bold text-slate-500 border-b border-slate-200/50 dark:border-slate-800/50 pb-3">
                                                             يعادل: <strong className="text-slate-700 dark:text-slate-350">{Math.round((stats.totalRevenue * (Number(markupRate) / 100)) * Number(exchangeRate)).toLocaleString('en-US')} ريال يمني</strong>
                                                         </p>
                                                         {stats.companyBreakdown && stats.companyBreakdown.length > 0 && (
                                                             <div className="space-y-2 pt-1">
-                                                                <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 tracking-wider uppercase mb-2">تفصيل عمولة الشركات:</p>
+                                                                <p className="text-[9px] font-black text-slate-405 dark:text-slate-550 tracking-wider uppercase mb-2">تفصيل عمولة الشركات:</p>
                                                                 {stats.companyBreakdown.map((comp) => {
                                                                     const compRevenue = Number(comp.revenue) || 0;
                                                                     const compProfit = compRevenue * (Number(markupRate) / 100);
                                                                     const compProfitYer = Math.round(compProfit * Number(exchangeRate));
                                                                     return (
-                                                                        <div key={comp.airline_code} className="flex justify-between items-center text-xs border-b border-dashed border-slate-200/40 dark:border-slate-800/40 pb-1.5 last:border-0 last:pb-0">
+                                                                        <div key={comp.airline_code} className="flex justify-between items-center text-xs border-b border-dashed border-slate-200/30 dark:border-slate-800/30 pb-2 last:border-0 last:pb-0">
                                                                             <span className="font-bold text-slate-650 dark:text-slate-350">{comp.company_name || comp.airline_code}</span>
                                                                             <div className="text-left font-black text-slate-800 dark:text-slate-100">
-                                                                                <span>${compProfit.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
-                                                                                <span className="text-[9px] font-bold text-slate-455 mr-2">({compProfitYer.toLocaleString()} ر.ي)</span>
+                                                                                <span>${compProfit.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span>
+                                                                                <span className="text-[9px] font-bold text-slate-455 mr-1.5">({compProfitYer.toLocaleString('en-US')} ر.ي)</span>
                                                                             </div>
                                                                         </div>
                                                                     );
@@ -1633,40 +1706,53 @@ const AdminDashboard = () => {
                                                     </div>
 
                                                     {/* 4. Exchange rate */}
-                                                    <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
+                                                    <div className="print-card bg-slate-50/50 dark:bg-slate-800/20 border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-6 space-y-3 relative overflow-hidden">
+                                                        <div className="absolute top-4 left-4 h-8 w-8 rounded-xl bg-slate-200/30 dark:bg-slate-700/30 text-slate-500 dark:text-slate-450 flex items-center justify-center">
+                                                            <Wallet size={16} />
+                                                        </div>
                                                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">سعر الصرف المعتمد</p>
-                                                        <h4 className="text-2xl font-black text-slate-800 dark:text-white">{exchangeRate} ر.ي / $</h4>
+                                                        <h4 className="text-2xl font-black text-slate-800 dark:text-white mt-1">{exchangeRate} ر.ي / $</h4>
                                                         <p className="text-[11px] font-bold text-slate-500">معدل التحويل النشط للمبيعات</p>
-                                                    </div>                                                    {/* 5. Cancellation rate */}
-                                                    <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
+                                                    </div>
+
+                                                    {/* 5. Cancellation rate */}
+                                                    <div className="print-card bg-gradient-to-br from-rose-500/[0.03] to-red-500/[0.01] dark:from-rose-500/[0.06] dark:to-red-500/[0.02] border border-rose-500/20 dark:border-rose-500/10 rounded-2xl p-6 space-y-3 relative overflow-hidden">
+                                                        <div className="absolute top-4 left-4 h-8 w-8 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center">
+                                                            <XCircle size={16} />
+                                                        </div>
                                                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedReportMonth ? `نسبة إلغاء شهر ${getArabicMonthName(selectedReportMonth)}` : `نسبة إلغاء سنة ${selectedReportYear}`}</p>
-                                                        <h4 className="text-2xl font-black text-rose-500">{stats.cancellationRate}%</h4>
-                                                        <p className="text-[11px] font-bold text-slate-500 border-b border-slate-200/60 dark:border-slate-700/60 pb-3">تحديث فوري من قاعدة البيانات</p>
+                                                        <h4 className="text-2xl font-black text-rose-500 mt-1">{stats.cancellationRate}%</h4>
+                                                        <p className="text-[11px] font-bold text-slate-500 border-b border-slate-200/40 dark:border-slate-800/40 pb-3">تحديث فوري من قاعدة البيانات</p>
                                                         {stats.companyBreakdown && stats.companyBreakdown.length > 0 && (
                                                             <div className="space-y-2 pt-1">
-                                                                <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 tracking-wider uppercase mb-2">الحجوزات الملغية للشركات:</p>
+                                                                <p className="text-[9px] font-black text-slate-405 dark:text-slate-550 tracking-wider uppercase mb-2">الحجوزات الملغية للشركات:</p>
                                                                 {stats.companyBreakdown.map((comp) => {
                                                                     const compCancelled = Number(comp.cancelled_bookings) || 0;
                                                                     return (
-                                                                        <div key={comp.airline_code} className="flex justify-between items-center text-xs border-b border-dashed border-slate-200/40 dark:border-slate-800/40 pb-1.5 last:border-0 last:pb-0">
+                                                                        <div key={comp.airline_code} className="flex justify-between items-center text-xs border-b border-dashed border-slate-200/30 dark:border-slate-800/30 pb-2 last:border-0 last:pb-0">
                                                                             <span className="font-bold text-slate-650 dark:text-slate-350">{comp.company_name || comp.airline_code}</span>
-                                                                            <span className="font-black text-rose-600 dark:text-rose-400">{compCancelled} حجز ملغي</span>
+                                                                            <span className="font-black text-rose-600 dark:text-rose-450">{compCancelled} حجز ملغي</span>
                                                                         </div>
                                                                     );
                                                                 })}
                                                             </div>
                                                         )}
-                                                    </div>                                                    {/* 6. Active Companies */}
-                                                    <div className="print-card bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-3">
+                                                    </div>
+
+                                                    {/* 6. Active Companies */}
+                                                    <div className="print-card bg-gradient-to-br from-violet-500/[0.03] to-indigo-500/[0.01] dark:from-violet-500/[0.06] dark:to-indigo-500/[0.02] border border-violet-500/20 dark:border-violet-500/10 rounded-2xl p-6 space-y-3 relative overflow-hidden">
+                                                        <div className="absolute top-4 left-4 h-8 w-8 rounded-xl bg-violet-500/10 text-violet-650 dark:text-violet-400 flex items-center justify-center">
+                                                            <Building2 size={16} />
+                                                        </div>
                                                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">شركات الطيران النشطة</p>
-                                                        <h4 className="text-3xl font-black text-violet-500 border-b border-slate-200/60 dark:border-slate-700/60 pb-3">{companiesList.length} شركات طيران</h4>
+                                                        <h4 className="text-2xl font-black text-violet-600 dark:text-violet-400 mt-1">{companiesList.length} شركات طيران</h4>
                                                         {companiesList && companiesList.length > 0 && (
-                                                            <div className="space-y-2 pt-1">
-                                                                <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 tracking-wider uppercase mb-2">أسماء الشركات المسجلة:</p>
+                                                            <div className="space-y-2 pt-1 border-t border-slate-200/40 dark:border-slate-800/40">
+                                                                <p className="text-[9px] font-black text-slate-405 dark:text-slate-550 tracking-wider uppercase mb-2">أسماء الشركات المسجلة:</p>
                                                                 {companiesList.map((comp) => (
-                                                                    <div key={comp.airline_code} className="flex justify-between items-center text-xs border-b border-dashed border-slate-200/40 dark:border-slate-800/40 pb-1.5 last:border-0 last:pb-0">
+                                                                    <div key={comp.airline_code} className="flex justify-between items-center text-xs border-b border-dashed border-slate-200/30 dark:border-slate-800/30 pb-2 last:border-0 last:pb-0">
                                                                         <span className="font-bold text-slate-655 dark:text-slate-350">{comp.company_name}</span>
-                                                                        <span className="font-black text-[10px] px-2 py-0.5 rounded bg-violet-100 dark:bg-violet-900/50 text-violet-600 dark:text-violet-400">{comp.airline_code}</span>
+                                                                        <span className="font-mono font-bold text-[9px] px-2 py-0.5 rounded-lg bg-violet-100 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400">{comp.airline_code}</span>
                                                                     </div>
                                                                 ))}
                                                             </div>
@@ -1677,20 +1763,20 @@ const AdminDashboard = () => {
                                                 {/* Destinations & Airline share row */}
                                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                                     {/* 1. Top Destinations */}
-                                                    <div className="print-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl space-y-4">
-                                                        <h3 className="text-sm font-black border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center gap-2 text-slate-800 dark:text-white">
+                                                    <div className="print-card bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/60 dark:border-slate-800/60 p-6 rounded-2xl space-y-4">
+                                                        <h3 className="text-sm font-black border-b border-slate-200/50 dark:border-slate-800/50 pb-3.5 flex items-center gap-2 text-slate-805 dark:text-white">
                                                             <MapPin size={16} className="text-blue-500" />
                                                             <span>الوجهات الأكثر طلباً وسفراً</span>
                                                         </h3>
                                                         <div className="space-y-3">
                                                             {stats.destinationsStats.length > 0 ? (
                                                                 stats.destinationsStats.slice(0, 5).map((dest, idx) => (
-                                                                    <div key={idx} className="flex items-center justify-between text-xs font-bold border-b border-slate-50 dark:border-slate-800/50 pb-2">
+                                                                    <div key={idx} className="flex items-center justify-between text-xs font-bold border-b border-slate-200/40 dark:border-slate-800/30 pb-2 last:border-0 last:pb-0">
                                                                         <span className="text-slate-700 dark:text-slate-200 flex items-center gap-2">
-                                                                            <span className="text-slate-400 text-[10px]">#{idx+1}</span>
+                                                                            <span className="h-5 w-5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] font-black flex items-center justify-center">#{idx+1}</span>
                                                                             <span>{getDestinationName(dest.destination)}</span>
                                                                         </span>
-                                                                        <span className="text-blue-600 font-black">{dest.count} تذكرة محجوزة</span>
+                                                                        <span className="text-blue-600 dark:text-blue-400 font-mono font-black">{dest.count} تذكرة محجوزة</span>
                                                                     </div>
                                                                 ))
                                                             ) : (
@@ -1700,19 +1786,20 @@ const AdminDashboard = () => {
                                                     </div>
 
                                                     {/* 2. Airline Share */}
-                                                    <div className="print-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl space-y-4">
-                                                        <h3 className="text-sm font-black border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center gap-2 text-slate-800 dark:text-white">
-                                                            <Plane size={16} className="text-blue-500" />
+                                                    <div className="print-card bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/60 dark:border-slate-800/60 p-6 rounded-2xl space-y-4">
+                                                        <h3 className="text-sm font-black border-b border-slate-200/50 dark:border-slate-800/50 pb-3.5 flex items-center gap-2 text-slate-805 dark:text-white">
+                                                            <Plane size={16} className="text-indigo-500" />
                                                             <span>توزيع الحجوزات حسب شركات الطيران</span>
                                                         </h3>
                                                         <div className="space-y-3">
                                                             {stats.airlineStats.length > 0 ? (
                                                                 stats.airlineStats.map((item, idx) => (
-                                                                    <div key={idx} className="flex items-center justify-between text-xs font-bold border-b border-slate-50 dark:border-slate-800/50 pb-2">
-                                                                        <span className="text-slate-700 dark:text-slate-200">
-                                                                            {getAirlineName(item.name)}
+                                                                    <div key={idx} className="flex items-center justify-between text-xs font-bold border-b border-slate-200/40 dark:border-slate-800/30 pb-2 last:border-0 last:pb-0">
+                                                                        <span className="text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                                                                            <span className="h-5 w-5 rounded-lg bg-indigo-500/10 text-indigo-650 dark:text-indigo-400 text-[10px] font-black flex items-center justify-center">#{idx+1}</span>
+                                                                            <span>{getAirlineName(item.name)}</span>
                                                                         </span>
-                                                                        <span className="text-slate-800 dark:text-white font-black">{item.value} حجز</span>
+                                                                        <span className="text-slate-800 dark:text-white font-mono font-black">{item.value} حجز</span>
                                                                     </div>
                                                                 ))
                                                             ) : (
@@ -1723,9 +1810,9 @@ const AdminDashboard = () => {
                                                 </div>
 
                                                 {/* Recent Bookings Table */}
-                                                <div className="print-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl space-y-4">
-                                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-3">
-                                                        <h3 className="text-sm font-black flex items-center gap-2 text-slate-800 dark:text-white">
+                                                <div className="print-card bg-white dark:bg-slate-900/10 border border-slate-200/60 dark:border-slate-800/60 p-6 rounded-2xl space-y-4">
+                                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 dark:border-slate-800/60 pb-3">
+                                                        <h3 className="text-sm font-black flex items-center gap-2 text-slate-805 dark:text-white">
                                                             <Ticket size={16} className="text-blue-500" />
                                                             <span>سجل آخر الحجوزات المستلمة والمؤكدة في النظام</span>
                                                         </h3>
@@ -1742,22 +1829,23 @@ const AdminDashboard = () => {
                                                                     <th className="pb-3 px-2">الحالة</th>
                                                                 </tr>
                                                             </thead>
-                                                            <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
-                                                                {stats.recentBookings.map((booking) => (
-                                                                    <tr key={booking.id_bookings} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                                                                        <td className="py-3 px-2 font-black text-blue-600">#{booking.booking_reference}</td>
+                                                            <tbody className="divide-y divide-slate-50 dark:divide-slate-800/30">
+                                                                {stats.recentBookings.slice(0, 5).map((booking) => (
+                                                                    <tr key={booking.id_bookings} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
+                                                                        <td className="py-3 px-2 font-mono font-black text-blue-600 dark:text-blue-400">#{booking.booking_reference}</td>
                                                                         <td className="py-3 px-2 font-bold text-slate-700 dark:text-white">{booking.lead_passenger || 'غير محدد'}</td>
                                                                         <td className="py-3 px-2 font-bold text-slate-500">{booking.flight_number}</td>
-                                                                        <td className="py-3 px-2 font-black text-slate-900 dark:text-white">${Number(booking.final_price).toLocaleString('en-US')}</td>
-                                                                        <td className="py-3 px-2 font-bold text-slate-400">{new Date(booking.booking_date).toLocaleDateString('ar-YE')}</td>
+                                                                        <td className="py-3 px-2 font-mono font-black text-slate-855 dark:text-white">${Number(booking.final_price).toLocaleString('en-US')}</td>
+                                                                        <td className="py-3 px-2 font-bold text-slate-400 font-mono">{new Date(booking.booking_date).toLocaleDateString('en-US')}</td>
                                                                         <td className="py-3 px-2 font-bold">
-                                                                            <span className={`px-2 py-0.5 rounded text-[10px] ${
+                                                                            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[9px] font-black ${
                                                                                 booking.status === 'certain'
-                                                                                    ? 'bg-emerald-500/10 text-emerald-600'
+                                                                                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                                                                                     : booking.status === 'temporary'
-                                                                                    ? 'bg-amber-500/10 text-amber-600'
-                                                                                    : 'bg-rose-500/10 text-rose-600'
+                                                                                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                                                                    : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
                                                                             }`}>
+                                                                                <div className={`h-1.5 w-1.5 rounded-full ${booking.status === 'certain' ? 'bg-emerald-500' : booking.status === 'temporary' ? 'bg-amber-500' : 'bg-rose-500'}`} />
                                                                                 {booking.status === 'certain' ? 'مؤكد' : booking.status === 'temporary' ? 'معلق' : 'ملغي'}
                                                                             </span>
                                                                         </td>
@@ -1769,8 +1857,8 @@ const AdminDashboard = () => {
                                                 </div>
 
                                                 {/* Recent Flights Table */}
-                                                <div className="print-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl space-y-4 page-break-inside-avoid">
-                                                    <h3 className="text-sm font-black border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center gap-2 text-slate-800 dark:text-white">
+                                                <div className="print-card bg-white dark:bg-slate-900/10 border border-slate-200/60 dark:border-slate-800/60 p-6 rounded-2xl space-y-4 page-break-inside-avoid">
+                                                    <h3 className="text-sm font-black border-b border-slate-100 dark:border-slate-800/60 pb-3 flex items-center gap-2 text-slate-805 dark:text-white">
                                                         <Plane size={16} className="text-blue-500" />
                                                         <span>سجل آخر الرحلات الجوية النشطة والمضافة</span>
                                                     </h3>
@@ -1783,13 +1871,12 @@ const AdminDashboard = () => {
                                                                     <th className="pb-3 px-2">الوجهة (من ➔ إلى)</th>
                                                                     <th className="pb-3 px-2">تاريخ الإقلاع</th>
                                                                     <th className="pb-3 px-2">السعر</th>
-                                                                </tr>
+                                                                 </tr>
                                                             </thead>
-                                                            <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
+                                                            <tbody className="divide-y divide-slate-50 dark:divide-slate-800/30">
                                                                 {flights.slice(0, 5).map((flight) => (
-                                                                    <tr key={flight.id_flights} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                                                                        <td className="py-3 px-2 font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                                                                            <Plane size={12} className="text-blue-500" />
+                                                                    <tr key={flight.id_flights} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
+                                                                        <td className="py-3 px-2 font-black text-slate-900 dark:text-white">
                                                                             {flight.flight_number}
                                                                         </td>
                                                                         <td className="py-3 px-2 font-bold text-slate-500">{getAirlineName(flight.airline_code)}</td>
@@ -1798,10 +1885,10 @@ const AdminDashboard = () => {
                                                                             <span className="mx-1.5 text-slate-300">➔</span>
                                                                             <span>{flight.airportDestination_code}</span>
                                                                         </td>
-                                                                        <td className="py-3 px-2 font-bold text-slate-400">
-                                                                            {new Date(flight.departure_time).toLocaleString('ar-YE', { dateStyle: 'short', timeStyle: 'short' })}
+                                                                        <td className="py-3 px-2 font-bold text-slate-400 font-mono">
+                                                                            {new Date(flight.departure_time).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' })}
                                                                         </td>
-                                                                        <td className="py-3 px-2 font-black text-blue-600 dark:text-blue-400">${Number(flight.price || 0).toLocaleString('en-US')}</td>
+                                                                        <td className="py-3 px-2 font-mono font-black text-blue-600 dark:text-blue-400">${Number(flight.price || 0).toLocaleString('en-US')}</td>
                                                                     </tr>
                                                                 ))}
                                                             </tbody>
@@ -1810,7 +1897,7 @@ const AdminDashboard = () => {
                                                 </div>
 
                                                 {/* Footer Signatures */}
-                                                <div className="pt-8 border-t border-slate-200 dark:border-slate-800 flex justify-between text-[11px] font-bold text-slate-500">
+                                                <div className="pt-8 border-t border-slate-200/60 dark:border-slate-800/60 flex justify-between text-[11px] font-bold text-slate-500 print-signatures">
                                                     <div>توقيع المسؤول المصدر: ___________________</div>
                                                     <div>ختم الإدارة المالية: ___________________</div>
                                                 </div>
@@ -1840,10 +1927,18 @@ const AdminDashboard = () => {
                                         <div className="space-y-2">
                                             <label className="text-xs font-black text-slate-400">قيمة عمولة الموقع (%)</label>
                                             <input
-                                                type="number"
+                                                type="text"
+                                                inputMode="decimal"
+                                                lang="en"
+                                                dir="ltr"
                                                 value={markupRate}
-                                                onChange={(e) => setMarkupRate(e.target.value)}
-                                                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-2xl py-3.5 px-5 text-sm font-bold outline-none"
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    if (val === '' || /^[0-9]*\.?[0-9]*$/.test(val)) {
+                                                        setMarkupRate(val);
+                                                    }
+                                                }}
+                                                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-2xl py-3.5 px-5 text-sm font-bold outline-none font-mono text-left"
                                                 required
                                             />
                                         </div>
@@ -1851,10 +1946,18 @@ const AdminDashboard = () => {
                                         <div className="space-y-2">
                                             <label className="text-xs font-black text-slate-400">سعر صرف الدولار (مقابل الريال اليمني)</label>
                                             <input
-                                                type="number"
+                                                type="text"
+                                                inputMode="decimal"
+                                                lang="en"
+                                                dir="ltr"
                                                 value={exchangeRate}
-                                                onChange={(e) => setExchangeRate(e.target.value)}
-                                                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-2xl py-3.5 px-5 text-sm font-bold outline-none"
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    if (val === '' || /^[0-9]*\.?[0-9]*$/.test(val)) {
+                                                        setExchangeRate(val);
+                                                    }
+                                                }}
+                                                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-2xl py-3.5 px-5 text-sm font-bold outline-none font-mono text-left"
                                                 required
                                             />
                                         </div>
@@ -2458,7 +2561,7 @@ const AdminDashboard = () => {
                                     <label className="text-[10px] font-black text-slate-700">اسم الشركة</label>
                                     <input
                                         type="text"
-                                        placeholder="مثال: اليمنية، القطيبي"
+                                        placeholder=""
                                         value={companyForm.company_name}
                                         onChange={(e) => setCompanyForm({ ...companyForm, company_name: e.target.value })}
                                         className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none text-slate-800 dark:text-slate-100"
@@ -2471,7 +2574,7 @@ const AdminDashboard = () => {
                                     <label className="text-[10px] font-black text-slate-700">رمز الطيران (airline_code)</label>
                                     <input
                                         type="text"
-                                        placeholder="مثال: IY, DH"
+                                        placeholder=""
                                         value={companyForm.airline_code}
                                         onChange={(e) => setCompanyForm({ ...companyForm, airline_code: e.target.value.toUpperCase() })}
                                         className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none text-slate-800 dark:text-slate-100"
@@ -2486,7 +2589,7 @@ const AdminDashboard = () => {
                                     <label className="text-[10px] font-black text-slate-700">البريد الإلكتروني للشركة</label>
                                     <input
                                         type="email"
-                                        placeholder="example@gmail.com"
+                                        placeholder=""
                                         value={companyForm.email}
                                         onChange={(e) => setCompanyForm({ ...companyForm, email: e.target.value })}
                                         className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none text-slate-800 dark:text-slate-100"
@@ -2499,7 +2602,7 @@ const AdminDashboard = () => {
                                     <label className="text-[10px] font-black text-slate-700">كلمة المرور</label>
                                     <input
                                         type="password"
-                                        placeholder={isEditingCompany ? 'اتركها فارغة للمحافظة عليها' : 'كلمة المرور'}
+                                        placeholder={isEditingCompany ? 'اتركها فارغة للمحافظة عليها' : ''}
                                         value={companyForm.password}
                                         onChange={(e) => setCompanyForm({ ...companyForm, password: e.target.value })}
                                         className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none text-slate-800 dark:text-slate-100"
@@ -2514,7 +2617,7 @@ const AdminDashboard = () => {
                                     <label className="text-[10px] font-black text-slate-700">رقم الموظف (employee_id)</label>
                                     <input
                                         type="text"
-                                        placeholder="مثال: 1"
+                                        placeholder=""
                                         value={companyForm.employee_id}
                                         onChange={(e) => setCompanyForm({ ...companyForm, employee_id: e.target.value })}
                                         className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none text-slate-800 dark:text-slate-100"
@@ -2527,7 +2630,7 @@ const AdminDashboard = () => {
                                     <label className="text-[10px] font-black text-slate-700">القسم (department)</label>
                                     <input
                                         type="text"
-                                        placeholder="مثال: قسم اضافة الرحلات"
+                                        placeholder=""
                                         value={companyForm.department}
                                         onChange={(e) => setCompanyForm({ ...companyForm, department: e.target.value })}
                                         className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none text-slate-800 dark:text-slate-100"

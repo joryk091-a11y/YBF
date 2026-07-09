@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from 'react'
-import { Building2, CheckCircle2, CreditCard, Landmark, Lock, ShieldCheck, Plane, MoveLeft, ChevronDown, Luggage, HeartPulse, Accessibility, Wind, Salad, BadgeCheck, Headphones, Camera, Upload, MapPin, Phone, Trash2, AlertCircle, Building, Clock, RefreshCcw } from 'lucide-react'
+import { Building2, CheckCircle2, CreditCard, Landmark, Lock, ShieldCheck, Plane, MoveLeft, ChevronDown, Luggage, HeartPulse, Accessibility, Wind, Salad, BadgeCheck, Headphones, Camera, Upload, MapPin, Phone, Trash2, AlertCircle, Building, Clock, RefreshCcw, FileText, X } from 'lucide-react'
 import { useLocation, Link, useSearchParams } from 'react-router-dom'
 import { useSearch } from '../utils/SearchContext'
 import { useAuth } from '../utils/AuthContext'
@@ -13,10 +13,10 @@ const CARD_COUNTDOWN = 10 * 60 // 10 minutes for card payment
 const CONFIRMATION_COUNTDOWN = 3 * 24 * 60 * 60
 
 const SERVICES = [
-  { id: 'wheelchair', icon: Accessibility, label: 'مساعدة بالكرسي المتحرك', desc: 'خدمة مرافقة وكرسي متحرك داخل المطار والطائرة', price: 20, color: 'blue' },
-  { id: 'oxygen', icon: Wind, label: 'أكسجين طبي على المتن', desc: 'توفير أسطوانة أكسجين طبية معتمدة خلال الرحلة', price: 55, color: 'sky' },
-  { id: 'medical', icon: HeartPulse, label: 'مساعدة طبية متخصصة', desc: 'طاقم طبي مدرّب لمرافقة المريض طوال الرحلة', price: 80, color: 'orange' },
-  { id: 'medmeal', icon: HeartPulse, label: 'سيارة إسعاف', desc: 'تأمين سيارة إسعاف مجهزة لنقل المريض من/إلى الطائرة', price: 18, color: 'emerald' },
+  { id: 'wheelchair', icon: Accessibility, label: 'مساعدة بالكرسي المتحرك', desc: 'خدمة مرافقة وكرسي متحرك داخل المطار والطائرة', price: 0, color: 'blue' },
+  { id: 'oxygen', icon: Wind, label: 'أكسجين طبي على المتن', desc: 'توفير أسطوانة أكسجين طبية معتمدة خلال الرحلة', price: 15, color: 'sky' },
+  { id: 'medical', icon: HeartPulse, label: 'مساعدة طبية متخصصة', desc: 'طاقم طبي مدرّب لمرافقة المريض طوال الرحلة', price: 50, color: 'orange' },
+  { id: 'medmeal', icon: HeartPulse, label: 'سيارة إسعاف', desc: 'تأمين سيارة إسعاف مجهزة لنقل المريض من/إلى الطائرة', price: 12.50, color: 'emerald' },
 ]
 
 const paymentMethods = [
@@ -195,7 +195,7 @@ function PaymentPage() {
 
   const passengers = location.state?.passengers || []
   const extraBags = location.state?.extraBags || {}
-  const selectedServices = location.state?.selectedServices || []
+  const selectedServices = location.state?.selectedServices || {}
   const extrasTotal = Number(location.state?.extrasTotal) || 0
   const selectedSeats = location.state?.selectedSeats || []
 
@@ -209,37 +209,63 @@ function PaymentPage() {
     return false
   }).length
 
-  const BUSINESS_SURCHARGE = 150
+  const BUSINESS_SURCHARGE = 100
   const businessSurchargeTotal = businessSeatsCount * BUSINESS_SURCHARGE
 
-  let adults = 0
-  let children = 0
-  let infants = 0
-  passengers.forEach(p => {
-    if (p.passengerCode === 'CHD') children++
-    else if (p.passengerCode === 'INF') infants++
-    else adults++
-  })
+  let businessAdults = 0, economyAdults = 0;
+  let businessChildren = 0, economyChildren = 0;
+  let businessInfants = 0, economyInfants = 0;
 
-  const EXTRA_BAG_PRICE = 2
-  const bagsTotal = Object.values(extraBags).reduce((s, n) => s + n * EXTRA_BAG_PRICE, 0)
-  const servicesTotal = SERVICES.filter(s => selectedServices.includes(s.id)).reduce((s, srv) => s + srv.price, 0)
+  passengers.forEach((p, idx) => {
+    const seat = selectedSeats[idx] || '';
+    const seatRowMatch = seat.match(/^(\d+)/);
+    const isBusiness = seatRowMatch ? BUSINESS_ROWS.includes(parseInt(seatRowMatch[1], 10)) : false;
+
+    if (p.passengerCode === 'CHD') {
+      if (isBusiness) businessChildren++;
+      else economyChildren++;
+    } else if (p.passengerCode === 'INF') {
+      economyInfants++;
+    } else {
+      if (isBusiness) businessAdults++;
+      else economyAdults++;
+    }
+  });
+
+  const economyAdultsTotal = economyAdults * basePrice
+  const businessAdultsTotal = businessAdults * (basePrice + BUSINESS_SURCHARGE)
+  const adultFaresTotal = economyAdultsTotal + businessAdultsTotal
+
+  const economyChildrenTotal = economyChildren * Math.round(basePrice * 0.75)
+  const businessChildrenTotal = businessChildren * (Math.round(basePrice * 0.75) + BUSINESS_SURCHARGE)
+  const childFaresTotal = economyChildrenTotal + businessChildrenTotal
+
+  const economyInfantsTotal = economyInfants * Math.round(basePrice * 0.10)
+  const businessInfantsTotal = 0
+  const infantFaresTotal = economyInfantsTotal
 
   const adultBaseFare = Math.round(basePrice * 0.85)
   const adultTaxes = basePrice - adultBaseFare
-  const adultFaresTotal = adults * basePrice
 
   const childBaseFare = Math.round(basePrice * 0.75 * 0.85)
   const childTaxes = Math.round(basePrice * 0.75) - childBaseFare
-  const childFaresTotal = children * Math.round(basePrice * 0.75)
 
-  const infantBaseFare = Math.round(basePrice * 0.15 * 0.85)
-  const infantTaxes = Math.round(basePrice * 0.15) - infantBaseFare
-  const infantFaresTotal = infants * Math.round(basePrice * 0.15)
+  const infantBaseFare = Math.round(basePrice * 0.10 * 0.85)
+  const infantTaxes = Math.round(basePrice * 0.10) - infantBaseFare
+
+  const EXTRA_BAG_PRICE = 2
+  const bagsTotal = Object.values(extraBags).reduce((s, n) => s + n * EXTRA_BAG_PRICE, 0)
+  const servicesTotal = SERVICES.reduce((sum, srv) => sum + (selectedServices[srv.id] || 0) * srv.price, 0)
 
   const ticketsTotal = adultFaresTotal + childFaresTotal + infantFaresTotal
+  const baseTicketsTotal = (economyAdults + businessAdults) * basePrice + 
+                           (economyChildren + businessChildren) * Math.round(basePrice * 0.75) + 
+                           (economyInfants) * Math.round(basePrice * 0.10)
+
   const totalPrice = ticketsTotal
-  const finalTotal = ticketsTotal + businessSurchargeTotal + extrasTotal
+  const markupRate = Number(localStorage.getItem('adminMarkupRate') || '5')
+  const markupFee = Math.round(baseTicketsTotal * (markupRate / 100))
+  const finalTotal = ticketsTotal + extrasTotal + markupFee
 
   const [searchParams] = useSearchParams()
 
@@ -252,6 +278,9 @@ function PaymentPage() {
     }
   }, [searchParams])
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
+  const [agreed, setAgreed] = useState(false)
+  const [isTermsOpen, setIsTermsOpen] = useState(false)
+  const [validationError, setValidationError] = useState(null)
 
   // Branch and Payment Proof states
   const [selectedBranchCity, setSelectedBranchCity] = useState('الكل')
@@ -340,8 +369,8 @@ function PaymentPage() {
   const [bookingRef, setBookingRef] = useState('')
 
   const handleConfirmBooking = async () => {
-    if (paymentMethod === 'branch' && !selectedBranch) {
-      alert('يرجى اختيار الفرع الذي ترغب بالدفع فيه لإتمام عملية الحجز.')
+    if (!agreed) {
+      setValidationError('يجب الموافقة على الشروط والأحكام وسياسة إلغاء وتعديل تذاكر الطيران لإتمام عملية الحجز.')
       return
     }
 
@@ -584,72 +613,11 @@ function PaymentPage() {
                     <div>
                       <h3 className="text-xs font-black text-slate-800 mb-3 flex items-center gap-2 justify-start" dir="rtl">
                         <Building className="h-4 w-4 text-brand-blue" />
-                        <span>مواقع المكاتب والفروع المعتمدة للدفع</span>
+                        <span>الدفع نقداً في مكاتب شركة الطيران</span>
                       </h3>
-                      <p className="text-[11px] font-bold text-slate-400 mb-4 text-right">
-                        يمكنك زيارة أحد مكاتب شركة الطيران الناقلة ({selectedFlight?.airline_name || 'اليمنية للطيران'}) المذكورة أدناه للدفع نقداً وتأكيد حجزك.
+                      <p className="text-[11px] font-bold text-slate-400 mb-4 text-right leading-relaxed">
+                        يمكنك زيارة أحد المكاتب أو الفروع والوكالات المعتمدة لشركة الطيران الناقلة ({selectedFlight?.airline_name || 'اليمنية للطيران'}) لدفع قيمة التذكرة نقداً وتأكيد حجزك. يرجى التأكيد وإرفاق إثبات الدفع قبل انتهاء مهلة الـ 72 ساعة لضمان بقاء المقاعد.
                       </p>
-
-                      {/* City Filters */}
-                      <div className="flex flex-wrap gap-2 mb-4 justify-start" dir="rtl">
-                        {['الكل', ...new Set((BRANCHES[selectedFlight?.airline_code || selectedFlight?.airlineCode] || BRANCHES.IY).map(b => b.city))].map(city => (
-                          <button
-                            key={city}
-                            type="button"
-                            onClick={() => setSelectedBranchCity(city)}
-                            className={`px-3.5 py-1.5 text-xs font-black rounded-xl border transition-all duration-200 cursor-pointer ${
-                              selectedBranchCity === city
-                                ? 'bg-brand-blue text-white border-brand-blue shadow-md shadow-brand-blue/20'
-                                : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                            }`}
-                          >
-                            {city}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Branches Grid */}
-                      <div className="grid gap-3 sm:grid-cols-2 max-h-[300px] overflow-y-auto pr-1" dir="rtl">
-                        {(BRANCHES[selectedFlight?.airline_code || selectedFlight?.airlineCode] || BRANCHES.IY)
-                          .filter(b => selectedBranchCity === 'الكل' || b.city === selectedBranchCity).map(branch => {
-                          const isSelected = selectedBranch?.id === branch.id
-                          return (
-                            <button
-                              key={branch.id}
-                              type="button"
-                              onClick={() => setSelectedBranch(branch)}
-                              className={`flex flex-col text-right p-4 rounded-xl border-2 transition-all cursor-pointer ${
-                                isSelected
-                                  ? 'border-brand-blue bg-brand-blue/5 shadow-sm'
-                                  : 'border-slate-100 bg-slate-50/50 hover:border-slate-200'
-                              }`}
-                            >
-                              <div className="flex items-start justify-between w-full">
-                                <span className="font-black text-xs text-slate-800">{branch.name}</span>
-                                {isSelected && (
-                                  <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-brand-blue text-white">
-                                    <CheckCircle2 className="h-3 w-3" />
-                                  </span>
-                                )}
-                              </div>
-                              <div className="mt-2.5 space-y-1.5 w-full">
-                                <p className="text-[10px] text-slate-400 font-bold flex items-center gap-1.5 justify-start">
-                                  <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                                  <span className="truncate">{branch.address}</span>
-                                </p>
-                                <p className="text-[10px] text-slate-400 font-bold flex items-center gap-1.5 justify-start">
-                                  <Phone className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                                  <span dir="ltr">{branch.phone}</span>
-                                </p>
-                                <p className="text-[10px] text-slate-400 font-bold flex items-center gap-1.5 justify-start">
-                                  <Clock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                                  <span>{branch.hours}</span>
-                                </p>
-                              </div>
-                            </button>
-                          )
-                        })}
-                      </div>
                     </div>
 
                     {/* Shared Payment Proof Component */}
@@ -687,7 +655,7 @@ function PaymentPage() {
                         <div className="mt-4 space-y-3">
                           <div className="flex justify-between items-center text-xs">
                             <span className="font-bold text-slate-400">البنك والمصرف</span>
-                            <span className="font-black text-slate-800">بنك التضامن الإسلامي</span>
+                            <span className="font-black text-slate-800">بنك الكريمي</span>
                           </div>
                           <div className="border-t border-slate-100 my-2" />
                           <div className="flex justify-between items-center text-xs">
@@ -720,6 +688,29 @@ function PaymentPage() {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Terms and Conditions */}
+            <div className="mb-6 flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/50 p-4 text-right" dir="rtl">
+              <button
+                type="button"
+                onClick={() => setAgreed((v) => !v)}
+                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-all cursor-pointer ${
+                  agreed ? 'border-brand-blue bg-brand-blue' : 'border-slate-300 bg-white hover:border-brand-blue'
+                }`}
+              >
+                {agreed && <CheckCircle2 className="h-3.5 w-3.5 text-white" />}
+              </button>
+              <p className="text-xs font-bold leading-6 text-slate-600">
+                لقد قرأت وأوافق على{' '}
+                <button
+                  type="button"
+                  onClick={() => setIsTermsOpen(true)}
+                  className="font-black text-brand-blue underline-offset-2 hover:underline transition cursor-pointer"
+                >
+                  الشروط والأحكام
+                </button>
+              </p>
             </div>
 
             {/* Navigation */}
@@ -777,53 +768,73 @@ function PaymentPage() {
                 <div className="mt-5 space-y-4 border-b border-slate-100 pb-5">
                   <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">تعرفة تذاكر الطيران</p>
 
-                  {/* Adults */}
-                  {adults > 0 && (
+                  {/* Adults Economy */}
+                  {economyAdults > 0 && (
                     <div className="space-y-1">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="font-bold text-slate-500">تذكرة بالغ (Adult) × {adults}</span>
-                        <span className="font-black text-slate-900">${adultFaresTotal}</span>
+                        <span className="font-bold text-slate-500">تذكرة بالغ (سياحية) × {economyAdults}</span>
+                        <span className="font-black text-slate-900">${economyAdults * basePrice}</span>
                       </div>
                       <div className="flex justify-between text-[10px] font-medium text-slate-400 pr-4">
-                        <span>الأجرة الأساسية: ${adultBaseFare * adults}</span>
-                        <span>الضرائب والرسوم: ${adultTaxes * adults}</span>
+                        <span>الأجرة الأساسية: ${Math.round(basePrice * 0.85) * economyAdults}</span>
+                        <span>الضرائب والرسوم: ${(basePrice - Math.round(basePrice * 0.85)) * economyAdults}</span>
                       </div>
                     </div>
                   )}
 
-                  {/* Children */}
-                  {children > 0 && (
+                  {/* Adults Business */}
+                  {businessAdults > 0 && (
                     <div className="space-y-1 mt-3">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="font-bold text-slate-500">تذكرة طفل (Child) × {children} <span className="text-[10px] font-semibold text-emerald-500 mr-1">(خصم 25%)</span></span>
-                        <span className="font-black text-slate-900">${childFaresTotal}</span>
+                        <span className="font-bold text-slate-500">تذكرة بالغ (درجة الأعمال) × {businessAdults}</span>
+                        <span className="font-black text-slate-900">${businessAdults * (basePrice + BUSINESS_SURCHARGE)}</span>
                       </div>
                       <div className="flex justify-between text-[10px] font-medium text-slate-400 pr-4">
-                        <span>الأجرة الأساسية: ${childBaseFare * children}</span>
-                        <span>الضرائب والرسوم: ${childTaxes * children}</span>
+                        <span>الأجرة الأساسية: ${Math.round((basePrice + BUSINESS_SURCHARGE) * 0.85) * businessAdults}</span>
+                        <span>الضرائب والرسوم: ${((basePrice + BUSINESS_SURCHARGE) - Math.round((basePrice + BUSINESS_SURCHARGE) * 0.85)) * businessAdults}</span>
                       </div>
                     </div>
                   )}
 
-                  {/* Infants */}
-                  {infants > 0 && (
+                  {/* Children Economy */}
+                  {economyChildren > 0 && (
                     <div className="space-y-1 mt-3">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="font-bold text-slate-500">تذكرة رضيع (Infant) × {infants} <span className="text-[10px] font-semibold text-emerald-500 mr-1">(خصم 85%)</span></span>
-                        <span className="font-black text-slate-900">${infantFaresTotal}</span>
+                        <span className="font-bold text-slate-500">تذكرة طفل (سياحية) × {economyChildren} <span className="text-[10px] font-semibold text-emerald-500 mr-1">(خصم 25%)</span></span>
+                        <span className="font-black text-slate-900">${economyChildren * Math.round(basePrice * 0.75)}</span>
                       </div>
                       <div className="flex justify-between text-[10px] font-medium text-slate-400 pr-4">
-                        <span>الأجرة الأساسية: ${infantBaseFare * infants}</span>
-                        <span>الضرائب والرسوم: ${infantTaxes * infants}</span>
+                        <span>الأجرة الأساسية: ${Math.round(basePrice * 0.75 * 0.85) * economyChildren}</span>
+                        <span>الضرائب والرسوم: ${(Math.round(basePrice * 0.75) - Math.round(basePrice * 0.75 * 0.85)) * economyChildren}</span>
                       </div>
                     </div>
                   )}
 
-                  {/* Business Class Upgrade */}
-                  {businessSeatsCount > 0 && (
-                    <div className="flex items-center justify-between text-sm bg-amber-50/50 border border-amber-100 rounded-xl p-3 mt-4">
-                      <span className="font-bold text-amber-800">ترقية لدرجة الأعمال × {businessSeatsCount}</span>
-                      <span className="font-black text-amber-900">+${businessSurchargeTotal}</span>
+                  {/* Children Business */}
+                  {businessChildren > 0 && (
+                    <div className="space-y-1 mt-3">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-bold text-slate-500">تذكرة طفل (درجة الأعمال) × {businessChildren} <span className="text-[10px] font-semibold text-emerald-500 mr-1">(خصم 25%)</span></span>
+                        <span className="font-black text-slate-900">${businessChildren * (Math.round(basePrice * 0.75) + BUSINESS_SURCHARGE)}</span>
+                      </div>
+                      <div className="flex justify-between text-[10px] font-medium text-slate-400 pr-4">
+                        <span>الأجرة الأساسية: ${Math.round((Math.round(basePrice * 0.75) + BUSINESS_SURCHARGE) * 0.85) * businessChildren}</span>
+                        <span>الضرائب والرسوم: ${((Math.round(basePrice * 0.75) + BUSINESS_SURCHARGE) - Math.round((Math.round(basePrice * 0.75) + BUSINESS_SURCHARGE) * 0.85)) * businessChildren}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Infants Economy */}
+                  {economyInfants > 0 && (
+                    <div className="space-y-1 mt-3">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-bold text-slate-500">تذكرة رضيع (على الحجر) × {economyInfants} <span className="text-[10px] font-semibold text-emerald-500 mr-1">(خصم 90%)</span></span>
+                        <span className="font-black text-slate-900">${economyInfants * Math.round(basePrice * 0.10)}</span>
+                      </div>
+                      <div className="flex justify-between text-[10px] font-medium text-slate-400 pr-4">
+                        <span>الأجرة الأساسية: ${Math.round(basePrice * 0.10 * 0.85) * economyInfants}</span>
+                        <span>الضرائب والرسوم: ${(Math.round(basePrice * 0.10) - Math.round(basePrice * 0.10 * 0.85)) * economyInfants}</span>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -845,18 +856,28 @@ function PaymentPage() {
                     )}
 
                     {/* Special Services */}
-                    {SERVICES.filter(s => selectedServices.includes(s.id)).map(srv => {
+                    {SERVICES.filter(s => selectedServices[s.id] > 0).map(srv => {
                       const Icon = srv.icon
+                      const qty = selectedServices[srv.id]
                       return (
                         <div key={srv.id} className="flex items-center justify-between text-sm">
                           <div className="flex items-center gap-2 text-slate-600">
                             <Icon className="h-4 w-4 text-orange-500" />
-                            <span className="font-semibold text-xs">{srv.label}</span>
+                            <span className="font-semibold text-xs">{srv.label} × {qty}</span>
                           </div>
-                          <span className="font-black text-slate-900">+${srv.price}</span>
+                          <span className="font-black text-slate-900">+${srv.price * qty}</span>
                         </div>
                       )
                     })}
+
+                    {/* Admin Markup Fee */}
+                    <div className="flex items-center justify-between text-sm pt-3 border-t border-slate-100">
+                      <div className="flex items-center gap-2 text-slate-600">
+                        <ShieldCheck className="h-4 w-4 text-brand-blue" />
+                        <span className="font-semibold text-xs">رسوم الخدمة للموقع ({markupRate}%)</span>
+                      </div>
+                      <span className="font-black text-slate-900">+${markupFee}</span>
+                    </div>
                   </div>
                 )}
 
@@ -952,6 +973,80 @@ function PaymentPage() {
             >
               العودة للرئيسية
             </Link>
+          </div>
+        </div>
+      )}
+      {/* Terms Modal */}
+      {isTermsOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm shadow-2xl" dir="rtl">
+          <div className="relative w-full max-w-lg overflow-hidden rounded-[2.2rem] bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal header */}
+            <div className="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-blue/10">
+                  <FileText className="h-5 w-5 text-brand-blue" />
+                </div>
+                <h2 className="text-lg font-black text-slate-900">شروط وأحكام الحجز</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsTermsOpen(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition hover:bg-slate-100 hover:text-slate-900 cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal body */}
+            <div className="max-h-[50vh] overflow-y-auto px-6 py-6">
+              <div className="space-y-5 text-right">
+                {[
+                  { num: '1', title: 'قبول الشروط', body: 'باستخدامك لمنصة Yemen Booking Flight، فإنك توافق على الالتزام بكافة الشروط والأحكام المذكورة هنا. يرجى قراءتها بعناية قبل إتمام أي عملية حجز.' },
+                  { num: '2', title: 'سياسة الحجز', body: 'تخضع جميع الحجوزات لسياسات شركات الطيران المعنية. نحن نعمل كوسيط لتسهيل عملية الحجز، ولسنا مسؤولين عن أي تغييرات تطرأ على مواعيد الرحلات من قبل الشركات.' },
+                  { num: '3', title: 'سياسة الإلغاء والاسترداد', body: 'تعتمد شروط الإلغاء والاسترداد على فئة التذكرة المشتراة وسياسة شركة الطيران. قد يتم تطبيق رسوم إدارية في حال طلب الإلغاء أو التغيير.' },
+                  { num: '4', title: 'خصوصية البيانات', body: 'نحن ملتزمون بحماية بياناتك الشخصية وتشفيرها وفقاً لأعلى معايير الأمان العالمية. لن يتم مشاركة بياناتك مع أي طرف ثالث إلا لتنفيذ عملية الحجز.' },
+                ].map(({ num, title, body }) => (
+                  <div key={num} className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
+                    <h3 className="text-sm font-black text-slate-900">{num}. {title}</h3>
+                    <p className="mt-2 text-xs font-semibold leading-7 text-slate-500">{body}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Modal footer */}
+            <div className="border-t border-slate-100 bg-slate-50 px-6 py-4">
+              <button
+                type="button"
+                onClick={() => { setAgreed(true); setIsTermsOpen(false) }}
+                className="flex h-12 w-full items-center justify-center rounded-2xl bg-brand-blue hover:bg-brand-blue-hover text-sm font-black text-white shadow-lg shadow-brand-blue/20 transition-all cursor-pointer active:scale-98"
+              >
+                <CheckCircle2 className="ml-2 h-4 w-4" />
+                لقد قرأت الشروط وأوافق عليها
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Validation Error Modal */}
+      {validationError !== null && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm shadow-2xl" dir="rtl">
+          <div className="relative w-full max-w-sm overflow-hidden rounded-[2.2rem] bg-white p-6 shadow-2xl border border-slate-100/50 text-center animate-in fade-in zoom-in-95 duration-200">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-50 text-orange-500">
+              <AlertCircle className="h-6 w-6" />
+            </div>
+            <h3 className="text-base font-black text-slate-900 mb-2">تنبيه: الموافقة على الشروط</h3>
+            <p className="text-xs font-semibold text-slate-500 leading-relaxed mb-6 px-2">
+              {validationError}
+            </p>
+            <button
+              type="button"
+              onClick={() => setValidationError(null)}
+              className="w-full h-11 flex items-center justify-center rounded-xl bg-brand-blue hover:bg-brand-blue-hover text-xs font-black text-white transition-all cursor-pointer shadow-md shadow-brand-blue/10 active:scale-98"
+            >
+              موافق
+            </button>
           </div>
         </div>
       )}

@@ -406,7 +406,7 @@ function HomePage() {
         </ScrollReveal>
 
         {/* الوجهات الأكثر طلباً */}
-        <section className="mx-auto mt-16 max-w-7xl px-4 sm:px-6 lg:px-8 relative" dir="rtl">
+        <section id="popular-destinations" className="mx-auto mt-16 max-w-7xl px-4 sm:px-6 lg:px-8 relative" dir="rtl">
           <ScrollReveal animation="fade-down" duration={700}>
             <div className="text-center mb-16 relative flex flex-col items-center">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-4 py-1.5 text-[10px] font-black tracking-wider text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 uppercase mb-4 shadow-sm">
@@ -478,7 +478,6 @@ function HomePage() {
                         <span className="text-[9px] font-bold text-white/50">تبدأ من</span>
                         <div className="flex items-baseline gap-0.5">
                           <span className="text-xl font-black text-white tabular-nums">${dest.price}</span>
-                          <span className="text-xs font-medium text-white/70">/ اتجاه</span>
                         </div>
                       </div>
 

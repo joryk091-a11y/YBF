@@ -221,7 +221,7 @@ function SearchPage() {
           {/* Price & Book Button */}
           <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between gap-4">
             <div className="text-right">
-              <span className="text-[9px] font-black uppercase text-slate-400">السعر الكلي</span>
+              <span className="text-[9px] font-black uppercase text-slate-400">السعر</span>
               <div className="flex items-baseline gap-0.5">
                 <span className="text-2xl font-black tracking-tighter text-slate-950 leading-none">{flight.price}</span>
                 <span className="text-sm font-black text-slate-400">$</span>
@@ -277,7 +277,7 @@ function SearchPage() {
                   </span>
                 </div>
                 <div className="mt-1 flex items-center gap-3">
-                  <span className="text-xs font-bold text-slate-400">Airbus A320</span>
+                  <span className="text-xs font-bold text-slate-400">{flight.raw?.aircraft_type || flight.aircraft_type || 'Airbus A320'}</span>
                 </div>
               </div>
             </div>
@@ -339,12 +339,11 @@ function SearchPage() {
           {/* Pricing Stub */}
           <div className="relative flex flex-col items-center justify-center bg-slate-50/30 p-8 rounded-b-[30px] lg:rounded-b-0 lg:rounded-l-[30px] border-t border-slate-100 lg:border-t-0 lg:border-r">
             <div className="relative z-10 w-full text-center">
-              <span className="text-[10px] font-black uppercase tracking-[3px] text-slate-400">السعر الإجمالي</span>
+              <span className="text-[10px] font-black uppercase tracking-[3px] text-slate-400">السعر</span>
               <div className="mt-2 flex items-baseline justify-center gap-1">
                 <span className="text-4xl font-black tracking-tighter text-slate-900 leading-none">{flight.price}</span>
                 <span className="text-lg font-black text-slate-400">$</span>
               </div>
-              <p className="mt-1 text-[10px] font-bold text-slate-400">شامل الرسوم</p>
 
               <button
                 onClick={() => handleSelectFlight(flight)}

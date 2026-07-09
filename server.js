@@ -1441,13 +1441,13 @@ app.post('/api/flights/:id', handleFlightUpdate);
 
 // Create a new booking
 app.post('/api/bookings', async (req, res) => {
-  const { flightId, passengers, totalPrice, basePrice, extraBags, selectedServices, extrasTotal, paymentMethod: rawMethod, reference, userId } = req.body;
+  const { flightId, passengers, totalPrice, basePrice, extraBags, selectedServices, extrasTotal, paymentMethod: rawMethod, reference, userId, selectedSeats } = req.body;
 
   const serviceDataMap = {
-    'wheelchair': { label: 'مساعدة بالكرسي المتحرك', price: 20 },
-    'oxygen': { label: 'أكسجين طبي على المتن', price: 55 },
-    'medical': { label: 'مساعدة طبية متخصصة', price: 80 },
-    'medmeal': { label: 'وجبة غذائية طبية', price: 18 }
+    'wheelchair': { label: 'مساعدة بالكرسي المتحرك', price: 0 },
+    'oxygen': { label: 'أكسجين طبي على المتن', price: 15 },
+    'medical': { label: 'مساعدة طبية متخصصة', price: 50 },
+    'medmeal': { label: 'سيارة إسعاف', price: 12.50 }
   };
 
   // Map frontend payment method to DB Enum values
@@ -1496,6 +1496,45 @@ app.post('/api/bookings', async (req, res) => {
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
+
+    // Check if the flight is international
+    const [flightRows] = await connection.execute(
+      'SELECT airportOrigin_code as origin, airportDestination_code as destination FROM flights WHERE id_flights = ?',
+      [flightId]
+    );
+
+    if (flightRows.length > 0) {
+      const origin = flightRows[0].origin;
+      const destination = flightRows[0].destination;
+      const YEMEN_AIRPORTS = ['ADE', 'RIY', 'GXF', 'SCT', 'AAY', 'ATQ'];
+      const isInternational = !YEMEN_AIRPORTS.includes(String(origin).toUpperCase().trim()) || 
+                              !YEMEN_AIRPORTS.includes(String(destination).toUpperCase().trim());
+
+      if (isInternational) {
+        const limitDate = new Date();
+        limitDate.setMonth(limitDate.getMonth() + 6);
+        limitDate.setHours(0, 0, 0, 0);
+
+        for (const p of passengers) {
+          const pExpiry = p.passportExpiry || p.passport_expiry || null;
+          if (!pExpiry) {
+            return res.status(400).json({ 
+              success: false, 
+              error: `يرجى تحديد تاريخ انتهاء الجواز للمسافر (${p.fullName || p.name}) لأن الرحلة دولية.` 
+            });
+          }
+
+          const expiryDate = new Date(pExpiry);
+          if (expiryDate < limitDate) {
+            return res.status(400).json({ 
+              success: false, 
+              error: `يجب أن يكون جواز سفر المسافر (${p.fullName || p.name}) صالحاً لمدة 6 أشهر على الأقل للسفر الدولي. أقل تاريخ انتهاء مقبول هو: ${limitDate.toISOString().split('T')[0]}` 
+            });
+          }
+        }
+      }
+    }
+
     await connection.beginTransaction();
 
     // 1. Create the booking record
@@ -1513,6 +1552,7 @@ app.post('/api/bookings', async (req, res) => {
       const pName = p.name || p.fullName || 'مسافر';
       const pPassport = p.passport_number || p.passportNumber || `TMP-${Math.random()}`;
       const pDob = p.date_of_birth || p.birthDate || null;
+      const pExpiry = p.passportExpiry || p.passport_expiry || null;
       const pNationality = p.nationality || '';
       const pGender = (p.gender || p.gander || 'male').toLowerCase();
 
@@ -1522,12 +1562,15 @@ app.post('/api/bookings', async (req, res) => {
 
       if (existing.length > 0) {
         passengerId = existing[0].id_passengers;
-        // Link to user if not already linked
-        await connection.execute('UPDATE passengers SET user_id = ? WHERE id_passengers = ? AND user_id IS NULL', [userId || null, passengerId]);
+        // Update passenger details including passport expiry and link user
+        await connection.execute(
+          'UPDATE passengers SET passport_expiry = ?, user_id = COALESCE(user_id, ?) WHERE id_passengers = ?',
+          [pExpiry, userId || null, passengerId]
+        );
       } else {
         const [passResult] = await connection.execute(
-          'INSERT INTO passengers (name, passport_number, date_of_birth, nationality, gander, user_id) VALUES (?, ?, ?, ?, ?, ?)',
-          [pName, pPassport, pDob, pNationality, pGender, userId || null]
+          'INSERT INTO passengers (name, passport_number, date_of_birth, passport_expiry, nationality, gander, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          [pName, pPassport, pDob, pExpiry, pNationality, pGender, userId || null]
         );
         passengerId = passResult.insertId;
       }
@@ -1537,21 +1580,40 @@ app.post('/api/bookings', async (req, res) => {
       }
       index++;
 
-      await connection.execute(
-        'INSERT INTO bookings_passengers (booking_id, passenger_id) VALUES (?, ?)',
-        [bookingId, passengerId]
-      );
+      // 3. Add baggage record (base weight + extra bags)
+      const seatNumber = selectedSeats && selectedSeats[index - 1] ? String(selectedSeats[index - 1]) : '';
+      const seatRow = parseInt(seatNumber, 10);
+      const isBusinessSeat = !isNaN(seatRow) && seatRow >= 1 && seatRow <= 3;
+      const seatClass = isBusinessSeat ? 'Business' : 'Economy';
 
-      // 3. Add baggage if selected
-      const extraBagsCount = extraBags ? Number(extraBags[p.id] || 0) : 0;
-      // Always add at least a base baggage record if it's expected, 
-      // but here we specifically add the extra baggage data.
-      if (extraBagsCount > 0) {
-        await connection.execute(
-          'INSERT INTO baggage (booking_id, passenger_id, weight, base_price, extra_price) VALUES (?, ?, ?, ?, ?)',
-          [bookingId, passengerId, 23.0, 0, extraBagsCount * 35]
-        );
+      let baseWeight = 30.0;
+      const pCode = p.passengerCode || '';
+      
+      if (pCode === 'INF') {
+        baseWeight = 10.0;
+      } else if (seatClass === 'Business') {
+        if (pCode === 'ADT') {
+          baseWeight = 40.0;
+        } else {
+          baseWeight = 30.0;
+        }
       }
+
+      const extraBagsCount = extraBags ? Number(extraBags[p.id] || 0) : 0;
+      const extraWeight = extraBagsCount * 1.0; // Assume each extra unit is 1 kg
+      const totalBaggageWeight = baseWeight + extraWeight;
+      const extraBaggagePrice = extraBagsCount * 2.0;
+
+      const [baggageResult] = await connection.execute(
+        'INSERT INTO baggage (booking_id, passenger_id, weight, base_price, extra_price, total_price) VALUES (?, ?, ?, ?, ?, ?)',
+        [bookingId, passengerId, totalBaggageWeight, 0.0, extraBaggagePrice, extraBaggagePrice]
+      );
+      const baggageId = baggageResult.insertId;
+
+      await connection.execute(
+        'INSERT INTO bookings_passengers (booking_id, passenger_id, baggage_id) VALUES (?, ?, ?)',
+        [bookingId, passengerId, baggageId]
+      );
     }
 
     // 4. Process Ground Services
@@ -2381,7 +2443,7 @@ app.get('/api/flight-passengers/:flightNumber', async (req, res) => {
       gender: r.gender === 'female' ? 'أنثى' : 'ذكر',
       seatNumber: r.seatNumber || 'غير محدد',
       bookingReference: r.bookingReference,
-      extraWeight: r.baggageWeight > 23 ? Math.round(r.baggageWeight - 23) : 0,
+      extraWeight: r.extraBaggagePrice > 0 ? Math.round(Number(r.extraBaggagePrice) / 2) : 0,
       extraBaggagePrice: Number(r.extraBaggagePrice) || 0,
       services: servicesMap[r.bookingId] || [],
       finalPrice: Number(r.finalPrice) || 0

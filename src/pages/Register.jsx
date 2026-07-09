@@ -63,10 +63,7 @@ function RegisterPage() {
             return
         }
 
-        if (!agreed) {
-            setError('يجب الموافقة على الشروط والأحكام')
-            return
-        }
+
 
         setLoading(true)
         try {
@@ -284,27 +281,7 @@ function RegisterPage() {
                         </div>
                     </div>
 
-                    {/* Terms */}
-                    <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-55 p-4">
-                        <button
-                            type="button"
-                            onClick={() => setAgreed((v) => !v)}
-                            className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-all ${agreed ? 'border-brand-blue bg-brand-blue' : 'border-slate-300 bg-white hover:border-brand-blue'}`}
-                        >
-                            {agreed && <CheckCircle2 className="h-3.5 w-3.5 text-white" />}
-                        </button>
-                        <p className="text-xs font-bold leading-6 text-slate-600">
-                            أوافق على{' '}
-                            <button
-                                type="button"
-                                onClick={() => setIsTermsOpen(true)}
-                                className="font-black text-brand-blue underline-offset-2 hover:underline transition"
-                            >
-                                الشروط والأحكام
-                            </button>
-                            {' '}وسياسة الخصوصية.
-                        </p>
-                    </div>
+
 
                     {/* Submit */}
                     <button

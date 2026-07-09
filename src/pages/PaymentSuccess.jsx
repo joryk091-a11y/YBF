@@ -75,42 +75,60 @@ function PaymentSuccessPage() {
   }
 
   return (
-    <main className="min-h-[85vh] bg-[#f8f9fc] pb-16 pt-24 sm:pt-28" dir="rtl">
-      <div className="mx-auto max-w-2xl px-4 sm:px-6">
-        <div className="overflow-hidden rounded-[32px] border border-slate-200 bg-white p-8 text-center shadow-xl relative">
+    <main className="min-h-[85vh] bg-[#f8fafc] pb-20 pt-24 sm:pt-32" dir="rtl">
+      <div className="mx-auto max-w-xl px-4 sm:px-6">
+        <div className="overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white p-10 text-center shadow-[0_24px_70px_rgba(0,0,0,0.03)] relative">
           {/* Glowing blur effects */}
-          <div className="absolute -left-16 -top-16 h-40 w-40 rounded-full bg-emerald-500/10 blur-2xl pointer-events-none" />
-          <div className="absolute -right-16 -bottom-16 h-40 w-40 rounded-full bg-brand-blue/10 blur-2xl pointer-events-none" />
+          <div className="absolute -left-20 -top-20 h-48 w-48 rounded-full bg-emerald-500/5 blur-3xl pointer-events-none" />
+          <div className="absolute -right-20 -bottom-20 h-48 w-48 rounded-full bg-brand-blue/5 blur-3xl pointer-events-none" />
 
           {/* Success Checkmark with Ring */}
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 border-4 border-emerald-100/40 text-emerald-500 shadow-inner mb-6">
-            <CheckCircle2 className="h-10 w-10 animate-bounce" />
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500 text-white shadow-xl shadow-emerald-500/20 mb-8 transition-transform duration-300 hover:scale-105">
+            <CheckCircle2 className="h-10 w-10 stroke-[2.5]" />
           </div>
 
-          <h1 className="text-2xl font-black text-slate-900">تم الدفع بنجاح!</h1>
-          <p className="mt-2 text-sm font-bold text-slate-400">تهانينا، تم تأكيد حجزك وإصدار تذاكر الصعود الإلكترونية بنجاح.</p>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">تم الدفع بنجاح!</h1>
+          <p className="mt-3 text-sm font-medium text-slate-500 max-w-md mx-auto leading-relaxed">
+            تهانينا، تم تأكيد حجزك وإصدار تذاكر الصعود الإلكترونية بنجاح. لقد أرسلنا تفاصيل الحجز إلى بريدك الإلكتروني.
+          </p>
 
-          {/* Details Section */}
-          <div className="mt-8 rounded-2xl bg-slate-50 border border-slate-100 p-5 text-right space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-200/50 pb-3.5">
-              <span className="text-xs font-bold text-slate-400">رمز الحجز PNR</span>
-              <span className="text-sm font-mono font-black text-slate-900 tracking-wider bg-slate-200/60 px-3 py-1 rounded-xl">{reference}</span>
-            </div>
-            
-            <div className="flex items-center justify-between border-b border-slate-200/50 pb-3.5">
-              <span className="text-xs font-bold text-slate-400">حالة الدفع</span>
-              <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-black text-emerald-700">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                مكتمل ومؤكد
-              </span>
-            </div>
+          {/* Receipt Card Container */}
+          <div className="mt-8 rounded-3xl bg-slate-50 border border-slate-100 p-6 text-right relative overflow-hidden">
+            {/* Left and Right half-circle notches to look like a premium ticket/receipt */}
+            <div className="absolute top-1/2 -left-3 h-6 w-6 -translate-y-1/2 rounded-full bg-white border border-slate-100 pointer-events-none hidden sm:block" />
+            <div className="absolute top-1/2 -right-3 h-6 w-6 -translate-y-1/2 rounded-full bg-white border border-slate-100 pointer-events-none hidden sm:block" />
 
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-400">طريقة الدفع</span>
-              <span className="text-xs font-black text-slate-700 flex items-center gap-1.5">
-                <Receipt className="h-4 w-4 text-brand-blue" />
-                بطاقة ائتمانية (Mastercard)
-              </span>
+            <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-4 pb-2 border-b border-slate-200/50 flex items-center justify-between">
+              <span>تفاصيل الدفع والتأكيد</span>
+              <Receipt className="h-4.5 w-4.5 text-slate-400" />
+            </h3>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-400">رمز الحجز (PNR)</span>
+                <span className="text-sm font-mono font-black text-slate-800 tracking-widest bg-slate-200/50 px-3 py-1 rounded-xl">{reference}</span>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-400">حالة العملية</span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-black text-emerald-700">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  مكتمل ومؤكد
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-400">طريقة الدفع</span>
+                <span className="text-xs font-black text-slate-700 flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-brand-blue" />
+                  بطاقة ائتمانية (Mastercard)
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-400">رقم المعاملة</span>
+                <span className="text-xs font-mono font-bold text-slate-500">TXN-{Math.random().toString(36).substring(2, 10).toUpperCase()}</span>
+              </div>
             </div>
           </div>
 
@@ -118,14 +136,14 @@ function PaymentSuccessPage() {
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center items-center">
             <button
               onClick={() => navigate('/my-bookings')}
-              className="w-full sm:w-auto inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-brand-blue hover:bg-brand-blue-hover text-white px-8 text-xs font-black shadow-md shadow-brand-blue/20 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
+              className="w-full sm:flex-1 inline-flex h-13 items-center justify-center gap-2 rounded-2xl bg-brand-blue hover:bg-brand-blue-hover text-white text-xs font-black shadow-lg shadow-brand-blue/15 hover:shadow-brand-blue/25 transition-all cursor-pointer active:scale-98"
             >
               <Download size={14} />
               <span>عرض وتحميل التذاكر</span>
             </button>
             <button
               onClick={() => navigate('/')}
-              className="w-full sm:w-auto inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 px-8 text-xs font-black transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
+              className="w-full sm:flex-1 inline-flex h-13 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-black transition-all cursor-pointer active:scale-98"
             >
               <span>العودة للرئيسية</span>
               <ArrowRight size={14} className="rotate-180" />

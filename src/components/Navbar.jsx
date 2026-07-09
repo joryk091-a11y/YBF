@@ -5,7 +5,7 @@ import defaultLogo from '../assets/logo.png'
 
 const defaultNavItems = [
   { label: 'الرئيسية', href: '/' },
-  { label: 'الوجهات', href: '/search' },
+  { label: 'الوجهات', href: '#popular-destinations' },
   { label: 'حجوزاتي', href: '/my-bookings' },
   { label: 'الشروط والأحكام', href: '/terms' },
 ]

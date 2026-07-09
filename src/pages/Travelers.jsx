@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Calendar, ChevronDown, Globe, IdCard, Plane, PlaneTakeoff, MoveLeft, ShieldCheck, Lock, UserRound, Luggage, CheckCircle2, Plus, Minus, Accessibility, Wind, HeartPulse, Salad, AlertCircle, Clock, BadgeCheck } from 'lucide-react'
+import { Calendar, ChevronDown, Globe, IdCard, Plane, PlaneTakeoff, MoveLeft, ShieldCheck, Lock, UserRound, Luggage, CheckCircle2, Plus, Minus, Accessibility, Wind, HeartPulse, Salad, AlertCircle, Clock, BadgeCheck, Trash2 } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useSearch } from '../utils/SearchContext'
 import BookingStepper from '../components/BookingStepper.jsx'
@@ -7,10 +7,10 @@ import BookingStepper from '../components/BookingStepper.jsx'
 const EXTRA_BAG_PRICE = 2
 
 const SERVICES = [
-  { id: 'wheelchair', icon: Accessibility, label: 'مساعدة بالكرسي المتحرك', desc: 'خدمة مرافقة وكرسي متحرك داخل المطار والطائرة', price: 20, color: 'blue' },
-  { id: 'oxygen', icon: Wind, label: 'أكسجين طبي على المتن', desc: 'توفير أسطوانة أكسجين طبية معتمدة خلال الرحلة', price: 55, color: 'sky' },
-  { id: 'medical', icon: HeartPulse, label: 'مساعدة طبية متخصصة', desc: 'طاقم طبي مدرّب لمرافقة المريض طوال الرحلة', price: 80, color: 'orange' },
-  { id: 'medmeal', icon: HeartPulse, label: 'سيارة إسعاف', desc: 'تأمين سيارة إسعاف مجهزة لنقل المريض من/إلى الطائرة', price: 18, color: 'emerald' },
+  { id: 'wheelchair', icon: Accessibility, label: 'مساعدة بالكرسي المتحرك', desc: 'خدمة مرافقة وكرسي متحرك داخل المطار والطائرة', price: 0, color: 'blue' },
+  { id: 'oxygen', icon: Wind, label: 'أكسجين طبي على المتن', desc: 'توفير أسطوانة أكسجين طبية معتمدة خلال الرحلة', price: 15, color: 'sky' },
+  { id: 'medical', icon: HeartPulse, label: 'مساعدة طبية متخصصة', desc: 'طاقم طبي مدرّب لمرافقة المريض طوال الرحلة', price: 50, color: 'orange' },
+  { id: 'medmeal', icon: HeartPulse, label: 'سيارة إسعاف', desc: 'تأمين سيارة إسعاف مجهزة لنقل المريض من/إلى الطائرة', price: 12.50, color: 'emerald' },
 ]
 
 const createPassenger = (id) => ({
@@ -67,11 +67,16 @@ function Field({ label, children, icon: Icon, className = '', required = false }
 function TravelersPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { searchCriteria: contextSearchCriteria } = useSearch()
+  const { searchCriteria: contextSearchCriteria, setPassengerCount } = useSearch()
 
   const selectedFlight = location.state?.selectedFlight
   const searchCriteria = location.state?.searchCriteria || contextSearchCriteria
-  const selectedSeats = location.state?.selectedSeats || []
+  const [selectedSeats, setSelectedSeats] = useState(() => location.state?.selectedSeats || [])
+  const origin = selectedFlight?.fromCode || selectedFlight?.airportOrigin_code || 'ADE';
+  const destination = selectedFlight?.toCode || selectedFlight?.airportDestination_code || 'CAI';
+  const YEMEN_AIRPORTS = ['ADE', 'RIY', 'GXF', 'SCT', 'AAY', 'ATQ'];
+  const isInternational = !YEMEN_AIRPORTS.includes(String(origin).toUpperCase().trim()) || 
+                          !YEMEN_AIRPORTS.includes(String(destination).toUpperCase().trim());
   const initialPassengerCount = Math.min(Math.max(Number(searchCriteria?.passengerCount) || 1, 1), 9)
 
   const [passengers, setPassengers] = useState(() =>
@@ -87,6 +92,69 @@ function TravelersPage() {
   }, [searchCriteria?.passengerCount])
 
   const [activePassengerId, setActivePassengerId] = useState(1)
+  const [passengerToDelete, setPassengerToDelete] = useState(null)
+  const [validationError, setValidationError] = useState(null)
+
+  const addPassenger = () => {
+    if (passengers.length >= 9) {
+      alert('الحد الأقصى لعدد المسافرين هو 9 مسافرين.');
+      return;
+    }
+    const newCount = passengers.length + 1;
+    const newPassenger = createPassenger(newCount);
+    
+    setPassengers(prev => [...prev, newPassenger]);
+
+    if (setPassengerCount) {
+      setPassengerCount(newCount);
+    }
+    if (searchCriteria) {
+      searchCriteria.passengerCount = newCount;
+    }
+    
+    setActivePassengerId(newCount);
+  };
+
+  const triggerRemovePassenger = (index) => {
+    setPassengerToDelete(index);
+  };
+
+  const confirmRemovePassenger = () => {
+    if (passengerToDelete === null) return;
+    const indexToRemove = passengerToDelete;
+    
+    const newPassengers = passengers.filter((_, idx) => idx !== indexToRemove).map((p, idx) => ({
+      ...p,
+      id: idx + 1
+    }));
+    setPassengers(newPassengers);
+
+    setExtraBags(prev => {
+      const nextBags = {};
+      newPassengers.forEach((p, newIdx) => {
+        const oldIdx = newIdx < indexToRemove ? newIdx : newIdx + 1;
+        const oldId = oldIdx + 1;
+        nextBags[p.id] = prev[oldId] || 0;
+      });
+      return nextBags;
+    });
+
+    setSelectedSeats(prev => prev.filter((_, idx) => idx !== indexToRemove));
+
+    if (setPassengerCount) {
+      setPassengerCount(newPassengers.length);
+    }
+    
+    if (searchCriteria) {
+      searchCriteria.passengerCount = newPassengers.length;
+    }
+
+    if (activePassengerId > newPassengers.length) {
+      setActivePassengerId(newPassengers.length || 1);
+    }
+
+    setPassengerToDelete(null);
+  };
 
   // Pre-fill first passenger from logged-in user
   useEffect(() => {
@@ -140,25 +208,26 @@ function TravelersPage() {
   const [extraBags, setExtraBags] = useState(() =>
     Object.fromEntries(Array.from({ length: initialPassengerCount }, (_, i) => [i + 1, 0]))
   )
-  const [selectedServices, setSelectedServices] = useState(new Set())
+  const [selectedServices, setSelectedServices] = useState(() =>
+    Object.fromEntries(SERVICES.map(s => [s.id, 0]))
+  )
 
-  const toggleService = (id) => {
-    setSelectedServices(prev => {
-      const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
-      return next
-    })
+  const changeServiceQty = (id, delta) => {
+    setSelectedServices(prev => ({
+      ...prev,
+      [id]: Math.max(0, (prev[id] || 0) + delta)
+    }))
   }
 
   const changeExtraBag = (passengerId, delta) => {
     setExtraBags(prev => ({
       ...prev,
-      [passengerId]: Math.min(2, Math.max(0, (prev[passengerId] || 0) + delta))
+      [passengerId]: Math.min(30, Math.max(0, (prev[passengerId] || 0) + delta))
     }))
   }
 
   const bagsTotal = Object.values(extraBags).reduce((s, n) => s + n * EXTRA_BAG_PRICE, 0)
-  const servicesTotal = SERVICES.filter(s => selectedServices.has(s.id)).reduce((s, srv) => s + srv.price, 0)
+  const servicesTotal = SERVICES.reduce((sum, srv) => sum + (selectedServices[srv.id] || 0) * srv.price, 0)
   const extrasTotal = bagsTotal + servicesTotal
 
   const BUSINESS_ROWS = [1, 2, 3]
@@ -171,56 +240,99 @@ function TravelersPage() {
     return false
   }).length
 
-  const BUSINESS_SURCHARGE = 150
+  const BUSINESS_SURCHARGE = 100
+
+  let businessAdults = 0, economyAdults = 0;
+  let businessChildren = 0, economyChildren = 0;
+  let businessInfants = 0, economyInfants = 0;
+
+  passengers.forEach((p, idx) => {
+    const seat = selectedSeats[idx] || '';
+    const seatRowMatch = seat.match(/^(\d+)/);
+    const isBusiness = seatRowMatch ? BUSINESS_ROWS.includes(parseInt(seatRowMatch[1], 10)) : false;
+
+    if (p.passengerCode === 'CHD') {
+      if (isBusiness) businessChildren++;
+      else economyChildren++;
+    } else if (p.passengerCode === 'INF') {
+      economyInfants++;
+    } else {
+      if (isBusiness) businessAdults++;
+      else economyAdults++;
+    }
+  });
+
   const businessSurchargeTotal = businessSeatsCount * BUSINESS_SURCHARGE
 
-  let adults = 0
-  let children = 0
-  let infants = 0
-  passengers.forEach(p => {
-    if (p.passengerCode === 'CHD') children++
-    else if (p.passengerCode === 'INF') infants++
-    else adults++
-  })
+  const economyAdultsTotal = economyAdults * basePrice
+  const businessAdultsTotal = businessAdults * (basePrice + BUSINESS_SURCHARGE)
+  const adultsTotal = economyAdultsTotal + businessAdultsTotal
 
-  const adultBaseFare = Math.round(basePrice * 0.85)
-  const adultTaxes = basePrice - adultBaseFare
-  const adultsTotal = adults * basePrice
+  const economyChildrenTotal = economyChildren * Math.round(basePrice * 0.75)
+  const businessChildrenTotal = businessChildren * (Math.round(basePrice * 0.75) + BUSINESS_SURCHARGE)
+  const childrenTotal = economyChildrenTotal + businessChildrenTotal
 
-  const childBaseFare = Math.round(basePrice * 0.75 * 0.85)
-  const childTaxes = Math.round(basePrice * 0.75) - childBaseFare
-  const childrenTotal = children * Math.round(basePrice * 0.75)
-
-  const infantBaseFare = Math.round(basePrice * 0.15 * 0.85)
-  const infantTaxes = Math.round(basePrice * 0.15) - infantBaseFare
-  const infantsTotal = infants * Math.round(basePrice * 0.15)
+  const economyInfantsTotal = economyInfants * Math.round(basePrice * 0.10)
+  const businessInfantsTotal = 0
+  const infantsTotal = economyInfantsTotal
 
   const ticketsTotal = adultsTotal + childrenTotal + infantsTotal
-  const finalTotal = ticketsTotal + businessSurchargeTotal + extrasTotal
+  const baseTicketsTotal = (economyAdults + businessAdults) * basePrice + 
+                           (economyChildren + businessChildren) * Math.round(basePrice * 0.75) + 
+                           (economyInfants) * Math.round(basePrice * 0.10)
+
+  const markupRate = Number(localStorage.getItem('adminMarkupRate') || '5')
+  const markupFee = Math.round(baseTicketsTotal * (markupRate / 100))
+  const finalTotal = ticketsTotal + extrasTotal + markupFee
 
   const handleProceedToPayment = (e) => {
     e.preventDefault()
 
+    const origin = selectedFlight?.fromCode || selectedFlight?.airportOrigin_code || 'ADE';
+    const destination = selectedFlight?.toCode || selectedFlight?.airportDestination_code || 'CAI';
+    const YEMEN_AIRPORTS = ['ADE', 'RIY', 'GXF', 'SCT', 'AAY', 'ATQ'];
+    const isInternational = !YEMEN_AIRPORTS.includes(String(origin).toUpperCase().trim()) || 
+                            !YEMEN_AIRPORTS.includes(String(destination).toUpperCase().trim());
+
     for (const passenger of passengers) {
       if (!passenger.fullName || !passenger.passportNumber || !passenger.gender) {
         setActivePassengerId(passenger.id)
-        alert(`يرجى إكمال البيانات الأساسية للراكب رقم ${passenger.id} (الاسم، رقم الجواز، والجنس)`)
+        setValidationError(`يرجى إكمال البيانات الأساسية للراكب رقم ${passenger.id} (الاسم الكامل، رقم الجواز والنوع).`)
         return
       }
 
-      if (passenger.passportExpiry) {
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
-        const expiryDate = new Date(passenger.passportExpiry)
-        if (expiryDate < today) {
+      if (isInternational) {
+        if (!passenger.passportExpiry) {
           setActivePassengerId(passenger.id)
-          alert(`تاريخ انتهاء الجواز للراكب رقم ${passenger.id} لا يمكن أن يكون في الماضي. يرجى اختيار تاريخ انتهاء صالح في المستقبل.`)
+          setValidationError(`يرجى تحديد تاريخ انتهاء الجواز للراكب رقم ${passenger.id} لأن الرحلة دولية.`)
           return
+        }
+        
+        const limitDate = new Date()
+        limitDate.setMonth(limitDate.getMonth() + 6)
+        limitDate.setHours(0, 0, 0, 0)
+        
+        const expiryDate = new Date(passenger.passportExpiry)
+        if (expiryDate < limitDate) {
+          setActivePassengerId(passenger.id)
+          setValidationError(`يجب أن يكون جواز سفر الراكب رقم ${passenger.id} صالحاً لمدة 6 أشهر على الأقل للسفر الدولي. أقل تاريخ انتهاء مقبول هو: ${limitDate.toLocaleDateString('ar-YE')}`)
+          return
+        }
+      } else {
+        if (passenger.passportExpiry) {
+          const today = new Date()
+          today.setHours(0, 0, 0, 0)
+          const expiryDate = new Date(passenger.passportExpiry)
+          if (expiryDate < today) {
+            setActivePassengerId(passenger.id)
+            setValidationError(`تاريخ انتهاء الجواز للراكب رقم ${passenger.id} لا يمكن أن يكون في الماضي. يرجى اختيار تاريخ انتهاء صالح في المستقبل.`)
+            return
+          }
         }
       }
     }
 
-    navigate('/payment', { state: { selectedFlight, searchCriteria, passengers, extraBags, selectedServices: [...selectedServices], extrasTotal, selectedSeats } })
+    navigate('/payment', { state: { selectedFlight, searchCriteria, passengers, extraBags, selectedServices, extrasTotal, selectedSeats } })
   }
 
   return (
@@ -234,17 +346,43 @@ function TravelersPage() {
 
       <div className="mx-auto mt-10 grid w-full max-w-7xl gap-8 px-4 lg:grid-cols-[1fr_340px] sm:px-6" dir="ltr">
         <section className="w-full min-w-0" dir="rtl">
-          <div className="mb-10 text-right">
-            <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">بيانات المسافرين</h1>
-            <p className="mt-2 text-xs font-medium text-slate-400">
-              الرجاء إدخال تفاصيل وثيقة السفر مطابقة تماماً لجواز السفر لتجنب أي إشكالات في مطار المغادرة.
-            </p>
+          <div className="mb-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-right">
+            <div>
+              <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl font-black">بيانات المسافرين</h1>
+              <p className="mt-2 text-xs font-medium text-slate-450">
+                الرجاء إدخال تفاصيل وثيقة السفر مطابقة تماماً لجواز السفر لتجنب أي إشكالات في مطار المغادرة.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={addPassenger}
+              className="flex h-11 items-center justify-center gap-2 rounded-2xl bg-white border border-slate-200 hover:bg-slate-50 text-brand-blue text-xs font-black px-5 shadow-sm transition-all active:scale-[0.98] cursor-pointer shrink-0 self-start sm:self-center"
+            >
+              <Plus className="h-4 w-4 text-brand-blue" />
+              <span>إضافة مسافر</span>
+            </button>
           </div>
 
           <div className="space-y-4">
-            {passengers.map((passenger) => {
+            {passengers.map((passenger, index) => {
               const isActive = passenger.id === activePassengerId
               const isComplete = passenger.fullName && passenger.passportNumber && passenger.gender
+
+              const seatNumber = selectedSeats[index] || '';
+              const seatRow = parseInt(seatNumber, 10);
+              const isBusinessSeat = !isNaN(seatRow) && seatRow >= 1 && seatRow <= 3;
+              const seatClass = isBusinessSeat ? 'Business' : 'Economy';
+
+              let freeBaggageWeight = 30;
+              if (passenger.passengerCode === 'INF') {
+                freeBaggageWeight = 10;
+              } else if (seatClass === 'Business') {
+                if (passenger.passengerCode === 'ADT') {
+                  freeBaggageWeight = 40;
+                } else {
+                  freeBaggageWeight = 30;
+                }
+              }
 
               return (
                 <article
@@ -292,6 +430,20 @@ function TravelersPage() {
                         <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black text-slate-500">
                           {passenger.passengerTypeLabel}
                         </span>
+                      )}
+
+                      {index > 0 && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            triggerRemovePassenger(index);
+                          }}
+                          className="text-orange-500 hover:text-orange-600 transition-all ml-3 cursor-pointer p-1"
+                          title="إلغاء الراكب"
+                        >
+                          <Trash2 className="h-4.5 w-4.5" />
+                        </button>
                       )}
 
                       <div className={`flex h-6 w-6 items-center justify-center rounded-full border transition-all ${
@@ -380,7 +532,7 @@ function TravelersPage() {
                             />
                           </Field>
 
-                          <Field label="تاريخ انتهاء الجواز" icon={Calendar}>
+                          <Field label="تاريخ انتهاء الجواز" icon={Calendar} required={isInternational}>
                             <input
                               type={passenger.passportExpiry ? "date" : "text"}
                               placeholder="يوم / شهر / سنة"
@@ -388,7 +540,14 @@ function TravelersPage() {
                               lang="en-GB"
                               onFocus={(e) => (e.target.type = "date")}
                               onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }}
-                              min={new Date().toISOString().split('T')[0]}
+                              min={isInternational 
+                                ? (() => {
+                                    const d = new Date();
+                                    d.setMonth(d.getMonth() + 6);
+                                    return d.toISOString().split('T')[0];
+                                  })()
+                                : new Date().toISOString().split('T')[0]
+                              }
                               className="w-full h-12 pr-11 pl-4 text-right rounded-xl border border-slate-200/80 bg-white text-slate-800 font-bold text-xs focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/5 focus:outline-none transition-all duration-150"
                               value={passenger.passportExpiry}
                               onChange={(event) => updatePassenger(passenger.id, 'passportExpiry', event.target.value)}
@@ -416,8 +575,25 @@ function TravelersPage() {
             </div>
 
             <div className="p-6 divide-y divide-slate-100">
-              {passengers.map(p => (
-                <div key={p.id} className="py-4 first:pt-0 last:pb-0 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              {passengers.map((p, idx) => {
+                const seatNumber = selectedSeats[idx] || '';
+                const seatRow = parseInt(seatNumber, 10);
+                const isBusinessSeat = !isNaN(seatRow) && seatRow >= 1 && seatRow <= 3;
+                const seatClass = isBusinessSeat ? 'Business' : 'Economy';
+
+                let freeBaggageWeight = 30;
+                if (p.passengerCode === 'INF') {
+                  freeBaggageWeight = 10;
+                } else if (seatClass === 'Business') {
+                  if (p.passengerCode === 'ADT') {
+                    freeBaggageWeight = 40;
+                  } else {
+                    freeBaggageWeight = 30;
+                  }
+                }
+
+                return (
+                  <div key={p.id} className="py-4 first:pt-0 last:pb-0 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
                       <UserRound className="h-4 w-4" />
@@ -435,7 +611,7 @@ function TravelersPage() {
                     </div>
                     <div className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-200/60 dark:border-slate-800 px-3 py-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300">
                       <span className="h-1.5 w-1.5 rounded-full bg-brand-blue" />
-                      حقيبة شحن رئيسية (مجاناً): 23 كجم
+                      حقيبة شحن رئيسية (مجاناً): {freeBaggageWeight} كجم
                     </div>
                   </div>
 
@@ -445,10 +621,10 @@ function TravelersPage() {
                         className="flex h-6 w-6 items-center justify-center rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition disabled:opacity-30"
                         disabled={!extraBags[p.id]}
                       ><Minus className="h-3 w-3" /></button>
-                      <span className="w-12 text-center text-xs font-black text-slate-800 dark:text-slate-150">{(extraBags[p.id] || 0) * 2} كجم</span>
+                      <span className="w-12 text-center text-xs font-black text-slate-800 dark:text-slate-150">{(extraBags[p.id] || 0) * 1} كجم</span>
                       <button onClick={() => changeExtraBag(p.id, 1)}
                         className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-blue text-white hover:bg-[#3862e0] transition disabled:opacity-30"
-                        disabled={extraBags[p.id] >= 2}
+                        disabled={extraBags[p.id] >= 30}
                       ><Plus className="h-3 w-3" /></button>
                     </div>
                     {extraBags[p.id] > 0 && (
@@ -458,8 +634,9 @@ function TravelersPage() {
                     )}
                   </div>
                 </div>
-              ))}
-            </div>
+              )
+            })}
+          </div>
           </section>
 
           {/* ═══════════════ جدول الخدمات الصحية ═══════════════ */}
@@ -474,37 +651,52 @@ function TravelersPage() {
               </div>
             </div>
 
-            <div className="grid gap-3 p-6 sm:grid-cols-2">
+            <div className="grid gap-4 p-6 sm:grid-cols-2">
               {SERVICES.map(srv => {
-                const isSelected = selectedServices.has(srv.id)
+                const qty = selectedServices[srv.id] || 0
                 const Icon = srv.icon
                 return (
-                  <button
+                  <div
                     key={srv.id}
-                    type="button"
-                    onClick={() => toggleService(srv.id)}
-                    className={`flex items-start gap-4 rounded-xl border p-4 text-right transition-all duration-200 ${
-                      isSelected
-                        ? 'border-brand-blue bg-brand-blue/5 shadow-sm'
-                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
+                    className={`flex items-start gap-4 rounded-2xl border p-4 text-right transition-all duration-200 ${
+                      qty > 0
+                        ? 'border-brand-blue bg-brand-blue/5 shadow-sm font-semibold'
+                        : 'border-slate-200 bg-white'
                     }`}
                   >
-                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-all ${isSelected ? 'bg-brand-blue text-white shadow-sm' : 'bg-slate-100 text-slate-400'}`}>
+                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-all ${qty > 0 ? 'bg-brand-blue text-white shadow-sm' : 'bg-slate-100 text-slate-400'}`}>
                       <Icon className="h-4.5 w-4.5" />
                     </div>
                     <div className="flex-1 min-w-0 pr-0.5">
                       <p className="text-xs font-black text-slate-800">{srv.label}</p>
-                      <p className="text-[10px] font-bold text-slate-400 mt-0.5 leading-4">{srv.desc}</p>
-                      <span className={`inline-block mt-2 text-[10px] font-black px-2 py-0.5 rounded-full ${isSelected ? 'bg-brand-blue text-white' : 'bg-slate-100 text-slate-500'}`}>
-                        +${srv.price}
-                      </span>
+                      <p className="text-[10px] font-bold text-slate-400 mt-0.5 leading-relaxed">{srv.desc}</p>
+                      <div className="mt-3 flex items-center justify-between gap-3">
+                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${qty > 0 ? 'bg-brand-blue text-white' : 'bg-slate-100 text-slate-500'}`}>
+                          ${srv.price} / للخدمة
+                        </span>
+                        
+                        {/* Counter controls */}
+                        <div className="flex items-center gap-2 rounded-lg p-0.5 border border-slate-200 bg-white">
+                          <button
+                            type="button"
+                            onClick={() => changeServiceQty(srv.id, -1)}
+                            className="flex h-5 w-5 items-center justify-center rounded bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100 transition disabled:opacity-30 cursor-pointer"
+                            disabled={qty === 0}
+                          >
+                            <Minus className="h-2.5 w-2.5" />
+                          </button>
+                          <span className="w-6 text-center text-[10px] font-black text-slate-800">{qty}</span>
+                          <button
+                            type="button"
+                            onClick={() => changeServiceQty(srv.id, 1)}
+                            className="flex h-5 w-5 items-center justify-center rounded bg-brand-blue text-white hover:bg-blue-650 transition cursor-pointer"
+                          >
+                            <Plus className="h-2.5 w-2.5" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    <div className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all ${
-                      isSelected ? 'border-brand-blue bg-brand-blue text-white' : 'border-slate-300 bg-white'
-                    }`}>
-                      {isSelected && <CheckCircle2 className="h-3 w-3 text-white" />}
-                    </div>
-                  </button>
+                  </div>
                 )
               })}
             </div>
@@ -664,53 +856,73 @@ function TravelersPage() {
               <div className="mt-5 space-y-4 border-b border-slate-100 pb-5">
                 <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">تعرفة تذاكر الطيران</p>
 
-                {/* Adults */}
-                {adults > 0 && (
+                {/* Adults Economy */}
+                {economyAdults > 0 && (
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="font-black text-slate-700">تذكرة بالغ (Adult) × {adults}</span>
-                      <span className="font-black text-slate-900">${adultsTotal}</span>
+                      <span className="font-black text-slate-700">تذكرة بالغ (سياحية) × {economyAdults}</span>
+                      <span className="font-black text-slate-900">${economyAdults * basePrice}</span>
                     </div>
                     <div className="flex justify-between text-[11px] font-bold text-slate-400 pr-4">
-                      <span>الأجرة الأساسية: ${adultBaseFare * adults}</span>
-                      <span>الضرائب والرسوم: ${adultTaxes * adults}</span>
+                      <span>الأجرة الأساسية: ${Math.round(basePrice * 0.85) * economyAdults}</span>
+                      <span>الضرائب والرسوم: ${(basePrice - Math.round(basePrice * 0.85)) * economyAdults}</span>
                     </div>
                   </div>
                 )}
 
-                {/* Children */}
-                {children > 0 && (
+                {/* Adults Business */}
+                {businessAdults > 0 && (
                   <div className="space-y-1 mt-3">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="font-black text-slate-700">تذكرة طفل (Child) × {children} <span className="text-xs font-bold text-emerald-500 mr-1.5">(خصم 25%)</span></span>
-                      <span className="font-black text-slate-900">${childrenTotal}</span>
+                      <span className="font-black text-slate-700">تذكرة بالغ (درجة الأعمال) × {businessAdults}</span>
+                      <span className="font-black text-slate-900">${businessAdults * (basePrice + BUSINESS_SURCHARGE)}</span>
                     </div>
                     <div className="flex justify-between text-[11px] font-bold text-slate-400 pr-4">
-                      <span>الأجرة الأساسية: ${childBaseFare * children}</span>
-                      <span>الضرائب والرسوم: ${childTaxes * children}</span>
+                      <span>الأجرة الأساسية: ${Math.round((basePrice + BUSINESS_SURCHARGE) * 0.85) * businessAdults}</span>
+                      <span>الضرائب والرسوم: ${((basePrice + BUSINESS_SURCHARGE) - Math.round((basePrice + BUSINESS_SURCHARGE) * 0.85)) * businessAdults}</span>
                     </div>
                   </div>
                 )}
 
-                {/* Infants */}
-                {infants > 0 && (
+                {/* Children Economy */}
+                {economyChildren > 0 && (
                   <div className="space-y-1 mt-3">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="font-black text-slate-700">تذكرة رضيع (Infant) × {infants} <span className="text-xs font-bold text-emerald-500 mr-1.5">(خصم 85%)</span></span>
-                      <span className="font-black text-slate-900">${infantsTotal}</span>
+                      <span className="font-black text-slate-700">تذكرة طفل (سياحية) × {economyChildren} <span className="text-xs font-bold text-emerald-500 mr-1.5">(خصم 25%)</span></span>
+                      <span className="font-black text-slate-900">${economyChildren * Math.round(basePrice * 0.75)}</span>
                     </div>
                     <div className="flex justify-between text-[11px] font-bold text-slate-400 pr-4">
-                      <span>الأجرة الأساسية: ${infantBaseFare * infants}</span>
-                      <span>الضرائب والرسوم: ${infantTaxes * infants}</span>
+                      <span>الأجرة الأساسية: ${Math.round(basePrice * 0.75 * 0.85) * economyChildren}</span>
+                      <span>الضرائب والرسوم: ${(Math.round(basePrice * 0.75) - Math.round(basePrice * 0.75 * 0.85)) * economyChildren}</span>
                     </div>
                   </div>
                 )}
 
-                {/* Business Class Upgrade */}
-                {businessSeatsCount > 0 && (
-                  <div className="flex items-center justify-between text-sm bg-amber-50/50 border border-amber-100 rounded-2xl p-3 mt-4">
-                    <span className="font-black text-amber-800">ترقية لدرجة الأعمال × {businessSeatsCount}</span>
-                    <span className="font-black text-amber-900">+${businessSurchargeTotal}</span>
+                {/* Children Business */}
+                {businessChildren > 0 && (
+                  <div className="space-y-1 mt-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-black text-slate-700">تذكرة طفل (درجة الأعمال) × {businessChildren} <span className="text-xs font-bold text-emerald-500 mr-1.5">(خصم 25%)</span></span>
+                      <span className="font-black text-slate-900">${businessChildren * (Math.round(basePrice * 0.75) + BUSINESS_SURCHARGE)}</span>
+                    </div>
+                    <div className="flex justify-between text-[11px] font-bold text-slate-400 pr-4">
+                      <span>الأجرة الأساسية: ${Math.round((Math.round(basePrice * 0.75) + BUSINESS_SURCHARGE) * 0.85) * businessChildren}</span>
+                      <span>الضرائب والرسوم: ${((Math.round(basePrice * 0.75) + BUSINESS_SURCHARGE) - Math.round((Math.round(basePrice * 0.75) + BUSINESS_SURCHARGE) * 0.85)) * businessChildren}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Infants Economy */}
+                {economyInfants > 0 && (
+                  <div className="space-y-1 mt-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-black text-slate-700">تذكرة رضيع (على الحجر) × {economyInfants} <span className="text-xs font-bold text-emerald-500 mr-1.5">(خصم 90%)</span></span>
+                      <span className="font-black text-slate-900">${economyInfants * Math.round(basePrice * 0.10)}</span>
+                    </div>
+                    <div className="flex justify-between text-[11px] font-bold text-slate-400 pr-4">
+                      <span>الأجرة الأساسية: ${Math.round(basePrice * 0.10 * 0.85) * economyInfants}</span>
+                      <span>الضرائب والرسوم: ${(Math.round(basePrice * 0.10) - Math.round(basePrice * 0.10 * 0.85)) * economyInfants}</span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -732,18 +944,28 @@ function TravelersPage() {
                   )}
 
                   {/* Special Services */}
-                  {SERVICES.filter(s => selectedServices.has(s.id)).map(srv => {
+                  {SERVICES.filter(s => selectedServices[s.id] > 0).map(srv => {
                     const Icon = srv.icon
+                    const qty = selectedServices[srv.id]
                     return (
-                      <div key={srv.id} className="flex items-center justify-between text-sm">
+                      <div key={srv.id} className="flex items-center justify-between text-sm animate-fade-in">
                         <div className="flex items-center gap-2 text-slate-600">
                           <Icon className="h-4 w-4 text-orange-500" />
-                          <span className="font-bold">{srv.label}</span>
+                          <span className="font-bold">{srv.label} × {qty}</span>
                         </div>
-                        <span className="font-black text-slate-900">+${srv.price}</span>
+                        <span className="font-black text-slate-900">+${srv.price * qty}</span>
                       </div>
                     )
                   })}
+
+                  {/* Admin Markup Fee */}
+                  <div className="flex items-center justify-between text-sm pt-3 border-t border-slate-100">
+                    <div className="flex items-center gap-2 text-slate-600">
+                      <ShieldCheck className="h-4 w-4 text-brand-blue" />
+                      <span className="font-bold">رسوم الخدمة للموقع ({markupRate}%)</span>
+                    </div>
+                    <span className="font-black text-slate-900">+${markupFee}</span>
+                  </div>
                 </div>
               )}
 
@@ -821,6 +1043,58 @@ function TravelersPage() {
           </div>
         </aside>
       </div>
+      {/* Confirmation Modal for Deletion */}
+      {passengerToDelete !== null && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm shadow-2xl" dir="rtl">
+          <div className="relative w-full max-w-sm overflow-hidden rounded-[2.2rem] bg-white p-6 shadow-2xl border border-slate-100/50 text-center animate-in fade-in zoom-in-95 duration-200">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-500">
+              <Trash2 className="h-6 w-6" />
+            </div>
+            <h3 className="text-base font-black text-slate-900 mb-2">تأكيد حذف المسافر</h3>
+            <p className="text-xs font-semibold text-slate-500 leading-relaxed mb-6 px-2">
+              هل أنت متأكد من رغبتك في حذف المسافر رقم {passengerToDelete + 1}؟ لا يمكن التراجع عن هذا الإجراء وسيتم إعادة احتساب التذاكر.
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={confirmRemovePassenger}
+                className="flex-1 h-11 flex items-center justify-center rounded-xl bg-red-500 hover:bg-red-600 text-xs font-black text-white transition-all cursor-pointer shadow-md shadow-red-500/10 active:scale-98"
+              >
+                تأكيد الحذف
+              </button>
+              <button
+                type="button"
+                onClick={() => setPassengerToDelete(null)}
+                className="flex-1 h-11 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-150 text-xs font-black text-slate-700 transition-all cursor-pointer active:scale-98"
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Validation Error Modal */}
+      {validationError !== null && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm shadow-2xl" dir="rtl">
+          <div className="relative w-full max-w-sm overflow-hidden rounded-[2.2rem] bg-white p-6 shadow-2xl border border-slate-100/50 text-center animate-in fade-in zoom-in-95 duration-200">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-50 text-orange-500">
+              <AlertCircle className="h-6 w-6" />
+            </div>
+            <h3 className="text-base font-black text-slate-900 mb-2">تنبيه: بيانات غير مكتملة</h3>
+            <p className="text-xs font-semibold text-slate-500 leading-relaxed mb-6 px-2">
+              {validationError}
+            </p>
+            <button
+              type="button"
+              onClick={() => setValidationError(null)}
+              className="w-full h-11 flex items-center justify-center rounded-xl bg-brand-blue hover:bg-brand-blue-hover text-xs font-black text-white transition-all cursor-pointer shadow-md shadow-brand-blue/10 active:scale-98"
+            >
+              موافق
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   )
 }

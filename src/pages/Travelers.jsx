@@ -70,8 +70,10 @@ function TravelersPage() {
   const { searchCriteria: contextSearchCriteria, setPassengerCount } = useSearch()
 
   const selectedFlight = location.state?.selectedFlight
+  const selectedFlights = location.state?.selectedFlights || (selectedFlight ? [selectedFlight] : [])
   const searchCriteria = location.state?.searchCriteria || contextSearchCriteria
-  const [selectedSeats, setSelectedSeats] = useState(() => location.state?.selectedSeats || [])
+  const [seatsSelectionMap, setSeatsSelectionMap] = useState(() => location.state?.seatsSelectionMap || (location.state?.selectedSeats ? { 0: location.state.selectedSeats } : {}))
+  const [selectedSeats, setSelectedSeats] = useState(() => seatsSelectionMap[0] || location.state?.selectedSeats || [])
   const origin = selectedFlight?.fromCode || selectedFlight?.airportOrigin_code || 'ADE';
   const destination = selectedFlight?.toCode || selectedFlight?.airportDestination_code || 'CAI';
   const YEMEN_AIRPORTS = ['ADE', 'RIY', 'GXF', 'SCT', 'AAY', 'ATQ'];
@@ -140,6 +142,13 @@ function TravelersPage() {
     });
 
     setSelectedSeats(prev => prev.filter((_, idx) => idx !== indexToRemove));
+    setSeatsSelectionMap(prev => {
+      const nextMap = {}
+      Object.keys(prev).forEach(key => {
+        nextMap[key] = (prev[key] || []).filter((_, idx) => idx !== indexToRemove)
+      })
+      return nextMap
+    });
 
     if (setPassengerCount) {
       setPassengerCount(newPassengers.length);
@@ -182,7 +191,9 @@ function TravelersPage() {
   }
 
   const bookingPassengersCount = passengers.length
-  const basePrice = Number(summaryFlight.price) || 856
+  const basePrice = selectedFlights.length > 0
+    ? selectedFlights.reduce((acc, f) => acc + (Number(f.price) || 0), 0)
+    : (Number(summaryFlight.price) || 856)
   const totalPrice = basePrice * bookingPassengersCount
 
   const updatePassenger = (id, key, value) => {
@@ -332,7 +343,7 @@ function TravelersPage() {
       }
     }
 
-    navigate('/payment', { state: { selectedFlight, searchCriteria, passengers, extraBags, selectedServices, extrasTotal, selectedSeats } })
+    navigate('/payment', { state: { selectedFlight, selectedFlights, seatsSelectionMap, searchCriteria, passengers, extraBags, selectedServices, extrasTotal, selectedSeats } })
   }
 
   return (

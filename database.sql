@@ -48,7 +48,7 @@ DROP TABLE IF EXISTS `admins`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `admins` (
   `id_admin` int NOT NULL AUTO_INCREMENT,
-  `email` varchar(100) NOT NULL,
+  `username` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
   `role` enum('admin','company') DEFAULT 'company',
   `airline_code` varchar(10) DEFAULT NULL,
@@ -68,9 +68,9 @@ CREATE TABLE `admins` (
 
 LOCK TABLES `admins` WRITE;
 /*!40000 ALTER TABLE `admins` DISABLE KEYS */;
-INSERT INTO `admins` (`id_admin`, `email`, `password`, `role`, `airline_code`, `employee_id`, `department`, `last_login`, `created_at`) VALUES 
-(1, 'admin@gmail.com', 'ADMIN123', 'admin', NULL, '1', 'قسم الادارة', NULL, CURRENT_TIMESTAMP),
-(2, 'yemenia@gmail.com', 'YEMENIA123', 'company', 'IY', '1', 'قسم اضافة الرحلات', NULL, CURRENT_TIMESTAMP);
+INSERT INTO `admins` (`id_admin`, `username`, `password`, `role`, `airline_code`, `employee_id`, `department`, `last_login`, `created_at`) VALUES 
+(1, 'admin', 'ADMIN123', 'admin', NULL, '1', 'قسم الادارة', NULL, CURRENT_TIMESTAMP),
+(2, 'yemenia', 'YEMENIA123', 'company', 'IY', '1', 'قسم اضافة الرحلات', NULL, CURRENT_TIMESTAMP);
 /*!40000 ALTER TABLE `admins` ENABLE KEYS */;
 UNLOCK TABLES;
 

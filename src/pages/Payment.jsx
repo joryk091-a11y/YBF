@@ -189,9 +189,10 @@ function PaymentPage() {
   const { searchCriteria: contextSearchCriteria } = useSearch()
 
   const selectedFlight = location.state?.selectedFlight
+  const selectedFlights = location.state?.selectedFlights || (selectedFlight ? [selectedFlight] : [])
+  const seatsSelectionMap = location.state?.seatsSelectionMap || (location.state?.selectedSeats ? { 0: location.state.selectedSeats } : {})
   const searchCriteria = location.state?.searchCriteria || contextSearchCriteria
   const bookingPassengersCount = Number(searchCriteria?.passengerCount) || 1
-  const basePrice = Number(selectedFlight?.price) || 856
 
   const passengers = location.state?.passengers || []
   const extraBags = location.state?.extraBags || {}
@@ -200,49 +201,88 @@ function PaymentPage() {
   const selectedSeats = location.state?.selectedSeats || []
 
   const BUSINESS_ROWS = [1, 2, 3]
-  const businessSeatsCount = selectedSeats.filter(seat => {
-    const rowMatch = seat.match(/^(\d+)/)
-    if (rowMatch) {
-      const rowNum = parseInt(rowMatch[1], 10)
-      return BUSINESS_ROWS.includes(rowNum)
-    }
-    return false
-  }).length
-
   const BUSINESS_SURCHARGE = 100
+
+  // Calculate business seats count across all segments and passengers
+  let businessSeatsCount = 0
+  Object.values(seatsSelectionMap).forEach(flightSeats => {
+    flightSeats.forEach(seat => {
+      const rowMatch = seat.match(/^(\d+)/)
+      if (rowMatch) {
+        const rowNum = parseInt(rowMatch[1], 10)
+        if (BUSINESS_ROWS.includes(rowNum)) {
+          businessSeatsCount++
+        }
+      }
+    })
+  })
+
   const businessSurchargeTotal = businessSeatsCount * BUSINESS_SURCHARGE
 
-  let businessAdults = 0, economyAdults = 0;
-  let businessChildren = 0, economyChildren = 0;
-  let businessInfants = 0, economyInfants = 0;
+  // Calculate total ticket fares per passenger category across all flight segments
+  let adultFaresTotal = 0
+  let childFaresTotal = 0
+  let infantFaresTotal = 0
 
-  passengers.forEach((p, idx) => {
-    const seat = selectedSeats[idx] || '';
-    const seatRowMatch = seat.match(/^(\d+)/);
-    const isBusiness = seatRowMatch ? BUSINESS_ROWS.includes(parseInt(seatRowMatch[1], 10)) : false;
+  let businessAdults = 0, economyAdults = 0
+  let businessChildren = 0, economyChildren = 0
+  let businessInfants = 0, economyInfants = 0
+
+  passengers.forEach((p, passengerIdx) => {
+    let passengerFare = 0
+    let passengerHasBusiness = false
+
+    selectedFlights.forEach((flight, flightIdx) => {
+      const flightPrice = Number(flight.price) || 0
+      const flightSeats = seatsSelectionMap[flightIdx] || []
+      const seat = flightSeats[passengerIdx] || ''
+      const seatRowMatch = seat.match(/^(\d+)/)
+      const isBusinessSeat = seatRowMatch ? BUSINESS_ROWS.includes(parseInt(seatRowMatch[1], 10)) : false
+      if (isBusinessSeat) {
+        passengerHasBusiness = true
+      }
+
+      // Base fare for this segment based on age category
+      let segmentFare = flightPrice
+      if (p.passengerCode === 'CHD') {
+        segmentFare = Math.round(flightPrice * 0.75)
+      } else if (p.passengerCode === 'INF') {
+        segmentFare = Math.round(flightPrice * 0.10)
+      }
+
+      // Add business surcharge if applicable
+      if (isBusinessSeat) {
+        segmentFare += BUSINESS_SURCHARGE
+      }
+
+      passengerFare += segmentFare
+    });
 
     if (p.passengerCode === 'CHD') {
-      if (isBusiness) businessChildren++;
-      else economyChildren++;
+      if (passengerHasBusiness) businessChildren++
+      else economyChildren++
+      childFaresTotal += passengerFare
     } else if (p.passengerCode === 'INF') {
-      economyInfants++;
+      economyInfants++
+      infantFaresTotal += passengerFare
     } else {
-      if (isBusiness) businessAdults++;
-      else economyAdults++;
+      if (passengerHasBusiness) businessAdults++
+      else economyAdults++
+      adultFaresTotal += passengerFare
     }
-  });
+  })
+
+  // Aggregate basePrice to display/break down fares nicely
+  const basePrice = selectedFlights.reduce((sum, f) => sum + (Number(f.price) || 0), 0) || 856
 
   const economyAdultsTotal = economyAdults * basePrice
   const businessAdultsTotal = businessAdults * (basePrice + BUSINESS_SURCHARGE)
-  const adultFaresTotal = economyAdultsTotal + businessAdultsTotal
 
   const economyChildrenTotal = economyChildren * Math.round(basePrice * 0.75)
   const businessChildrenTotal = businessChildren * (Math.round(basePrice * 0.75) + BUSINESS_SURCHARGE)
-  const childFaresTotal = economyChildrenTotal + businessChildrenTotal
 
   const economyInfantsTotal = economyInfants * Math.round(basePrice * 0.10)
   const businessInfantsTotal = 0
-  const infantFaresTotal = economyInfantsTotal
 
   const adultBaseFare = Math.round(basePrice * 0.85)
   const adultTaxes = basePrice - adultBaseFare
@@ -258,14 +298,34 @@ function PaymentPage() {
   const servicesTotal = SERVICES.reduce((sum, srv) => sum + (selectedServices[srv.id] || 0) * srv.price, 0)
 
   const ticketsTotal = adultFaresTotal + childFaresTotal + infantFaresTotal
-  const baseTicketsTotal = (economyAdults + businessAdults) * basePrice + 
-                           (economyChildren + businessChildren) * Math.round(basePrice * 0.75) + 
-                           (economyInfants) * Math.round(basePrice * 0.10)
+  
+  let baseTicketsTotal = 0
+  passengers.forEach((p) => {
+    selectedFlights.forEach((flight) => {
+      const flightPrice = Number(flight.price) || 0
+      if (p.passengerCode === 'CHD') {
+        baseTicketsTotal += Math.round(flightPrice * 0.75)
+      } else if (p.passengerCode === 'INF') {
+        baseTicketsTotal += Math.round(flightPrice * 0.10)
+      } else {
+        baseTicketsTotal += flightPrice
+      }
+    })
+  })
 
   const totalPrice = ticketsTotal
   const markupRate = Number(localStorage.getItem('adminMarkupRate') || '5')
   const markupFee = Math.round(baseTicketsTotal * (markupRate / 100))
   const finalTotal = ticketsTotal + extrasTotal + markupFee
+
+  // Summarize flight segment(s)
+  const summaryFlight = selectedFlights[0] || {
+    fromCode: 'ADE',
+    toCode: 'CAI',
+    fromCity: 'عدن',
+    toCity: 'القاهرة',
+    airline_name: 'اليمنية'
+  }
 
   const [searchParams] = useSearchParams()
 
@@ -383,18 +443,27 @@ function PaymentPage() {
     const addMockBookingLocal = (referenceToUse) => {
       const newBookingRecord = {
         id: referenceToUse,
-        flightId: selectedFlight?.id_flights || selectedFlight?.id || 1,
-        flight_number: selectedFlight?.flight_number || 'IY-601',
-        origin: selectedFlight?.airportOrigin_code || selectedFlight?.fromCode || 'ADE',
-        destination: selectedFlight?.airportDestination_code || selectedFlight?.toCode || 'CAI',
-        departure_time: selectedFlight?.departure_time || '2026-06-15T08:30',
-        passengers: passengers.map((p, idx) => ({
-          name: p.fullName || p.name || 'مسافر مجهول',
-          passport_number: p.passportNumber || p.passport_number || 'Y-998877',
-          seat: selectedSeats[idx] || `${10 + idx}F`,
-          travel_class: selectedSeats[idx] && BUSINESS_ROWS.includes(parseInt(selectedSeats[idx], 10)) ? 'Business' : 'Economy',
-          services: selectedServices || []
-        })),
+        flightId: summaryFlight?.id_flights || summaryFlight?.id || 1,
+        flight_number: selectedFlights.map(f => f.flight_number).join(' / '),
+        origin: selectedFlights[0]?.airportOrigin_code || selectedFlights[0]?.fromCode || 'ADE',
+        destination: selectedFlights[selectedFlights.length - 1]?.airportDestination_code || selectedFlights[selectedFlights.length - 1]?.toCode || 'CAI',
+        departure_time: selectedFlights[0]?.departure_time || '2026-06-15T08:30',
+        passengers: passengers.map((p, idx) => {
+          const classes = selectedFlights.map((_, fIdx) => {
+            const fSeats = seatsSelectionMap[fIdx] || []
+            const seat = fSeats[idx] || ''
+            const rowMatch = seat.match(/^(\d+)/)
+            return rowMatch && BUSINESS_ROWS.includes(parseInt(rowMatch[1], 10)) ? 'Business' : 'Economy'
+          })
+          const isBusinessOverall = classes.includes('Business')
+          return {
+            name: p.fullName || p.name || 'مسافر مجهول',
+            passport_number: p.passportNumber || p.passport_number || 'Y-998877',
+            seat: selectedFlights.map((_, fIdx) => (seatsSelectionMap[fIdx] || [])[idx] || '').join(' / '),
+            travel_class: isBusinessOverall ? 'Business' : 'Economy',
+            services: selectedServices || []
+          }
+        }),
         totalPrice: finalTotal,
         paymentMethod,
         status: (paymentMethod === 'branch' || paymentMethod === 'transfer') ? 'temporary' : 'certain',
@@ -416,7 +485,7 @@ function PaymentPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          flightId: selectedFlight?.id_flights || selectedFlight?.id || 1,
+          flightId: selectedFlights.map(f => f.id_flights || f.id || 1),
           passengers,
           totalPrice: finalTotal,
           basePrice: ticketsTotal + businessSurchargeTotal,
@@ -426,7 +495,8 @@ function PaymentPage() {
           paymentMethod: paymentMethod === 'card' ? 'card' : paymentMethod,
           userId: userObj.id,
           reference: refVal,
-          selectedSeats,
+          selectedSeats: seatsSelectionMap[0] || [],
+          seatsSelectionMap,
           paymentProof: paymentProofImage,
           selectedBranchId: selectedBranch ? selectedBranch.id : null
         })
@@ -445,9 +515,9 @@ function PaymentPage() {
               bookingId: data.bookingId,
               reference: data.reference,
               amount: finalTotal,
-              flightNumber: selectedFlight?.flight_number || 'IY-601',
-              origin: selectedFlight?.airportOrigin_code || 'ADE',
-              destination: selectedFlight?.airportDestination_code || 'CAI'
+              flightNumber: selectedFlights.map(f => f.flight_number).join(' / '),
+              origin: selectedFlights[0]?.airportOrigin_code || 'ADE',
+              destination: selectedFlights[selectedFlights.length - 1]?.airportDestination_code || 'CAI'
             })
           })
           const stripeData = await stripeResponse.json()
@@ -717,7 +787,7 @@ function PaymentPage() {
             <div className="flex flex-col-reverse gap-4 sm:flex-row sm:items-center sm:justify-between">
               <Link
                 to="/travelers"
-                state={{ selectedFlight, searchCriteria }}
+                state={{ selectedFlight, selectedFlights, seatsSelectionMap, searchCriteria }}
                 className="inline-flex h-14 items-center justify-center rounded-2xl border border-slate-200 bg-white px-8 text-sm font-black text-slate-600 transition-all hover:bg-slate-50"
               >
                 العودة لبيانات الركاب

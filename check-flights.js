@@ -5,17 +5,6 @@ dotenv.config();
 const getDbConfig = () => {
   const url = process.env.DATABASE_URL;
   if (!url) return null;
-  const regex = /mysql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/;
-  const match = url.match(regex);
-  if (match) {
-    return {
-      host: match[3],
-      user: match[1],
-      password: match[2],
-      port: match[4],
-      database: match[5]
-    };
-  }
   return url;
 };
 

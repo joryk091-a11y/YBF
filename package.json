@@ -11,10 +11,12 @@
         "db:init": "prisma migrate dev --name init",
         "db:migrate": "prisma migrate dev",
         "db:studio": "prisma studio",
-        "server": "node server.js"
+        "server": "node server.js",
+        "start": "node server.js"
     },
     "dependencies": {
         "@prisma/client": "^7.8.0",
+        "bcryptjs": "^3.0.3",
         "cors": "^2.8.6",
         "dotenv": "^17.4.2",
         "express": "^5.2.1",

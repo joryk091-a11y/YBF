@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mysql from 'mysql2/promise';
+import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import path from 'path';
 import puppeteer from 'puppeteer';
@@ -35,19 +36,7 @@ const getDbConfig = () => {
       database: 'airlines'
     };
   }
-  // Format: mysql://user:password@host:port/database
-  const regex = /mysql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/;
-  const match = url.match(regex);
-  if (match) {
-    return {
-      host: match[3],
-      user: match[1],
-      password: match[2],
-      port: match[4],
-      database: match[5]
-    };
-  }
-  return url; // Return as string if regex fails, mysql2 might handle it
+  return url;
 };
 
 // ─── RESTful Auth Aliases ──────────────────────────────────────────────────
@@ -116,9 +105,10 @@ async function registerHandler(req, res) {
     if (existing.length > 0) {
       return res.status(400).json({ success: false, error: 'البريد الإلكتروني مسجل بالفعل' });
     }
+    const hashedPassword = await bcrypt.hash(password, 10);
     const [result] = await connection.execute(
       'INSERT INTO users (full_name, email, phone, password, created_at) VALUES (?, ?, ?, ?, NOW())',
-      [fullName, email, phone, password]
+      [fullName, email, phone, hashedPassword]
     );
     res.status(201).json({ success: true, userId: result.insertId });
   } catch (error) {
@@ -141,15 +131,26 @@ async function loginHandler(req, res) {
   try {
     connection = await mysql.createConnection(getDbConfig());
     const [rows] = await connection.execute(
-      'SELECT * FROM users WHERE email = ? AND password = ?',
-      [email, password]
+      'SELECT * FROM users WHERE email = ?',
+      [email]
     );
     if (rows.length > 0) {
       const user = rows[0];
-      res.json({
-        success: true,
-        user: { id: user.id_users, fullName: user.full_name, email: user.email }
-      });
+      let isMatch = false;
+      try {
+        isMatch = await bcrypt.compare(password, user.password);
+      } catch (e) {
+        isMatch = password === user.password;
+      }
+
+      if (isMatch) {
+        res.json({
+          success: true,
+          user: { id: user.id_users, fullName: user.full_name, email: user.email }
+        });
+      } else {
+        res.status(401).json({ success: false, error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' });
+      }
     } else {
       res.status(401).json({ success: false, error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' });
     }
@@ -187,9 +188,10 @@ app.post('/api/admin/users', async (req, res) => {
       return res.status(400).json({ success: false, error: 'البريد الإلكتروني مسجل بالفعل' });
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
     const [result] = await connection.execute(
       'INSERT INTO users (full_name, email, phone, password, created_at) VALUES (?, ?, ?, ?, NOW())',
-      [full_name, email, phone, password]
+      [full_name, email, phone, hashedPassword]
     );
 
     res.status(201).json({ success: true, userId: result.insertId });
@@ -214,9 +216,10 @@ app.put('/api/admin/users/:id', async (req, res) => {
     }
 
     if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
       await connection.execute(
         'UPDATE users SET full_name = ?, email = ?, phone = ?, password = ? WHERE id_users = ?',
-        [full_name, email, phone, password, id]
+        [full_name, email, phone, hashedPassword, id]
       );
     } else {
       await connection.execute(
@@ -871,8 +874,8 @@ app.post('/api/admin/bookings/:id/status', updateBookingStatusHandler);
 app.post('/api/auth/company/login', async (req, res) => companyLoginHandler(req, res));
 
 async function companyLoginHandler(req, res) {
-  const { email, password } = req.body;
-  console.log('Company Login Request:', { email });
+  const { username, password } = req.body;
+  console.log('Company Login Request:', { username });
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
@@ -880,24 +883,35 @@ async function companyLoginHandler(req, res) {
       `SELECT a.*, c.company_name AS airline_name, NULL AS logo_url, c.id_company AS id_airline
        FROM admins a
        LEFT JOIN companies c ON a.airline_code = c.airline_code
-       WHERE a.email = ? AND a.password = ?`,
-      [email, password]
+       WHERE a.username = ?`,
+      [username]
     );
     if (rows.length > 0) {
       const admin = rows[0];
-      await connection.execute('UPDATE admins SET last_login = NOW() WHERE id_admin = ?', [admin.id_admin]);
-      res.json({
-        success: true,
-        role: admin.role,
-        airline_code: admin.airline_code,
-        airline_id: admin.id_airline || admin.airlineId_airline,
-        airline_name: admin.airline_name,
-        logo_url: admin.logo_url,
-        id: admin.id_admin,
-        email: admin.email,
-      });
+      let isMatch = false;
+      try {
+        isMatch = await bcrypt.compare(password, admin.password);
+      } catch (e) {
+        isMatch = password === admin.password;
+      }
+
+      if (isMatch) {
+        await connection.execute('UPDATE admins SET last_login = NOW() WHERE id_admin = ?', [admin.id_admin]);
+        res.json({
+          success: true,
+          role: admin.role,
+          airline_code: admin.airline_code,
+          airline_id: admin.id_airline || admin.airlineId_airline,
+          airline_name: admin.airline_name,
+          logo_url: admin.logo_url,
+          id: admin.id_admin,
+          username: admin.username,
+        });
+      } else {
+        res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
+      }
     } else {
-      res.status(401).json({ success: false, error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' });
+      res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
     }
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -1441,7 +1455,7 @@ app.post('/api/flights/:id', handleFlightUpdate);
 
 // Create a new booking
 app.post('/api/bookings', async (req, res) => {
-  const { flightId, passengers, totalPrice, basePrice, extraBags, selectedServices, extrasTotal, paymentMethod: rawMethod, reference, userId, selectedSeats } = req.body;
+  const { flightId, passengers, totalPrice, basePrice, extraBags, selectedServices, extrasTotal, paymentMethod: rawMethod, reference, userId, selectedSeats, seatsSelectionMap } = req.body;
 
   const serviceDataMap = {
     'wheelchair': { label: 'مساعدة بالكرسي المتحرك', price: 0 },
@@ -1493,43 +1507,49 @@ app.post('/api/bookings', async (req, res) => {
     }
   }
 
+  // Normalize flightId(s) and selectedSeats/seatsSelectionMap
+  const flightIds = Array.isArray(flightId) ? flightId : (req.body.flightIds || [flightId]);
+  const seatsMap = seatsSelectionMap || { 0: selectedSeats || [] };
+
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    // Check if the flight is international
-    const [flightRows] = await connection.execute(
-      'SELECT airportOrigin_code as origin, airportDestination_code as destination FROM flights WHERE id_flights = ?',
-      [flightId]
-    );
+    // Check if any of the flights are international and validate passenger passport details
+    for (const fId of flightIds) {
+      const [flightRows] = await connection.execute(
+        'SELECT airportOrigin_code as origin, airportDestination_code as destination FROM flights WHERE id_flights = ?',
+        [fId]
+      );
 
-    if (flightRows.length > 0) {
-      const origin = flightRows[0].origin;
-      const destination = flightRows[0].destination;
-      const YEMEN_AIRPORTS = ['ADE', 'RIY', 'GXF', 'SCT', 'AAY', 'ATQ'];
-      const isInternational = !YEMEN_AIRPORTS.includes(String(origin).toUpperCase().trim()) || 
-                              !YEMEN_AIRPORTS.includes(String(destination).toUpperCase().trim());
+      if (flightRows.length > 0) {
+        const origin = flightRows[0].origin;
+        const destination = flightRows[0].destination;
+        const YEMEN_AIRPORTS = ['ADE', 'RIY', 'GXF', 'SCT', 'AAY', 'ATQ'];
+        const isInternational = !YEMEN_AIRPORTS.includes(String(origin).toUpperCase().trim()) || 
+                                !YEMEN_AIRPORTS.includes(String(destination).toUpperCase().trim());
 
-      if (isInternational) {
-        const limitDate = new Date();
-        limitDate.setMonth(limitDate.getMonth() + 6);
-        limitDate.setHours(0, 0, 0, 0);
+        if (isInternational) {
+          const limitDate = new Date();
+          limitDate.setMonth(limitDate.getMonth() + 6);
+          limitDate.setHours(0, 0, 0, 0);
 
-        for (const p of passengers) {
-          const pExpiry = p.passportExpiry || p.passport_expiry || null;
-          if (!pExpiry) {
-            return res.status(400).json({ 
-              success: false, 
-              error: `يرجى تحديد تاريخ انتهاء الجواز للمسافر (${p.fullName || p.name}) لأن الرحلة دولية.` 
-            });
-          }
+          for (const p of passengers) {
+            const pExpiry = p.passportExpiry || p.passport_expiry || null;
+            if (!pExpiry) {
+              return res.status(400).json({ 
+                success: false, 
+                error: `يرجى تحديد تاريخ انتهاء الجواز للمسافر (${p.fullName || p.name}) لأن الرحلة دولية.` 
+              });
+            }
 
-          const expiryDate = new Date(pExpiry);
-          if (expiryDate < limitDate) {
-            return res.status(400).json({ 
-              success: false, 
-              error: `يجب أن يكون جواز سفر المسافر (${p.fullName || p.name}) صالحاً لمدة 6 أشهر على الأقل للسفر الدولي. أقل تاريخ انتهاء مقبول هو: ${limitDate.toISOString().split('T')[0]}` 
-            });
+            const expiryDate = new Date(pExpiry);
+            if (expiryDate < limitDate) {
+              return res.status(400).json({ 
+                success: false, 
+                error: `يجب أن يكون جواز سفر المسافر (${p.fullName || p.name}) صالحاً لمدة 6 أشهر على الأقل للسفر الدولي. أقل تاريخ انتهاء مقبول هو: ${limitDate.toISOString().split('T')[0]}` 
+              });
+            }
           }
         }
       }
@@ -1537,116 +1557,128 @@ app.post('/api/bookings', async (req, res) => {
 
     await connection.beginTransaction();
 
-    // 1. Create the booking record
-    const [bookingResult] = await connection.execute(
-      'INSERT INTO bookings (flight_id, booking_date, total_passengers, base_price, extra_total, final_price, status, booking_reference) VALUES (?, NOW(), ?, ?, ?, ?, ?, ?)',
-      [flightId, passengers.length, basePrice || (totalPrice / passengers.length), extrasTotal || 0, totalPrice, bookingStatus, reference]
-    );
-    const bookingId = bookingResult.insertId;
-
-    // 2. Process each passenger
+    let firstBookingId = null;
     let leadPassengerId = null;
-    let index = 0;
-    for (const p of passengers) {
-      // Handle different field naming conventions from frontend
-      const pName = p.name || p.fullName || 'مسافر';
-      const pPassport = p.passport_number || p.passportNumber || `TMP-${Math.random()}`;
-      const pDob = p.date_of_birth || p.birthDate || null;
-      const pExpiry = p.passportExpiry || p.passport_expiry || null;
-      const pNationality = p.nationality || '';
-      const pGender = (p.gender || p.gander || 'male').toLowerCase();
 
-      // Check if passenger exists by passport number or create new
-      let passengerId;
-      const [existing] = await connection.execute('SELECT id_passengers FROM passengers WHERE passport_number = ?', [pPassport]);
+    for (let fIdx = 0; fIdx < flightIds.length; fIdx++) {
+      const currentFlightId = flightIds[fIdx];
 
-      if (existing.length > 0) {
-        passengerId = existing[0].id_passengers;
-        // Update passenger details including passport expiry and link user
-        await connection.execute(
-          'UPDATE passengers SET passport_expiry = ?, user_id = COALESCE(user_id, ?) WHERE id_passengers = ?',
-          [pExpiry, userId || null, passengerId]
-        );
-      } else {
-        const [passResult] = await connection.execute(
-          'INSERT INTO passengers (name, passport_number, date_of_birth, passport_expiry, nationality, gander, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
-          [pName, pPassport, pDob, pExpiry, pNationality, pGender, userId || null]
-        );
-        passengerId = passResult.insertId;
-      }
-      
-      if (index === 0) {
-        leadPassengerId = passengerId;
-      }
-      index++;
+      // Segment pricing (split total amounts across all segments evenly)
+      const segmentBasePrice = Math.round(basePrice / flightIds.length);
+      const segmentExtraPrice = Math.round(extrasTotal / flightIds.length);
+      const segmentTotalPrice = Math.round(totalPrice / flightIds.length);
 
-      // 3. Add baggage record (base weight + extra bags)
-      const seatNumber = selectedSeats && selectedSeats[index - 1] ? String(selectedSeats[index - 1]) : '';
-      const seatRow = parseInt(seatNumber, 10);
-      const isBusinessSeat = !isNaN(seatRow) && seatRow >= 1 && seatRow <= 3;
-      const seatClass = isBusinessSeat ? 'Business' : 'Economy';
-
-      let baseWeight = 30.0;
-      const pCode = p.passengerCode || '';
-      
-      if (pCode === 'INF') {
-        baseWeight = 10.0;
-      } else if (seatClass === 'Business') {
-        if (pCode === 'ADT') {
-          baseWeight = 40.0;
-        } else {
-          baseWeight = 30.0;
-        }
-      }
-
-      const extraBagsCount = extraBags ? Number(extraBags[p.id] || 0) : 0;
-      const extraWeight = extraBagsCount * 1.0; // Assume each extra unit is 1 kg
-      const totalBaggageWeight = baseWeight + extraWeight;
-      const extraBaggagePrice = extraBagsCount * 2.0;
-
-      const [baggageResult] = await connection.execute(
-        'INSERT INTO baggage (booking_id, passenger_id, weight, base_price, extra_price, total_price) VALUES (?, ?, ?, ?, ?, ?)',
-        [bookingId, passengerId, totalBaggageWeight, 0.0, extraBaggagePrice, extraBaggagePrice]
+      // 1. Create the booking record
+      const [bookingResult] = await connection.execute(
+        'INSERT INTO bookings (flight_id, booking_date, total_passengers, base_price, extra_total, final_price, status, booking_reference) VALUES (?, NOW(), ?, ?, ?, ?, ?, ?)',
+        [currentFlightId, passengers.length, segmentBasePrice, segmentExtraPrice, segmentTotalPrice, bookingStatus, reference]
       );
-      const baggageId = baggageResult.insertId;
+      const bookingId = bookingResult.insertId;
+      if (fIdx === 0) {
+        firstBookingId = bookingId;
+      }
 
-      await connection.execute(
-        'INSERT INTO bookings_passengers (booking_id, passenger_id, baggage_id) VALUES (?, ?, ?)',
-        [bookingId, passengerId, baggageId]
-      );
-    }
+      // 2. Process each passenger
+      let passengerIndex = 0;
+      for (const p of passengers) {
+        const pName = p.name || p.fullName || 'مسافر';
+        const pPassport = p.passport_number || p.passportNumber || `TMP-${Math.random()}`;
+        const pDob = p.date_of_birth || p.birthDate || null;
+        const pExpiry = p.passportExpiry || p.passport_expiry || null;
+        const pNationality = p.nationality || '';
+        const pGender = (p.gender || p.gander || 'male').toLowerCase();
 
-    // 4. Process Ground Services
-    if (selectedServices && Array.isArray(selectedServices)) {
-      for (const serviceId of selectedServices) {
-        const srv = serviceDataMap[serviceId];
-        if (srv) {
+        let passengerId;
+        const [existing] = await connection.execute('SELECT id_passengers FROM passengers WHERE passport_number = ?', [pPassport]);
+
+        if (existing.length > 0) {
+          passengerId = existing[0].id_passengers;
           await connection.execute(
-            'INSERT INTO ground_services (booking_id, service_name, price, is_active, created_at) VALUES (?, ?, ?, ?, NOW())',
-            [bookingId, srv.label, srv.price, 1]
+            'UPDATE passengers SET passport_expiry = ?, user_id = COALESCE(user_id, ?) WHERE id_passengers = ?',
+            [pExpiry, userId || null, passengerId]
           );
+        } else {
+          const [passResult] = await connection.execute(
+            'INSERT INTO passengers (name, passport_number, date_of_birth, passport_expiry, nationality, gander, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [pName, pPassport, pDob, pExpiry, pNationality, pGender, userId || null]
+          );
+          passengerId = passResult.insertId;
+        }
+        
+        if (fIdx === 0 && passengerIndex === 0) {
+          leadPassengerId = passengerId;
+        }
+        passengerIndex++;
+
+        // 3. Add baggage record (base weight + extra bags)
+        const flightSeats = seatsMap[fIdx] || [];
+        const seatNumber = flightSeats[passengerIndex - 1] ? String(flightSeats[passengerIndex - 1]) : '';
+        const seatRow = parseInt(seatNumber, 10);
+        const isBusinessSeat = !isNaN(seatRow) && seatRow >= 1 && seatRow <= 3;
+        const seatClass = isBusinessSeat ? 'Business' : 'Economy';
+
+        let baseWeight = 30.0;
+        const pCode = p.passengerCode || '';
+        
+        if (pCode === 'INF') {
+          baseWeight = 10.0;
+        } else if (seatClass === 'Business') {
+          if (pCode === 'ADT') {
+            baseWeight = 40.0;
+          } else {
+            baseWeight = 30.0;
+          }
+        }
+
+        const extraBagsCount = extraBags ? Number(extraBags[p.id] || 0) : 0;
+        const extraWeight = extraBagsCount * 1.0;
+        const totalBaggageWeight = baseWeight + extraWeight;
+        const extraBaggagePrice = extraBagsCount * 2.0;
+
+        const [baggageResult] = await connection.execute(
+          'INSERT INTO baggage (booking_id, passenger_id, weight, base_price, extra_price, total_price) VALUES (?, ?, ?, ?, ?, ?)',
+          [bookingId, passengerId, totalBaggageWeight, 0.0, extraBaggagePrice, extraBaggagePrice]
+        );
+        const baggageId = baggageResult.insertId;
+
+        await connection.execute(
+          'INSERT INTO bookings_passengers (booking_id, passenger_id, baggage_id) VALUES (?, ?, ?)',
+          [bookingId, passengerId, baggageId]
+        );
+      }
+
+      // 4. Process Ground Services
+      if (selectedServices && Array.isArray(selectedServices)) {
+        for (const serviceId of selectedServices) {
+          const srv = serviceDataMap[serviceId];
+          if (srv) {
+            await connection.execute(
+              'INSERT INTO ground_services (booking_id, service_name, price, is_active, created_at) VALUES (?, ?, ?, ?, NOW())',
+              [bookingId, srv.label, srv.price, 1]
+            );
+          }
         }
       }
+
+      const gatewayResponse = JSON.stringify({
+        paymentProof: proofPath,
+        selectedBranchId: req.body.selectedBranchId || null
+      });
+
+      // 5. Create payment record
+      await connection.execute(
+        'INSERT INTO payments (booking_id, amount, payment_method, payment_status, gateway_response, payment_date) VALUES (?, ?, ?, ?, ?, NOW())',
+        [bookingId, segmentTotalPrice, paymentMethod, paymentStatus, gatewayResponse]
+      );
     }
 
-    const gatewayResponse = JSON.stringify({
-      paymentProof: proofPath,
-      selectedBranchId: req.body.selectedBranchId || null
-    });
-
-    // 5. Create payment record
-    await connection.execute(
-      'INSERT INTO payments (booking_id, amount, payment_method, payment_status, gateway_response, payment_date) VALUES (?, ?, ?, ?, ?, NOW())',
-      [bookingId, totalPrice, paymentMethod, paymentStatus, gatewayResponse]
-    );
-
-    // 6. Create notification for lead passenger
-    if (leadPassengerId) {
+    // 6. Create notification for lead passenger on the first booking
+    if (leadPassengerId && firstBookingId) {
       await connection.execute(
         'INSERT INTO notifications (passenger_id, booking_id, title, message, type, is_read, created_at) VALUES (?, ?, ?, ?, ?, 0, NOW())',
         [
           leadPassengerId,
-          bookingId,
+          firstBookingId,
           'طلب حجز جديد معلق',
           `تم تقديم طلب حجزك برقم المرجع ${reference}. يرجى الانتظار لحين مراجعة سند الدفع وتأكيد الحجز.`,
           'booking'
@@ -1655,7 +1687,7 @@ app.post('/api/bookings', async (req, res) => {
     }
 
     await connection.commit();
-    res.json({ success: true, bookingId, reference });
+    res.json({ success: true, bookingId: firstBookingId, reference });
   } catch (error) {
     if (connection) await connection.rollback();
     console.error('Booking Error:', error);
@@ -1716,16 +1748,16 @@ app.post('/api/bookings/confirm-payment', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Booking not found' });
     }
 
-    const bookingId = bookings[0].id_bookings;
-
+    // Update all segments under this reference
     await connection.execute(
-      "UPDATE bookings SET status = 'certain' WHERE id_bookings = ?",
-      [bookingId]
+      "UPDATE bookings SET status = 'certain' WHERE booking_reference = ?",
+      [reference]
     );
 
+    // Update all payments linked to these bookings
     await connection.execute(
-      "UPDATE payments SET payment_status = 'success' WHERE booking_id = ?",
-      [bookingId]
+      "UPDATE payments SET payment_status = 'success' WHERE booking_id IN (SELECT id_bookings FROM bookings WHERE booking_reference = ?)",
+      [reference]
     );
 
     await connection.commit();
@@ -1738,7 +1770,6 @@ app.post('/api/bookings/confirm-payment', async (req, res) => {
     if (connection) await connection.end();
   }
 });
-
 
 // ─── Notifications API ─────────────────────────────────────────────────────
 
@@ -2566,7 +2597,7 @@ app.get('/api/admin/companies', async (req, res) => {
     const [rows] = await connection.execute(
       `SELECT 
          a.id_admin, 
-         a.email, 
+         a.username, 
          a.password, 
          a.role, 
          a.airline_code, 
@@ -2590,15 +2621,15 @@ app.get('/api/admin/companies', async (req, res) => {
 
 // Create a new company
 app.post('/api/admin/companies', async (req, res) => {
-  const { email, password, airline_code, company_name, employee_id, department } = req.body;
+  const { username, password, airline_code, company_name, employee_id, department } = req.body;
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
     
-    // Check if email already exists
-    const [existing] = await connection.execute('SELECT id_admin FROM admins WHERE email = ?', [email]);
+    // Check if username already exists
+    const [existing] = await connection.execute('SELECT id_admin FROM admins WHERE username = ?', [username]);
     if (existing.length > 0) {
-      return res.status(400).json({ success: false, error: 'البريد الإلكتروني مسجل بالفعل' });
+      return res.status(400).json({ success: false, error: 'اسم المستخدم مسجل بالفعل' });
     }
 
     // 1. Insert or update company in companies table
@@ -2615,11 +2646,13 @@ app.post('/api/admin/companies', async (req, res) => {
     const [maxIdRows] = await connection.execute('SELECT COALESCE(MAX(id_admin), 0) + 1 as nextId FROM admins');
     const nextId = maxIdRows[0].nextId;
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     // 3. Insert admin account
     await connection.execute(
-      `INSERT INTO admins (id_admin, email, password, role, airline_code, employee_id, department, created_at) 
+      `INSERT INTO admins (id_admin, username, password, role, airline_code, employee_id, department, created_at) 
        VALUES (?, ?, ?, 'company', ?, ?, ?, NOW())`,
-      [nextId, email, password, airline_code || null, employee_id || null, department || null]
+      [nextId, username, hashedPassword, airline_code || null, employee_id || null, department || null]
     );
 
     res.status(201).json({ success: true, companyId: nextId });
@@ -2633,15 +2666,15 @@ app.post('/api/admin/companies', async (req, res) => {
 // Update a company
 app.put('/api/admin/companies/:id', async (req, res) => {
   const { id } = req.params;
-  const { email, password, airline_code, company_name, employee_id, department } = req.body;
+  const { username, password, airline_code, company_name, employee_id, department } = req.body;
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    // Check if email already exists for another user
-    const [existing] = await connection.execute('SELECT id_admin FROM admins WHERE email = ? AND id_admin != ?', [email, id]);
+    // Check if username already exists for another user
+    const [existing] = await connection.execute('SELECT id_admin FROM admins WHERE username = ? AND id_admin != ?', [username, id]);
     if (existing.length > 0) {
-      return res.status(400).json({ success: false, error: 'البريد الإلكتروني مسجل بمستخدم آخر' });
+      return res.status(400).json({ success: false, error: 'اسم المستخدم مسجل بمستخدم آخر' });
     }
 
     // 1. Insert or update company if provided
@@ -2656,18 +2689,19 @@ app.put('/api/admin/companies/:id', async (req, res) => {
 
     // 2. Update admin account
     if (password && password.trim() !== '') {
+      const hashedPassword = await bcrypt.hash(password, 10);
       await connection.execute(
         `UPDATE admins 
-         SET email = ?, password = ?, airline_code = ?, employee_id = ?, department = ? 
+         SET username = ?, password = ?, airline_code = ?, employee_id = ?, department = ? 
          WHERE id_admin = ? AND role = 'company'`,
-        [email, password, airline_code || null, employee_id || null, department || null, id]
+        [username, hashedPassword, airline_code || null, employee_id || null, department || null, id]
       );
     } else {
       await connection.execute(
         `UPDATE admins 
-         SET email = ?, airline_code = ?, employee_id = ?, department = ? 
+         SET username = ?, airline_code = ?, employee_id = ?, department = ? 
          WHERE id_admin = ? AND role = 'company'`,
-        [email, airline_code || null, employee_id || null, department || null, id]
+        [username, airline_code || null, employee_id || null, department || null, id]
       );
     }
 
@@ -2700,15 +2734,16 @@ const seedAdmin = async () => {
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
-    const [rows] = await connection.execute('SELECT id_admin FROM admins WHERE email = ?', ['admin@gmail.com']);
+    const [rows] = await connection.execute('SELECT id_admin FROM admins WHERE username = ?', ['admin']);
     if (rows.length === 0) {
       const [maxIdRows] = await connection.execute('SELECT COALESCE(MAX(id_admin), 0) + 1 as nextId FROM admins');
       const nextId = maxIdRows[0].nextId;
+      const hashedPassword = await bcrypt.hash('ADMIN123', 10);
       await connection.execute(
-        'INSERT INTO admins (id_admin, email, password, role, created_at) VALUES (?, ?, ?, ?, NOW())',
-        [nextId, 'admin@gmail.com', 'ADMIN123', 'admin']
+        'INSERT INTO admins (id_admin, username, password, role, created_at) VALUES (?, ?, ?, ?, NOW())',
+        [nextId, 'admin', hashedPassword, 'admin']
       );
-      console.log('Seeded default admin account (admin@gmail.com) successfully.');
+      console.log('Seeded default admin account (admin) successfully.');
     }
   } catch (error) {
     console.error('Error seeding admin account:', error);
@@ -2716,7 +2751,6 @@ const seedAdmin = async () => {
     if (connection) await connection.end();
   }
 };
-
 // PATCH /api/bookings/:id/cancel — RESTful route
 // POST /api/bookings/cancel — legacy route (kept for compatibility)
 async function cancelBookingHandler(req, res) {
@@ -2724,12 +2758,31 @@ async function cancelBookingHandler(req, res) {
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
-    await connection.execute(
-      "UPDATE bookings SET status = 'cancelled' WHERE id_bookings = ?",
+    await connection.beginTransaction();
+
+    // Find the booking reference for the bookingId to cancel all segments
+    const [bookingRows] = await connection.execute(
+      'SELECT booking_reference FROM bookings WHERE id_bookings = ?',
       [bookingId]
     );
+
+    if (bookingRows.length > 0) {
+      const reference = bookingRows[0].booking_reference;
+      await connection.execute(
+        "UPDATE bookings SET status = 'cancelled' WHERE booking_reference = ?",
+        [reference]
+      );
+    } else {
+      await connection.execute(
+        "UPDATE bookings SET status = 'cancelled' WHERE id_bookings = ?",
+        [bookingId]
+      );
+    }
+
+    await connection.commit();
     res.json({ success: true });
   } catch (error) {
+    if (connection) await connection.rollback();
     console.error('Error canceling booking:', error);
     res.status(500).json({ success: false, error: error.message });
   } finally {

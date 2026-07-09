@@ -7,6 +7,7 @@ function LoginPage() {
     const navigate = useNavigate()
     const location = useLocation()
     const [showPassword, setShowPassword] = useState(false)
+    const [showForgotModal, setShowForgotModal] = useState(false)
     const [focused, setFocused] = useState(null)
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
@@ -95,7 +96,13 @@ function LoginPage() {
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400">كلمة المرور</label>
-                            <Link to="/forgot-password" className="text-[11px] font-black text-brand-blue hover:underline">نسيت كلمة المرور؟</Link>
+                            <button
+                                type="button"
+                                onClick={() => setShowForgotModal(true)}
+                                className="text-[11px] font-black text-brand-blue hover:underline cursor-pointer"
+                            >
+                                هل نسيت كلمة المرور؟
+                            </button>
                         </div>
                         <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'pass' ? 'border-brand-blue bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
                             <Lock className="pointer-events-none absolute right-4 h-4 w-4 text-slate-400" />
@@ -144,6 +151,42 @@ function LoginPage() {
                     </p>
                 </form>
             </div>
+
+            {/* Password Reset Information Modal */}
+            {showForgotModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+                    <div className="relative w-full max-w-md overflow-hidden rounded-[2.5rem] bg-white border border-slate-100 p-8 shadow-2xl animate-in scale-in duration-300">
+                        <button
+                            onClick={() => setShowForgotModal(false)}
+                            className="absolute left-6 top-6 flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-550 hover:bg-slate-200 transition-colors"
+                        >
+                            <X className="h-4 w-4" />
+                        </button>
+                        <div className="text-center mt-4">
+                            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-brand-blue">
+                                <Lock className="h-6 w-6" />
+                            </div>
+                            <h3 className="text-lg font-black text-slate-950 mb-2">استعادة كلمة المرور</h3>
+                            <p className="text-xs font-semibold text-slate-500 leading-relaxed mb-6">
+                                لاستعادة أو إعادة تعيين كلمة المرور الخاصة بحسابك، يرجى التواصل مع فريق الدعم الفني للمنصة عبر البريد الإلكتروني:
+                            </p>
+                            <a
+                                href="mailto:support@ybf.com?subject=طلب استعادة كلمة المرور للمستخدم"
+                                className="inline-flex items-center gap-2 rounded-2xl bg-slate-50 border border-slate-200 hover:bg-slate-100 px-5 py-3 text-xs font-black text-slate-700 transition-all duration-300 mb-6"
+                            >
+                                <Mail className="h-4 w-4 text-brand-blue" />
+                                support@ybf.com
+                            </a>
+                            <button
+                                onClick={() => setShowForgotModal(false)}
+                                className="w-full py-4 bg-brand-blue hover:bg-brand-blue-hover text-white rounded-2xl text-xs font-black shadow-md shadow-brand-blue/15 transition-all active:scale-[0.98]"
+                            >
+                                موافق
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </main>
     )
 }

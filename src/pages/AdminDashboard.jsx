@@ -24,8 +24,8 @@ const getApiUrl = (path) => {
 const AdminDashboard = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const adminEmail = localStorage.getItem('adminEmail') || 'admin@ybf.com';
-    const adminInitials = adminEmail.split('@')[0].slice(0, 2).toUpperCase();
+    const adminUsername = localStorage.getItem('adminUsername') || 'admin';
+    const adminInitials = adminUsername.slice(0, 2).toUpperCase();
     const token = localStorage.getItem('adminToken');
     const role = localStorage.getItem('userRole');
 
@@ -78,7 +78,7 @@ const AdminDashboard = () => {
         id_admin: null,
         company_name: '',
         airline_code: '',
-        email: '',
+        username: '',
         password: '',
         employee_id: '',
         department: ''
@@ -155,7 +155,7 @@ const AdminDashboard = () => {
         const handleAutoLogout = () => {
             localStorage.removeItem('adminToken');
             localStorage.removeItem('userRole');
-            localStorage.removeItem('adminEmail');
+            localStorage.removeItem('adminUsername');
         };
 
         window.addEventListener('unload', handleAutoLogout);
@@ -356,7 +356,7 @@ const AdminDashboard = () => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    email: companyForm.email,
+                    username: companyForm.username,
                     password: companyForm.password,
                     airline_code: companyForm.airline_code,
                     company_name: companyForm.company_name,
@@ -372,7 +372,7 @@ const AdminDashboard = () => {
                     id_admin: null,
                     company_name: '',
                     airline_code: '',
-                    email: '',
+                    username: '',
                     password: '',
                     employee_id: '',
                     department: ''
@@ -395,7 +395,7 @@ const AdminDashboard = () => {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    email: companyForm.email,
+                    username: companyForm.username,
                     password: companyForm.password,
                     airline_code: companyForm.airline_code,
                     company_name: companyForm.company_name,
@@ -411,7 +411,7 @@ const AdminDashboard = () => {
                     id_admin: null,
                     company_name: '',
                     airline_code: '',
-                    email: '',
+                    username: '',
                     password: '',
                     employee_id: '',
                     department: ''
@@ -653,7 +653,7 @@ const AdminDashboard = () => {
     const handleLogout = () => {
         localStorage.removeItem('adminToken');
         localStorage.removeItem('userRole');
-        localStorage.removeItem('adminEmail');
+        localStorage.removeItem('adminUsername');
         navigate('/');
     };
 
@@ -735,7 +735,7 @@ const AdminDashboard = () => {
     );
 
     const filteredCompanies = companiesList.filter(c =>
-        (c.email && c.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (c.username && c.username.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (c.airline_code && c.airline_code.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
@@ -1606,7 +1606,7 @@ const AdminDashboard = () => {
                                                     <div className="text-right text-xs text-slate-500 dark:text-slate-400 font-bold space-y-1.5 bg-slate-50 dark:bg-slate-800/40 p-5 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 min-w-[280px]">
                                                         <div className="flex justify-between items-center"><span className="text-slate-400">تاريخ التقرير:</span> <span className="text-slate-900 dark:text-white font-mono font-bold">{new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
                                                         <div className="flex justify-between items-center"><span className="text-slate-400">الفترة الزمنية:</span> <span className="text-blue-600 dark:text-blue-400 font-bold">{selectedReportMonth ? `${getArabicMonthName(selectedReportMonth)} ${selectedReportYear}` : `سنة ${selectedReportYear}`}</span></div>
-                                                        <div className="flex justify-between items-center"><span className="text-slate-400">المسؤول المصدر:</span> <span className="text-slate-950 dark:text-white font-bold">{adminEmail}</span></div>
+                                                        <div className="flex justify-between items-center"><span className="text-slate-400">المسؤول المصدر:</span> <span className="text-slate-950 dark:text-white font-bold">{adminUsername}</span></div>
                                                     </div>
                                                 </div>
 
@@ -2175,7 +2175,7 @@ const AdminDashboard = () => {
                                                         id_admin: null,
                                                         company_name: '',
                                                         airline_code: '',
-                                                        email: '',
+                                                        username: '',
                                                         password: '',
                                                         employee_id: '',
                                                         department: ''
@@ -2196,7 +2196,7 @@ const AdminDashboard = () => {
                                                 <table className="w-full text-right text-xs">
                                                     <thead>
                                                         <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-black uppercase">
-                                                            <th className="pb-4 px-4">الشركة والبريد الإلكتروني</th>
+                                                            <th className="pb-4 px-4">الشركة واسم المستخدم</th>
                                                             <th className="pb-4 px-4">رمز شركة الطيران</th>
                                                             <th className="pb-4 px-4">تاريخ التسجيل</th>
                                                             <th className="pb-4 px-4">آخر دخول</th>
@@ -2210,10 +2210,10 @@ const AdminDashboard = () => {
                                                                     <td className="py-5 px-4 font-black text-slate-900 dark:text-white">
                                                                         <div className="flex items-center gap-3">
                                                                             <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-blue-600/10 to-indigo-600/10 dark:from-blue-900/20 dark:to-indigo-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center font-black">
-                                                                                {company.email?.charAt(0).toUpperCase() || 'C'}
+                                                                                {company.username?.charAt(0).toUpperCase() || 'C'}
                                                                             </div>
                                                                             <div>
-                                                                                <p className="font-black text-slate-800 dark:text-white">{company.email}</p>
+                                                                                <p className="font-black text-slate-800 dark:text-white">{company.username}</p>
                                                                                 <p className="text-[10px] text-slate-400">ID: #{company.id_admin}</p>
                                                                             </div>
                                                                         </div>
@@ -2238,7 +2238,7 @@ const AdminDashboard = () => {
                                                                                         id_admin: company.id_admin,
                                                                                         company_name: company.company_name || '',
                                                                                         airline_code: company.airline_code || '',
-                                                                                        email: company.email || '',
+                                                                                        username: company.username || '',
                                                                                         password: '',
                                                                                         employee_id: company.employee_id || '',
                                                                                         department: company.department || ''
@@ -2586,12 +2586,12 @@ const AdminDashboard = () => {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-700">البريد الإلكتروني للشركة</label>
+                                    <label className="text-[10px] font-black text-slate-700">اسم المستخدم للشركة</label>
                                     <input
-                                        type="email"
+                                        type="text"
                                         placeholder=""
-                                        value={companyForm.email}
-                                        onChange={(e) => setCompanyForm({ ...companyForm, email: e.target.value })}
+                                        value={companyForm.username}
+                                        onChange={(e) => setCompanyForm({ ...companyForm, username: e.target.value })}
                                         className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl py-2 px-3 text-xs font-bold outline-none text-slate-800 dark:text-slate-100"
                                         required
                                         autoComplete="off"

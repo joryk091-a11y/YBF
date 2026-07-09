@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Lock, Mail, Eye, EyeOff, ShieldAlert, ArrowLeft, Shield, CheckCircle } from 'lucide-react';
+import { Lock, User, Eye, EyeOff, ShieldAlert, ArrowLeft, Shield, CheckCircle } from 'lucide-react';
 
 const AdminLogin = () => {
-    const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
@@ -29,7 +29,7 @@ const AdminLogin = () => {
             const response = await fetch('http://localhost:8080/api/company-login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ username, password })
             });
 
             const data = await response.json();
@@ -38,13 +38,13 @@ const AdminLogin = () => {
                 if (data.role === 'admin') {
                     localStorage.setItem('userRole', 'admin');
                     localStorage.setItem('adminToken', 'admin-token-' + data.id);
-                    localStorage.setItem('adminEmail', data.email || email);
+                    localStorage.setItem('adminUsername', data.username || username);
                     navigate('/admin/dashboard');
                 } else {
                     setError('هذا الحساب ليس له صلاحيات مدير النظام.');
                 }
             } else {
-                setError(data.error || 'البريد الإلكتروني أو كلمة المرور غير صحيحة.');
+                setError(data.error || 'اسم المستخدم أو كلمة المرور غير صحيحة.');
             }
         } catch (err) {
             console.error('Admin login connection error:', err);
@@ -100,23 +100,23 @@ const AdminLogin = () => {
                     {/* Form */}
                     <form onSubmit={handleSubmit} className="space-y-5">
                         
-                        {/* Email Input */}
+                        {/* Username Input */}
                         <div className="space-y-1.5">
-                            <label className="block text-[10px] font-black text-slate-450 dark:text-slate-500 uppercase tracking-widest" htmlFor="email">
-                                البريد الإلكتروني للمسؤول
+                            <label className="block text-[10px] font-black text-slate-450 dark:text-slate-500 uppercase tracking-widest" htmlFor="username">
+                                اسم المستخدم للمسؤول
                             </label>
                             <div className={`relative flex items-center rounded-2xl border transition-all duration-300 ${
-                                focusedField === 'email' 
+                                focusedField === 'username' 
                                     ? 'border-blue-500 bg-white dark:bg-slate-900 shadow-[0_0_0_4px_rgba(59,130,246,0.12)]' 
                                     : 'border-slate-200/80 dark:border-slate-800/85 bg-slate-50/30 dark:bg-slate-950/20 hover:border-slate-350 dark:hover:border-slate-700'
                             }`}>
-                                <Mail className={`absolute right-4 h-4 w-4 transition-colors duration-300 ${focusedField === 'email' ? 'text-blue-500' : 'text-slate-400'}`} />
+                                <User className={`absolute right-4 h-4 w-4 transition-colors duration-300 ${focusedField === 'username' ? 'text-blue-500' : 'text-slate-400'}`} />
                                 <input
-                                    type="email"
-                                    id="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    onFocus={() => setFocusedField('email')}
+                                    type="text"
+                                    id="username"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    onFocus={() => setFocusedField('username')}
                                     onBlur={() => setFocusedField(null)}
                                     className="w-full bg-transparent py-4 pr-12 pl-4 text-sm font-bold outline-none text-slate-900 dark:text-white font-mono"
                                     placeholder=""

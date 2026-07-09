@@ -5,7 +5,7 @@ import defaultLogo from '../assets/logo.png'
 
 const defaultNavItems = [
   { label: 'الرئيسية', href: '/' },
-  { label: 'الوجهات', href: '#popular-destinations' },
+  { label: 'الوجهات', href: '/search' },
   { label: 'حجوزاتي', href: '/my-bookings' },
   { label: 'الشروط والأحكام', href: '/terms' },
 ]
@@ -263,7 +263,9 @@ function Navbar({
             <div className="absolute left-1/2 -translate-x-1/2">
               <ul className="flex items-center gap-6">
                 {links.map((item) => {
-                  const isActive = location.pathname === item.href || (item.href.startsWith('#') && location.pathname === '/');
+                  const isActive = item.href.startsWith('#')
+                    ? location.pathname === '/' && location.hash === item.href
+                    : location.pathname === item.href && (!location.hash || location.hash === '');
                   return (
                     <li key={item.label}>
                       {item.href.startsWith('#') ? (
@@ -282,13 +284,13 @@ function Navbar({
                         <Link
                           to={item.href}
                           state={item.label === 'الوجهات' ? { showAll: true } : undefined}
-                          className={`group relative inline-flex select-none py-1.5 px-3.5 text-xs font-black transition-all duration-300 rounded-xl ${location.pathname === item.href
+                          className={`group relative inline-flex select-none py-1.5 px-3.5 text-xs font-black transition-all duration-300 rounded-xl ${isActive
                               ? 'text-blue-500 bg-blue-500/5 dark:bg-blue-500/10'
                               : 'text-slate-655 dark:text-slate-300 hover:text-blue-500 dark:hover:text-blue-400'
                             } focus:outline-none`}
                         >
                           {item.label}
-                          <span className={`pointer-events-none absolute -bottom-0.5 left-1/2 h-[2px] w-0 -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-300 group-hover:w-1/2 ${location.pathname === item.href ? 'w-1/2' : ''}`} />
+                          <span className={`pointer-events-none absolute -bottom-0.5 left-1/2 h-[2px] w-0 -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-300 group-hover:w-1/2 ${isActive ? 'w-1/2' : ''}`} />
                         </Link>
                       )}
                     </li>

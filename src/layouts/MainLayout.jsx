@@ -205,13 +205,9 @@ function MainLayout() {
               )}
 
               {/* Quick Contact Footer */}
-              <div className="px-5 py-2 border-t border-slate-50 bg-slate-50/10 flex items-center justify-between text-[8px] text-slate-400 font-bold">
-                <a href="mailto:admin@gmail.com" className="flex items-center gap-1 hover:text-[#4974f9] transition-colors">
-                  <Mail size={9} />
-                  admin@gmail.com
-                </a>
-                <span className="flex items-center gap-0.5">
-                  <Sparkles size={9} className="text-amber-500 animate-pulse" />
+              <div className="px-5 py-2.5 border-t border-slate-50 bg-slate-50/10 flex items-center justify-center text-[9px] text-slate-400 font-bold">
+                <span className="flex items-center gap-1.5">
+                  <Sparkles size={10} className="text-amber-500 animate-pulse" />
                   دعم فني مباشر
                 </span>
               </div>

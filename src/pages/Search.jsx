@@ -40,7 +40,26 @@ const airportMap = {
 
 const formatSearchDate = (value) => (value ? String(value).replaceAll('-', '/') : 'غير محدد')
 
-// Mock data removed for DB integration
+const getAirportName = (code) => {
+  const upper = String(code || '').toUpperCase()
+  const codeToKey = {
+    'ADE': 'aden',
+    'CAI': 'cairo',
+    'RUH': 'riyadh',
+    'JED': 'jeddah',
+    'DXB': 'dubai',
+    'DOH': 'doha',
+    'RIY': 'mukalla',
+    'GXF': 'seiyun',
+    'SCT': 'socotra',
+    'AMM': 'amman',
+    'KWI': 'kuwait',
+    'JIB': 'djibouti',
+    'ADD': 'addis'
+  };
+  const key = codeToKey[upper];
+  return airportMap[key]?.city || upper;
+}
 
 function SearchPage() {
   const navigate = useNavigate()
@@ -51,6 +70,30 @@ function SearchPage() {
     ? { fromCity: '', toCity: '', travelDate: '', passengerCount: 1 }
     : { ...contextSearchCriteria, ...location.state?.searchCriteria }
 
+  const segments = useMemo(() => {
+    if (isShowAll) {
+      return [{ from: '', to: '', date: '', label: 'جميع الرحلات' }]
+    }
+    if (searchCriteria?.activeTab === 'round-trip') {
+      return [
+        { from: searchCriteria.fromCity, to: searchCriteria.toCity, date: searchCriteria.travelDate, label: 'رحلة الذهاب' },
+        { from: searchCriteria.toCity, to: searchCriteria.fromCity, date: searchCriteria.returnDate, label: 'رحلة العودة' }
+      ]
+    } else if (searchCriteria?.activeTab === 'multi-city') {
+      return (searchCriteria.segments || []).map((seg, idx) => ({
+        ...seg,
+        label: `الرحلة ${idx + 1}`
+      }))
+    } else {
+      return [
+        { from: searchCriteria.fromCity || '', to: searchCriteria.toCity || '', date: searchCriteria.travelDate || '', label: 'رحلة الذهاب' }
+      ]
+    }
+  }, [searchCriteria, isShowAll])
+
+  const [currentSegmentIdx, setCurrentSegmentIdx] = useState(0)
+  const [selectedSegmentFlights, setSelectedSegmentFlights] = useState([])
+
   const [flights, setFlights] = useState([])
   const [loading, setLoading] = useState(true)
   const [sortBy, setSortBy] = useState('الأفضل')
@@ -60,9 +103,10 @@ function SearchPage() {
   const [priceRange, setPriceRange] = useState(1500)
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
 
-  const fromCityQuery = searchCriteria?.fromCity || ''
-  const toCityQuery = searchCriteria?.toCity || ''
-  const travelDateQuery = searchCriteria?.travelDate || ''
+  const activeSegment = segments[currentSegmentIdx] || segments[0] || {}
+  const fromCityQuery = activeSegment.from || ''
+  const toCityQuery = activeSegment.to || ''
+  const travelDateQuery = activeSegment.date || ''
 
   useEffect(() => {
     const fetchFlights = async () => {
@@ -413,17 +457,24 @@ function SearchPage() {
 
   const handleSelectFlight = (flight) => {
     const user = localStorage.getItem('user')
-    if (user) {
-      navigate('/seats', { state: { selectedFlight: flight, searchCriteria } })
+    const nextSelected = [...selectedSegmentFlights, flight]
+
+    if (currentSegmentIdx < segments.length - 1) {
+      setSelectedSegmentFlights(nextSelected)
+      setCurrentSegmentIdx(currentSegmentIdx + 1)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     } else {
-      // Pass the current state to login so we can return here or proceed to seats
-      navigate('/login', {
-        state: {
-          from: '/seats',
-          selectedFlight: flight,
-          searchCriteria
-        }
-      })
+      if (user) {
+        navigate('/seats', { state: { selectedFlights: nextSelected, searchCriteria } })
+      } else {
+        navigate('/login', {
+          state: {
+            from: '/seats',
+            selectedFlights: nextSelected,
+            searchCriteria
+          }
+        })
+      }
     }
   }
 
@@ -582,6 +633,30 @@ function SearchPage() {
           )}
 
           <div dir="rtl">
+            {segments.length > 1 && !isShowAll && (
+              <div className="mb-8 rounded-[24px] bg-gradient-to-r from-brand-blue/10 to-indigo-500/10 border border-brand-blue/20 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 animate-in fade-in duration-300">
+                <div>
+                  <h3 className="text-sm font-black text-brand-blue flex items-center gap-2">
+                    <Zap className="h-4 w-4 animate-pulse" />
+                    <span>جاري اختيار الرحلة لـ: {activeSegment.label}</span>
+                  </h3>
+                  <p className="text-xs font-extrabold text-slate-650 mt-1">
+                    المسار: {getAirportName(fromCityQuery)} ➔ {getAirportName(toCityQuery)} | التاريخ: {travelDateQuery || 'غير محدد'}
+                  </p>
+                </div>
+                {currentSegmentIdx > 0 && (
+                  <button
+                    onClick={() => {
+                      setCurrentSegmentIdx(currentSegmentIdx - 1)
+                      setSelectedSegmentFlights(prev => prev.slice(0, -1))
+                    }}
+                    className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-xs font-black text-slate-650 shadow-sm transition hover:bg-slate-50 cursor-pointer"
+                  >
+                    تراجع عن الاختيار السابق
+                  </button>
+                )}
+              </div>
+            )}
             {isShowAll && <h3 className="text-2xl font-black text-slate-950 mb-8">الرحلات المجدولة حسب شركات الطيران</h3>}
             {/* Sorting Tabs & Mobile Filters */}
             {!isShowAll && (

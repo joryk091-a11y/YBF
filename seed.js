@@ -1,5 +1,6 @@
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
+import bcrypt from 'bcryptjs';
 
 dotenv.config();
 
@@ -8,17 +9,6 @@ const getDbConfig = () => {
   if (!url) {
     console.error('DATABASE_URL is not defined in .env file!');
     process.exit(1);
-  }
-  const regex = /mysql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/;
-  const match = url.match(regex);
-  if (match) {
-    return {
-      host: match[3],
-      user: match[1],
-      password: match[2],
-      port: match[4],
-      database: match[5]
-    };
   }
   return url;
 };
@@ -72,15 +62,18 @@ async function seed() {
     // 2. Insert Admins
     console.log('Inserting Admins...');
     const admins = [
-      [1, 'admin@gmail.com', 'ADMIN123', 'admin', null, '1', 'الادارة'],
-      [2, 'yemenia@gmail.com', 'YEMENIA123', 'company', 'IY', '2', 'اليمنية'],
-      [3, 'balqis@gmail.com', 'BALQIS123', 'company', 'BS', '3', 'بلقيس'],
-      [4, 'aden@gmail.com', 'ADEN123', 'company', 'QY', '4', 'عدن']
+      [1, 'admin', 'ADMIN123', 'admin', null, '1', 'الادارة'],
+      [2, 'yemenia', 'YEMENIA123', 'company', 'IY', '2', 'اليمنية'],
+      [3, 'balqis', 'BALQIS123', 'company', 'BS', '3', 'بلقيس'],
+      [4, 'aden', 'ADEN123', 'company', 'QY', '4', 'عدن']
     ];
     for (const admin of admins) {
+      const hashedPassword = await bcrypt.hash(admin[2], 10);
+      const adminData = [...admin];
+      adminData[2] = hashedPassword;
       await connection.execute(
-        'INSERT INTO admins (id_admin, email, password, role, airline_code, employee_id, department, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())',
-        admin
+        'INSERT INTO admins (id_admin, username, password, role, airline_code, employee_id, department, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())',
+        adminData
       );
     }
     console.log('Admins inserted.');
@@ -91,9 +84,12 @@ async function seed() {
       [1, 'محمد علي', '777777777', 'user@gmail.com', 'user123']
     ];
     for (const user of users) {
+      const hashedPassword = await bcrypt.hash(user[4], 10);
+      const userData = [...user];
+      userData[4] = hashedPassword;
       await connection.execute(
         'INSERT INTO users (id_users, full_name, phone, email, password, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
-        user
+        userData
       );
     }
     console.log('Users inserted.');

@@ -47,11 +47,20 @@ function SeatsPage() {
     const navigate = useNavigate()
     const location = useLocation()
     const selectedFlight = location.state?.selectedFlight
+    const selectedFlights = location.state?.selectedFlights || (selectedFlight ? [selectedFlight] : [])
     const searchCriteria = location.state?.searchCriteria
     const passengerCount = Number(searchCriteria?.passengerCount) || 1
 
+    const [activeFlightIdx, setActiveFlightIdx] = useState(0)
+    const [seatsSelectionMap, setSeatsSelectionMap] = useState({})
     const [selectedSeats, setSelectedSeats] = useState([])
     const [hoveredSeat, setHoveredSeat] = useState(null)
+
+    const activeFlight = selectedFlights[activeFlightIdx] || selectedFlight || {}
+
+    useEffect(() => {
+        setSelectedSeats(seatsSelectionMap[activeFlightIdx] || [])
+    }, [activeFlightIdx, seatsSelectionMap])
 
     const toggleSeat = (seatId) => {
         if (MOCK_OCCUPIED.includes(seatId)) return
@@ -202,13 +211,23 @@ function SeatsPage() {
 
     const handleContinue = () => {
         if (selectedSeats.length === passengerCount) {
-            navigate('/travelers', {
-                state: {
-                    selectedFlight,
-                    searchCriteria,
-                    selectedSeats
-                }
-            })
+            const nextMap = { ...seatsSelectionMap, [activeFlightIdx]: selectedSeats }
+            setSeatsSelectionMap(nextMap)
+
+            if (activeFlightIdx < selectedFlights.length - 1) {
+                setActiveFlightIdx(activeFlightIdx + 1)
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+            } else {
+                navigate('/travelers', {
+                    state: {
+                        selectedFlight: selectedFlights[0],
+                        selectedFlights,
+                        seatsSelectionMap: nextMap,
+                        searchCriteria,
+                        selectedSeats: nextMap[0] || []
+                    }
+                })
+            }
         }
     }
 
@@ -227,9 +246,33 @@ function SeatsPage() {
                     <div className="mb-12 w-full text-center lg:text-right">
                         <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">اختر مقعدك المفضل</h1>
                         <p className="text-lg font-bold text-slate-550">
-                            {selectedFlight?.airlineName || 'طيران اليمنية'} | {selectedFlight?.raw?.aircraft_type || 'Airbus A320-200'}
+                            {activeFlight?.airlineName || 'طيران اليمنية'} | {activeFlight?.raw?.aircraft_type || 'Airbus A320-200'}
                         </p>
                     </div>
+
+                    {selectedFlights.length > 1 && (
+                        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-6 py-5 rounded-3xl bg-blue-500/5 border border-blue-500/10 shadow-sm max-w-[580px] w-full" dir="rtl">
+                            <div className="flex items-center gap-3">
+                                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white font-black text-xs animate-pulse">
+                                    {activeFlightIdx + 1}
+                                </span>
+                                <div className="text-right">
+                                    <span className="block text-[10px] font-black uppercase text-blue-500">جاري اختيار مقاعد الرحلة {activeFlightIdx + 1} من {selectedFlights.length}</span>
+                                    <span className="block text-xs font-black text-slate-800 mt-0.5">{activeFlight.fromCity} ➔ {activeFlight.toCity}</span>
+                                </div>
+                            </div>
+                            {activeFlightIdx > 0 && (
+                                <button
+                                    onClick={() => {
+                                        setActiveFlightIdx(activeFlightIdx - 1)
+                                    }}
+                                    className="inline-flex h-9 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-[11px] font-black text-slate-650 shadow-sm hover:bg-slate-50 transition cursor-pointer"
+                                >
+                                    رجوع للرحلة السابقة
+                                </button>
+                            )}
+                        </div>
+                    )}
 
                     {/* Modern Horizontal Legend */}
                     <div className="flex flex-wrap items-center justify-center gap-6 px-6 py-4 rounded-3xl bg-white border border-slate-200/60 shadow-sm max-w-[580px] w-full mb-6" dir="rtl">

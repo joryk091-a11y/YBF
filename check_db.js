@@ -1,12 +1,21 @@
+import 'dotenv/config';
 import mysql from 'mysql2/promise';
 
-const dbConfig = {
-  host: 'localhost',
-  user: 'root',
-  password: 'Jory774432',
-  database: 'airlines',
-  port: 3306,
+const getDbConfig = () => {
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    return {
+      host: 'localhost',
+      user: 'root',
+      password: '',
+      database: 'airlines',
+      port: 3306,
+    };
+  }
+  return url;
 };
+
+const dbConfig = getDbConfig();
 
 async function run() {
   let connection;

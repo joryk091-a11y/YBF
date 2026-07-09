@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Lock, ShieldCheck, ArrowRight, Building2, Activity, Mail, Eye, EyeOff } from 'lucide-react';
+import { Lock, ShieldCheck, ArrowRight, Building2, Activity, User, Mail, Eye, EyeOff, X } from 'lucide-react';
 import logo from '../assets/logo.png';
 import { useAuth } from '../utils/AuthContext';
 
 const CompanyLogin = () => {
-    const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [showForgotModal, setShowForgotModal] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [focusedField, setFocusedField] = useState(null);
@@ -39,7 +40,7 @@ const CompanyLogin = () => {
             const response = await fetch('http://localhost:8080/api/company-login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ username, password })
             });
 
             const data = await response.json();
@@ -48,6 +49,7 @@ const CompanyLogin = () => {
                 if (data.role === 'admin') {
                     localStorage.setItem('userRole', 'admin');
                     localStorage.setItem('adminToken', 'admin-token-' + data.id);
+                    localStorage.setItem('adminUsername', data.username || username);
                     setUser({
                         role: 'super_admin',
                         airline_name: 'Yemenia',
@@ -73,7 +75,7 @@ const CompanyLogin = () => {
                     navigate('/company/dashboard');
                 }
             } else {
-                setError(data.error || 'البريد الإلكتروني أو كلمة المرور غير صحيحة.');
+                setError(data.error || 'اسم المستخدم أو كلمة المرور غير صحيحة.');
             }
         } catch (error) {
             console.error('Company login error:', error);
@@ -112,19 +114,19 @@ const CompanyLogin = () => {
                     )}
 
                     <form onSubmit={handleSubmit} className="space-y-5">
-                        {/* Email Field */}
+                        {/* Username Field */}
                         <div className="space-y-2">
-                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest" htmlFor="email">
-                                البريد الإلكتروني
+                            <label className="block text-xs font-black text-slate-450 dark:text-slate-500 uppercase tracking-widest" htmlFor="username">
+                                اسم المستخدم
                             </label>
-                            <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focusedField === 'email' ? 'border-blue-500 bg-white shadow-[0_0_0_4px_rgba(59,130,246,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
-                                <Mail className="pointer-events-none absolute right-4 h-4 w-4 text-slate-400" />
+                            <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focusedField === 'username' ? 'border-blue-500 bg-white shadow-[0_0_0_4px_rgba(59,130,246,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
+                                <User className="pointer-events-none absolute right-4 h-4 w-4 text-slate-400" />
                                 <input
-                                    type="email"
-                                    id="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    onFocus={() => setFocusedField('email')}
+                                    type="text"
+                                    id="username"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    onFocus={() => setFocusedField('username')}
                                     onBlur={() => setFocusedField(null)}
                                     className="w-full bg-transparent py-5 pr-12 pl-4 text-base font-bold text-slate-900 placeholder:text-slate-350 outline-none"
                                     placeholder=""
@@ -136,9 +138,18 @@ const CompanyLogin = () => {
 
                         {/* Password Field */}
                         <div className="space-y-2">
-                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest" htmlFor="password">
-                                كلمة المرور
-                            </label>
+                            <div className="flex items-center justify-between">
+                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest" htmlFor="password">
+                                    كلمة المرور
+                                </label>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowForgotModal(true)}
+                                    className="text-xs font-black text-blue-600 hover:underline cursor-pointer"
+                                >
+                                    هل نسيت كلمة المرور؟
+                                </button>
+                            </div>
                             <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focusedField === 'password' ? 'border-blue-500 bg-white shadow-[0_0_0_4px_rgba(59,130,246,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
                                 <Lock className="pointer-events-none absolute right-4 h-4 w-4 text-slate-400" />
                                 <input
@@ -213,6 +224,42 @@ const CompanyLogin = () => {
                 <div className="absolute inset-0 opacity-20 pointer-events-none"
                     style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, #4974f9 0%, transparent 50%)' }} />
             </div>
+
+            {/* Password Reset Information Modal */}
+            {showForgotModal && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+                    <div className="relative w-full max-w-md overflow-hidden rounded-[2.5rem] bg-white border border-slate-100 p-8 shadow-2xl animate-in scale-in duration-300">
+                        <button
+                            onClick={() => setShowForgotModal(false)}
+                            className="absolute left-6 top-6 flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-550 hover:bg-slate-200 transition-colors"
+                        >
+                            <X className="h-4 w-4" />
+                        </button>
+                        <div className="text-center mt-4">
+                            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                                <Lock className="h-6 w-6" />
+                            </div>
+                            <h3 className="text-lg font-black text-slate-950 mb-2">استعادة كلمة المرور للشركاء</h3>
+                            <p className="text-xs font-semibold text-slate-500 leading-relaxed mb-6">
+                                لإعادة تعيين كلمة المرور الخاصة بحساب شركتك أو حساب الإدارة، يرجى التواصل مع الدعم الفني للشركاء عبر البريد الإلكتروني:
+                            </p>
+                            <a
+                                href="mailto:ybf.support@gmail.com?subject=طلب استعادة كلمة المرور للشركاء"
+                                className="inline-flex items-center gap-2 rounded-2xl bg-slate-50 border border-slate-200 hover:bg-slate-100 px-5 py-3 text-xs font-black text-slate-700 transition-all duration-300 mb-6"
+                            >
+                                <Mail className="h-4 w-4 text-blue-600" />
+                                ybf.support@gmail.com
+                            </a>
+                            <button
+                                onClick={() => setShowForgotModal(false)}
+                                className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-xs font-black shadow-md shadow-blue-600/15 transition-all active:scale-[0.98]"
+                            >
+                                موافق
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

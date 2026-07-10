@@ -237,7 +237,7 @@ function Navbar({
   }
 
   return (
-    <header className="fixed top-0 inset-x-0 z-50 w-full px-4 pt-4 sm:px-6 lg:px-8 transition-all duration-300" dir="rtl">
+    <header className="fixed top-0 left-0 right-0 z-50 px-4 pt-4 sm:px-6 lg:px-8 transition-all duration-300" dir="rtl">
       <div className="mx-auto max-w-7xl">
         <nav className="backdrop-blur-xl bg-white/85 dark:bg-slate-900/80 border border-slate-200/50 dark:border-slate-800/40 rounded-[2rem] px-6 py-2.5 text-slate-850 dark:text-slate-200 shadow-[0_10px_35px_rgba(0,0,0,0.08)] transition-all duration-300">
           {/* Desktop Menu */}
@@ -274,7 +274,7 @@ function Navbar({
                           onClick={(event) => goTo(item.href, event)}
                           className={`group relative inline-flex select-none py-1.5 px-3.5 text-xs font-black transition-all duration-300 rounded-xl ${isActive
                               ? 'text-blue-500 bg-blue-500/5 dark:bg-blue-500/10'
-                              : 'text-slate-650 dark:text-slate-300 hover:text-blue-500 dark:hover:text-blue-400'
+                              : 'text-slate-655 dark:text-slate-300 hover:text-blue-500 dark:hover:text-blue-400'
                             } focus:outline-none`}
                         >
                           {item.label}
@@ -361,7 +361,7 @@ function Navbar({
 
           {/* Mobile Menu - perfect center logo via grid */}
           <div className="grid grid-cols-3 items-center md:hidden">
-            {/* Right: bell (if logged in) or empty */}
+            {/* Right: bell (if logged in) or empty placeholder */}
             <div className="flex items-center justify-start">
               {user ? (
                 <button
@@ -375,7 +375,9 @@ function Navbar({
                     </span>
                   )}
                 </button>
-              ) : <span />}
+              ) : (
+                <div className="w-9 h-9" />
+              )}
             </div>
 
             {/* Center: Logo - always perfectly centered */}

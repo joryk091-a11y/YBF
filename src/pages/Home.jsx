@@ -424,7 +424,7 @@ function HomePage() {
         </ScrollReveal>
 
         {/* الوجهات الأكثر طلباً */}
-        <section id="popular-destinations" className="mx-auto mt-10 sm:mt-16 max-w-7xl px-4 sm:px-6 lg:px-8 relative" dir="rtl">
+        <section id="popular-destinations" className="mx-auto mt-10 sm:mt-16 max-w-7xl px-4 sm:px-6 lg:px-8 relative overflow-hidden" dir="rtl">
           <ScrollReveal animation="fade-down" duration={700}>
             <div className="text-center mb-16 relative flex flex-col items-center">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-4 py-1.5 text-[10px] font-black tracking-wider text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 uppercase mb-4 shadow-sm">
@@ -515,7 +515,7 @@ function HomePage() {
         </section>
 
         {/* Services Bento Grid Section */}
-        <section id="services" className="mx-auto mt-14 sm:mt-20 max-w-7xl px-4 sm:px-6 lg:px-8 relative" dir="rtl">
+        <section id="services" className="mx-auto mt-14 sm:mt-20 max-w-7xl px-4 sm:px-6 lg:px-8 relative overflow-hidden" dir="rtl">
           <ScrollReveal animation="fade-down" duration={700}>
             <div className="text-center mb-16 relative flex flex-col items-center">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-4 py-1.5 text-[10px] font-black tracking-wider text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 uppercase mb-4 shadow-sm">
@@ -663,7 +663,7 @@ function HomePage() {
         </section>
 
         {/* Interactive Split-Screen 'Flight Journey' Section */}
-        <section id="how-it-works" className="mx-auto mt-20 max-w-7xl px-4 sm:px-6 lg:px-8 relative" dir="rtl">
+        <section id="how-it-works" className="mx-auto mt-20 max-w-7xl px-4 sm:px-6 lg:px-8 relative overflow-hidden" dir="rtl">
           <ScrollReveal animation="fade-down" duration={700}>
             <div className="relative mb-20 text-center flex flex-col items-center">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-4 py-1.5 text-[10px] font-black tracking-wider text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 uppercase mb-4 shadow-sm">
@@ -756,7 +756,7 @@ function HomePage() {
         </section>
 
         {/* Modernized FAQ Section */}
-        <section id="faq" className="mx-auto mt-20 max-w-4xl px-4 pb-20 sm:px-6 lg:px-8" dir="rtl">
+        <section id="faq" className="mx-auto mt-20 max-w-4xl px-4 pb-20 sm:px-6 lg:px-8 overflow-hidden" dir="rtl">
           <ScrollReveal animation="fade-down" duration={700}>
             <div className="relative mb-24 text-center flex flex-col items-center">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-4 py-1.5 text-[10px] font-black tracking-wider text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 uppercase mb-4 shadow-sm">

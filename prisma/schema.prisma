@@ -278,3 +278,50 @@ model Company {
 
   @@map("companies")
 }
+
+model SystemSetting {
+  setting_key   String @id @db.VarChar(64)
+  setting_value String @db.VarChar(255)
+
+  @@map("system_settings")
+}
+
+model ChatSession {
+  id           Int           @id @default(autoincrement())
+  session_key  String        @unique @db.VarChar(64)
+  user_name    String?       @default("زائر") @db.VarChar(100)
+  user_email   String?       @db.VarChar(150)
+  status       ChatStatus?   @default(open)
+  created_at   DateTime?     @default(now()) @db.DateTime(0)
+  updated_at   DateTime?     @default(now()) @db.DateTime(0)
+  messages     ChatMessage[]
+
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id_chat      Int          @id @default(autoincrement())
+  session_id   Int?
+  sender       ChatSender
+  sender_name  String?      @db.VarChar(100)
+  sender_email String?      @db.VarChar(150)
+  message      String?      @db.Text
+  text         String?      @db.Text
+  is_read      Int?         @default(0) @db.TinyInt
+  created_at   DateTime?    @default(now()) @db.DateTime(0)
+  session      ChatSession? @relation(fields: [session_id], references: [id], onDelete: Cascade)
+
+  @@index([session_id], map: "chat_messages_session_id_fkey")
+  @@map("chat_messages")
+}
+
+enum ChatStatus {
+  open
+  replied
+  closed
+}
+
+enum ChatSender {
+  user
+  admin
+}

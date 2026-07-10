@@ -551,19 +551,6 @@ function PaymentPage() {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
   }
 
-  const summaryFlight = selectedFlight ?? {
-    fromCity: 'عدن',
-    toCity: 'القاهرة',
-    departTime: '07:35',
-    arriveTime: '10:10',
-    fromCode: 'CAI',
-    toCode: 'ADE',
-    duration: '4 س 25 د',
-    price: 856,
-  }
-
-
-
   return (
     <main className="min-h-[100svh] bg-[#f3f4f6] pb-16 pt-24 sm:pt-28" dir="rtl">
       {/* Sticky Stepper Bar */}

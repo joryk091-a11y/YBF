@@ -387,6 +387,59 @@ LOCK TABLES `seats` WRITE;
 /*!40000 ALTER TABLE `seats` DISABLE KEYS */;
 /*!40000 ALTER TABLE `seats` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `system_settings`
+--
+
+DROP TABLE IF EXISTS `system_settings`;
+CREATE TABLE `system_settings` (
+  `setting_key` varchar(64) NOT NULL,
+  `setting_value` varchar(255) NOT NULL,
+  PRIMARY KEY (`setting_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+LOCK TABLES `system_settings` WRITE;
+INSERT INTO `system_settings` VALUES ('markup_rate','5'),('exchange_rate','530'),('support_email','support@ybf.com');
+UNLOCK TABLES;
+
+--
+-- Table structure for table `chat_sessions`
+--
+
+DROP TABLE IF EXISTS `chat_sessions`;
+CREATE TABLE `chat_sessions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `session_key` varchar(64) NOT NULL,
+  `user_name` varchar(100) DEFAULT 'زائر',
+  `user_email` varchar(150) DEFAULT NULL,
+  `status` enum('open','replied','closed') DEFAULT 'open',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `session_key` (`session_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Table structure for table `chat_messages`
+--
+
+DROP TABLE IF EXISTS `chat_messages`;
+CREATE TABLE `chat_messages` (
+  `id_chat` int NOT NULL AUTO_INCREMENT,
+  `session_id` int DEFAULT NULL,
+  `sender` enum('user','admin') NOT NULL,
+  `sender_name` varchar(100) DEFAULT NULL,
+  `sender_email` varchar(150) DEFAULT NULL,
+  `message` text,
+  `text` text,
+  `is_read` tinyint(1) DEFAULT '0',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_chat`),
+  KEY `chat_messages_session_id_fkey` (`session_id`),
+  CONSTRAINT `chat_messages_session_id_fkey` FOREIGN KEY (`session_id`) REFERENCES `chat_sessions` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

@@ -162,7 +162,6 @@ const AdminDashboard = () => {
 
         return () => {
             window.removeEventListener('unload', handleAutoLogout);
-            handleAutoLogout();
         };
     }, []);
 

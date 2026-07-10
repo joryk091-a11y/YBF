@@ -26,7 +26,7 @@ export default function Notifications() {
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
 
-  // Get active airline ID and details
+  
   const airlineId = localStorage.getItem('companyId') || user?.airline_id || '';
 
   const getCompanyLogo = () => {
@@ -73,7 +73,7 @@ export default function Notifications() {
       });
       const data = await response.json();
       if (data.success) {
-        // Remove from list
+        
         setBookings(prev => prev.filter(b => b.id_bookings !== bookingId));
       } else {
         alert('حدث خطأ أثناء تحديث حالة الحجز: ' + data.error);
@@ -86,7 +86,7 @@ export default function Notifications() {
     }
   };
 
-  // Filter bookings based on reference or passenger names
+  
   const filteredBookings = bookings.filter(b =>
     b.booking_reference.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (b.passengers && b.passengers.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -97,16 +97,16 @@ export default function Notifications() {
     <div className="min-h-screen bg-[#f8faff] dark:bg-[#080d19] text-slate-900 dark:text-slate-100 transition-colors duration-300 relative overflow-hidden" dir="rtl">
       <Sidebar />
       
-      {/* ─── Aesthetic Mesh Decor ────────────────────────────── */}
+      {}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-blue-500/5 dark:bg-blue-500/10 blur-[120px] transition-all" />
         <div className="absolute bottom-[-10%] right-[-10%] h-[600px] w-[600px] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-[120px] transition-all" />
       </div>
 
-      {/* المحتوى الرئيسي */}
+      {}
       <main className="relative z-10 mx-auto max-w-7xl px-6 py-10 md:mr-72 animate-in fade-in slide-in-from-bottom-8 duration-1000">
 
-        {/* الترويسة (Header) */}
+        {}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-3 mb-2">
@@ -125,7 +125,7 @@ export default function Notifications() {
           </div>
         </div>
 
-        {/* أدوات البحث والتحديث */}
+        {}
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="relative w-full sm:w-auto">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
@@ -147,7 +147,7 @@ export default function Notifications() {
           </button>
         </div>
 
-        {/* عرض الحجوزات المعلقة */}
+        {}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 dark:border-blue-400"></div>
@@ -172,11 +172,11 @@ export default function Notifications() {
                 key={booking.id_bookings}
                 className="group relative overflow-hidden rounded-3xl bg-white dark:bg-slate-900/40 border border-slate-150/70 dark:border-slate-800/40 p-6 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-md"
               >
-                {/* شريط تمييز الحالة جانبي */}
+                {}
                 <div className="absolute top-0 right-0 bottom-0 w-1.5 bg-yellow-500"></div>
 
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pr-4">
-                  {/* معلومات الحجز الأساسية */}
+                  {}
                   <div className="space-y-3 flex-1">
                     <div className="flex flex-wrap items-center gap-3">
                       <span className="text-lg font-black text-slate-800 dark:text-white">
@@ -195,7 +195,7 @@ export default function Notifications() {
                       </span>
                     </div>
 
-                    {/* تفاصيل المسار والرحلة */}
+                    {}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/50 dark:bg-slate-950/20 p-4 rounded-2xl border border-slate-150/50 dark:border-slate-850">
                       <div>
                         <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 block mb-0.5 uppercase">رقم الرحلة</span>
@@ -213,7 +213,7 @@ export default function Notifications() {
                       </div>
                     </div>
 
-                    {/* تفاصيل الركاب والأسماء */}
+                    {}
                     <div className="flex items-start gap-2 text-xs">
                       <User size={16} className="text-slate-400 dark:text-slate-500 mt-0.5" />
                       <div>
@@ -223,7 +223,7 @@ export default function Notifications() {
                     </div>
                   </div>
 
-                  {/* تفاصيل الدفع والإجراءات */}
+                  {}
                   <div className="flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end justify-between lg:justify-center gap-4 lg:min-w-[240px] border-t lg:border-t-0 lg:border-r border-slate-150/50 dark:border-slate-850 pt-4 lg:pt-0 lg:pr-6">
                     <div className="space-y-1 text-right lg:text-left">
                       <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 block uppercase">طريقة الدفع والمبلغ</span>
@@ -237,7 +237,7 @@ export default function Notifications() {
                       </div>
                     </div>
 
-                    {/* الأزرار التفاعلية */}
+                    {}
                     <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                       {booking.paymentProof && (
                         <button
@@ -274,19 +274,19 @@ export default function Notifications() {
           </div>
         )}
 
-        {/* نافذة معاينة السند (Receipt Modal) */}
+        {}
         {selectedReceipt && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* خلفية معتمة */}
+            {}
             <div
               onClick={() => setSelectedReceipt(null)}
               className="absolute inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm transition-opacity duration-300"
             />
 
-            {/* بطاقة السند */}
+            {}
             <div className="relative w-full max-w-2xl overflow-hidden rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 transition-all duration-300 animate-in fade-in zoom-in-95">
 
-              {/* الترويسة */}
+              {}
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
                 <h3 className="text-lg font-black text-slate-950 dark:text-white flex items-center gap-2">
                   <FileText size={20} className="text-blue-600" />
@@ -300,7 +300,7 @@ export default function Notifications() {
                 </button>
               </div>
 
-              {/* الصورة */}
+              {}
               <div className="bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden max-h-[400px] flex items-center justify-center p-2 mb-6">
                 <img
                   src={selectedReceipt.paymentProof.startsWith('http')
@@ -315,7 +315,7 @@ export default function Notifications() {
                 />
               </div>
 
-              {/* أزرار الإجراء السريع داخل النافذة */}
+              {}
               <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-4 gap-4">
                 <div className="text-right">
                   <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 block uppercase">المبلغ المطلوب</span>

@@ -14,14 +14,14 @@ const Messages = ({ token, showToast }) => {
 
     const chatEndRef = useRef(null);
 
-    // Suppress ESLint warning by referencing token
+    
     useEffect(() => {
         if (token) {
-            // Token is available
+            
         }
     }, [token]);
 
-    // Fetch conversations list
+    
     const fetchConversations = async () => {
         try {
             const res = await fetch('http://localhost:8080/api/admin/chat/conversations');
@@ -34,7 +34,7 @@ const Messages = ({ token, showToast }) => {
         }
     };
 
-    // Fetch message history for selected conversation
+    
     const fetchActiveMessages = async (email) => {
         if (!email) return;
         try {
@@ -48,14 +48,14 @@ const Messages = ({ token, showToast }) => {
         }
     };
 
-    // Mark messages as read
+    
     const markAsRead = async (email) => {
         if (!email) return;
         try {
             await fetch(`http://localhost:8080/api/admin/chat/read?email=${encodeURIComponent(email)}`, {
                 method: 'PUT'
             });
-            // Update local badge counts
+            
             setConversations(prev => prev.map(c => 
                 c.sender_email === email ? { ...c, unread_count: 0 } : c
             ));
@@ -64,7 +64,7 @@ const Messages = ({ token, showToast }) => {
         }
     };
 
-    // Handle select conversation
+    
     const handleSelectConversation = (conv) => {
         setActiveConversation(conv);
         setLoadingMessages(true);
@@ -72,7 +72,7 @@ const Messages = ({ token, showToast }) => {
         markAsRead(conv.sender_email);
     };
 
-    // Send reply
+    
     const handleSendReply = async (e) => {
         e.preventDefault();
         if (!replyText.trim() || !activeConversation) return;
@@ -90,7 +90,7 @@ const Messages = ({ token, showToast }) => {
             created_at: new Date().toISOString()
         };
 
-        // Optimistic UI updates
+        
         setMessages(prev => [...prev, newMsg]);
         setConversations(prev => prev.map(c => 
             c.sender_email === activeConversation.sender_email 
@@ -121,7 +121,7 @@ const Messages = ({ token, showToast }) => {
         }
     };
 
-    // Delete conversation
+    
     const handleDeleteConversation = async (email) => {
         if (!window.confirm('هل أنت متأكد من رغبتك في حذف هذه المحادثة نهائياً؟')) return;
         try {
@@ -145,14 +145,14 @@ const Messages = ({ token, showToast }) => {
         }
     };
 
-    // Auto-scroll to bottom of chat
+    
     useEffect(() => {
         if (chatEndRef.current) {
             chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
         }
     }, [messages]);
 
-    // Initial load and polling of conversations list
+    
     useEffect(() => {
         const loadInitial = async () => {
             setLoadingConversations(true);
@@ -168,7 +168,7 @@ const Messages = ({ token, showToast }) => {
         return () => clearInterval(intervalId);
     }, []);
 
-    // Polling messages of active conversation
+    
     useEffect(() => {
         let intervalId;
         if (activeConversation) {
@@ -181,7 +181,7 @@ const Messages = ({ token, showToast }) => {
         };
     }, [activeConversation]);
 
-    // Filter conversations based on search query
+    
     const filteredConversations = conversations.filter(conv => 
         (conv.sender_name && conv.sender_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (conv.sender_email && conv.sender_email.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -206,9 +206,9 @@ const Messages = ({ token, showToast }) => {
     return (
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/85 rounded-3xl overflow-hidden shadow-2xl flex h-[640px]" dir="rtl">
             
-            {/* Right Panel: Conversations List (Sidebar) */}
+            {}
             <div className="w-80 sm:w-96 border-l border-slate-200/70 dark:border-slate-800/60 flex flex-col bg-slate-50/40 dark:bg-slate-950/20 backdrop-blur-md animate-fade-in">
-                {/* Sidebar Header */}
+                {}
                 <div className="p-5 border-b border-slate-200/70 dark:border-slate-800/60 flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-2.5">
                         <div className="h-9 w-9 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
@@ -218,7 +218,7 @@ const Messages = ({ token, showToast }) => {
                     </div>
                 </div>
 
-                {/* Search Bar */}
+                {}
                 <div className="p-4 border-b border-slate-200/50 dark:border-slate-800/50 shrink-0">
                     <div className="relative">
                         <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
@@ -232,7 +232,7 @@ const Messages = ({ token, showToast }) => {
                     </div>
                 </div>
 
-                {/* Conversations List Scrollable */}
+                {}
                 <div className="flex-1 overflow-y-auto divide-y divide-slate-100/60 dark:divide-slate-800/20 scrollbar-thin">
                     {loadingConversations ? (
                         <div className="py-20 text-center text-slate-400 font-bold text-xs flex flex-col items-center gap-3">
@@ -254,12 +254,12 @@ const Messages = ({ token, showToast }) => {
                                         isActive ? 'bg-blue-50/70 dark:bg-blue-950/20 border-r-4 border-blue-600 shadow-sm' : ''
                                     }`}
                                 >
-                                    {/* Avatar */}
+                                    {}
                                     <div className="h-11 w-11 rounded-full flex items-center justify-center font-black text-sm bg-gradient-to-tr from-blue-500 to-indigo-600 text-white shrink-0 shadow-md">
                                         {getInitials(conv.sender_name)}
                                     </div>
 
-                                    {/* Conversation Snippet */}
+                                    {}
                                     <div className="flex-1 min-w-0">
                                         <div className="flex justify-between items-center mb-1">
                                             <h5 className="text-xs font-black text-slate-850 dark:text-white truncate">{conv.sender_name}</h5>
@@ -271,7 +271,7 @@ const Messages = ({ token, showToast }) => {
                                         </p>
                                     </div>
 
-                                    {/* Unread badge */}
+                                    {}
                                     {conv.unread_count > 0 && (
                                         <div className="h-5 w-5 bg-emerald-500 text-white rounded-full flex items-center justify-center text-[9px] font-black shrink-0 animate-pulse">
                                             {conv.unread_count}
@@ -284,12 +284,12 @@ const Messages = ({ token, showToast }) => {
                 </div>
             </div>
 
-            {/* Left Panel: Active Chat Thread */}
+            {}
             <div className="flex-1 flex flex-col bg-white dark:bg-slate-950/10 relative">
                 
                 {activeConversation ? (
                     <>
-                        {/* Chat Header */}
+                        {}
                         <div className="flex items-center justify-between border-b border-slate-200/70 dark:border-slate-800/60 px-6 py-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shrink-0">
                             <div className="flex items-center gap-3">
                                 <div className="h-10 w-10 rounded-full flex items-center justify-center font-black text-xs bg-gradient-to-tr from-blue-500 to-indigo-600 text-white shrink-0 shadow-md">
@@ -309,7 +309,7 @@ const Messages = ({ token, showToast }) => {
                             </button>
                         </div>
 
-                        {/* Messages Area */}
+                        {}
                         <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/10 dark:bg-slate-950/10 scrollbar-thin">
                             {loadingMessages ? (
                                 <div className="py-20 text-center text-slate-400 font-bold text-xs flex flex-col items-center gap-3">
@@ -347,7 +347,7 @@ const Messages = ({ token, showToast }) => {
                             <div ref={chatEndRef} />
                         </div>
 
-                        {/* Input Area */}
+                        {}
                         <form onSubmit={handleSendReply} className="p-4 border-t border-slate-200/70 dark:border-slate-800/60 bg-white dark:bg-slate-900 flex items-center gap-3 shrink-0">
                             <input
                                 type="text"

@@ -16,7 +16,7 @@ import {
   Printer
 } from 'lucide-react';
 
-// استيراد الشعارات ديناميكياً
+
 import logo from '../assets/logo.png';
 import yemeniaLogo from '../assets/Y.png';
 import balqisLogo from '../assets/B.png';
@@ -28,11 +28,11 @@ export default function MedicalServicesReport() {
   const [stats, setStats] = useState({ servicesStats: [], criticalFlights: [] });
   const [loading, setLoading] = useState(true);
 
-  // الحصول على كود شركة الطيران النشطة
+  
   const airlineCode = localStorage.getItem('airlineCode') || (user?.airline_id === 1 ? 'IY' : user?.airline_id === 2 ? 'BS' : 'FA');
   const airlineId = localStorage.getItem('companyId') || user?.airline_id || '';
 
-  // الحصول على شعار شركة الطيران النشطة
+  
   const getCompanyLogo = () => {
     if (!user || user.role === 'super_admin') {
       return logo;
@@ -65,16 +65,16 @@ export default function MedicalServicesReport() {
   const servicesData = activeStats.servicesStats || [];
   const criticalFlightsData = activeStats.criticalFlights || [];
 
-  // ألوان وتنسيقات المخططات في الوضع الفاتح والداكن
+  
   const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9';
   const labelColor = isDarkMode ? '#94a3b8' : '#64748b';
   const tooltipBg = isDarkMode ? 'rgba(15, 23, 42, 0.95)' : '#ffffff';
   const tooltipBorder = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0';
 
-  // ألوان احترافية مريحة للمخطط الدائري
+  
   const COLORS = ['#ef4444', '#f59e0b', '#3b82f6', '#10b981', '#6366f1'];
 
-  // تنسيق موعد الوصول
+  
   const formatTime = (timeStr) => {
     if (!timeStr) return '';
     try {
@@ -93,21 +93,21 @@ export default function MedicalServicesReport() {
 
   return (
     <div className="flex min-h-screen bg-[#f8faff] dark:bg-[#080d19] text-slate-900 dark:text-slate-100 transition-colors duration-300 relative overflow-hidden" dir="rtl">
-      {/* تأثيرات التوهج الشبكي (Mesh Gradients) */}
+      {}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-blue-500/5 dark:bg-blue-500/10 blur-[120px] transition-all" />
         <div className="absolute bottom-[-10%] right-[-10%] h-[600px] w-[600px] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-[120px] transition-all" />
       </div>
 
-      {/* القائمة الجانبية */}
+      {}
       <div className="print:hidden">
         <Sidebar />
       </div>
 
-      {/* المحتوى الرئيسي */}
+      {}
       <main className="flex-1 mr-72 print:mr-0 p-8 print:p-0 relative z-10 min-h-screen">
 
-        {/* الترويسة (Header) */}
+        {}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 print:hidden animate-in fade-in slide-in-from-top-4 duration-500">
           <div>
             <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
@@ -128,10 +128,10 @@ export default function MedicalServicesReport() {
           </div>
         </div>
 
-        {/* المخططات والتقارير */}
+        {}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-          {/* مخطط حجم الخدمات الطبية المطلوبة */}
+          {}
           <div className="lg:col-span-1 group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl flex flex-col justify-between">
             <div>
               <h3 className="text-xs font-black tracking-widest text-slate-500 dark:text-slate-400 mb-6 uppercase flex items-center gap-2">
@@ -175,7 +175,7 @@ export default function MedicalServicesReport() {
               </div>
             </div>
 
-            {/* تفاصيل الخدمات بالأرقام */}
+            {}
             <div className="space-y-3 mt-6 border-t border-slate-100 dark:border-slate-800 pt-6">
               {servicesData.map((item, idx) => (
                 <div key={item.name} className="flex items-center justify-between text-xs">
@@ -196,7 +196,7 @@ export default function MedicalServicesReport() {
             </div>
           </div>
 
-          {/* جدول الحالات الحرجة والتجهيز الأرضي الطارئ */}
+          {}
           <div className="lg:col-span-2 group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xs font-black tracking-widest text-slate-500 dark:text-slate-400 uppercase flex items-center gap-2">

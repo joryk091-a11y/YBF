@@ -262,7 +262,7 @@
   }
 }
 
-/* Dynamic Sidebar width margin overrides */
+
 @media (min-width: 768px) {
 
   .mr-72,
@@ -271,7 +271,7 @@
   }
 }
 
-/* Premium Admin Dashboard styling overrides */
+
 .lining-nums .bg-white.dark\:bg-slate-900.border,
 .lining-nums .bg-white.dark\:bg-slate-900\/40.border,
 .lining-nums .bg-white.dark\:bg-slate-900.border-slate-200,
@@ -292,7 +292,7 @@
   border: 1px solid rgba(30, 41, 59, 0.5) !important;
 }
 
-/* Let's style tables inside the Admin Dashboard to be ultra premium */
+
 .lining-nums table {
   width: 100%;
   border-collapse: collapse;
@@ -320,7 +320,7 @@
   background-color: rgba(30, 41, 59, 0.2) !important;
 }
 
-/* Also style selects and inputs inside the Admin Dashboard */
+
 .lining-nums select, 
 .lining-nums input[type="text"], 
 .lining-nums input[type="date"], 
@@ -330,7 +330,7 @@
   border: 1px solid rgba(226, 232, 240, 0.7) !important;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02) !important;
   transition: all 0.2s ease-in-out !important;
-  border-radius: 0.75rem !important; /* rounded-xl */
+  border-radius: 0.75rem !important; 
 }
 
 .dark .lining-nums select, 
@@ -349,14 +349,14 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
 }
 
-/* Force modal to have solid non-transparent background */
+
 .lining-nums .modal-solid-bg {
   background-color: #ffffff !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
 
-/* ─── Premium Glassmorphic Cards & Soft Shadows for Company Dashboard ─── */
+
 .border-slate-150\/70,
 .border-slate-150\/50,
 .border-slate-150 {

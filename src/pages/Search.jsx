@@ -116,7 +116,7 @@ function SearchPage() {
         const data = await response.json()
 
         if (data.success) {
-          // Map DB fields to UI fields
+          
           const mappedFlights = data.flights.map(f => {
             const airlineCode = String(f.airline_code || '').toUpperCase();
             const airlineInfo = airlinePanelItems.find(a =>
@@ -125,7 +125,7 @@ function SearchPage() {
               (airlineCode === 'QY' || airlineCode === 'ADEN' || airlineCode === 'DH' || airlineCode === 'QTB') && a.id === 'aden'
             ) || { name: 'طيران', logo: logoY, id: 'other' };
 
-            // Ensure airlineInfo.id is in selectedAirlines or fallback to yemenia for test
+            
             const flightAirlineId = airlineInfo.id === 'other' ? 'yemenia' : airlineInfo.id;
             const flightAirlineName = f.airline_name || (airlineInfo.id === 'other' ? 'طيران' : airlineInfo.name);
             const flightLogo = airlineInfo.id === 'other' ? logoY : airlineInfo.logo;
@@ -230,10 +230,10 @@ function SearchPage() {
           key={flight.id}
           className="group relative overflow-hidden rounded-[32px] border border-white/40 bg-white/80 p-6 shadow-[0_16px_40px_rgba(0,0,0,0.02)] backdrop-blur-2xl transition-all duration-500 hover:-translate-y-2 hover:border-brand-blue/30 hover:shadow-[0_32px_64px_rgba(73,116,249,0.08)]"
         >
-          {/* Premium Accent Line */}
+          {}
           <div className="absolute top-0 right-0 h-1 w-full bg-gradient-to-l from-brand-blue via-indigo-400 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
-          {/* Top Section: Airline Info */}
+          {}
           <div className="flex items-center justify-between gap-4">
             <span className="rounded-md bg-slate-100 px-2.5 py-0.5 text-[9px] font-black text-slate-500 uppercase tracking-widest group-hover:bg-brand-blue/10 group-hover:text-brand-blue transition-colors">
               {flight.flightNumber}
@@ -241,7 +241,7 @@ function SearchPage() {
             <span className="text-[10px] font-bold text-slate-400">سياحية كلاسيكية</span>
           </div>
 
-          {/* Flight Path Details */}
+          {}
           <div className="mt-6 flex items-center justify-between gap-4 bg-slate-50/50 p-4 rounded-2xl ring-1 ring-slate-100">
             <div className="text-right">
               <p className="text-2xl font-black tracking-tighter text-slate-900 leading-none">{flight.departTime}</p>
@@ -262,7 +262,7 @@ function SearchPage() {
             </div>
           </div>
 
-          {/* Price & Book Button */}
+          {}
           <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between gap-4">
             <div className="text-right">
               <span className="text-[9px] font-black uppercase text-slate-400">السعر</span>
@@ -287,10 +287,10 @@ function SearchPage() {
         key={flight.id}
         className="group relative overflow-hidden rounded-[30px] border border-white/40 bg-white/70 shadow-[0_20px_50px_rgba(0,0,0,0.03)] backdrop-blur-2xl transition-all duration-500 hover:-translate-y-1.5 hover:border-brand-blue/20 hover:shadow-[0_30px_60px_rgba(73,116,249,0.08)]"
       >
-        {/* Premium Accent Line */}
+        {}
         <div className="absolute top-0 right-0 h-1.5 w-full bg-gradient-to-l from-brand-blue via-indigo-400 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
-        {/* Floating Badges - Simplified Colors */}
+        {}
         {showBadges && isCheapest && (
           <div className="absolute left-6 top-6 flex gap-2 z-20">
             <div className="flex items-center gap-1.5 rounded-full bg-slate-900 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-white shadow-lg shadow-slate-900/10">
@@ -301,9 +301,9 @@ function SearchPage() {
         )}
 
         <div className="grid lg:grid-cols-[1fr_260px]">
-          {/* Ticket Content */}
+          {}
           <div className="relative p-6 sm:p-10">
-            {/* Top Section: Airline Info */}
+            {}
             <div className="flex items-center gap-5">
               <div className="relative flex h-14 w-14 items-center justify-center rounded-xl bg-white p-2 shadow-sm ring-1 ring-slate-100/80 transition-all duration-500 group-hover:scale-105 group-hover:shadow-md group-hover:ring-brand-blue/20">
                 <img
@@ -326,9 +326,9 @@ function SearchPage() {
               </div>
             </div>
 
-            {/* Flight Path Visualization */}
+            {}
             <div className="mt-12 grid items-center gap-8 sm:grid-cols-[1fr_auto_1fr]">
-              {/* Departure Info */}
+              {}
               <div className="text-right">
                 <div className="flex items-center gap-2 justify-end mb-1">
                   <span className="text-xs font-black text-slate-400">({flight.fromCode})</span>
@@ -343,7 +343,7 @@ function SearchPage() {
                 </div>
               </div>
 
-              {/* Progress Line */}
+              {}
               <div className="flex flex-col items-center justify-center min-w-[240px] px-4">
                 <div className="mb-2.5 flex items-center gap-1.5 rounded-full bg-slate-50 border border-slate-200/50 px-3.5 py-1 transition-all duration-300 group-hover:bg-brand-blue/5 group-hover:border-brand-blue/10">
                   <Clock className="h-3 w-3 text-slate-400 group-hover:text-brand-blue" />
@@ -362,7 +362,7 @@ function SearchPage() {
                 <span className="text-[9px] font-black text-slate-400 mt-1 uppercase tracking-widest">رحلة مباشرة</span>
               </div>
 
-              {/* Arrival Info */}
+              {}
               <div className="text-left">
                 <div className="flex items-center gap-2 justify-start mb-1">
                   <span className="text-[10px] font-black uppercase tracking-[2px] text-slate-400">الوصول</span>
@@ -380,7 +380,7 @@ function SearchPage() {
 
           </div>
 
-          {/* Pricing Stub */}
+          {}
           <div className="relative flex flex-col items-center justify-center bg-slate-50/30 p-8 rounded-b-[30px] lg:rounded-b-0 lg:rounded-l-[30px] border-t border-slate-100 lg:border-t-0 lg:border-r">
             <div className="relative z-10 w-full text-center">
               <span className="text-[10px] font-black uppercase tracking-[3px] text-slate-400">السعر</span>
@@ -480,7 +480,7 @@ function SearchPage() {
 
   return (
     <main className="min-h-[100svh] bg-[#f8f9fc] pb-16 pt-24 sm:pt-28" dir="rtl">
-      {/* Premium Sub-Header / Stepper */}
+      {}
       {!isShowAll && (
         <div className="sticky top-16 z-40 w-full border-b border-slate-200/60 bg-white/80 py-4 backdrop-blur-xl sm:top-20">
           <div className="mx-auto max-w-[1380px] px-4 sm:px-6">
@@ -490,7 +490,7 @@ function SearchPage() {
       )}
 
       <section className="mx-auto mt-8 w-full max-w-[1380px] px-4 sm:px-6">
-        {/* Sleek Search Summary Bar - Redesigned for Premium Look */}
+        {}
         {isShowAll ? (
           <div className="mb-10 overflow-hidden rounded-[40px] border border-white/40 bg-gradient-to-r from-brand-blue/10 to-indigo-500/10 p-8 shadow-[0_32px_64px_rgba(0,0,0,0.04)] backdrop-blur-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 animate-in fade-in slide-in-from-top-5 duration-500" dir="rtl">
             <div>
@@ -505,7 +505,7 @@ function SearchPage() {
         ) : searchCriteria ? (
           <div className="mb-10 overflow-hidden rounded-[40px] border border-white/40 bg-white/70 shadow-[0_32px_64px_rgba(0,0,0,0.06)] backdrop-blur-3xl" dir="rtl">
             <div className="grid divide-y divide-slate-200/40 sm:grid-cols-4 sm:divide-x sm:divide-y-0 sm:divide-x-reverse">
-              {/* Departure */}
+              {}
               <div className="flex items-center gap-4 p-6 transition-all duration-300 hover:bg-white/50 group">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 group-hover:bg-brand-blue group-hover:text-white transition-all duration-500">
                   <MapPin className="h-6 w-6" />
@@ -516,7 +516,7 @@ function SearchPage() {
                 </div>
               </div>
 
-              {/* Destination */}
+              {}
               <div className="flex items-center gap-4 p-6 transition-all duration-300 hover:bg-white/50 group">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 group-hover:bg-brand-blue group-hover:text-white transition-all duration-500">
                   <Plane className="h-6 w-6 rotate-90" />
@@ -527,7 +527,7 @@ function SearchPage() {
                 </div>
               </div>
 
-              {/* Date */}
+              {}
               <div className="flex items-center gap-4 p-6 transition-all duration-300 hover:bg-white/50 group">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 group-hover:bg-brand-blue group-hover:text-white transition-all duration-500">
                   <Calendar className="h-6 w-6" />
@@ -538,7 +538,7 @@ function SearchPage() {
                 </div>
               </div>
 
-              {/* Passengers & Edit */}
+              {}
               <div className="flex items-center justify-between p-6 transition-all duration-300 hover:bg-white/50 group">
                 <div className="flex items-center gap-4">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 group-hover:bg-brand-blue group-hover:text-white transition-all duration-500">
@@ -559,7 +559,7 @@ function SearchPage() {
         ) : null}
 
         <div className={isShowAll ? "w-full animate-in fade-in duration-500" : "grid items-start gap-8 lg:grid-cols-[300px_minmax(0,1fr)]"}>
-          {/* Professional Filters Sidebar */}
+          {}
           {!isShowAll && (
             <aside className="sticky top-40 hidden space-y-6 lg:block" dir="rtl">
               <div className="rounded-[36px] border border-slate-100 bg-white p-8 shadow-[0_20px_50px_rgba(0,0,0,0.015)] transition-all duration-300 hover:shadow-[0_30px_60px_rgba(37,99,235,0.02)]">
@@ -574,7 +574,7 @@ function SearchPage() {
                 </div>
 
                 <div className="space-y-8">
-                  {/* Airlines Filter */}
+                  {}
                   <div className="group">
                     <h3 className="mb-5 flex items-center gap-2 text-[11px] font-black uppercase tracking-[3px] text-slate-400">
                       <Plane className="h-3.5 w-3.5 text-brand-blue" />
@@ -616,7 +616,7 @@ function SearchPage() {
                     </div>
                   </div>
 
-                  {/* Reset Action */}
+                  {}
                   <button
                     type="button"
                     onClick={resetFilters}
@@ -658,7 +658,7 @@ function SearchPage() {
               </div>
             )}
             {isShowAll && <h3 className="text-2xl font-black text-slate-950 mb-8">الرحلات المجدولة حسب شركات الطيران</h3>}
-            {/* Sorting Tabs & Mobile Filters */}
+            {}
             {!isShowAll && (
               <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -691,7 +691,7 @@ function SearchPage() {
                     })}
                   </div>
 
-                  {/* Mobile Filter Button */}
+                  {}
                   <button
                     onClick={() => setIsMobileFilterOpen(true)}
                     className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-600 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50 lg:hidden"
@@ -756,12 +756,12 @@ function SearchPage() {
         </div>
       </section>
 
-      {/* Mobile Filter Drawer Overlay */}
+      {}
       {isMobileFilterOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 backdrop-blur-sm lg:hidden animate-in fade-in duration-300">
           <div className="absolute inset-0" onClick={() => setIsMobileFilterOpen(false)} />
           <div className="relative w-full max-h-[85vh] overflow-y-auto rounded-t-[36px] bg-white p-6 shadow-2xl animate-in slide-in-from-bottom duration-500" dir="rtl">
-            {/* Handle bar */}
+            {}
             <div className="mx-auto mb-6 h-1 w-12 rounded-full bg-slate-200" />
 
             <div className="mb-8 flex items-center justify-between">
@@ -778,7 +778,7 @@ function SearchPage() {
             </div>
 
             <div className="space-y-8 pb-8">
-              {/* Airlines Filter */}
+              {}
               <div>
                 <h4 className="mb-5 flex items-center gap-2 text-[11px] font-black uppercase tracking-[3px] text-slate-400">
                   <Plane className="h-3.5 w-3.5 text-brand-blue" />
@@ -820,7 +820,7 @@ function SearchPage() {
                 </div>
               </div>
 
-              {/* Reset & Apply Buttons */}
+              {}
               <div className="flex items-center gap-4 pt-4">
                 <button
                   type="button"

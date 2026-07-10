@@ -27,10 +27,10 @@ function LoginPage() {
             })
             const data = await response.json()
             if (data.success) {
-                // Save user details to localStorage
+                
                 localStorage.setItem('user', JSON.stringify(data.user))
 
-                // Redirect user to where they wanted to go, or home page
+                
                 const from = location.state?.from || '/'
                 navigate(from, { state: location.state })
             } else {
@@ -45,15 +45,15 @@ function LoginPage() {
 
     return (
         <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-blue-100 to-blue-200 px-4 py-8 pt-24 sm:pt-44 md:pt-48 relative overflow-hidden" dir="rtl">
-            {/* Modern subtle ambient glows within brand blue identity */}
+            {}
             <div className="absolute inset-0 pointer-events-none opacity-70 z-0">
                 <div className="absolute -top-20 -right-20 h-[600px] w-[600px] rounded-full bg-blue-350/40 blur-[120px]" />
                 <div className="absolute -bottom-20 -left-20 h-[600px] w-[600px] rounded-full bg-indigo-300/30 blur-[120px]" />
             </div>
 
-            {/* Centralized Login Card */}
+            {}
             <div className="relative z-10 w-full max-w-[540px] bg-white rounded-[2.5rem] border border-slate-200/50 p-8 sm:p-10 shadow-[0_20px_50px_rgba(15,23,42,0.08)]">
-                {/* Logo & Header */}
+                {}
                 <div className="flex flex-col items-center mb-8">
                     <div className="relative mb-4 flex items-center justify-center h-16 w-16">
                         <div className="absolute inset-0 rounded-full bg-brand-blue/20 blur-md animate-pulse" />
@@ -73,7 +73,7 @@ function LoginPage() {
                         </div>
                     )}
 
-                    {/* Email */}
+                    {}
                     <div className="space-y-2">
                         <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400">البريد الإلكتروني</label>
                         <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'email' ? 'border-brand-blue bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
@@ -92,7 +92,7 @@ function LoginPage() {
                         </div>
                     </div>
 
-                    {/* Password */}
+                    {}
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400">كلمة المرور</label>
@@ -126,7 +126,7 @@ function LoginPage() {
                         </div>
                     </div>
 
-                    {/* Submit */}
+                    {}
                     <button
                         type="submit"
                         disabled={loading}
@@ -142,7 +142,7 @@ function LoginPage() {
                         )}
                     </button>
 
-                    {/* Register link */}
+                    {}
                     <p className="text-center text-xs sm:text-sm font-bold text-slate-500 pt-2">
                         لا تملك حسابًا؟{' '}
                         <Link to="/register" state={location.state} className="font-black text-brand-blue transition hover:text-brand-blue-hover">
@@ -152,7 +152,7 @@ function LoginPage() {
                 </form>
             </div>
 
-            {/* Password Reset Information Modal */}
+            {}
             {showForgotModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
                     <div className="relative w-full max-w-md overflow-hidden rounded-[2.5rem] bg-white border border-slate-100 p-8 shadow-2xl animate-in scale-in duration-300">

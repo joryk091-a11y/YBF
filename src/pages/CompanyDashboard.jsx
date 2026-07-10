@@ -14,7 +14,7 @@ import yemeniaLogo from '../assets/Y.png';
 import balqisLogo from '../assets/B.png';
 import adenLogo from '../assets/F.png';
 
-// Mock data removed for database integration
+
 
 const airlineOptions = [
     { code: 'IY', name: 'اليمنية' },
@@ -168,7 +168,7 @@ const CompanyDashboard = () => {
         }
     };
 
-    // تصفية الحجوزات لتتبع شركة الطيران الحالية فقط
+    
     const companyBookings = bookings.filter(b =>
         b.flight_number.startsWith(airlineCode) && b.status !== 'cancelled' && b.status !== 'Cancelled'
     );
@@ -242,7 +242,7 @@ const CompanyDashboard = () => {
             const data = await response.json();
             if (data.success) {
                 fetchFlights();
-                fetchStats(); // Refresh list
+                fetchStats(); 
                 setShowAddForm(false);
                 setNewFlight({
                     flightNumber: '', originCode: '', destinationCode: '',
@@ -347,13 +347,13 @@ const CompanyDashboard = () => {
         <div className="min-h-screen bg-[#f8faff] dark:bg-[#080d19] text-slate-900 dark:text-slate-100 transition-colors duration-300 relative overflow-hidden" dir="rtl">
             <Sidebar />
 
-            {/* ─── Aesthetic Mesh Decor ────────────────────────────── */}
+            {}
             <div className="fixed inset-0 pointer-events-none z-0">
                 <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-blue-500/5 dark:bg-blue-500/10 blur-[120px] transition-all" />
                 <div className="absolute bottom-[-10%] right-[-10%] h-[600px] w-[600px] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-[120px] transition-all" />
             </div>
 
-            {/* ─── Premium Header ───────────────────────────────────── */}
+            {}
             <header
                 className={`sticky top-4 z-50 transition-all duration-500 mx-6 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl py-3 px-6 rounded-2xl shadow-xl shadow-slate-200/60 dark:shadow-black/40 border border-slate-150/70 dark:border-slate-800/40`}
                 style={{ marginRight: 'calc(var(--sidebar-width, 288px) + 1.5rem)' }}
@@ -394,12 +394,12 @@ const CompanyDashboard = () => {
 
             <main className="relative z-10 mx-auto max-w-7xl px-6 py-10 md:mr-72 animate-in fade-in slide-in-from-bottom-8 duration-1000">
 
-                {/* Welcome Section */}
+                {}
                 <div className="mb-10">
                     <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">أهلاً بك 👋 إليك نظرة سريعة على أداء رحلاتك وحجوزاتك اليوم.</h2>
                 </div>
 
-                {/* Stats Cards */}
+                {}
                 <div className="mb-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     {[
                         { label: 'إجمالي الرحلات', value: stats.totalFlights.toLocaleString('en-US'), icon: Plane, color: 'from-blue-500 to-indigo-650', iconBg: 'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400', shadowGlow: 'hover:shadow-blue-500/10' },
@@ -407,7 +407,7 @@ const CompanyDashboard = () => {
                         { label: 'إجمالي الإيرادات', value: `$${stats.totalRevenueSum.toLocaleString('en-US')}`, icon: DollarSign, color: 'from-amber-500 to-orange-650', iconBg: 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400', shadowGlow: 'hover:shadow-amber-500/10' },
                     ].map((stat, i) => (
                         <div key={i} className={`group relative overflow-hidden rounded-2xl bg-gradient-to-b from-white to-slate-50/40 dark:from-slate-900/60 dark:to-slate-950/60 p-6 shadow-sm border border-slate-150/70 dark:border-slate-800/40 backdrop-blur-md transition-all duration-350 hover:shadow-xl ${stat.shadowGlow} hover:-translate-y-1`}>
-                            {/* Decorative corner glow */}
+                            {}
                             <div className={`absolute -right-12 -top-12 h-28 w-28 rounded-full bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 blur-lg transition-opacity duration-355`} />
 
                             <div className="flex items-center gap-4 relative z-10">
@@ -423,7 +423,7 @@ const CompanyDashboard = () => {
                     ))}
                 </div>
 
-                {/* Flights Section */}
+                {}
                 <div className="rounded-3xl bg-white dark:bg-slate-900/40 border border-slate-150/70 dark:border-slate-800/40 p-6 shadow-sm backdrop-blur-md">
                     <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
@@ -580,7 +580,7 @@ const CompanyDashboard = () => {
                 </div>
             </main>
 
-            {/* ─── Add Flight Modal ─────────────────────────────────── */}
+            {}
             {showAddForm && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-md bg-slate-900/40 dark:bg-slate-950/60 animate-in fade-in duration-300">
                     <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-[40px] shadow-2xl border border-slate-100 dark:border-slate-800/60 overflow-hidden animate-in zoom-in-95 duration-300">
@@ -663,7 +663,7 @@ const CompanyDashboard = () => {
                     </div>
                 </div>
             )}
-            {/* ─── Edit Flight Modal ─────────────────────────────────── */}
+            {}
             {showEditForm && editingFlight && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-md bg-slate-900/40 dark:bg-slate-950/60 animate-in fade-in duration-300" dir="rtl">
                     <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-[40px] shadow-2xl border border-slate-100 dark:border-slate-800/60 overflow-hidden animate-in zoom-in-95 duration-300">

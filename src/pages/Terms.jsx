@@ -122,7 +122,7 @@ function TermsPage() {
     <main className="min-h-[100svh] bg-[#f8f9fc] pb-24 pt-28 sm:pt-36" dir="rtl">
       <div className="mx-auto max-w-[950px] px-4 sm:px-6 lg:px-8">
         
-        {/* Professional Travel Header */}
+        {}
         <div className="mb-14 border-b border-slate-200 pb-10 text-center md:text-right">
           <div className="flex items-center justify-center md:justify-start gap-3 text-slate-850 mb-4">
             <FileText className="h-6 w-6 text-brand-blue" />
@@ -134,10 +134,10 @@ function TermsPage() {
           </p>
         </div>
 
-        {/* Structured Centered Layout */}
+        {}
         <div className="max-w-4xl mx-auto space-y-6">
           
-          {/* Document Info Box */}
+          {}
           <div className="flex items-start gap-4 rounded-[24px] bg-blue-500/5 border border-brand-blue/10 p-5 text-brand-blue">
             <Info className="h-5 w-5 shrink-0 mt-0.5" />
             <div>
@@ -148,7 +148,7 @@ function TermsPage() {
             </div>
           </div>
 
-          {/* Unified Policies Card Container */}
+          {}
           <div className="bg-white rounded-[24px] border border-slate-200/60 p-6 sm:p-10 shadow-sm divide-y divide-slate-100">
             {policies.map((pol) => {
               const PolIcon = pol.icon

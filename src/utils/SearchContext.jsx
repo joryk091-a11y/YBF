@@ -3,7 +3,7 @@ import { createContext, useContext, useState, useEffect } from 'react'
 const SearchContext = createContext()
 
 export function SearchProvider({ children }) {
-  // Initialize from localStorage if available
+  
   const [searchCriteria, setSearchCriteria] = useState(() => {
     const saved = localStorage.getItem('ybf_search_criteria')
     return saved ? JSON.parse(saved) : {
@@ -16,7 +16,7 @@ export function SearchProvider({ children }) {
     }
   })
 
-  // Persist to localStorage whenever searchCriteria changes
+  
   useEffect(() => {
     localStorage.setItem('ybf_search_criteria', JSON.stringify(searchCriteria))
   }, [searchCriteria])

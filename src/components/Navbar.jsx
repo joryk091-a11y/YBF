@@ -64,7 +64,7 @@ function NotificationDropdown({ userId, onClose }) {
 
   return (
     <div className="absolute left-0 top-14 z-50 w-96 overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.1)] animate-in fade-in slide-in-from-top-2 duration-200" dir="rtl">
-      {/* Header */}
+      {}
       <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 bg-slate-50/50">
         <div className="flex items-center gap-2">
           <BellRing className="h-4 w-4 text-blue-500" />
@@ -86,7 +86,7 @@ function NotificationDropdown({ userId, onClose }) {
         )}
       </div>
 
-      {/* List */}
+      {}
       <div className="max-h-[380px] overflow-y-auto divide-y divide-slate-100">
         {loading ? (
           <div className="flex items-center justify-center py-12">
@@ -145,7 +145,7 @@ function NotificationDropdown({ userId, onClose }) {
         )}
       </div>
 
-      {/* Footer */}
+      {}
       <div className="border-t border-slate-100 px-5 py-3 bg-slate-50/50">
         <Link
           to="/my-bookings"
@@ -191,7 +191,7 @@ function Navbar({
     [navItems],
   )
 
-  // Fetch unread count
+  
   useEffect(() => {
     if (!user?.id) return
     const fetch_ = () =>
@@ -204,7 +204,7 @@ function Navbar({
     return () => clearInterval(interval)
   }, [user?.id])
 
-  // Close dropdown on outside click
+  
   useEffect(() => {
     if (!showNotifications) return
     const handler = (e) => {
@@ -240,7 +240,7 @@ function Navbar({
     <header className="fixed top-0 left-0 right-0 z-50 px-4 pt-4 sm:px-6 lg:px-8 transition-all duration-300" dir="rtl">
       <div className="mx-auto max-w-7xl">
         <nav className="backdrop-blur-xl bg-white/85 dark:bg-slate-900/80 border border-slate-200/50 dark:border-slate-800/40 rounded-[2rem] px-6 py-2.5 text-slate-850 dark:text-slate-200 shadow-[0_10px_35px_rgba(0,0,0,0.08)] transition-all duration-300">
-          {/* Desktop Menu */}
+          {}
           <div className="relative hidden md:flex md:items-center md:justify-between">
             <div className="flex items-center justify-end gap-3.5">
               <Link to="/" className="inline-flex items-center focus:outline-none">
@@ -300,7 +300,7 @@ function Navbar({
             </div>
 
             <div className="flex items-center justify-start gap-3">
-              {/* Bell Button with Dropdown */}
+              {}
               {user && (
                 <div ref={bellRef} className="relative flex items-center">
                   <button
@@ -359,9 +359,9 @@ function Navbar({
             </div>
           </div>
 
-          {/* Mobile Menu - perfect center logo via grid */}
+          {}
           <div className="grid grid-cols-3 items-center md:hidden">
-            {/* Right: bell (if logged in) or empty placeholder */}
+            {}
             <div className="flex items-center justify-start">
               {user ? (
                 <button
@@ -380,7 +380,7 @@ function Navbar({
               )}
             </div>
 
-            {/* Center: Logo - always perfectly centered */}
+            {}
             <div className="flex justify-center">
               <Link to="/" className="inline-flex items-center focus:outline-none">
                 <img
@@ -391,7 +391,7 @@ function Navbar({
               </Link>
             </div>
 
-            {/* Left: hamburger */}
+            {}
             <div className="flex items-center justify-end">
               <button
                 type="button"
@@ -409,7 +409,7 @@ function Navbar({
             </div>
           </div>
 
-          {/* Mobile Menu Dropdown */}
+          {}
           <div
             className={`overflow-hidden transition-all duration-300 md:hidden ${isMenuOpen ? 'max-h-96 pt-4 opacity-100' : 'max-h-0 opacity-0'}`}
           >
@@ -437,7 +437,7 @@ function Navbar({
                 </li>
               ))}
 
-              {/* Login/Logout in Mobile Menu */}
+              {}
               <li className="pt-2 border-t border-slate-100">
                 {user ? (
                   <div className="flex items-center justify-between px-4 py-2">

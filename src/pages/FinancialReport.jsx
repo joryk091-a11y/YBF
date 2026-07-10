@@ -16,7 +16,7 @@ import {
   Printer
 } from 'lucide-react';
 
-// استيراد الشعارات ديناميكياً
+
 import logo from '../assets/logo.png';
 import yemeniaLogo from '../assets/Y.png';
 import balqisLogo from '../assets/B.png';
@@ -63,13 +63,13 @@ export default function FinancialReport() {
   const { isDarkMode } = useTheme();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [revenueView, setRevenueView] = useState('monthly'); // 'monthly' | 'weekly'
+  const [revenueView, setRevenueView] = useState('monthly'); 
 
-  // الحصول على كود شركة الطيران النشطة
+  
   const airlineCode = localStorage.getItem('airlineCode') || (user?.airline_id === 1 ? 'IY' : user?.airline_id === 2 ? 'BS' : 'FA');
   const airlineId = localStorage.getItem('companyId') || user?.airline_id || '';
 
-  // الحصول على شعار شركة الطيران النشطة
+  
   const getCompanyLogo = () => {
     if (!user || user.role === 'super_admin') {
       return logo;
@@ -99,7 +99,7 @@ export default function FinancialReport() {
 
   const activeStats = stats || defaultStats;
 
-  // دمج البيانات للتأكد من وجود قيم معتبرة دائماً
+  
   const finalRevenue = activeStats.totalRevenue > 0 ? activeStats.totalRevenue : defaultStats.totalRevenue;
   const currentMonthRevenue = activeStats.currentMonthRevenue !== undefined ? activeStats.currentMonthRevenue : 0;
   const revenueGrowth = activeStats.revenueGrowth !== undefined ? activeStats.revenueGrowth : 0;
@@ -109,19 +109,19 @@ export default function FinancialReport() {
   const classStatsData = (activeStats.classStats && activeStats.classStats.length > 0) ? activeStats.classStats : defaultStats.classStats;
   const flightsProfitsData = (activeStats.flightsProfits && activeStats.flightsProfits.length > 0) ? activeStats.flightsProfits : defaultStats.flightsProfits;
 
-  // اختيار البيانات النشطة للمخطط البياني
+  
   const activeChartData = revenueView === 'monthly' ? monthlyRevenueData : weeklyRevenueData;
 
-  // تهيئة الألوان لدرجات السفر
+  
   const classColors = {
-    'الدرجة الأولى': '#eab308',    // ذهبي
-    'درجة الأعمال': '#a855f7',    // بنفسجي
-    'الدرجة السياحية': '#3b82f6',  // أزرق
+    'الدرجة الأولى': '#eab308',    
+    'درجة الأعمال': '#a855f7',    
+    'الدرجة السياحية': '#3b82f6',  
   };
 
   const totalClassBookings = classStatsData.reduce((sum, item) => sum + item.value, 0) || 1;
 
-  // ألوان وتنسيقات المخططات في الوضع الفاتح والداكن
+  
   const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9';
   const labelColor = isDarkMode ? '#94a3b8' : '#64748b';
   const tooltipBg = isDarkMode ? 'rgba(15, 23, 42, 0.95)' : '#ffffff';
@@ -129,21 +129,21 @@ export default function FinancialReport() {
 
   return (
     <div className="flex min-h-screen bg-[#f8faff] dark:bg-[#080d19] text-slate-900 dark:text-slate-100 transition-colors duration-300 relative overflow-hidden" dir="rtl">
-      {/* تأثيرات التوهج الشبكي (Mesh Gradients) */}
+      {}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-blue-500/5 dark:bg-blue-500/10 blur-[120px] transition-all" />
         <div className="absolute bottom-[-10%] right-[-10%] h-[600px] w-[600px] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-[120px] transition-all" />
       </div>
 
-      {/* القائمة الجانبية */}
+      {}
       <div className="print:hidden">
         <Sidebar />
       </div>
 
-      {/* المحتوى الرئيسي */}
+      {}
       <main className="flex-1 mr-72 print:mr-0 p-8 print:p-0 relative z-10 min-h-screen">
 
-        {/* الترويسة (Header) */}
+        {}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 print:hidden animate-in fade-in slide-in-from-top-4 duration-500">
           <div>
             <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
@@ -164,11 +164,11 @@ export default function FinancialReport() {
           </div>
         </div>
 
-        {/* قسم الإيرادات: بطاقة KPI مع مخطط AreaChart */}
+        {}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-          {/* بطاقة KPI الفاتحة والمهنية */}
+          {}
           <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-b from-white to-slate-50/40 dark:from-slate-900/60 dark:to-slate-950/60 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl flex flex-col justify-between min-h-[220px]">
-            {/* Decorative corner glow */}
+            {}
             <div className="absolute -right-12 -top-12 h-28 w-28 rounded-full bg-gradient-to-br from-emerald-500 to-teal-650 opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 blur-lg transition-opacity duration-355" />
 
             <div className="flex items-center gap-4 relative z-10">
@@ -195,7 +195,7 @@ export default function FinancialReport() {
             </div>
           </div>
 
-          {/* مخطط نمو الأرباح شهرياً وسنوياً (AreaChart) */}
+          {}
           <div className="lg:col-span-2 group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <h3 className="text-xs font-black tracking-widest text-slate-500 dark:text-slate-400 uppercase flex items-center gap-2">
@@ -275,10 +275,10 @@ export default function FinancialReport() {
           </div>
         </div>
 
-        {/* قسم درجات السفر والجدول */}
+        {}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-          {/* مخطط درجات السفر (PieChart) */}
+          {}
           <div className="group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl flex flex-col justify-between">
             <div>
               <h3 className="text-xs font-black tracking-widest text-slate-500 dark:text-slate-400 mb-6 uppercase flex items-center gap-2">
@@ -327,7 +327,7 @@ export default function FinancialReport() {
               </div>
             </div>
 
-            {/* مفتاح الإيضاح المخصص */}
+            {}
             <div className="space-y-2.5 mt-4">
               {classStatsData.map(item => {
                 const color = classColors[item.name] || '#3b82f6';
@@ -347,7 +347,7 @@ export default function FinancialReport() {
             </div>
           </div>
 
-          {/* جدول صافي الأرباح لكل رحلة */}
+          {}
           <div className="lg:col-span-2 group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xs font-black tracking-widest text-slate-500 dark:text-slate-400 uppercase flex items-center gap-2">

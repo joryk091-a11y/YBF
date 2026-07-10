@@ -19,7 +19,7 @@ import {
   Printer
 } from 'lucide-react';
 
-// استيراد الشعارات ديناميكياً
+
 import logo from '../assets/logo.png';
 import yemeniaLogo from '../assets/Y.png';
 import balqisLogo from '../assets/B.png';
@@ -71,11 +71,11 @@ export default function CompanyAnalytics() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // الحصول على كود شركة الطيران النشطة
+  
   const airlineCode = localStorage.getItem('airlineCode') || (user?.airline_id === 1 ? 'IY' : user?.airline_id === 2 ? 'BS' : 'FA');
   const airlineId = localStorage.getItem('companyId') || user?.airline_id || '';
 
-  // الحصول على شعار شركة الطيران النشطة
+  
   const getCompanyLogo = () => {
     if (!user || user.role === 'super_admin') {
       return logo;
@@ -105,7 +105,7 @@ export default function CompanyAnalytics() {
 
   const activeStats = stats || defaultStats;
 
-  // دمج البيانات الحقيقية والبيانات الوهمية لتجنب ظهور مخططات فارغة في بيئة التطوير
+  
   const finalRevenue = activeStats.totalRevenue > 0 ? activeStats.totalRevenue : defaultStats.totalRevenue;
   const finalActiveBookings = activeStats.activeBookings > 0 ? activeStats.activeBookings : defaultStats.activeBookings;
   const finalAvailableFlights = activeStats.availableFlights > 0 ? activeStats.availableFlights : defaultStats.availableFlights;
@@ -127,7 +127,7 @@ export default function CompanyAnalytics() {
     ? activeStats.sparklineData
     : defaultStats.sparklineData;
 
-  // تجهيز بيانات الخدمات وتعيين الألوان ديناميكياً
+  
   const colors = ['#3b82f6', '#06b6d4', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'];
   const processedServicesData = rawServicesData.map((item, idx) => ({
     name: item.name,
@@ -137,7 +137,7 @@ export default function CompanyAnalytics() {
 
   const totalServicesRequests = processedServicesData.reduce((sum, item) => sum + item.value, 0) || 0;
 
-  // ألوان وتنسيقات Recharts بناءً على وضع الثيم (Light / Dark)
+  
   const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
   const labelColor = isDarkMode ? '#94a3b8' : '#64748b';
   const tooltipBg = isDarkMode ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)';
@@ -145,19 +145,19 @@ export default function CompanyAnalytics() {
 
   return (
     <div className="flex min-h-screen bg-[#f8faff] dark:bg-[#080d19] text-slate-900 dark:text-slate-100 transition-colors duration-300 relative overflow-hidden" dir="rtl">
-      {/* تأثيرات التوهج الشبكي (Mesh Gradients) */}
+      {}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-blue-500/5 dark:bg-blue-500/10 blur-[120px] transition-all" />
         <div className="absolute bottom-[-10%] right-[-10%] h-[600px] w-[600px] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-[120px] transition-all" />
       </div>
 
-      {/* القائمة الجانبية */}
+      {}
       <Sidebar />
 
-      {/* المحتوى الرئيسي */}
+      {}
       <main className="flex-1 mr-72 p-8 relative z-10 min-h-screen">
 
-        {/* الترويسة (Header) */}
+        {}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 print:hidden animate-in fade-in slide-in-from-top-4 duration-500">
           <div>
             <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
@@ -180,16 +180,16 @@ export default function CompanyAnalytics() {
 
 
 
-        {/* الصف العلوي (4 بطاقات KPI) */}
+        {}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
 
-          {/* بطاقة 1: الإيرادات */}
+          {}
           <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-b from-white to-slate-50/40 dark:from-slate-900/60 dark:to-slate-950/60 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-emerald-500/30 dark:hover:border-emerald-500/20">
             <div className="flex items-start justify-between mb-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
                 <DollarSign size={22} />
               </div>
-              {/* مخطط اتجاه مصغر متوهج */}
+              {}
               <div className="h-8 w-24 opacity-80 group-hover:opacity-100 transition-opacity">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={sparklineData}>
@@ -208,7 +208,7 @@ export default function CompanyAnalytics() {
             </div>
           </div>
 
-          {/* بطاقة 2: الحجوزات النشطة */}
+          {}
           <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-b from-white to-slate-50/40 dark:from-slate-900/60 dark:to-slate-950/60 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-blue-500/30 dark:hover:border-blue-500/20">
             <div className="flex items-center justify-between mb-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
@@ -222,7 +222,7 @@ export default function CompanyAnalytics() {
             </p>
           </div>
 
-          {/* بطاقة 3: الرحلات المتاحة */}
+          {}
           <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-b from-white to-slate-50/40 dark:from-slate-900/60 dark:to-slate-950/60 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-cyan-500/30 dark:hover:border-cyan-500/20">
             <div className="flex items-center justify-between mb-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
@@ -231,13 +231,13 @@ export default function CompanyAnalytics() {
             </div>
             <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">الرحلات المتاحة</p>
             <h3 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">{finalAvailableFlights}</h3>
-            {/* شريط تقدم متوهج */}
+            {}
             <div className="w-full bg-slate-200 dark:bg-white/10 rounded-full h-1.5 mt-4 overflow-hidden">
               <div className="bg-gradient-to-r from-cyan-400 to-blue-500 h-1.5 rounded-full shadow-[0_0_8px_rgba(6,182,212,0.8)]" style={{ width: '80%' }}></div>
             </div>
           </div>
 
-          {/* بطاقة 4: إجمالي المسافرين */}
+          {}
           <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-b from-white to-slate-50/40 dark:from-slate-900/60 dark:to-slate-950/60 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-purple-500/30 dark:hover:border-purple-500/20">
             <div className="flex items-center justify-between mb-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
@@ -253,10 +253,10 @@ export default function CompanyAnalytics() {
           </div>
         </div>
 
-        {/* الصف الأوسط (تقسيم 2-Column Layout) */}
+        {}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
 
-          {/* اليسار: الطلب على الوجهات - حاوية أعرد */}
+          {}
           <div className="lg:col-span-2 group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-8 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl">
             <h3 className="text-xs font-black tracking-widest text-slate-400 dark:text-slate-500 mb-6 uppercase">
               الطلب على الوجهات (عدد الحجوزات)
@@ -306,7 +306,7 @@ export default function CompanyAnalytics() {
             </div>
           </div>
 
-          {/* اليمين: تفاصيل الخدمات الخاصة - حاوية أضيق */}
+          {}
           <div className="group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-8 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl flex flex-col justify-between">
             <div>
               <h3 className="text-xs font-black tracking-widest text-slate-400 dark:text-slate-500 mb-6 uppercase">
@@ -340,7 +340,7 @@ export default function CompanyAnalytics() {
                     />
                   </PieChart>
                 </ResponsiveContainer>
-                {/* إجمالي الإحصاء في المنتصف */}
+                {}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                   <span className="text-xl font-black text-slate-800 dark:text-white">{totalServicesRequests}</span>
                   <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-tight">إجمالي الطلبات</span>
@@ -348,7 +348,7 @@ export default function CompanyAnalytics() {
               </div>
             </div>
 
-            {/* وسيلة الإيضاح المخصصة */}
+            {}
             <div className="space-y-2.5 mt-4">
               {processedServicesData.map(item => (
                 <div key={item.name} className="flex items-center justify-between border-b border-slate-200/30 dark:border-slate-800/40 pb-2 last:border-0 last:pb-0">
@@ -368,7 +368,7 @@ export default function CompanyAnalytics() {
           </div>
         </div>
 
-        {/* الصف السفلي (جدول الحجوزات) */}
+        {}
         <div className="group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xs font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase">

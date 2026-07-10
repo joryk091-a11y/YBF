@@ -9,7 +9,7 @@ import creditCardTemplate from '../assets/credite card.png'
 import masterCardLogo from '../assets/mastercard logo.png'
 import visaLogo from '../assets/visa.png'
 
-const CARD_COUNTDOWN = 10 * 60 // 10 minutes for card payment
+const CARD_COUNTDOWN = 10 * 60 
 const CONFIRMATION_COUNTDOWN = 3 * 24 * 60 * 60
 
 const SERVICES = [
@@ -148,7 +148,7 @@ function PaymentProofUpload({
           )}
 
           <div className="grid gap-3 sm:grid-cols-2">
-            {/* File Upload Button */}
+            {}
             <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 hover:border-brand-blue hover:bg-brand-blue/5 rounded-xl p-5 cursor-pointer transition-all text-center">
               <Upload className="h-6 w-6 text-slate-400 mb-2" />
               <span className="text-xs font-black text-slate-700">تحميل إيصال الدفع</span>
@@ -161,7 +161,7 @@ function PaymentProofUpload({
               />
             </label>
 
-            {/* Camera Capture Button */}
+            {}
             <button
               type="button"
               onClick={startCamera}
@@ -203,7 +203,7 @@ function PaymentPage() {
   const BUSINESS_ROWS = [1, 2, 3]
   const BUSINESS_SURCHARGE = 100
 
-  // Calculate business seats count across all segments and passengers
+  
   let businessSeatsCount = 0
   Object.values(seatsSelectionMap).forEach(flightSeats => {
     flightSeats.forEach(seat => {
@@ -219,7 +219,7 @@ function PaymentPage() {
 
   const businessSurchargeTotal = businessSeatsCount * BUSINESS_SURCHARGE
 
-  // Calculate total ticket fares per passenger category across all flight segments
+  
   let adultFaresTotal = 0
   let childFaresTotal = 0
   let infantFaresTotal = 0
@@ -242,7 +242,7 @@ function PaymentPage() {
         passengerHasBusiness = true
       }
 
-      // Base fare for this segment based on age category
+      
       let segmentFare = flightPrice
       if (p.passengerCode === 'CHD') {
         segmentFare = Math.round(flightPrice * 0.75)
@@ -250,7 +250,7 @@ function PaymentPage() {
         segmentFare = Math.round(flightPrice * 0.10)
       }
 
-      // Add business surcharge if applicable
+      
       if (isBusinessSeat) {
         segmentFare += BUSINESS_SURCHARGE
       }
@@ -272,7 +272,7 @@ function PaymentPage() {
     }
   })
 
-  // Aggregate basePrice to display/break down fares nicely
+  
   const basePrice = selectedFlights.reduce((sum, f) => sum + (Number(f.price) || 0), 0) || 856
 
   const economyAdultsTotal = economyAdults * basePrice
@@ -318,7 +318,7 @@ function PaymentPage() {
   const markupFee = Math.round(baseTicketsTotal * (markupRate / 100))
   const finalTotal = ticketsTotal + extrasTotal + markupFee
 
-  // Summarize flight segment(s)
+  
   const summaryFlight = selectedFlights[0] || {
     fromCode: 'ADE',
     toCode: 'CAI',
@@ -342,7 +342,7 @@ function PaymentPage() {
   const [isTermsOpen, setIsTermsOpen] = useState(false)
   const [validationError, setValidationError] = useState(null)
 
-  // Branch and Payment Proof states
+  
   const [selectedBranchCity, setSelectedBranchCity] = useState('الكل')
   const [selectedBranch, setSelectedBranch] = useState(null)
   const [paymentProofImage, setPaymentProofImage] = useState(null)
@@ -357,7 +357,7 @@ function PaymentPage() {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
       if (videoRef.current) {
         videoRef.current.srcObject = stream
-        // Wait for metadata to load to play
+        
         videoRef.current.onloadedmetadata = () => {
           videoRef.current.play().catch(e => console.error("Video play error:", e))
         }
@@ -385,7 +385,7 @@ function PaymentPage() {
       canvas.width = videoRef.current.videoWidth || 640
       canvas.height = videoRef.current.videoHeight || 480
       const ctx = canvas.getContext('2d')
-      // Flip canvas context for mirroring if needed, or draw directly
+      
       ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height)
       const dataUrl = canvas.toDataURL('image/jpeg')
       setPaymentProofImage(dataUrl)
@@ -411,7 +411,7 @@ function PaymentPage() {
 
     return () => {
       clearInterval(timer)
-      // Stop camera if component unmounts
+      
       if (videoRef.current && videoRef.current.srcObject) {
         const stream = videoRef.current.srcObject
         const tracks = stream.getTracks()
@@ -439,7 +439,7 @@ function PaymentPage() {
     const userObj = JSON.parse(localStorage.getItem('user') || '{}')
     const refVal = `YBF-${Math.random().toString(36).toUpperCase().substring(2, 8)}`
 
-    // دالة محاكاة الحجز المحلي لتحديث الحالة المشتركة ديناميكياً
+    
     const addMockBookingLocal = (referenceToUse) => {
       const newBookingRecord = {
         id: referenceToUse,
@@ -471,7 +471,7 @@ function PaymentPage() {
       }
       addBooking(newBookingRecord)
 
-      // حفظ إثبات الدفع والفرع المحدد محلياً
+      
       if (paymentProofImage) {
         localStorage.setItem(`payment_proof_${referenceToUse}`, paymentProofImage)
       }
@@ -535,7 +535,7 @@ function PaymentPage() {
       }
     } catch (error) {
       console.error('Error confirming booking, falling back to mock save:', error)
-      // في حال توقف السيرفر، يتم التأكيد محلياً لتمكين العرض التقديمي للدكاترة
+      
       setBookingRef(refVal)
       addMockBookingLocal(refVal)
       setIsPaymentModalOpen(true)
@@ -553,7 +553,7 @@ function PaymentPage() {
 
   return (
     <main className="min-h-[100svh] bg-[#f3f4f6] pb-16 pt-24 sm:pt-28" dir="rtl">
-      {/* Sticky Stepper Bar */}
+      {}
       <div className="sticky top-16 z-40 w-full border-b border-slate-200 bg-white/90 py-4 backdrop-blur-xl sm:top-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <BookingStepper current="payment" />
@@ -580,7 +580,7 @@ function PaymentPage() {
           </div>
 
           <div className="space-y-6">
-            {/* Payment Method Selector */}
+            {}
             <div className="grid gap-4 md:grid-cols-3">
               {paymentMethods.map((method) => {
                 const isActive = paymentMethod === method.id
@@ -596,20 +596,20 @@ function PaymentPage() {
                       }`}
                   >
                     <div className="flex items-center gap-3.5 min-w-0">
-                      {/* Radio dot */}
+                      {}
                       <div className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full border transition-all ${isActive ? 'border-brand-blue bg-brand-blue' : 'border-slate-300 bg-white'
                         }`}>
                         {isActive && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
                       </div>
 
-                      {/* Info */}
+                      {}
                       <div className="text-right">
                         <span className="block text-xs font-black text-slate-800">{method.label}</span>
                         <span className="block text-[10px] font-bold text-slate-400 mt-0.5">{method.description}</span>
                       </div>
                     </div>
 
-                    {/* Logo/Icon Container */}
+                    {}
                     <div className="flex h-10 w-24 shrink-0 items-center justify-end">
                       {method.logos ? (
                         <div className="flex items-center gap-1.5 justify-end">
@@ -634,7 +634,7 @@ function PaymentPage() {
               })}
             </div>
 
-            {/* Dynamic Payment Form */}
+            {}
             <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm sm:p-8">
               {paymentMethod === 'card' && (
                 <div className="flex flex-col items-center py-10 text-center">
@@ -677,7 +677,7 @@ function PaymentPage() {
                       </p>
                     </div>
 
-                    {/* Shared Payment Proof Component */}
+                    {}
                     <PaymentProofUpload
                       paymentProofImage={paymentProofImage}
                       isCameraActive={isCameraActive}
@@ -729,7 +729,7 @@ function PaymentPage() {
                       </div>
                     </div>
 
-                    {/* Shared Payment Proof Component */}
+                    {}
                     <PaymentProofUpload
                       paymentProofImage={paymentProofImage}
                       isCameraActive={isCameraActive}
@@ -747,7 +747,7 @@ function PaymentPage() {
               )}
             </div>
 
-            {/* Terms and Conditions */}
+            {}
             <div className="mb-6 flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/50 p-4 text-right" dir="rtl">
               <button
                 type="button"
@@ -770,7 +770,7 @@ function PaymentPage() {
               </p>
             </div>
 
-            {/* Navigation */}
+            {}
             <div className="flex flex-col-reverse gap-4 sm:flex-row sm:items-center sm:justify-between">
               <Link
                 to="/travelers"
@@ -790,10 +790,10 @@ function PaymentPage() {
           </div>
         </section>
 
-        {/* Sidebar Summary */}
+        {}
         <aside className="sticky top-40 w-full" dir="rtl">
           <div className="space-y-6">
-            {/* Boarding Pass Style Summary */}
+            {}
             <section className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_20px_50px_rgba(15,23,42,0.04)]">
               <div className="bg-gradient-to-br from-brand-blue to-indigo-900 p-6 text-white">
                 <div className="flex items-center justify-between">
@@ -821,11 +821,11 @@ function PaymentPage() {
                     </p>
                   </div>
                 </div>
-                {/* Detailed Price Breakdown */}
+                {}
                 <div className="mt-5 space-y-4 border-b border-slate-100 pb-5">
                   <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">تعرفة تذاكر الطيران</p>
 
-                  {/* Adults Economy */}
+                  {}
                   {economyAdults > 0 && (
                     <div className="space-y-1">
                       <div className="flex items-center justify-between text-sm">
@@ -839,7 +839,7 @@ function PaymentPage() {
                     </div>
                   )}
 
-                  {/* Adults Business */}
+                  {}
                   {businessAdults > 0 && (
                     <div className="space-y-1 mt-3">
                       <div className="flex items-center justify-between text-sm">
@@ -853,7 +853,7 @@ function PaymentPage() {
                     </div>
                   )}
 
-                  {/* Children Economy */}
+                  {}
                   {economyChildren > 0 && (
                     <div className="space-y-1 mt-3">
                       <div className="flex items-center justify-between text-sm">
@@ -867,7 +867,7 @@ function PaymentPage() {
                     </div>
                   )}
 
-                  {/* Children Business */}
+                  {}
                   {businessChildren > 0 && (
                     <div className="space-y-1 mt-3">
                       <div className="flex items-center justify-between text-sm">
@@ -881,7 +881,7 @@ function PaymentPage() {
                     </div>
                   )}
 
-                  {/* Infants Economy */}
+                  {}
                   {economyInfants > 0 && (
                     <div className="space-y-1 mt-3">
                       <div className="flex items-center justify-between text-sm">
@@ -896,12 +896,12 @@ function PaymentPage() {
                   )}
                 </div>
 
-                {/* Extra Bags & Services Section */}
+                {}
                 {(bagsTotal > 0 || servicesTotal > 0) && (
                   <div className="mt-4 space-y-3 border-b border-slate-100 pb-4">
                     <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">الخدمات والوزن الإضافي</p>
 
-                    {/* Extra Bags */}
+                    {}
                     {bagsTotal > 0 && (
                       <div className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2 text-slate-600">
@@ -912,7 +912,7 @@ function PaymentPage() {
                       </div>
                     )}
 
-                    {/* Special Services */}
+                    {}
                     {SERVICES.filter(s => selectedServices[s.id] > 0).map(srv => {
                       const Icon = srv.icon
                       const qty = selectedServices[srv.id]
@@ -927,7 +927,7 @@ function PaymentPage() {
                       )
                     })}
 
-                    {/* Admin Markup Fee */}
+                    {}
                     <div className="flex items-center justify-between text-sm pt-3 border-t border-slate-100">
                       <div className="flex items-center gap-2 text-slate-600">
                         <ShieldCheck className="h-4 w-4 text-brand-blue" />
@@ -938,7 +938,7 @@ function PaymentPage() {
                   </div>
                 )}
 
-                {/* Final Total */}
+                {}
                 <div className="flex items-center justify-between mt-4">
                   <span className="text-base font-black text-slate-900">الإجمالي النهائي</span>
                   <span className="text-3xl font-black text-[#0f172a]">${finalTotal}</span>
@@ -946,7 +946,7 @@ function PaymentPage() {
               </div>
             </section>
 
-            {/* Payment Steps */}
+            {}
             <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-sm transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)]">
               <h3 className="mb-5 text-[11px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 border-b border-slate-100 pb-3 justify-start" dir="rtl">
                 <ShieldCheck className="h-4 w-4 text-brand-blue" />
@@ -954,7 +954,7 @@ function PaymentPage() {
               </h3>
 
               <div className="space-y-4">
-                {/* Step 1 */}
+                {}
                 <div className="group flex items-start gap-3.5 p-3 rounded-2xl border border-transparent hover:border-slate-100 hover:bg-slate-50/50 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-blue/5 text-brand-blue transition-all duration-300 group-hover:bg-brand-blue group-hover:text-white group-hover:shadow-[0_4px_12px_rgba(73,116,249,0.2)] shadow-sm">
                     <CreditCard className="h-5 w-5" />
@@ -967,7 +967,7 @@ function PaymentPage() {
                   </div>
                 </div>
 
-                {/* Step 2 */}
+                {}
                 <div className="group flex items-start gap-3.5 p-3 rounded-2xl border border-transparent hover:border-slate-100 hover:bg-slate-50/50 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-blue/5 text-brand-blue transition-all duration-300 group-hover:bg-brand-blue group-hover:text-white group-hover:shadow-[0_4px_12px_rgba(73,116,249,0.2)] shadow-sm">
                     <Camera className="h-5 w-5" />
@@ -980,7 +980,7 @@ function PaymentPage() {
                   </div>
                 </div>
 
-                {/* Step 3 */}
+                {}
                 <div className="group flex items-start gap-3.5 p-3 rounded-2xl border border-transparent hover:border-slate-100 hover:bg-slate-50/50 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-blue/5 text-brand-blue transition-all duration-300 group-hover:bg-brand-blue group-hover:text-white group-hover:shadow-[0_4px_12px_rgba(73,116,249,0.2)] shadow-sm">
                     <Clock className="h-5 w-5" />
@@ -993,7 +993,7 @@ function PaymentPage() {
                   </div>
                 </div>
 
-                {/* Step 4 */}
+                {}
                 <div className="group flex items-start gap-3.5 p-3 rounded-2xl border border-transparent hover:border-slate-100 hover:bg-slate-50/50 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-blue/5 text-brand-blue transition-all duration-300 group-hover:bg-brand-blue group-hover:text-white group-hover:shadow-[0_4px_12px_rgba(73,116,249,0.2)] shadow-sm">
                     <BadgeCheck className="h-5 w-5" />
@@ -1011,7 +1011,7 @@ function PaymentPage() {
         </aside>
       </div>
 
-      {/* Success Modal */}
+      {}
       {isPaymentModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" dir="rtl">
           <div className="relative w-full max-w-sm overflow-hidden rounded-[40px] bg-white p-10 text-center shadow-2xl">
@@ -1033,11 +1033,11 @@ function PaymentPage() {
           </div>
         </div>
       )}
-      {/* Terms Modal */}
+      {}
       {isTermsOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm shadow-2xl" dir="rtl">
           <div className="relative w-full max-w-lg overflow-hidden rounded-[2.2rem] bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-            {/* Modal header */}
+            {}
             <div className="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-5">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-blue/10">
@@ -1054,7 +1054,7 @@ function PaymentPage() {
               </button>
             </div>
 
-            {/* Modal body */}
+            {}
             <div className="max-h-[50vh] overflow-y-auto px-6 py-6">
               <div className="space-y-5 text-right">
                 {[
@@ -1071,7 +1071,7 @@ function PaymentPage() {
               </div>
             </div>
 
-            {/* Modal footer */}
+            {}
             <div className="border-t border-slate-100 bg-slate-50 px-6 py-4">
               <button
                 type="button"
@@ -1086,7 +1086,7 @@ function PaymentPage() {
         </div>
       )}
 
-      {/* Validation Error Modal */}
+      {}
       {validationError !== null && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm shadow-2xl" dir="rtl">
           <div className="relative w-full max-w-sm overflow-hidden rounded-[2.2rem] bg-white p-6 shadow-2xl border border-slate-100/50 text-center animate-in fade-in zoom-in-95 duration-200">

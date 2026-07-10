@@ -29,7 +29,7 @@ function BookingStepper({ current }) {
 
           return (
             <React.Fragment key={step.id}>
-              {/* Step Element */}
+              {}
               <div className="flex flex-col items-center z-10">
                 <Link
                   to={isDone ? step.path : '#'}
@@ -64,7 +64,7 @@ function BookingStepper({ current }) {
                 </span>
               </div>
 
-              {/* Connecting Line */}
+              {}
               {index < steps.length - 1 && (
                 <div className="flex-1 h-[2px] -mt-5 mx-2 bg-slate-100 rounded-full overflow-hidden">
                   <div

@@ -15,7 +15,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 
-// استيراد الشعارات ديناميكياً
+
 import logo from '../assets/logo.png';
 import yemeniaLogo from '../assets/Y.png';
 import balqisLogo from '../assets/B.png';
@@ -26,7 +26,7 @@ export default function PassengerStatusReport() {
   const [stats, setStats] = useState({ statusDistribution: [], peakTimes: [] });
   const [loading, setLoading] = useState(true);
 
-  // التحكم بالوضع الداكن للمخططات البيانية بشكل لحظي
+  
   const [isDark, setIsDark] = useState(false);
   useEffect(() => {
     setIsDark(document.documentElement.classList.contains('dark'));
@@ -37,7 +37,7 @@ export default function PassengerStatusReport() {
     return () => observer.disconnect();
   }, []);
 
-  // الحالات الخاصة بالتدرج التحليلي (Drill-down)
+  
   const [selectedDay, setSelectedDay] = useState(null);
   const [flights, setFlights] = useState([]);
   const [flightsLoading, setFlightsLoading] = useState(false);
@@ -48,11 +48,11 @@ export default function PassengerStatusReport() {
 
   const [selectedPassenger, setSelectedPassenger] = useState(null);
 
-  // الحصول على كود شركة الطيران النشطة
+  
   const airlineCode = localStorage.getItem('airlineCode') || (user?.airline_id === 1 ? 'IY' : user?.airline_id === 2 ? 'BS' : 'FA');
   const airlineId = localStorage.getItem('companyId') || user?.airline_id || '';
 
-  // الحصول على شعار شركة الطيران النشطة
+  
   const getCompanyLogo = () => {
     if (!user || user.role === 'super_admin') {
       return logo;
@@ -84,15 +84,15 @@ export default function PassengerStatusReport() {
   const statusData = activeStats.statusDistribution || [];
   const peakData = activeStats.peakTimes || [];
 
-  // ألوان الحالات للمخطط الدائري المجوف (Donut)
+  
   const getStatusColor = (name) => {
-    if (name === 'مؤكد') return '#10b981'; // أخضر
-    if (name === 'انتظار') return '#f59e0b'; // أصفر
-    if (name === 'ملغى') return '#ef4444'; // أحمر
+    if (name === 'مؤكد') return '#10b981'; 
+    if (name === 'انتظار') return '#f59e0b'; 
+    if (name === 'ملغى') return '#ef4444'; 
     return '#64748b';
   };
 
-  // معالجة النقر على المخطط الأسبوعي (المستوى الأول)
+  
   const handleChartClick = async (state) => {
     if (state && state.activeLabel) {
       const dayName = state.activeLabel;
@@ -119,7 +119,7 @@ export default function PassengerStatusReport() {
     }
   };
 
-  // معالجة النقر على رحلة (المستوى الثاني)
+  
   const handleFlightClick = async (flight) => {
     setSelectedFlight(flight);
     setSelectedPassenger(null);
@@ -141,7 +141,7 @@ export default function PassengerStatusReport() {
     }
   };
 
-  // ألوان وتنسيقات المخططات المتوافقة ديناميكياً مع الثيم
+  
   const gridColor = isDark ? '#334155' : '#f1f5f9';
   const labelColor = isDark ? '#94a3b8' : '#64748b';
   const tooltipBg = isDark ? '#1e293b' : '#ffffff';
@@ -150,21 +150,21 @@ export default function PassengerStatusReport() {
 
   return (
     <div className="flex min-h-screen bg-[#f8faff] dark:bg-[#080d19] text-slate-900 dark:text-slate-100 transition-colors duration-300 relative overflow-hidden" dir="rtl">
-      {/* تأثيرات التوهج الشبكي (Mesh Gradients) */}
+      {}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-blue-500/5 dark:bg-blue-500/10 blur-[120px] transition-all" />
         <div className="absolute bottom-[-10%] right-[-10%] h-[600px] w-[600px] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-[120px] transition-all" />
       </div>
 
-      {/* القائمة الجانبية */}
+      {}
       <div className="print:hidden">
         <Sidebar />
       </div>
 
-      {/* المحتوى الرئيسي */}
+      {}
       <main className="flex-1 mr-72 print:mr-0 p-8 print:p-0 relative z-10 min-h-screen">
 
-        {/* الترويسة (Header) */}
+        {}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 print:hidden animate-in fade-in slide-in-from-top-4 duration-500">
           <div>
             <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
@@ -185,10 +185,10 @@ export default function PassengerStatusReport() {
           </div>
         </div>
 
-        {/* المخططات والرسوم البيانية */}
+        {}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-          {/* مخطط حالات الحجز (Donut Chart) */}
+          {}
           <div className="lg:col-span-1 group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl flex flex-col justify-between">
             <div>
               <h3 className="text-xs font-black tracking-widest text-slate-500 dark:text-slate-400 mb-6 uppercase flex items-center gap-2">
@@ -232,7 +232,7 @@ export default function PassengerStatusReport() {
               </div>
             </div>
 
-            {/* تفاصيل الحالات بالأرقام */}
+            {}
             <div className="space-y-3 mt-6 border-t border-slate-100 dark:border-slate-850 pt-6">
               {statusData.map((item) => (
                 <div key={item.name} className="flex items-center justify-between text-xs">
@@ -253,7 +253,7 @@ export default function PassengerStatusReport() {
             </div>
           </div>
 
-          {/* مخطط أوقات الذروة (Line Chart) */}
+          {}
           <div className="lg:col-span-2 group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl flex flex-col justify-between">
             <div>
               <h3 className="text-xs font-black tracking-widest text-slate-500 dark:text-slate-400 mb-6 uppercase flex items-center gap-2">
@@ -304,7 +304,7 @@ export default function PassengerStatusReport() {
                 </ResponsiveContainer>
               </div>
 
-              {/* أزرار الأيام المساعدة للتنقل التفاعلي السلس */}
+              {}
               <div className="flex flex-wrap gap-2 mt-4 justify-center print:hidden">
                 {['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'].map(d => {
                   const hasBookings = peakData.find(p => p.day === d)?.bookings > 0;
@@ -333,11 +333,11 @@ export default function PassengerStatusReport() {
           </div>
         </div>
 
-        {/* المستوى الثاني والثالث: تفاصيل تحليل الركاب والرحلات (Drill-down) */}
+        {}
         {(selectedDay || selectedFlight) && (
           <div className="mt-8 rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-300">
 
-            {/* الترويسة الفرعية للتحليل */}
+            {}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-6 gap-4">
               <div>
                 <h3 className="text-lg font-black tracking-tight text-[#0f172a] dark:text-white flex items-center gap-2">
@@ -353,7 +353,7 @@ export default function PassengerStatusReport() {
                 </p>
               </div>
 
-              {/* أزرار العودة والإغلاق */}
+              {}
               <div className="flex items-center gap-2 print:hidden">
                 {selectedFlight && (
                   <button
@@ -380,7 +380,7 @@ export default function PassengerStatusReport() {
               </div>
             </div>
 
-            {/* المستوى الثاني: قائمة رحلات اليوم المختار */}
+            {}
             {selectedDay && !selectedFlight && (
               <div>
                 {flightsLoading ? (
@@ -425,7 +425,7 @@ export default function PassengerStatusReport() {
               </div>
             )}
 
-            {/* المستوى الثالث: قائمة الركاب المسجلين في الرحلة المختارة */}
+            {}
             {selectedFlight && (
               <div>
                 {passengersLoading ? (
@@ -492,19 +492,19 @@ export default function PassengerStatusReport() {
           </div>
         )}
 
-        {/* المستوى الرابع: نافذة تفاصيل الراكب المنبثقة (Modal) */}
+        {}
         {selectedPassenger && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* خلفية معتمة ناعمة (Backdrop blur) */}
+            {}
             <div
               onClick={() => setSelectedPassenger(null)}
               className="absolute inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm transition-opacity duration-300"
             />
 
-            {/* بطاقة النافذة المنبثقة */}
+            {}
             <div className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 transition-all duration-300 animate-in fade-in zoom-in-95">
 
-              {/* الترويسة */}
+              {}
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
                 <h3 className="text-base font-black text-slate-950 dark:text-white flex items-center gap-2">
                   <Users size={18} className="text-blue-600" />
@@ -520,16 +520,16 @@ export default function PassengerStatusReport() {
                 </button>
               </div>
 
-              {/* بيانات الراكب والخدمات المربوطة */}
+              {}
               <div className="space-y-4">
 
-                {/* الاسم */}
+                {}
                 <div className="bg-slate-50 dark:bg-slate-850/30 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/80">
                   <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 block mb-1 uppercase">الاسم الكامل للمسافر</span>
                   <span className="text-lg font-black text-slate-900 dark:text-white">{selectedPassenger.passengerName}</span>
                 </div>
 
-                {/* الجواز والجنسية */}
+                {}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-slate-50 dark:bg-slate-850/30 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/80">
                     <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 block mb-1">رقم جواز السفر</span>
@@ -541,7 +541,7 @@ export default function PassengerStatusReport() {
                   </div>
                 </div>
 
-                {/* مرجع الحجز والمقعد */}
+                {}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-slate-50 dark:bg-slate-850/30 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/80">
                     <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 block mb-1">مرجع الحجز (PNR)</span>
@@ -553,7 +553,7 @@ export default function PassengerStatusReport() {
                   </div>
                 </div>
 
-                {/* تفاصيل الوزن الزائد */}
+                {}
                 <div className="bg-slate-50 dark:bg-slate-850/30 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/80">
                   <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 block mb-1">تفاصيل الوزن الزائد</span>
                   <div className="flex items-center justify-between">
@@ -568,7 +568,7 @@ export default function PassengerStatusReport() {
                   </div>
                 </div>
 
-                {/* الخدمات الأرضية والطبية */}
+                {}
                 <div className="bg-slate-50 dark:bg-slate-850/30 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/80">
                   <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 block mb-1">الخدمات الخاصة المطلوبة</span>
                   {selectedPassenger.services && selectedPassenger.services.length > 0 ? (
@@ -587,7 +587,7 @@ export default function PassengerStatusReport() {
                   )}
                 </div>
 
-                {/* التكلفة الإجمالية للحجز */}
+                {}
                 <div className="bg-blue-50/50 dark:bg-blue-900/10 p-4 rounded-2xl border border-blue-100 dark:border-blue-900/20 flex items-center justify-between">
                   <div>
                     <span className="text-[10px] font-black text-blue-700/80 dark:text-blue-400/80 block uppercase">إجمالي السعر المدفوع</span>

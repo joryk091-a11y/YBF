@@ -63,7 +63,7 @@ const AdminDashboard = () => {
         companyBreakdown: []
     });
 
-    // Lists for other tabs
+    
     const [flights, setFlights] = useState([]);
     const [usersList, setUsersList] = useState([]);
     const [companiesList, setCompaniesList] = useState([]);
@@ -111,7 +111,7 @@ const AdminDashboard = () => {
 
 
 
-    // Settings State (backed by localStorage)
+    
     const [markupRate, setMarkupRate] = useState(() => localStorage.getItem('adminMarkupRate') || '5');
     const [exchangeRate, setExchangeRate] = useState(() => localStorage.getItem('adminExchangeRate') || '530');
     const [supportEmail, setSupportEmail] = useState(() => localStorage.getItem('adminSupportEmail') || 'support@ybf.com');
@@ -141,10 +141,10 @@ const AdminDashboard = () => {
         } catch (error) {
             console.error('Error fetching settings:', error);
         }
-    }, []); // 💡 مصفوفة فارغة هنا تعني أن الدالة ستُحفظ في الذاكرة ولن تتكرر أبداً
+    }, []); 
 
     useEffect(() => {
-        // eslint-disable-next-line no-unused-vars
+        
         let isMounted = true;
 
         const loadAdminSettings = async () => {
@@ -160,7 +160,7 @@ const AdminDashboard = () => {
         };
     }, [token, role, fetchSettings]); 
 
-    // Automatic logout when leaving the admin dashboard page or closing the tab
+    
     useEffect(() => {
         const handleAutoLogout = () => {
             localStorage.removeItem('adminToken');
@@ -175,7 +175,7 @@ const AdminDashboard = () => {
         };
     }, []);
 
-    // Check for unread messages
+    
     const checkUnreadMessages = useCallback(async () => {
         try {
             const res = await fetch(getApiUrl('/api/admin/chat/conversations'));
@@ -185,11 +185,11 @@ const AdminDashboard = () => {
                 setHasUnreadMessages(anyUnread);
             }
         } catch {
-            // Silence error to prevent console clutter
+            
         }
     }, []);
 
-    // Polling for unread messages
+    
     useEffect(() => {
         if (!token || role !== 'admin') return;
         
@@ -205,14 +205,14 @@ const AdminDashboard = () => {
         };
     }, [token, role, checkUnreadMessages]);
 
-    // Check auth
+    
     useEffect(() => {
         if (!token || role !== 'admin') {
             navigate('/admin/login');
         }
     }, [navigate, token, role]);
 
-    // Fetch Dashboard Stats
+    
     const fetchDashboardStats = useCallback(async () => {
         if (!token || role !== 'admin') return;
         if (isInitialMount.current) {
@@ -255,7 +255,7 @@ const AdminDashboard = () => {
         }
     }, [token, role, selectedDashboardYear, selectedDashboardMonth, selectedReportYear, selectedReportMonth, activeTab]);
 
-    // Fetch Flights
+    
     const fetchFlights = useCallback(async () => {
         if (!token || role !== 'admin') return;
         setLoadingList(true);
@@ -280,7 +280,7 @@ const AdminDashboard = () => {
 
 
 
-    // Fetch Users
+    
     const fetchUsers = useCallback(async () => {
         if (!token || role !== 'admin') return;
         setLoadingList(true);
@@ -297,7 +297,7 @@ const AdminDashboard = () => {
         }
     }, [token, role]);
 
-    // Fetch Companies
+    
     const fetchCompanies = useCallback(async () => {
         if (!token || role !== 'admin') return;
         setLoadingList(true);
@@ -314,7 +314,7 @@ const AdminDashboard = () => {
         }
     }, [token, role]);
 
-    // Fetch Bookings
+    
     const fetchBookings = useCallback(async () => {
         if (!token || role !== 'admin') return;
         setLoadingBookings(true);
@@ -331,7 +331,7 @@ const AdminDashboard = () => {
         }
     }, [token, role]);
 
-    // Update Booking Status
+    
     const handleUpdateBookingStatus = async (bookingId, status, paymentStatus) => {
         if (updatingBookingId) return;
         setUpdatingBookingId(bookingId);
@@ -357,7 +357,7 @@ const AdminDashboard = () => {
         }
     };
 
-    // Create new company
+    
     const handleCreateCompany = async (e) => {
         e.preventDefault();
         try {
@@ -396,7 +396,7 @@ const AdminDashboard = () => {
         }
     };
 
-    // Update company
+    
     const handleUpdateCompany = async (e) => {
         e.preventDefault();
         try {
@@ -435,13 +435,13 @@ const AdminDashboard = () => {
         }
     };
 
-    // Trigger delete company confirm
+    
     const triggerDeleteCompany = (id, name) => {
         setDeleteTarget({ id, type: 'company', label: name });
         setIsDeleteModalOpen(true);
     };
 
-    // Global execution function for custom delete modal confirmation
+    
     const executeDelete = async () => {
         if (!deleteTarget.id || !deleteTarget.type) return;
         setIsDeleteModalOpen(false);
@@ -480,7 +480,7 @@ const AdminDashboard = () => {
         }
     };
 
-    // Trigger loads on tab change
+    
     useEffect(() => {
         const timer = setTimeout(() => {
             if (activeTab === 'dashboard') {
@@ -501,7 +501,7 @@ const AdminDashboard = () => {
         return () => clearTimeout(timer);
     }, [activeTab, fetchDashboardStats, fetchFlights, fetchUsers, fetchCompanies, fetchBookings]);
 
-    // Re-fetch stats when date filters change
+    
     useEffect(() => {
         const timer = setTimeout(() => {
             if (activeTab === 'dashboard' || activeTab === 'reports') {
@@ -511,7 +511,7 @@ const AdminDashboard = () => {
         return () => clearTimeout(timer);
     }, [selectedReportYear, selectedReportMonth, selectedDashboardYear, selectedDashboardMonth, activeTab, fetchDashboardStats]);
 
-    // Initial mount load of companies and users (dashboard stats are fetched by the tab change hook since activeTab defaults to 'dashboard')
+    
     useEffect(() => {
         const timer = setTimeout(() => {
             fetchUsers();
@@ -520,7 +520,7 @@ const AdminDashboard = () => {
         return () => clearTimeout(timer);
     }, [fetchUsers, fetchCompanies]);
 
-    // Manual refresh function to update data on user request
+    
     const handleManualRefresh = () => {
         if (activeTab === 'dashboard' || activeTab === 'reports') {
             fetchDashboardStats();
@@ -544,7 +544,7 @@ const AdminDashboard = () => {
 
 
 
-    // Create new user
+    
     const handleCreateUser = async (e) => {
         e.preventDefault();
         try {
@@ -580,7 +580,7 @@ const AdminDashboard = () => {
         }
     };
 
-    // Update user
+    
     const handleUpdateUser = async (e) => {
         e.preventDefault();
         try {
@@ -615,7 +615,7 @@ const AdminDashboard = () => {
         }
     };
 
-    // Trigger delete user confirm
+    
     const triggerDeleteUser = (id, name) => {
         setDeleteTarget({ id, type: 'user', label: name });
         setIsDeleteModalOpen(true);
@@ -623,7 +623,7 @@ const AdminDashboard = () => {
 
 
 
-    // Save Settings
+    
     const handleSaveSettings = async (e) => {
         e.preventDefault();
         try {
@@ -652,13 +652,13 @@ const AdminDashboard = () => {
         }
     };
 
-    // Helper for toasts
+    
     const showToast = (msg) => {
         setNotificationMsg(msg);
         setTimeout(() => setNotificationMsg(null), 4000);
     };
 
-    // Logout
+    
     const handleLogout = () => {
         localStorage.removeItem('adminToken');
         localStorage.removeItem('userRole');
@@ -666,10 +666,10 @@ const AdminDashboard = () => {
         navigate('/');
     };
 
-    // Get airline badge/name
+    
     const getAirlineName = (code) => {
         if (!code) return 'غير معروف';
-        // Check dynamic database companies list first
+        
         const dbCompany = companiesList?.find(
             c => String(c.airline_code).toUpperCase() === String(code).toUpperCase()
         );
@@ -693,7 +693,7 @@ const AdminDashboard = () => {
         return airlines[code] ? `${airlines[code]} (${code})` : code;
     };
 
-    // Get destination full name
+    
     const getDestinationName = (code) => {
         const destinations = {
             'CAI': 'القاهرة (CAI)',
@@ -709,7 +709,7 @@ const AdminDashboard = () => {
         return destinations[code?.toUpperCase()] || code || 'وجهة غير معروفة';
     };
 
-    // Get Arabic month name
+    
     const getArabicMonthName = (monthStr) => {
         const months = {
             '01': 'يناير',
@@ -728,7 +728,7 @@ const AdminDashboard = () => {
         return months[monthStr] || monthStr;
     };
 
-    // Filter logic
+    
     const filteredFlights = flights.filter(f =>
         f.flight_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
         f.airportOrigin_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -768,13 +768,13 @@ const AdminDashboard = () => {
     return (
         <div className="h-screen overflow-hidden font-sans lining-nums flex text-slate-850 dark:text-slate-100 transition-colors duration-300 bg-[#f8faff] dark:bg-[#080d19]" dir="rtl">
             
-            {/* ─── Aesthetic Mesh Decor ────────────────────────────── */}
+            {}
             <div className="fixed inset-0 pointer-events-none z-0">
                 <div className="absolute top-[-10%] right-[-10%] h-[600px] w-[600px] rounded-full bg-blue-500/5 dark:bg-blue-500/10 blur-[120px] transition-all" />
                 <div className="absolute bottom-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-[120px] transition-all" />
             </div>
 
-            {/* TOAST NOTIFICATION */}
+            {}
             {notificationMsg && (
                 <div className="fixed top-6 left-6 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 text-slate-900 dark:text-white py-3.5 px-5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] font-bold flex items-center gap-3 animate-fade-in max-w-sm border-r-4 border-r-blue-600 dark:border-r-blue-500 select-none">
                     <div className="h-8 w-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
@@ -788,11 +788,11 @@ const AdminDashboard = () => {
             )}
 
 
-            {/* ===== 1. SIDEBAR ===== */}
+            {}
             <aside className={`${isSidebarCollapsed ? 'w-24' : 'w-80'} bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-l border-slate-200/60 dark:border-slate-800/60 flex flex-col justify-between shrink-0 z-30 select-none relative transition-all duration-300`}>
-                {/* Top Section */}
+                {}
                 <div>
-                    {/* Centered Profile */}
+                    {}
                     <div className={`${isSidebarCollapsed ? 'p-4' : 'p-8'} border-b border-slate-100 dark:border-slate-900 flex flex-col items-center text-center gap-3 transition-all`}>
                         <div className="relative">
                             <div className="h-14 w-14 rounded-full bg-gradient-to-tr from-blue-600 to-sky-400 p-0.5 shadow-md">
@@ -809,7 +809,7 @@ const AdminDashboard = () => {
                         )}
                     </div>
 
-                    {/* Nav tabs */}
+                    {}
                     <nav className={`${isSidebarCollapsed ? 'p-3' : 'p-6'} space-y-1.5 overflow-y-auto max-h-[calc(100vh-270px)] scrollbar-thin transition-all`}>
                         {[
                             { id: 'dashboard', label: 'لوحة التحكم', icon: Activity },
@@ -852,7 +852,7 @@ const AdminDashboard = () => {
                     </nav>
                 </div>
 
-                {/* Bottom Toggle Button */}
+                {}
                 <div className="p-4 border-t border-slate-100 dark:border-slate-900 flex justify-center no-print">
                     <button
                         onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
@@ -865,10 +865,10 @@ const AdminDashboard = () => {
                 </div>
             </aside>
 
-            {/* ===== 2. MAIN CONTENT AREA ===== */}
+            {}
             <main className="flex-1 flex flex-col overflow-y-auto relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-1000">
                 
-                {/* Header navbar */}
+                {}
                 <header className="sticky top-4 z-20 mx-8 my-4 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl py-3 px-6 rounded-2xl shadow-xl shadow-slate-200/80 dark:shadow-black/50 flex items-center justify-between shrink-0 select-none">
                     <div className="flex items-center gap-3">
                         <img
@@ -889,7 +889,7 @@ const AdminDashboard = () => {
                     </div>
 
                     <div className="flex items-center gap-6">
-                        {/* Control buttons */}
+                        {}
                         <div className="flex items-center gap-4">
                             <button
                                 onClick={handleManualRefresh}
@@ -919,7 +919,7 @@ const AdminDashboard = () => {
                     </div>
                 </header>
 
-                {/* View Content container */}
+                {}
                 <div className="relative z-10 px-8 py-6 flex-1">
                     
                     {loading && activeTab === 'dashboard' ? (
@@ -932,7 +932,7 @@ const AdminDashboard = () => {
                             {activeTab === 'dashboard' && (
                                 <div className="space-y-10">
                                     
-                                    {/* Dashboard Subheader with Custom Month/Year Selectors */}
+                                    {}
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200/60 pb-5 dark:border-slate-800/60">
                                         <div>
                                             <h3 className="text-lg font-black">مؤشرات الأداء</h3>
@@ -943,7 +943,7 @@ const AdminDashboard = () => {
                                             </p>
                                         </div>
                                         <div className="flex flex-wrap items-center gap-3">
-                                            {/* Year Selector */}
+                                            {}
                                             <div className="flex items-center gap-2">
                                                 <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">السنة:</span>
                                                 <select
@@ -959,7 +959,7 @@ const AdminDashboard = () => {
                                                 </select>
                                             </div>
 
-                                            {/* Month Selector */}
+                                            {}
                                             <div className="flex items-center gap-2">
                                                 <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">الشهر:</span>
                                                 <select
@@ -985,7 +985,7 @@ const AdminDashboard = () => {
                                         </div>
                                     </div>
 
-                                    {/* 1. Summary Cards (المؤشرات الرئيسية) */}
+                                    {}
                                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                                         {[
                                             { 
@@ -1021,7 +1021,7 @@ const AdminDashboard = () => {
                                             ];
                                             return (
                                                 <div key={i} className="group relative overflow-hidden rounded-2xl bg-gradient-to-b from-white to-slate-50/40 dark:from-slate-900/60 dark:to-slate-950/60 p-6 shadow-sm backdrop-blur-md transition-all duration-350 hover:shadow-xl hover:-translate-y-1">
-                                                    {/* Decorative corner glow */}
+                                                    {}
                                                     <div className={`absolute -right-12 -top-12 h-28 w-28 rounded-full bg-gradient-to-br ${glowColors[i]} opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 blur-lg transition-opacity duration-355`} />
 
                                                     <div className="flex items-center justify-between relative z-10">
@@ -1040,7 +1040,7 @@ const AdminDashboard = () => {
 
 
 
-                                    {/* Company Sales & Bookings Composed Chart */}
+                                    {}
                                     <div className="bg-white/80 dark:bg-slate-900/40 rounded-3xl p-8 shadow-sm backdrop-blur-md">
                                         <div className="mb-6">
                                             <h3 className="text-lg font-black">أداء الشركات (المبيعات والحجوزات)</h3>
@@ -1058,7 +1058,7 @@ const AdminDashboard = () => {
                                                             tickLine={false} 
                                                             tick={{ fontSize: 11, fontWeight: 'bold' }} 
                                                         />
-                                                        {/* Left Y Axis for Sales/Revenue */}
+                                                        {}
                                                         <YAxis 
                                                             yAxisId="left"
                                                             axisLine={false} 
@@ -1066,7 +1066,7 @@ const AdminDashboard = () => {
                                                             tick={{ fontSize: 10, fontWeight: 'bold' }} 
                                                             tickFormatter={(value) => `$${value}`}
                                                         />
-                                                        {/* Right Y Axis for Bookings/Tickets */}
+                                                        {}
                                                         <YAxis 
                                                             yAxisId="right"
                                                             orientation="right"
@@ -1103,10 +1103,10 @@ const AdminDashboard = () => {
                                         </div>
                                     </div>
 
-                                    {/* 3 & 5. Classification & Monitoring Row */}
+                                    {}
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                         
-                                        {/* Airline Share (تصنيف الحجوزات حسب شركة الطيران) */}
+                                        {}
                                         <div className="bg-white/80 dark:bg-slate-900/40 rounded-3xl p-8 shadow-sm backdrop-blur-md">
                                             <div className="mb-6">
                                                 <h3 className="text-sm font-black">تصنيف الحجوزات حسب شركات الطيران</h3>
@@ -1141,7 +1141,7 @@ const AdminDashboard = () => {
                                                 </div>
                                             </div>
                                             
-                                            {/* Labels list */}
+                                            {}
                                             <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 justify-center text-[10px] font-black">
                                                 {stats.airlineStats.map((item, idx) => (
                                                     <div key={idx} className="flex items-center gap-1.5">
@@ -1153,7 +1153,7 @@ const AdminDashboard = () => {
                                             </div>
                                         </div>
 
-                                        {/* Travel Class Share (تصنيف الحجوزات حسب درجة السفر) */}
+                                        {}
                                         <div className="bg-white/80 dark:bg-slate-900/40 rounded-3xl p-8 shadow-sm backdrop-blur-md">
                                             <div className="mb-6">
                                                 <h3 className="text-sm font-black">تصنيف الحجوزات حسب درجة السفر</h3>
@@ -1188,7 +1188,7 @@ const AdminDashboard = () => {
                                                 </div>
                                             </div>
 
-                                            {/* Labels list */}
+                                            {}
                                             <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 justify-center text-[10px] font-black">
                                                 {stats.classStats.map((item, idx) => (
                                                     <div key={idx} className="flex items-center gap-1.5">
@@ -1205,7 +1205,7 @@ const AdminDashboard = () => {
                                             </div>
                                         </div>
 
-                                        {/* 5. Payments & Cancellations Monitoring (متابعة الدفع وحالة الحجوزات ونسب الإلغاء) */}
+                                        {}
                                         <div className="bg-white/80 dark:bg-slate-900/40 rounded-3xl p-8 shadow-sm backdrop-blur-md flex flex-col justify-between">
                                             <div>
                                                 <h3 className="text-sm font-black">متابعة حالة الدفع والتحصيل</h3>
@@ -1262,10 +1262,10 @@ const AdminDashboard = () => {
                                         </div>
                                     </div>
 
-                                    {/* 4. Top Destinations & Ticket Count (الوجهات الأكثر طلباً وعدد التذاكر لكل وجهة) */}
+                                    {}
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                         
-                                        {/* Destination ticket count lists */}
+                                        {}
                                         <div className="bg-white/80 dark:bg-slate-900/40 rounded-3xl p-8 shadow-sm backdrop-blur-md lg:col-span-2">
                                             <div className="flex items-center justify-between mb-6">
                                                 <div>
@@ -1303,7 +1303,7 @@ const AdminDashboard = () => {
                                             </div>
                                         </div>
 
-                                        {/* Top Destinations Stats Highlights (الوجهات الأكثر طلباً) */}
+                                        {}
                                         <div className="bg-white/80 dark:bg-slate-900/40 rounded-3xl p-8 shadow-sm backdrop-blur-md flex flex-col justify-between relative overflow-hidden group">
                                             <div className="absolute right-[-20px] bottom-[-20px] text-blue-600/5 group-hover:scale-110 transition-transform duration-700">
                                                 <Globe size={160} />
@@ -1335,8 +1335,8 @@ const AdminDashboard = () => {
                                 </div>
                             )}
 
-                            {/* ======================================================== */}
-                            {/* ===== VIEW: FLIGHTS ===== */}
+                            {}
+                            {}
                             {activeTab === 'flights' && (
                                 <div className="space-y-6">
                                     <div className="flex items-center justify-between">
@@ -1346,10 +1346,10 @@ const AdminDashboard = () => {
                                         </div>
                                     </div>
 
-                                    {/* Date and Airline Filters */}
+                                    {}
                                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/80 dark:bg-slate-900/40 rounded-3xl p-6 shadow-sm backdrop-blur-md">
                                         <div className="flex items-center gap-6 flex-wrap w-full">
-                                            {/* Airline Filter */}
+                                            {}
                                             <div className="flex flex-col gap-1.5 w-full md:w-auto">
                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">تصفية حسب شركة الطيران</label>
                                                 <select
@@ -1366,7 +1366,7 @@ const AdminDashboard = () => {
                                                 </select>
                                             </div>
 
-                                            {/* Date Filter */}
+                                            {}
                                             <div className="flex flex-col gap-1.5 w-full md:w-auto">
                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">تصفية حسب تاريخ الرحلة</label>
                                                 <div className="flex items-center gap-2">
@@ -1402,7 +1402,7 @@ const AdminDashboard = () => {
                                         </div>
                                     </div>
 
-                                    {/* Flights Table */}
+                                    {}
                                     <div className="bg-white/80 dark:bg-slate-900/40 rounded-3xl shadow-sm p-8 backdrop-blur-md">
                                         {loadingList ? (
                                             <div className="py-20 text-center text-slate-400">جاري تحميل الرحلات...</div>
@@ -1458,8 +1458,8 @@ const AdminDashboard = () => {
 
 
 
-                            {/* ======================================================== */}
-                            {/* ===== VIEW: REPORTS ===== */}
+                            {}
+                            {}
                             {activeTab === 'reports' && (
                                 <div className="space-y-6">
                                         <div className="space-y-6">
@@ -1519,7 +1519,7 @@ const AdminDashboard = () => {
                                                 }
                                             `}} />
                                             
-                                            {/* Controls (no-print) */}
+                                            {}
                                             <div className="flex items-center justify-between no-print mb-6">
                                                 <div>
                                                     <h3 className="text-lg font-black text-slate-800 dark:text-slate-100">معاينة التقرير الشامل للطباعة (PDF)</h3>
@@ -1534,10 +1534,10 @@ const AdminDashboard = () => {
                                                 </button>
                                             </div>
 
-                                            {/* Date Filter (no-print) */}
+                                            {}
                                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm no-print mb-6">
                                                 <div className="flex items-center gap-6 flex-wrap w-full">
-                                                    {/* Year Filter */}
+                                                    {}
                                                     <div className="flex flex-col gap-1.5 w-full md:w-auto">
                                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">تصفية حسب السنة</label>
                                                         <select
@@ -1555,7 +1555,7 @@ const AdminDashboard = () => {
                                                         </select>
                                                     </div>
 
-                                                    {/* Month Filter */}
+                                                    {}
                                                     <div className="flex flex-col gap-1.5 w-full md:w-auto">
                                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">تصفية حسب الشهر</label>
                                                         <select
@@ -1581,7 +1581,7 @@ const AdminDashboard = () => {
                                                         </select>
                                                     </div>
 
-                                                    {/* Reset Button */}
+                                                    {}
                                                     {(selectedReportMonth !== String(new Date().getMonth() + 1).padStart(2, '0') || selectedReportYear !== String(new Date().getFullYear())) && (
                                                         <div className="flex flex-col gap-1.5 w-full md:w-auto self-end">
                                                             <button
@@ -1599,11 +1599,11 @@ const AdminDashboard = () => {
                                                 </div>
                                             </div>
 
-                                            {/* Report Printable Document */}
+                                            {}
                                             <div className="print-report-container relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 md:p-12 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-10">
                                                 <div className="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-r from-blue-600 via-indigo-500 to-violet-600" />
                                                 
-                                                {/* Report Header */}
+                                                {}
                                                 <div className="border-b border-slate-100 dark:border-slate-800/80 pb-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                                                     <div className="space-y-2">
                                                         <div className="flex items-center gap-3">
@@ -1619,9 +1619,9 @@ const AdminDashboard = () => {
                                                     </div>
                                                 </div>
 
-                                                {/* KPIs Cards */}
+                                                {}
                                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                                    {/* 1. Revenue */}
+                                                    {}
                                                     <div className="print-card bg-gradient-to-br from-emerald-500/[0.03] to-teal-500/[0.01] dark:from-emerald-500/[0.06] dark:to-teal-500/[0.02] border border-emerald-500/20 dark:border-emerald-500/10 rounded-2xl p-6 space-y-4 shadow-sm relative overflow-hidden">
                                                         <div className="absolute top-4 left-4 h-8 w-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                                                             <DollarSign size={16} />
@@ -1653,7 +1653,7 @@ const AdminDashboard = () => {
                                                         )}
                                                     </div>
 
-                                                    {/* 2. Tickets */}
+                                                    {}
                                                     <div className="print-card bg-gradient-to-br from-blue-500/[0.03] to-indigo-500/[0.01] dark:from-blue-500/[0.06] dark:to-indigo-500/[0.02] border border-blue-500/20 dark:border-blue-500/10 rounded-2xl p-6 space-y-4 shadow-sm relative overflow-hidden">
                                                         <div className="absolute top-4 left-4 h-8 w-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                                                             <Ticket size={16} />
@@ -1681,7 +1681,7 @@ const AdminDashboard = () => {
                                                         )}
                                                     </div>
 
-                                                    {/* 3. Estimated profit */}
+                                                    {}
                                                     <div className="print-card bg-gradient-to-br from-violet-500/[0.03] to-purple-500/[0.01] dark:from-violet-500/[0.06] dark:to-purple-500/[0.02] border border-violet-500/20 dark:border-violet-500/10 rounded-2xl p-6 space-y-4 shadow-sm relative overflow-hidden">
                                                         <div className="absolute top-4 left-4 h-8 w-8 rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400 flex items-center justify-center">
                                                             <TrendingUp size={16} />
@@ -1714,7 +1714,7 @@ const AdminDashboard = () => {
                                                         )}
                                                     </div>
 
-                                                    {/* 4. Exchange rate */}
+                                                    {}
                                                     <div className="print-card bg-slate-50/50 dark:bg-slate-800/20 border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-6 space-y-3 relative overflow-hidden">
                                                         <div className="absolute top-4 left-4 h-8 w-8 rounded-xl bg-slate-200/30 dark:bg-slate-700/30 text-slate-500 dark:text-slate-450 flex items-center justify-center">
                                                             <Wallet size={16} />
@@ -1724,7 +1724,7 @@ const AdminDashboard = () => {
                                                         <p className="text-[11px] font-bold text-slate-500">معدل التحويل النشط للمبيعات</p>
                                                     </div>
 
-                                                    {/* 5. Cancellation rate */}
+                                                    {}
                                                     <div className="print-card bg-gradient-to-br from-rose-500/[0.03] to-red-500/[0.01] dark:from-rose-500/[0.06] dark:to-red-500/[0.02] border border-rose-500/20 dark:border-rose-500/10 rounded-2xl p-6 space-y-3 relative overflow-hidden">
                                                         <div className="absolute top-4 left-4 h-8 w-8 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center">
                                                             <XCircle size={16} />
@@ -1748,7 +1748,7 @@ const AdminDashboard = () => {
                                                         )}
                                                     </div>
 
-                                                    {/* 6. Active Companies */}
+                                                    {}
                                                     <div className="print-card bg-gradient-to-br from-violet-500/[0.03] to-indigo-500/[0.01] dark:from-violet-500/[0.06] dark:to-indigo-500/[0.02] border border-violet-500/20 dark:border-violet-500/10 rounded-2xl p-6 space-y-3 relative overflow-hidden">
                                                         <div className="absolute top-4 left-4 h-8 w-8 rounded-xl bg-violet-500/10 text-violet-650 dark:text-violet-400 flex items-center justify-center">
                                                             <Building2 size={16} />
@@ -1769,9 +1769,9 @@ const AdminDashboard = () => {
                                                     </div>
                                                 </div>
 
-                                                {/* Destinations & Airline share row */}
+                                                {}
                                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                                    {/* 1. Top Destinations */}
+                                                    {}
                                                     <div className="print-card bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/60 dark:border-slate-800/60 p-6 rounded-2xl space-y-4">
                                                         <h3 className="text-sm font-black border-b border-slate-200/50 dark:border-slate-800/50 pb-3.5 flex items-center gap-2 text-slate-805 dark:text-white">
                                                             <MapPin size={16} className="text-blue-500" />
@@ -1794,7 +1794,7 @@ const AdminDashboard = () => {
                                                         </div>
                                                     </div>
 
-                                                    {/* 2. Airline Share */}
+                                                    {}
                                                     <div className="print-card bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/60 dark:border-slate-800/60 p-6 rounded-2xl space-y-4">
                                                         <h3 className="text-sm font-black border-b border-slate-200/50 dark:border-slate-800/50 pb-3.5 flex items-center gap-2 text-slate-805 dark:text-white">
                                                             <Plane size={16} className="text-indigo-500" />
@@ -1818,7 +1818,7 @@ const AdminDashboard = () => {
                                                     </div>
                                                 </div>
 
-                                                {/* Recent Bookings Table */}
+                                                {}
                                                 <div className="print-card bg-white dark:bg-slate-900/10 border border-slate-200/60 dark:border-slate-800/60 p-6 rounded-2xl space-y-4">
                                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 dark:border-slate-800/60 pb-3">
                                                         <h3 className="text-sm font-black flex items-center gap-2 text-slate-805 dark:text-white">
@@ -1865,7 +1865,7 @@ const AdminDashboard = () => {
                                                     </div>
                                                 </div>
 
-                                                {/* Recent Flights Table */}
+                                                {}
                                                 <div className="print-card bg-white dark:bg-slate-900/10 border border-slate-200/60 dark:border-slate-800/60 p-6 rounded-2xl space-y-4 page-break-inside-avoid">
                                                     <h3 className="text-sm font-black border-b border-slate-100 dark:border-slate-800/60 pb-3 flex items-center gap-2 text-slate-805 dark:text-white">
                                                         <Plane size={16} className="text-blue-500" />
@@ -1905,7 +1905,7 @@ const AdminDashboard = () => {
                                                     </div>
                                                 </div>
 
-                                                {/* Footer Signatures */}
+                                                {}
                                                 <div className="pt-8 border-t border-slate-200/60 dark:border-slate-800/60 flex justify-between text-[11px] font-bold text-slate-500 print-signatures">
                                                     <div>توقيع المسؤول المصدر: ___________________</div>
                                                     <div>ختم الإدارة المالية: ___________________</div>
@@ -1917,8 +1917,8 @@ const AdminDashboard = () => {
 
 
 
-                            {/* ======================================================== */}
-                            {/* ===== VIEW: SETTINGS ===== */}
+                            {}
+                            {}
                             {activeTab === 'settings' && (
                                 <div className="max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm p-10">
                                     <div className="mb-8">
@@ -1994,11 +1994,11 @@ const AdminDashboard = () => {
                                 </div>
                             )}
 
-                            {/* ======================================================== */}
-                            {/* ===== VIEW: USERS MANAGEMENT ===== */}
+                            {}
+                            {}
                             {activeTab === 'users' && (
                                 <div className="space-y-6">
-                                    {/* Stats Cards */}
+                                    {}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                         <div className="group relative overflow-hidden bg-white/80 dark:bg-slate-900/40 rounded-3xl p-6 shadow-sm flex items-center gap-4 backdrop-blur-md transition-all duration-350 hover:-translate-y-1 hover:shadow-md">
                                             <div className="absolute -right-6 -top-6 h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-655 opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 blur-md transition-opacity duration-350" />
@@ -2022,7 +2022,7 @@ const AdminDashboard = () => {
                                         </div>
                                     </div>
 
-                                    {/* Users List Table */}
+                                    {}
                                     <div className="bg-white/80 dark:bg-slate-900/40 rounded-3xl shadow-sm p-8 backdrop-blur-md">
                                         <div className="flex items-center justify-between mb-6">
                                             <div>
@@ -2143,10 +2143,10 @@ const AdminDashboard = () => {
                                 </div>
                             )}
 
-                            {/* ===== VIEW: COMPANIES MANAGEMENT ===== */}
+                            {}
                             {activeTab === 'companies' && (
                                 <div className="space-y-6">
-                                    {/* Stats Cards */}
+                                    {}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                         <div className="group relative overflow-hidden bg-white/80 dark:bg-slate-900/40 rounded-3xl p-6 shadow-sm flex items-center gap-4 backdrop-blur-md transition-all duration-350 hover:-translate-y-1 hover:shadow-md">
                                             <div className="absolute -right-6 -top-6 h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-650 opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 blur-md transition-opacity duration-350" />
@@ -2170,7 +2170,7 @@ const AdminDashboard = () => {
                                         </div>
                                     </div>
 
-                                    {/* Companies List Table */}
+                                    {}
                                     <div className="bg-white/80 dark:bg-slate-900/40 rounded-3xl shadow-sm p-8 backdrop-blur-md">
                                         <div className="flex items-center justify-between mb-6">
                                             <div>
@@ -2283,12 +2283,12 @@ const AdminDashboard = () => {
                                 </div>
                             )}
 
-                            {/* ===== VIEW: BOOKINGS MANAGEMENT ===== */}
+                            {}
                             {activeTab === 'bookings' && (
                                 <div className="space-y-6">
-                                    {/* Stats Cards */}
+                                    {}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                                        {/* Total Bookings */}
+                                        {}
                                         <div className="group relative overflow-hidden bg-white/80 dark:bg-slate-900/40 rounded-3xl p-6 shadow-sm flex items-center gap-4 backdrop-blur-md transition-all duration-350 hover:-translate-y-1 hover:shadow-md">
                                             <div className="absolute -right-6 -top-6 h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-650 opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 blur-md transition-opacity duration-350" />
                                             <div className="h-12 w-12 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center relative z-10">
@@ -2300,7 +2300,7 @@ const AdminDashboard = () => {
                                             </div>
                                         </div>
 
-                                        {/* Certain Bookings */}
+                                        {}
                                         <div className="group relative overflow-hidden bg-white/80 dark:bg-slate-900/40 rounded-3xl p-6 shadow-sm flex items-center gap-4 backdrop-blur-md transition-all duration-350 hover:-translate-y-1 hover:shadow-md">
                                             <div className="absolute -right-6 -top-6 h-16 w-16 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 blur-md transition-opacity duration-350" />
                                             <div className="h-12 w-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center relative z-10">
@@ -2314,7 +2314,7 @@ const AdminDashboard = () => {
                                             </div>
                                         </div>
 
-                                        {/* Pending Bookings */}
+                                        {}
                                         <div className="group relative overflow-hidden bg-white/80 dark:bg-slate-900/40 rounded-3xl p-6 shadow-sm flex items-center gap-4 backdrop-blur-md transition-all duration-350 hover:-translate-y-1 hover:shadow-md">
                                             <div className="absolute -right-6 -top-6 h-16 w-16 rounded-full bg-gradient-to-br from-amber-500 to-orange-650 opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 blur-md transition-opacity duration-350" />
                                             <div className="h-12 w-12 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center relative z-10">
@@ -2328,7 +2328,7 @@ const AdminDashboard = () => {
                                             </div>
                                         </div>
 
-                                        {/* Canceled Bookings */}
+                                        {}
                                         <div className="group relative overflow-hidden bg-white/80 dark:bg-slate-900/40 rounded-3xl p-6 shadow-sm flex items-center gap-4 backdrop-blur-md transition-all duration-350 hover:-translate-y-1 hover:shadow-md">
                                             <div className="absolute -right-6 -top-6 h-16 w-16 rounded-full bg-gradient-to-br from-rose-500 to-red-650 opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 blur-md transition-opacity duration-350" />
                                             <div className="h-12 w-12 rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center relative z-10">
@@ -2343,7 +2343,7 @@ const AdminDashboard = () => {
                                         </div>
                                     </div>
 
-                                    {/* Bookings Table Container */}
+                                    {}
                                     <div className="bg-white/80 dark:bg-slate-900/40 rounded-3xl shadow-sm p-8 backdrop-blur-md">
                                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                                             <div>
@@ -2351,7 +2351,7 @@ const AdminDashboard = () => {
                                                 <p className="text-xs text-slate-400 mt-1">تصفح وتحديث وإلغاء حجوزات المسافرين وحالة الدفع بشكل فوري</p>
                                             </div>
 
-                                            {/* Search Bar */}
+                                            {}
                                             <div className="relative w-full md:w-96">
                                                 <input
                                                     type="text"
@@ -2392,7 +2392,7 @@ const AdminDashboard = () => {
                                                         {filteredBookings.length > 0 ? (
                                                             filteredBookings.map((booking) => (
                                                                 <tr key={booking.id_bookings} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                                                                    {/* Booking Reference */}
+                                                                    {}
                                                                     <td className="py-5 px-4 font-black text-slate-900 dark:text-white">
                                                                         <div>
                                                                             <p className="font-mono font-bold text-slate-800 dark:text-white tracking-wider">
@@ -2402,7 +2402,7 @@ const AdminDashboard = () => {
                                                                         </div>
                                                                     </td>
 
-                                                                    {/* Flight & Route */}
+                                                                    {}
                                                                     <td className="py-5 px-4">
                                                                         <div className="space-y-1">
                                                                             <p className="font-black text-slate-800 dark:text-white">
@@ -2418,7 +2418,7 @@ const AdminDashboard = () => {
                                                                         </div>
                                                                     </td>
 
-                                                                    {/* Passengers */}
+                                                                    {}
                                                                     <td className="py-5 px-4 font-bold text-slate-700 dark:text-slate-300 max-w-[200px] truncate">
                                                                         <div className="flex flex-col gap-1">
                                                                             <span className="text-slate-800 dark:text-slate-200">
@@ -2430,20 +2430,20 @@ const AdminDashboard = () => {
                                                                         </div>
                                                                     </td>
 
-                                                                    {/* Total Price */}
+                                                                    {}
                                                                     <td className="py-5 px-4 text-center font-black text-blue-600 dark:text-blue-400">
                                                                         ${parseFloat(booking.final_price || 0).toLocaleString('en-US')}
                                                                     </td>
 
-                                                                    {/* Booking Date */}
+                                                                    {}
                                                                     <td className="py-5 px-4 font-bold text-slate-500">
                                                                         {new Date(booking.booking_date).toLocaleDateString('ar-EG-u-nu-latn', { dateStyle: 'medium' })}
                                                                     </td>
 
-                                                                    {/* Status Badges */}
+                                                                    {}
                                                                     <td className="py-5 px-4">
                                                                         <div className="flex flex-wrap gap-2">
-                                                                            {/* Booking status badge */}
+                                                                            {}
                                                                             {booking.status === 'certain' && (
                                                                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/10">
                                                                                     <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
@@ -2463,7 +2463,7 @@ const AdminDashboard = () => {
                                                                                 </span>
                                                                             )}
 
-                                                                            {/* Payment status badge */}
+                                                                            {}
                                                                             {booking.payment_status === 'success' ? (
                                                                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-black bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/10">
                                                                                     <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
@@ -2483,7 +2483,7 @@ const AdminDashboard = () => {
                                                                         </div>
                                                                     </td>
 
-                                                                    {/* Action Buttons */}
+                                                                    {}
                                                                     <td className="py-5 px-4 text-left">
                                                                         <div className="flex items-center justify-end gap-2">
                                                                             {updatingBookingId === booking.id_bookings ? (
@@ -2537,7 +2537,7 @@ const AdminDashboard = () => {
                                 </div>
                             )}
 
-                            {/* ===== VIEW: MESSAGES & COMPLAINTS ===== */}
+                            {}
                             {activeTab === 'messages' && (
                                 <Messages token={token} showToast={showToast} />
                             )}
@@ -2548,7 +2548,7 @@ const AdminDashboard = () => {
 
 
 
-            {/* ===== COMPANY MODAL (ADD/EDIT COMPANY FORM) ===== */}
+            {}
             {isCompanyModalOpen && (
                 <div className="fixed inset-0 bg-slate-950/10 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-fade-in select-none">
                     <div className="bg-white modal-solid-bg dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
@@ -2669,7 +2669,7 @@ const AdminDashboard = () => {
                 </div>
             )}
 
-            {/* ===== USER MODAL (ADD/EDIT USER FORM) ===== */}
+            {}
             {isUserModalOpen && (
                 <div className="fixed inset-0 bg-slate-950/10 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-fade-in select-none">
                     <div className="bg-white modal-solid-bg dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
@@ -2757,7 +2757,7 @@ const AdminDashboard = () => {
                 </div>
             )}
 
-            {/* ===== DELETE CONFIRMATION MODAL ===== */}
+            {}
             {isDeleteModalOpen && (
                 <div className="fixed inset-0 bg-slate-950/10 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-fade-in select-none">
                     <div className="bg-white modal-solid-bg rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center">
@@ -2791,7 +2791,7 @@ const AdminDashboard = () => {
                 </div>
             )}
 
-            {/* ===== CANCEL BOOKING CONFIRMATION MODAL ===== */}
+            {}
             {isCancelBookingModalOpen && (
                 <div className="fixed inset-0 bg-slate-950/10 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-fade-in select-none" dir="rtl">
                     <div className="bg-white modal-solid-bg rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center animate-zoom-in">

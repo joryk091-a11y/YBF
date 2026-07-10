@@ -70,8 +70,8 @@ const formatDate = (d) => d ? new Date(d).toLocaleDateString('ar-EG-u-nu-latn', 
 const formatTime = (d) => d ? new Date(d).toLocaleTimeString('ar-EG-u-nu-latn', { hour: '2-digit', minute: '2-digit' }) : '—';
 const formatDuration = (m) => m ? `${Math.floor(m / 60)}س ${m % 60}د` : '—';
 
-/* ── Individual Boarding Pass for one passenger ── */
-/* ── Individual Boarding Pass for one passenger ── */
+
+
 function BoardingPass({ passenger, booking, index }) {
     const [showQrModal, setShowQrModal] = useState(false);
     const [downloadingItinerary, setDownloadingItinerary] = useState(false);
@@ -426,7 +426,7 @@ function BoardingPass({ passenger, booking, index }) {
             id={`ticket-${passenger.id_passengers || index}`}
             className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-md hover:shadow-lg transition-all duration-300 relative"
         >
-            {/* Header strip */}
+            {}
             <div className={`bg-gradient-to-r ${airline.color} px-6 py-4 flex items-center justify-between text-white`} dir="rtl">
                 <div className="flex items-center gap-3">
                     {airline.logo ? (
@@ -450,9 +450,9 @@ function BoardingPass({ passenger, booking, index }) {
             </div>
 
             <div className="flex flex-col md:flex-row relative">
-                {/* Main section (Consistent RTL) */}
+                {}
                 <div className="flex-1 p-6 flex flex-col justify-between gap-5" dir="rtl">
-                    {/* Top Row: Passenger & PNR */}
+                    {}
                     <div className="bg-slate-50/60 rounded-2xl p-4 border border-slate-100 grid grid-cols-2 sm:grid-cols-3 gap-4 text-right">
                         <div>
                             <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">اسم المسافر / Passenger</p>
@@ -469,9 +469,9 @@ function BoardingPass({ passenger, booking, index }) {
                         </div>
                     </div>
 
-                    {/* Middle Section: Route (Consistent RTL layout) */}
+                    {}
                     <div className="flex items-center justify-between gap-1.5 pt-3.5 pb-1 border-t border-slate-100">
-                        {/* Origin (Departure) - Aligned Right */}
+                        {}
                         <div className="text-right shrink-0 w-fit max-w-[110px] sm:max-w-[160px]">
                             <span className="text-4xl font-black text-slate-900 tracking-tight">{booking.airportOrigin_code}</span>
                             <h4 className="text-xs font-black text-slate-700 mt-0.5 truncate">{originInfo.city}</h4>
@@ -482,7 +482,7 @@ function BoardingPass({ passenger, booking, index }) {
                             </div>
                         </div>
 
-                        {/* Center Path - Stretches to maximum */}
+                        {}
                         <div className="flex-1 flex flex-col items-center gap-1.5 mx-2 text-center select-none">
                             <span className="text-xs font-black text-slate-500 tracking-wide">{formatDuration(booking.duration)}</span>
                             <div className="relative flex w-full items-center justify-center">
@@ -494,7 +494,7 @@ function BoardingPass({ passenger, booking, index }) {
                             <span className="text-[9px] font-black text-brand-blue bg-brand-blue/5 border border-brand-blue/10 px-3 py-0.5 rounded-full mt-0.5">مباشر / Direct</span>
                         </div>
 
-                        {/* Destination (Arrival) - Aligned Left */}
+                        {}
                         <div className="text-left shrink-0 w-fit max-w-[110px] sm:max-w-[160px]" dir="ltr">
                             <span className="text-4xl font-black text-slate-900 tracking-tight">{booking.airportDestination_code}</span>
                             <h4 className="text-xs font-black text-slate-700 mt-0.5 truncate">{destinationInfo.city}</h4>
@@ -507,13 +507,13 @@ function BoardingPass({ passenger, booking, index }) {
                     </div>
                 </div>
 
-                {/* Stub (Consistent & balanced) */}
+                {}
                 <div className="w-full md:w-56 p-6 flex flex-col items-center justify-between gap-4 bg-slate-50/30 border-t md:border-t-0 md:border-r border-slate-200/50 border-dashed relative" dir="rtl">
-                    {/* Top and Bottom punch holes for stub separation */}
+                    {}
                     <div className="absolute -top-3 -right-3 w-6 h-6 rounded-full bg-[#f4f7fc] print:bg-white border border-slate-200/60 z-10 hidden md:block" />
                     <div className="absolute -bottom-3 -right-3 w-6 h-6 rounded-full bg-[#f4f7fc] print:bg-white border border-slate-200/60 z-10 hidden md:block" />
 
-                    {/* Top Seat and Status Info */}
+                    {}
                     <div className="w-full grid grid-cols-2 gap-2 text-center pb-3 border-b border-slate-200/40">
                         <div>
                             <p className="text-[9px] font-black uppercase text-slate-400 mb-0.5">المسافر / Pax</p>
@@ -528,7 +528,7 @@ function BoardingPass({ passenger, booking, index }) {
                         </div>
                     </div>
 
-                    {/* QR Code Container (Interactive & Beautiful) */}
+                    {}
                     <div className="flex flex-col items-center gap-2 py-1">
                         <div
                             onClick={() => setShowQrModal(true)}
@@ -551,14 +551,14 @@ function BoardingPass({ passenger, booking, index }) {
                         <span className="text-[9px] font-black text-slate-400 tracking-wider">رمز الصعود QR</span>
                     </div>
 
-                    {/* Stub Footer */}
+                    {}
                     <div className="w-full text-center pt-2 border-t border-slate-200/40">
                         <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">تذكرة صعود إلكترونية</p>
                     </div>
                 </div>
             </div>
 
-            {/* Footer meta strip */}
+            {}
             <div className="grid grid-cols-3 gap-px bg-slate-100 border-t border-slate-150">
                 {[
                     { label: 'تاريخ السفر / Date', value: formatDate(booking.departure_time) },
@@ -572,7 +572,7 @@ function BoardingPass({ passenger, booking, index }) {
                 ))}
             </div>
 
-            {/* Print button bar */}
+            {}
             <div className="bg-slate-50 px-5 py-3.5 flex justify-between items-center border-t border-slate-150 download-bar-pdf" data-html2canvas-ignore="true">
                 <span className="text-[10px] font-bold text-slate-400">تذكرة صعود جاهزة للطباعة أو الحفظ</span>
                 <div className="flex gap-2">
@@ -586,7 +586,7 @@ function BoardingPass({ passenger, booking, index }) {
                 </div>
             </div>
 
-            {/* QR Zoom Modal */}
+            {}
             {showQrModal && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
@@ -596,7 +596,7 @@ function BoardingPass({ passenger, booking, index }) {
                         className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-white p-6 shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200"
                         onClick={e => e.stopPropagation()}
                     >
-                        {/* Header */}
+                        {}
                         <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100" dir="rtl">
                             <h3 className="text-base font-black text-slate-900">رمز صعود الطائرة (QR)</h3>
                             <button
@@ -609,7 +609,7 @@ function BoardingPass({ passenger, booking, index }) {
                             </button>
                         </div>
 
-                        {/* Large QR Image */}
+                        {}
                         <div className="flex flex-col items-center justify-center p-4 border border-dashed border-slate-200 rounded-2xl bg-white shadow-inner">
                             {qrCodeUrl ? (
                                 <img
@@ -625,7 +625,7 @@ function BoardingPass({ passenger, booking, index }) {
                             </p>
                         </div>
 
-                        {/* Close button */}
+                        {}
                         <button
                             onClick={() => setShowQrModal(false)}
                             className="mt-5 w-full py-3 bg-brand-blue text-white font-black text-sm rounded-2xl shadow-lg shadow-brand-blue/20 hover:bg-brand-blue-hover hover:scale-[1.02] transition-all duration-200 cursor-pointer"
@@ -639,7 +639,7 @@ function BoardingPass({ passenger, booking, index }) {
     );
 }
 
-/* ── Booking Group (one booking → multiple passes) ── */
+
 function BookingGroup({ booking }) {
     const [expanded, setExpanded] = useState(false);
     const [passengers, setPassengers] = useState([]);
@@ -648,7 +648,7 @@ function BookingGroup({ booking }) {
     const airline = airlineConfig[booking.airline_code] || { name: booking.airline_code, color: 'from-slate-600 to-slate-800' };
     const StatusIcon = status.icon;
 
-    // Retrieve offline payment proof and branch details
+    
     const localProof = localStorage.getItem(`payment_proof_${booking.booking_reference}`);
     const localBranch = (() => {
         try {
@@ -684,7 +684,7 @@ function BookingGroup({ booking }) {
 
     return (
         <div className={`overflow-hidden rounded-3xl border bg-white shadow-sm transition-all duration-300 ${expanded ? 'border-brand-blue/30 shadow-lg' : 'border-slate-200/60 hover:shadow-md'}`}>
-            {/* Summary row */}
+            {}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 cursor-pointer select-none" onClick={loadPassengers}>
                 <div className="flex items-center gap-4">
                     {airline.logo ? (
@@ -756,7 +756,7 @@ function BookingGroup({ booking }) {
                 </div>
             </div>
 
-            {/* Individual boarding passes */}
+            {}
             {expanded && passengers.length > 0 && (
                 <div className="border-t border-slate-100 bg-slate-50/60 p-5 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-2">
@@ -769,7 +769,7 @@ function BookingGroup({ booking }) {
                 </div>
             )}
 
-            {/* Offline payment details and proof */}
+            {}
             {(localBranch || localProof) && (
                 <div className="bg-slate-50/80 px-5 py-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs" dir="rtl">
                     {localBranch && (
@@ -826,7 +826,7 @@ function BookingGroup({ booking }) {
     );
 }
 
-/* ── Main Page ── */
+
 export default function MyBookings() {
     const navigate = useNavigate();
     const [bookings, setBookings] = useState([]);
@@ -834,7 +834,7 @@ export default function MyBookings() {
     const [search, setSearch] = useState('');
     const [activeFilter, setActiveFilter] = useState('all');
     
-    const [activeSection, setActiveSection] = useState('bookings'); // 'bookings' or 'notifications'
+    const [activeSection, setActiveSection] = useState('bookings'); 
     const [notifications, setNotifications] = useState([]);
     const [notifLoading, setNotifLoading] = useState(true);
 
@@ -928,7 +928,7 @@ export default function MyBookings() {
             </div>
 
             <main className="relative z-10 mx-auto max-w-4xl px-4 py-16 pt-32 sm:px-6">
-                {/* Header */}
+                {}
                 <div className="mb-8 flex items-center gap-4">
                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-blue to-brand-blue-hover text-white shadow-xl shadow-brand-blue/30">
                         <Ticket size={24} />
@@ -939,7 +939,7 @@ export default function MyBookings() {
                     </div>
                 </div>
 
-                {/* Filter tabs */}
+                {}
                 {activeSection === 'bookings' && bookings.length > 0 && (
                     <div className="flex gap-2 mb-6 flex-wrap animate-in fade-in slide-in-from-top-1 duration-200">
                         {filters.map(({ id, label, count, icon: Icon }) => (
@@ -961,7 +961,7 @@ export default function MyBookings() {
                     </div>
                 )}
 
-                {/* Not logged in */}
+                {}
                 {!user && (
                     <div className="flex flex-col items-center text-center py-28 bg-white rounded-3xl border border-slate-200/60 shadow-sm">
                         <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-brand-blue/8 mb-6">
@@ -975,10 +975,10 @@ export default function MyBookings() {
                     </div>
                 )}
 
-                {/* Logged-in content */}
+                {}
                 {user && (
                     <>
-                        {/* Section Selection Tabs */}
+                        {}
                         <div className="flex border-b border-slate-200/80 mb-6 gap-6 relative" dir="rtl">
                             <button
                                 onClick={() => { setActiveSection('bookings'); setSearch(''); }}
@@ -1121,18 +1121,18 @@ export default function MyBookings() {
                                                                 !n.is_read ? 'bg-blue-500/[0.015] border-blue-500/10' : ''
                                                             }`}
                                                         >
-                                                            {/* Left indicator for unread */}
+                                                            {}
                                                             {!n.is_read && (
                                                                 <div className="absolute top-0 right-0 bottom-0 w-1.5 bg-brand-blue" />
                                                             )}
 
                                                             <div className="flex gap-4 items-start">
-                                                                {/* Notification Icon */}
+                                                                {}
                                                                 <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${tc.color} text-white shadow-md`}>
                                                                     <IconComp size={20} />
                                                                 </div>
 
-                                                                {/* Content */}
+                                                                {}
                                                                 <div className="flex-1 min-w-0">
                                                                     <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5 text-right">
                                                                         <h3 className={`text-base leading-snug ${!n.is_read ? 'font-black text-slate-900' : 'font-bold text-slate-700'}`}>
@@ -1149,7 +1149,7 @@ export default function MyBookings() {
                                                                         {n.message}
                                                                     </p>
                                                                     
-                                                                    {/* Actions row inside notification */}
+                                                                    {}
                                                                     <div className="mt-3 flex justify-between items-center" dir="rtl">
                                                                         {!n.is_read ? (
                                                                             <button

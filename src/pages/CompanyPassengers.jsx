@@ -23,14 +23,14 @@ export default function CompanyPassengers() {
   const { user, bookings } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
 
-  // 1. تصفية الحجوزات بحيث تتبع شركة الطيران الحالية فقط (مثل رحلات IY- لشركة Yemenia)
+  
   const airlineCode = localStorage.getItem('airlineCode') || (user.airline_id === 1 ? 'IY' : user.airline_id === 2 ? 'BS' : 'FA');
 
   const companyBookings = bookings.filter(b =>
     b.flight_number.startsWith(airlineCode) && b.status !== 'cancelled'
   );
 
-  // 2. تجميع قائمة الركاب وتنسيقها للعرض
+  
   const passengersList = [];
   companyBookings.forEach(booking => {
     if (booking.passengers && Array.isArray(booking.passengers)) {
@@ -49,7 +49,7 @@ export default function CompanyPassengers() {
     }
   });
 
-  // 3. تصفية قائمة الركاب بناءً على كلمة البحث (الاسم أو رقم الجواز أو رقم الرحلة)
+  
   const filteredPassengers = passengersList.filter(p =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.passport_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -60,16 +60,16 @@ export default function CompanyPassengers() {
     <div className="min-h-screen bg-[#f8faff] dark:bg-[#080d19] text-slate-900 dark:text-slate-100 transition-colors duration-300 relative overflow-hidden" dir="rtl">
       <Sidebar />
       
-      {/* ─── Aesthetic Mesh Decor ────────────────────────────── */}
+      {}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-blue-500/5 dark:bg-blue-500/10 blur-[120px] transition-all" />
         <div className="absolute bottom-[-10%] right-[-10%] h-[600px] w-[600px] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-[120px] transition-all" />
       </div>
 
-      {/* المحتوى الرئيسي */}
+      {}
       <main className="relative z-10 mx-auto max-w-7xl px-6 py-10 md:mr-72 animate-in fade-in slide-in-from-bottom-8 duration-1000">
 
-        {/* العناوين والترحيب */}
+        {}
         <div className="mb-10">
           <h1 className="text-3xl font-black tracking-tight mb-2">قائمة ركاب الرحلات</h1>
           <p className="text-slate-500 dark:text-slate-400 font-bold text-sm">
@@ -77,9 +77,9 @@ export default function CompanyPassengers() {
           </p>
         </div>
 
-        {/* الجدول المتجاوب للركاب */}
+        {}
         <div className="rounded-3xl bg-white dark:bg-slate-900/40 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md overflow-hidden p-6">
-          {/* رأس الجدول والبحث المدمج */}
+          {}
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/10">

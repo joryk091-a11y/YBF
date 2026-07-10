@@ -21,7 +21,7 @@ async function seed() {
     connection = await mysql.createConnection(config);
     console.log('Connected successfully. Starting seeding process...\n');
 
-    // Disable foreign key checks to safely truncate
+    
     await connection.query('SET FOREIGN_KEY_CHECKS = 0');
     
     console.log('Clearing old database records...');
@@ -44,7 +44,7 @@ async function seed() {
     await connection.query('SET FOREIGN_KEY_CHECKS = 1');
     console.log('Database tables cleared successfully.\n');
 
-    // 1. Insert Companies
+    
     console.log('Inserting Companies...');
     const companies = [
       ['الخطوط الجوية اليمنية', 'IY'],
@@ -59,7 +59,7 @@ async function seed() {
     }
     console.log('Companies inserted.');
 
-    // 2. Insert Admins
+    
     console.log('Inserting Admins...');
     const admins = [
       [1, 'admin', 'ADMIN123', 'admin', null, '1', 'الادارة'],
@@ -78,7 +78,7 @@ async function seed() {
     }
     console.log('Admins inserted.');
 
-    // 3. Insert Users
+    
     console.log('Inserting Users...');
     const users = [
       [1, 'محمد علي', '777777777', 'user@gmail.com', 'user123']
@@ -94,11 +94,11 @@ async function seed() {
     }
     console.log('Users inserted.');
 
-    // 4. Insert Flights (Scheduled in the future)
+    
     console.log('Inserting Flights...');
     const now = new Date();
     
-    // Tomorrow flights
+    
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
     const dep1 = new Date(tomorrow); dep1.setHours(8, 0, 0, 0);
@@ -106,7 +106,7 @@ async function seed() {
     const dep2 = new Date(tomorrow); dep2.setHours(14, 0, 0, 0);
     const arr2 = new Date(tomorrow); arr2.setHours(17, 30, 0, 0);
 
-    // In 2 days flights
+    
     const in2Days = new Date(now);
     in2Days.setDate(in2Days.getDate() + 2);
     const dep3 = new Date(in2Days); dep3.setHours(9, 0, 0, 0);
@@ -114,7 +114,7 @@ async function seed() {
     const dep4 = new Date(in2Days); dep4.setHours(15, 0, 0, 0);
     const arr4 = new Date(in2Days); arr4.setHours(17, 30, 0, 0);
 
-    // In 3 days flights
+    
     const in3Days = new Date(now);
     in3Days.setDate(in3Days.getDate() + 3);
     const dep5 = new Date(in3Days); dep5.setHours(10, 0, 0, 0);
@@ -139,7 +139,7 @@ async function seed() {
     }
     console.log('Flights inserted.');
 
-    // 5. Insert Passengers
+    
     console.log('Inserting Passengers...');
     const passengers = [
       [1, 'محمد علي', 'P123456', '1990-01-01', 'يمني', 'male', 1],
@@ -153,7 +153,7 @@ async function seed() {
     }
     console.log('Passengers inserted.');
 
-    // 6. Insert Bookings
+    
     console.log('Inserting Bookings...');
     const bookings = [
       [1, 1, new Date(), 2, 450.00, 0.00, 900.00, 'certain', 'PNR101'],
@@ -167,7 +167,7 @@ async function seed() {
     }
     console.log('Bookings inserted.');
 
-    // 7. Insert Payments
+    
     console.log('Inserting Payments...');
     const payments = [
       [1, 1, 900.00, 'credit_card', 'TXN-998877', 'success'],
@@ -181,7 +181,7 @@ async function seed() {
     }
     console.log('Payments inserted.');
 
-    // 8. Insert Booking Passengers Link
+    
     console.log('Inserting Booking Passengers Link...');
     const bookingPassengers = [
       [1, 1, 1],

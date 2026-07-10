@@ -55,14 +55,14 @@ export default function CompanyFlights() {
   const [searchTerm, setSearchTerm] = useState('');
   const fileInputRef = useRef(null);
 
-  // حالات السحب والإفلات والتحميل والإشعارات
+  
   const [isDragActive, setIsDragActive] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [toast, setToast] = useState(null);
   const [loading, setLoading] = useState(true);
   const [pendingCount, setPendingCount] = useState(0);
 
-  // الحصول على كود واسم الشركة بشكل آمن
+  
   const companyName = user?.airline_name || localStorage.getItem('companyName') || 'الشركة';
   const airlineCode = localStorage.getItem('airlineCode') || (user?.airline_id === 1 ? 'IY' : user?.airline_id === 2 ? 'BS' : 'FA');
   const airlineId = localStorage.getItem('companyId') || user?.airline_id || '';
@@ -93,10 +93,10 @@ export default function CompanyFlights() {
     }
   }, [airlineId]);
 
-  // رحلات شركة الطيران النشطة من قاعدة البيانات
+  
   const [flights, setFlights] = useState([]);
 
-  // دالة جلب الرحلات الحقيقية من قاعدة البيانات مغلفة بـ useCallback لتجنب التحذيرات
+  
   const fetchFlights = useCallback(async () => {
     try {
       await Promise.resolve();
@@ -105,7 +105,7 @@ export default function CompanyFlights() {
       const res = await fetch(`http://localhost:8080/api/flights?airlineCode=${code}&airline_id=${airlineId || ''}`);
       const data = await res.json();
       if (data.success) {
-        // مطابقة الحقول القادمة من قاعدة البيانات مع هيكلية الواجهة الأمامية
+        
         const mapped = data.flights.map(f => ({
           id: f.id_flights,
           flight_number: f.flight_number,
@@ -134,18 +134,18 @@ export default function CompanyFlights() {
     }
   }, [airlineCode, airlineId]);
 
-  // إعادة تحميل الرحلات عند تغير شركة الطيران أو الكود
+  
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    
     fetchFlights();
   }, [fetchFlights]);
 
-  // إدارة النوافذ المنبثقة
+  
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingFlight, setEditingFlight] = useState(null);
 
-  // حقول نموذج الإضافة
+  
   const [newFlight, setNewFlight] = useState({
     flight_number: '',
     origin: '',
@@ -158,12 +158,12 @@ export default function CompanyFlights() {
     status: 'Active'
   });
 
-  // حساب الإحصائيات ديناميكياً
+  
   const totalFlights = flights.length;
   const cancelledFlights = flights.filter(f => f.status === 'Cancelled').length;
   const totalPassengers = flights.reduce((sum, f) => sum + (f.passenger_count || 0), 0);
 
-  // معالجة اختيار الملف وقراءته وحفظه في قاعدة البيانات حقيقياً
+  
   const handleFileImport = (file) => {
     if (!file) return;
 
@@ -273,7 +273,7 @@ export default function CompanyFlights() {
     reader.readAsArrayBuffer(file);
   };
 
-  // معالجات أحداث السحب والإفلات
+  
   const handleDragOver = (e) => {
     e.preventDefault();
     setIsDragActive(true);
@@ -292,7 +292,7 @@ export default function CompanyFlights() {
     }
   };
 
-  // فتح مستكشف الملفات
+  
   const triggerFileSelect = () => {
     fileInputRef.current.click();
   };
@@ -303,7 +303,7 @@ export default function CompanyFlights() {
     }
   };
 
-  // إضافة رحلة جديدة يدوياً لقاعدة البيانات
+  
   const handleAddFlight = async (e) => {
     e.preventDefault();
     try {
@@ -314,7 +314,7 @@ export default function CompanyFlights() {
         airportOrigin_code: newFlight.origin,
         airportDestination_code: newFlight.destination,
         departure_time: newFlight.departure_time,
-        arrival_time: newFlight.arrival_time || newFlight.departure_time, // fallback to departure time if empty
+        arrival_time: newFlight.arrival_time || newFlight.departure_time, 
         aircraft_type: newFlight.aircraft_type,
         total_seats: parseInt(newFlight.total_seats, 10),
         available_seats: parseInt(newFlight.total_seats, 10),
@@ -353,7 +353,7 @@ export default function CompanyFlights() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // إلغاء رحلة في قاعدة البيانات (تغيير الحالة لـ Cancelled)
+  
   const handleCancelFlight = async (flight) => {
     if (window.confirm('هل أنت متأكد من إلغاء هذه الرحلة؟')) {
       try {
@@ -392,7 +392,7 @@ export default function CompanyFlights() {
     }
   };
 
-  // مساعد تنسيق وقت datetime-local
+  
   const formatDateForInput = (dateStr) => {
     if (!dateStr) return '';
     try {
@@ -404,7 +404,7 @@ export default function CompanyFlights() {
     }
   };
 
-  // فتح نافذة التعديل مع تعبئة الحقول المناسبة
+  
   const openEditModal = (flight) => {
     setEditingFlight({
       ...flight,
@@ -414,7 +414,7 @@ export default function CompanyFlights() {
     setShowEditModal(true);
   };
 
-  // حفظ التعديلات في قاعدة البيانات حقيقياً
+  
   const handleEditFlight = async (e) => {
     e.preventDefault();
     try {
@@ -459,7 +459,7 @@ export default function CompanyFlights() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // تصفية الرحلات بالبحث
+  
   const filteredFlights = flights.filter(f =>
     (f.flight_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (f.origin || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -468,7 +468,7 @@ export default function CompanyFlights() {
 
   return (
     <div className="min-h-screen bg-[#f8faff] dark:bg-[#080d19] text-slate-900 dark:text-slate-100 transition-colors duration-300 relative overflow-hidden" dir="rtl">
-      {/* ─── Aesthetic Mesh Decor ────────────────────────────── */}
+      {}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-blue-500/5 dark:bg-blue-500/10 blur-[120px] transition-all" />
         <div className="absolute bottom-[-10%] right-[-10%] h-[600px] w-[600px] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-[120px] transition-all" />
@@ -476,7 +476,7 @@ export default function CompanyFlights() {
 
       <Sidebar />
 
-      {/* ─── Premium Header ───────────────────────────────────── */}
+      {}
       <header
         className="sticky top-4 z-50 transition-all duration-500 mx-6 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl py-3 px-6 rounded-2xl shadow-xl shadow-slate-200/60 dark:shadow-black/40 border border-slate-150/70 dark:border-slate-800/40"
         style={{ marginRight: 'calc(var(--sidebar-width, 288px) + 1.5rem)' }}
@@ -515,10 +515,10 @@ export default function CompanyFlights() {
         </div>
       </header>
 
-      {/* المحتوى الرئيسي */}
+      {}
       <main className="relative z-10 mx-auto max-w-7xl px-6 py-10 md:mr-72 animate-in fade-in slide-in-from-bottom-8 duration-1000">
 
-        {/* العناوين والترحيب */}
+        {}
         <div className="mb-10">
           <h1 className="text-3xl font-black tracking-tight mb-2">إدارة الرحلات</h1>
           <p className="text-slate-500 dark:text-slate-400 font-bold text-sm">
@@ -526,7 +526,7 @@ export default function CompanyFlights() {
           </p>
         </div>
 
-        {/* 1. بطاقات الأداء (KPI Cards) */}
+        {}
         <div className="mb-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {[
             { label: 'رحلات الشركة هذا الشهر', value: totalFlights, icon: Plane, color: 'from-blue-500 to-indigo-650', iconBg: 'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400', shadowGlow: 'hover:shadow-blue-500/10' },
@@ -534,7 +534,7 @@ export default function CompanyFlights() {
             { label: 'الرحلات الملغاة', value: cancelledFlights, icon: XCircle, color: 'from-red-500 to-rose-650', iconBg: 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400', shadowGlow: 'hover:shadow-red-500/10' },
           ].map((stat, i) => (
             <div key={i} className={`group relative overflow-hidden rounded-2xl bg-gradient-to-b from-white to-slate-50/40 dark:from-slate-900/60 dark:to-slate-950/60 p-6 shadow-sm border border-slate-150/70 dark:border-slate-800/40 backdrop-blur-md transition-all duration-350 hover:shadow-xl ${stat.shadowGlow} hover:-translate-y-1`}>
-              {/* Decorative corner glow */}
+              {}
               <div className={`absolute -right-12 -top-12 h-28 w-28 rounded-full bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 blur-lg transition-opacity duration-355`} />
 
               <div className="flex items-center gap-4 relative z-10">
@@ -550,7 +550,7 @@ export default function CompanyFlights() {
           ))}
         </div>
 
-        {/* 2. منطقة رفع واستيراد ملفات الإكسل (Excel Dropzone) */}
+        {}
         <div className="mb-10">
           <input
             type="file"
@@ -569,7 +569,7 @@ export default function CompanyFlights() {
                 : 'border-slate-200/80 dark:border-slate-800/80 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl hover:bg-slate-50 dark:hover:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700'
               }`}
           >
-            {/* واجهة التحميل الوهمية */}
+            {}
             {isImporting ? (
               <div className="flex flex-col items-center justify-center py-6 animate-in fade-in duration-300">
                 <Loader2 size={44} className="text-blue-600 dark:text-blue-400 animate-spin mb-4" />
@@ -600,9 +600,9 @@ export default function CompanyFlights() {
           </div>
         </div>
 
-        {/* 4. الجدول المتجاوب */}
+        {}
         <div className="rounded-3xl bg-white dark:bg-slate-900/40 border border-slate-150/70 dark:border-slate-800/40 p-6 shadow-sm backdrop-blur-md overflow-hidden">
-          {/* رأس الجدول والبحث المدمج */}
+          {}
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/10">
@@ -708,7 +708,7 @@ export default function CompanyFlights() {
                       </td>
                       <td className="py-5 px-4 text-left">
                         <div className="flex items-center justify-end gap-1">
-                          {/* تعديل */}
+                          {}
                           <button
                             onClick={() => openEditModal(flight)}
                             className="h-9 w-9 flex items-center justify-center rounded-xl text-slate-400 dark:text-slate-500 hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 transition-all border border-transparent hover:border-blue-500/20"
@@ -716,7 +716,7 @@ export default function CompanyFlights() {
                           >
                             <Pencil size={16} />
                           </button>
-                          {/* إلغاء */}
+                          {}
                           {flight.status !== 'Cancelled' && (
                             <button
                               onClick={() => handleCancelFlight(flight)}
@@ -736,7 +736,7 @@ export default function CompanyFlights() {
           </div>
         </div>
 
-        {/* ─── 5. النافذة المنبثقة لإضافة رحلة (Add Flight Modal) ─── */}
+        {}
         {showAddModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 backdrop-blur-md bg-slate-900/40 overflow-y-auto animate-in fade-in duration-300">
             <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-[32px] sm:rounded-[40px] shadow-2xl border border-slate-150 dark:border-slate-800 flex flex-col max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300">
@@ -751,7 +751,7 @@ export default function CompanyFlights() {
               </div>
               <form onSubmit={handleAddFlight} className="p-8 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* رقم الرحلة */}
+                  {}
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">رقم الرحلة</label>
                     <input
@@ -764,7 +764,7 @@ export default function CompanyFlights() {
                     />
                   </div>
 
-                  {/* السعر */}
+                  {}
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">السعر الأساسي ($)</label>
                     <input
@@ -777,7 +777,7 @@ export default function CompanyFlights() {
                     />
                   </div>
 
-                  {/* مطار الإقلاع */}
+                  {}
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">مطار الإقلاع (Origin)</label>
                     <div className="relative">
@@ -796,7 +796,7 @@ export default function CompanyFlights() {
                     </div>
                   </div>
 
-                  {/* مطار الوصول */}
+                  {}
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">مطار الوصول (Destination)</label>
                     <div className="relative">
@@ -815,7 +815,7 @@ export default function CompanyFlights() {
                     </div>
                   </div>
 
-                  {/* وقت الإقلاع */}
+                  {}
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">وقت وتاريخ الإقلاع</label>
                     <input
@@ -827,7 +827,7 @@ export default function CompanyFlights() {
                     />
                   </div>
 
-                  {/* وقت الوصول */}
+                  {}
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">وقت وتاريخ الوصول</label>
                     <input
@@ -839,7 +839,7 @@ export default function CompanyFlights() {
                     />
                   </div>
 
-                  {/* نوع الطائرة */}
+                  {}
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">نوع الطائرة (Aircraft)</label>
                     <div className="relative">
@@ -857,7 +857,7 @@ export default function CompanyFlights() {
                     </div>
                   </div>
 
-                  {/* السعة الإجمالية */}
+                  {}
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">عدد المقاعد الإجمالي</label>
                     <input
@@ -891,7 +891,7 @@ export default function CompanyFlights() {
           </div>
         )}
 
-        {/* ─── 6. النافذة المنبثقة لتعديل رحلة (Edit Flight Modal) ─── */}
+        {}
         {showEditModal && editingFlight && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 backdrop-blur-md bg-slate-900/40 overflow-y-auto animate-in fade-in duration-300">
             <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-[32px] sm:rounded-[40px] shadow-2xl border border-slate-150 dark:border-slate-800 flex flex-col max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300">
@@ -906,7 +906,7 @@ export default function CompanyFlights() {
               </div>
               <form onSubmit={handleEditFlight} className="p-8 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* رقم الرحلة */}
+                  {}
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">رقم الرحلة</label>
                     <input
@@ -918,7 +918,7 @@ export default function CompanyFlights() {
                     />
                   </div>
 
-                  {/* السعر */}
+                  {}
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">السعر الأساسي ($)</label>
                     <input
@@ -930,7 +930,7 @@ export default function CompanyFlights() {
                     />
                   </div>
 
-                  {/* مطار الإقلاع */}
+                  {}
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">مطار الإقلاع (Origin)</label>
                     <div className="relative">
@@ -948,7 +948,7 @@ export default function CompanyFlights() {
                     </div>
                   </div>
 
-                  {/* مطار الوصول */}
+                  {}
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">مطار الوصول (Destination)</label>
                     <div className="relative">
@@ -966,7 +966,7 @@ export default function CompanyFlights() {
                     </div>
                   </div>
 
-                  {/* وقت الإقلاع */}
+                  {}
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">وقت وتاريخ الإقلاع</label>
                     <input
@@ -978,7 +978,7 @@ export default function CompanyFlights() {
                     />
                   </div>
 
-                  {/* وقت الوصول */}
+                  {}
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">وقت وتاريخ الوصول</label>
                     <input
@@ -990,7 +990,7 @@ export default function CompanyFlights() {
                     />
                   </div>
 
-                  {/* نوع الطائرة */}
+                  {}
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">نوع الطائرة (Aircraft)</label>
                     <div className="relative">
@@ -1008,7 +1008,7 @@ export default function CompanyFlights() {
                     </div>
                   </div>
 
-                  {/* السعة الإجمالية */}
+                  {}
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">عدد المقاعد الإجمالي</label>
                     <input
@@ -1021,7 +1021,7 @@ export default function CompanyFlights() {
                     />
                   </div>
 
-                  {/* الحالة */}
+                  {}
                   <div className="space-y-2 md:col-span-2">
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-1">الحالة</label>
                     <div className="relative">
@@ -1060,7 +1060,7 @@ export default function CompanyFlights() {
           </div>
         )}
 
-        {/* ─── 7. إشعارات الـ Toast العائمة ─── */}
+        {}
         {toast && (
           <div
             className={`fixed bottom-6 right-6 z-[9999] flex items-center gap-3 rounded-[20px] px-6 py-4 shadow-2xl animate-in slide-in-from-bottom-5 duration-300 ${toast.type === 'success'

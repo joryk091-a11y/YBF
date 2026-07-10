@@ -3,14 +3,14 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { Armchair, ChevronRight, Users, ShieldCheck, Plane, Info, CheckCircle2, Star, Zap } from 'lucide-react'
 import BookingStepper from '../components/BookingStepper.jsx'
 
-// Yemenia Airbus A320 Structure
+
 const BUSINESS_ROWS = [1, 2, 3]
-const ECONOMY_ROWS = Array.from({ length: 23 }, (_, i) => i + 4) // Rows 4 to 26
+const ECONOMY_ROWS = Array.from({ length: 23 }, (_, i) => i + 4) 
 const EXIT_ROWS = [11, 12]
 
 const MOCK_OCCUPIED = ['1A', '2B', '5C', '12D', '15F', '20A', '26E']
 
-// Custom Icons for the Details Popup
+
 const PitchIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M7 18V7c0-1.1.9-2 2-2h6" />
@@ -111,23 +111,23 @@ function SeatsPage() {
                         {col}
                     </span>
 
-                    {/* Animated shine effect on hover */}
+                    {}
                     {!isOccupied && !isSelected && (
                         <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                     )}
                 </button>
 
-                {/* Premium Seat Details Tooltip */}
+                {}
                 {hoveredSeat?.id === seatId && (
                     <div className="absolute bottom-full left-1/2 z-[100] mb-5 -translate-x-1/2 animate-in fade-in zoom-in slide-in-from-bottom-4 duration-300">
                         <div className="relative w-80 overflow-hidden rounded-[2.5rem] bg-white/95 p-8 shadow-[0_30px_70px_rgba(0,0,0,0.15)] border border-white/50 backdrop-blur-2xl">
-                            {/* Accent Gradient */}
+                            {}
                             <div className={`absolute top-0 left-0 right-0 h-2 ${isBusiness ? 'bg-gradient-to-r from-amber-400 to-yellow-600' : 'bg-gradient-to-r from-blue-400 to-indigo-600'}`} />
 
-                            {/* Tip Arrow */}
+                            {}
                             <div className="absolute bottom-[-10px] left-1/2 h-5 w-5 -translate-x-1/2 rotate-45 bg-white/95 border-r border-b border-white/50" />
 
-                            {/* Header */}
+                            {}
                             <div className="mb-6 flex items-center justify-between" dir="rtl">
                                 <div className="text-right">
                                     <h4 className="text-2xl font-black text-slate-900 leading-tight">
@@ -147,7 +147,7 @@ function SeatsPage() {
                                 </div>
                             </div>
 
-                            {/* Details Grid */}
+                            {}
                             <div className="grid grid-cols-3 gap-3" dir="rtl">
                                 <div className="flex flex-col items-center justify-center rounded-3xl bg-slate-50/50 p-4 transition-colors hover:bg-slate-100">
                                     <div className="mb-2 text-slate-400"><PitchIcon /></div>
@@ -189,19 +189,19 @@ function SeatsPage() {
 
         return (
             <div key={rowNum} className="flex items-center justify-center gap-3 sm:gap-6 px-4 sm:px-12 group/row">
-                {/* Left Side */}
+                {}
                 <div className={`flex gap-2 sm:gap-3 ${isBusiness ? 'w-[110px] sm:w-[130px] justify-end pr-4' : 'w-[150px] sm:w-[170px] justify-between'}`}>
                     {leftCols.map(col => renderSeat(rowNum, col, isBusiness, isExit))}
                 </div>
 
-                {/* Aisle with Row Number */}
+                {}
                 <div className="flex w-12 flex-col items-center justify-center">
                     <span className="text-[11px] font-black text-slate-400 bg-white shadow-sm border border-slate-100 w-8 h-8 rounded-2xl flex items-center justify-center group-hover/row:border-blue-200 group-hover/row:text-blue-500 transition-colors">
                         {rowNum}
                     </span>
                 </div>
 
-                {/* Right Side */}
+                {}
                 <div className={`flex gap-2 sm:gap-3 ${isBusiness ? 'w-[110px] sm:w-[130px] justify-start pl-4' : 'w-[150px] sm:w-[170px] justify-between'}`}>
                     {rightCols.map(col => renderSeat(rowNum, col, isBusiness, isExit))}
                 </div>
@@ -241,7 +241,7 @@ function SeatsPage() {
 
             <div className="mx-auto mt-12 grid w-full max-w-7xl gap-12 px-4 lg:grid-cols-[1fr_400px] sm:px-6">
 
-                {/* Airplane Map Section */}
+                {}
                 <section className="relative z-10 flex flex-col items-center">
                     <div className="mb-12 w-full text-center lg:text-right">
                         <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">اختر مقعدك المفضل</h1>
@@ -274,7 +274,7 @@ function SeatsPage() {
                         </div>
                     )}
 
-                    {/* Modern Horizontal Legend */}
+                    {}
                     <div className="flex flex-wrap items-center justify-center gap-6 px-6 py-4 rounded-3xl bg-white border border-slate-200/60 shadow-sm max-w-[580px] w-full mb-6" dir="rtl">
                         <div className="flex items-center gap-2">
                             <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-50 border border-amber-200 text-amber-600 shadow-sm">
@@ -303,14 +303,14 @@ function SeatsPage() {
                     </div>
 
                     <div className="relative w-full max-w-[580px] mt-48">
-                        {/* Realistic Airplane Body */}
+                        {}
                         <div className="relative mx-auto w-full max-w-[480px] bg-gradient-to-b from-white via-slate-50 to-white border-x-[16px] border-slate-200/80 shadow-[0_50px_100px_rgba(0,0,0,0.1)] p-0 overflow-visible pb-32">
 
-                            {/* Nose Section with Cockpit */}
+                            {}
                             <div className="absolute top-[-180px] left-[-16px] right-[-16px] h-[200px] bg-white border-x-[16px] border-t-[16px] border-slate-200/80 shadow-inner"
                                 style={{ borderRadius: '50% 50% 0 0 / 100% 100% 0 0' }}>
                                 <div className="absolute inset-0 flex flex-col items-center justify-end pb-10">
-                                    {/* Cockpit Windows */}
+                                    {}
                                     <div className="flex gap-1.5 mb-6">
                                         <div className="w-10 h-5 bg-slate-900 rounded-[15px_4px_4px_15px] shadow-lg opacity-90" />
                                         <div className="w-12 h-6 bg-slate-900 rounded-sm shadow-lg opacity-90" />
@@ -324,7 +324,7 @@ function SeatsPage() {
                                 </div>
                             </div>
 
-                            {/* Cabin Windows */}
+                            {}
                             <div className="absolute left-1 top-20 bottom-60 w-1.5 flex flex-col gap-10 items-center opacity-10">
                                 {Array.from({ length: 20 }).map((_, i) => <div key={i} className="w-2 h-4 bg-slate-900 rounded-full shadow-inner" />)}
                             </div>
@@ -332,7 +332,7 @@ function SeatsPage() {
                                 {Array.from({ length: 20 }).map((_, i) => <div key={i} className="w-2 h-4 bg-slate-900 rounded-full shadow-inner" />)}
                             </div>
 
-                            {/* Main Galley Area */}
+                            {}
                             <div className="h-28 w-full bg-slate-50/80 border-y-2 border-slate-100 flex items-center justify-between px-12 relative overflow-hidden">
                                 <div className="absolute left-[-20px] top-1/2 -translate-y-1/2 w-6 h-16 bg-brand-blue rounded-r-2xl shadow-lg shadow-brand-blue/20 flex items-center justify-center text-[9px] text-white font-black [writing-mode:vertical-lr] rotate-180 z-10 border-2 border-white/20">EXIT DOOR</div>
                                 <div className="absolute right-[-20px] top-1/2 -translate-y-1/2 w-6 h-16 bg-brand-blue rounded-l-2xl shadow-lg shadow-brand-blue/20 flex items-center justify-center text-[9px] text-white font-black [writing-mode:vertical-lr] z-10 border-2 border-white/20">EXIT DOOR</div>
@@ -340,7 +340,7 @@ function SeatsPage() {
                                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.8)_0%,transparent_70%)]" />
                             </div>
 
-                            {/* Interior Mapping Area */}
+                            {}
                             <div className="py-12 space-y-5 pt-20">
                                 <div className="flex flex-col items-center gap-2 mb-10">
                                     <div className="h-1 w-24 bg-amber-200 rounded-full" />
@@ -349,7 +349,7 @@ function SeatsPage() {
 
                                 {BUSINESS_ROWS.map(num => renderRow(num))}
 
-                                {/* Overwing Exit Area */}
+                                {}
                                 <div className="py-16 flex flex-col items-center justify-center relative">
                                     <div className="absolute left-[-60px] right-[-60px] h-32 bg-emerald-500/5 backdrop-blur-[2px] border-y border-emerald-500/10" />
                                     <div className="z-10 flex flex-col items-center gap-3">
@@ -366,7 +366,7 @@ function SeatsPage() {
                                 {ECONOMY_ROWS.map(num => renderRow(num))}
                             </div>
 
-                            {/* Tail Unit Section */}
+                            {}
                             <div className="absolute bottom-[-140px] left-[-16px] right-[-16px] h-[160px] bg-white border-x-[16px] border-b-[16px] border-slate-200/80 shadow-2xl"
                                 style={{ borderRadius: '0 0 50% 50% / 0 0 100% 100%' }}>
                                 <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center">
@@ -376,7 +376,7 @@ function SeatsPage() {
                                     </div>
                                     <span className="text-[10px] font-black text-slate-300 uppercase tracking-[6px]">TAIL SECTION</span>
                                 </div>
-                                {/* Rear Stabilizers Visual */}
+                                {}
                                 <div className="absolute bottom-10 left-[-80px] w-20 h-4 bg-slate-200 rounded-full origin-right -rotate-[20deg]" />
                                 <div className="absolute bottom-10 right-[-80px] w-20 h-4 bg-slate-200 rounded-full origin-left rotate-[20deg]" />
                             </div>
@@ -384,10 +384,10 @@ function SeatsPage() {
                     </div>
                 </section>
 
-                {/* Information & Actions Sidebar */}
+                {}
                 <aside className="h-fit lg:sticky lg:top-48 space-y-8">
 
-                    {/* Booking Summary Card */}
+                    {}
                     <div className="group relative overflow-hidden rounded-[3rem] border border-white bg-white/80 p-1 shadow-2xl shadow-blue-900/10 backdrop-blur-xl">
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-indigo-50/30 opacity-50" />
                         <div className="relative rounded-[2.8rem] bg-white p-8 shadow-inner">
@@ -455,7 +455,7 @@ function SeatsPage() {
 
 
 
-                    {/* Trust Banner */}
+                    {}
                     <div className="flex items-center gap-4 px-6 py-5 rounded-[2rem] bg-white border border-slate-200/50 shadow-[0_8px_30px_rgb(0,0,0,0.02)] transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
                         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-brand-blue">
                             <ShieldCheck size={22} />

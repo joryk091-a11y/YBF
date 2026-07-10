@@ -23,7 +23,7 @@ export default function MockAuthPanel() {
       className="fixed bottom-6 left-6 z-[9999] w-80 rounded-[24px] border border-slate-200/80 dark:border-slate-800/80 bg-white/90 dark:bg-slate-950/90 p-5 shadow-2xl backdrop-blur-xl transition-all duration-300 hover:shadow-blue-500/5"
       dir="rtl"
     >
-      {/* Header */}
+      {}
       <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-900 pb-3 mb-4">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
@@ -41,9 +41,9 @@ export default function MockAuthPanel() {
         </button>
       </div>
 
-      {/* Info Cards */}
+      {}
       <div className="space-y-3 mb-4">
-        {/* Role card */}
+        {}
         <div className="flex items-center justify-between rounded-xl bg-slate-50 dark:bg-slate-900/50 p-3 border border-slate-100/50 dark:border-slate-900/50">
           <div className="flex items-center gap-2">
             <User size={14} className="text-slate-400" />
@@ -58,7 +58,7 @@ export default function MockAuthPanel() {
           </span>
         </div>
 
-        {/* Airline details card */}
+        {}
         <div className="rounded-xl bg-slate-50 dark:bg-slate-900/50 p-3 border border-slate-100/50 dark:border-slate-900/50 text-[11px] font-bold text-slate-500 dark:text-slate-400 space-y-1">
           <div className="flex justify-between">
             <span>شركة الطيران:</span>
@@ -71,7 +71,7 @@ export default function MockAuthPanel() {
         </div>
       </div>
 
-      {/* Toggle Buttons */}
+      {}
       <div className="flex gap-2">
         <button
           onClick={() => setRole('super_admin')}
@@ -97,7 +97,7 @@ export default function MockAuthPanel() {
         </button>
       </div>
 
-      {/* Helper text */}
+      {}
       <p className="text-[10px] text-center text-slate-400 dark:text-slate-500 mt-3 font-medium">
         * يتم تبديل صلاحيات الوصول والمسارات تلقائياً عند تغيير الدور.
       </p>

@@ -23,11 +23,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Helper to parse DATABASE_URL
+
 const getDbConfig = () => {
   const url = process.env.DATABASE_URL;
   if (!url) {
-    // Fallback to standard local MySQL (e.g. XAMPP) if DATABASE_URL is not set in environment
+    
     return {
       host: '127.0.0.1',
       user: 'root',
@@ -39,15 +39,15 @@ const getDbConfig = () => {
   return url;
 };
 
-// ─── RESTful Auth Aliases ──────────────────────────────────────────────────
-// Allow both legacy paths and new /api/auth/* paths
+
+
 
 const authAliasHandler = (originalPath) => async (req, res, next) => {
   req.url = originalPath;
   next();
 };
 
-// ─── Passengers ─────────────────────────────────────────────────────────────
+
 app.post('/api/passengers', async (req, res) => {
   const { passengers, userId } = req.body;
   let connection;
@@ -60,7 +60,7 @@ app.post('/api/passengers', async (req, res) => {
       const birthDate = p.birthDate || null;
       const passportExpiry = p.passportExpiry || null;
 
-      // Upsert logic using MySQL
+      
       const [existing] = await connection.execute(
         'SELECT id_passengers FROM passengers WHERE passport_number = ?',
         [p.passportNumber]
@@ -90,9 +90,9 @@ app.post('/api/passengers', async (req, res) => {
   }
 });
 
-// --- NEW USER ACCOUNT ENDPOINTS ---
 
-// POST /api/auth/register — RESTful alias
+
+
 app.post('/api/auth/register', async (req, res, next) => { req.url = '/api/register'; return registerHandler(req, res); });
 
 async function registerHandler(req, res) {
@@ -121,7 +121,7 @@ async function registerHandler(req, res) {
 
 app.post('/api/register', registerHandler);
 
-// POST /api/auth/login — RESTful alias
+
 app.post('/api/auth/login', async (req, res) => loginHandler(req, res));
 
 async function loginHandler(req, res) {
@@ -182,7 +182,7 @@ app.post('/api/admin/users', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
     
-    // Check if email already exists
+    
     const [existing] = await connection.execute('SELECT id_users FROM users WHERE email = ?', [email]);
     if (existing.length > 0) {
       return res.status(400).json({ success: false, error: 'البريد الإلكتروني مسجل بالفعل' });
@@ -209,7 +209,7 @@ app.put('/api/admin/users/:id', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    // Check if email already exists for another user
+    
     const [existing] = await connection.execute('SELECT id_users FROM users WHERE email = ? AND id_users != ?', [email, id]);
     if (existing.length > 0) {
       return res.status(400).json({ success: false, error: 'البريد الإلكتروني مسجل بمستخدم آخر' });
@@ -252,9 +252,9 @@ app.delete('/api/admin/users/:id', async (req, res) => {
 });
 
 
-// ===== LIVE SUPPORT CHAT API ENDPOINTS =====
 
-// 1. GET chat history for a specific conversation thread (by email)
+
+
 app.get('/api/chat/messages', async (req, res) => {
   const { email } = req.query;
   if (!email) {
@@ -276,7 +276,7 @@ app.get('/api/chat/messages', async (req, res) => {
   }
 });
 
-// 2. POST a message in a conversation thread (used by both users and admin)
+
 app.post('/api/chat/messages', async (req, res) => {
   const { user_id, sender, sender_name, sender_email, message } = req.body;
   if (!sender || !sender_name || !sender_email || !message) {
@@ -298,7 +298,7 @@ app.post('/api/chat/messages', async (req, res) => {
   }
 });
 
-// 3. GET all active conversations for the Admin Dashboard (WhatsApp style list)
+
 app.get('/api/admin/chat/conversations', async (req, res) => {
   let connection;
   try {
@@ -341,7 +341,7 @@ app.get('/api/admin/chat/conversations', async (req, res) => {
   }
 });
 
-// 4. PUT mark all messages in a conversation as read
+
 app.put('/api/admin/chat/read', async (req, res) => {
   const { email } = req.query;
   if (!email) {
@@ -363,7 +363,7 @@ app.put('/api/admin/chat/read', async (req, res) => {
   }
 });
 
-// 5. DELETE a full conversation thread
+
 app.delete('/api/admin/chat/conversations', async (req, res) => {
   const { email } = req.query;
   if (!email) {
@@ -383,9 +383,9 @@ app.delete('/api/admin/chat/conversations', async (req, res) => {
 });
 
 
-// GET Admin Dashboard stats from database
+
 app.get('/api/admin/dashboard-stats', async (req, res) => {
-  const { period, date, year, month, flightNumber } = req.query; // 'current_month', 'current_year', YYYY-MM-DD or custom year & month
+  const { period, date, year, month, flightNumber } = req.query; 
   const isCurrentMonth = period === 'current_month';
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   const isCustomDate = date && dateRegex.test(date);
@@ -393,7 +393,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    // شروط تصفية التواريخ للشهر الحالي أو السنة الحالية أو تاريخ محدد أو سنة وشهر معينين
+    
     let dateFilterBookings;
     let dateFilterPayments;
     let dateFilterBookingsAnd;
@@ -454,25 +454,25 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
         : "AND DATE_FORMAT(p.payment_date, '%Y') = DATE_FORMAT(NOW(), '%Y')";
     }
 
-    // 1. Total tickets (number of passenger tickets booked)
+    
     const [[{ totalTickets }]] = await connection.execute(
       `SELECT COALESCE(SUM(total_passengers), 0) as totalTickets FROM bookings ${dateFilterBookings}`
     );
 
-    // 2. Total revenue (sum of amount of success payments)
+    
     const [[{ totalRevenue }]] = await connection.execute(
       `SELECT COALESCE(SUM(amount), 0) as totalRevenue FROM payments WHERE payment_status = 'success' ${dateFilterPayments}`
     );
 
-    // 3. Pending payments (bookings count with 'temporary' status)
+    
     const [[{ pendingPayments }]] = await connection.execute(
       `SELECT COUNT(*) as pendingPayments FROM bookings WHERE status = 'temporary' ${dateFilterBookingsAnd}`
     );
 
-    // 4. Total users
+    
     const [[{ totalUsers }]] = await connection.execute('SELECT COUNT(*) as totalUsers FROM users');
 
-    // 5. Recent bookings
+    
     let flightFilter = '';
     const recentParams = [];
     if (flightNumber && flightNumber.trim() !== '') {
@@ -490,7 +490,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       LIMIT 100
     `, recentParams);
 
-    // 6. Top Destinations and ticket counts (SUM of passengers)
+    
     const [destinationsStats] = await connection.execute(`
       SELECT f.airportDestination_code as destination, COALESCE(SUM(b.total_passengers), 0) as count 
       FROM bookings b
@@ -501,7 +501,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       LIMIT 5
     `);
 
-    // 7. Monthly Sales and passenger count (last 6 months)
+    
     const [monthlySales] = await connection.execute(`
       SELECT DATE_FORMAT(booking_date, '%Y-%m') as month, COALESCE(SUM(final_price), 0) as sales, COALESCE(SUM(total_passengers), 0) as passengers
       FROM bookings
@@ -510,7 +510,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       LIMIT 6
     `);
 
-    // 7b. Daily Sales (last 14 days)
+    
     const [dailySales] = await connection.execute(`
       SELECT DATE_FORMAT(booking_date, '%Y-%m-%d') as day, COALESCE(SUM(final_price), 0) as sales, COALESCE(SUM(total_passengers), 0) as passengers
       FROM bookings
@@ -519,7 +519,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       ORDER BY day ASC
     `);
 
-    // 8. Airline Share
+    
     const [airlineStats] = await connection.execute(`
       SELECT f.airline_code as name, COUNT(b.id_bookings) as value
       FROM bookings b
@@ -528,7 +528,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       GROUP BY f.airline_code
     `);
 
-    // 9. Class stats
+    
     const [classStats] = await connection.execute(`
       SELECT s.seat_class as name, COUNT(bp.id_bookings_passengers) as value
       FROM bookings_passengers bp
@@ -538,12 +538,12 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       GROUP BY s.seat_class
     `);
 
-    // 10. Active passengers
+    
     const [[{ activePassengers }]] = await connection.execute(
       `SELECT COUNT(DISTINCT bp.passenger_id) as activePassengers FROM bookings_passengers bp JOIN bookings b ON bp.booking_id = b.id_bookings ${dateFilterBookingsWhereAlias}`
     );
 
-    // 11. Cancellation Rate and Status Mapping
+    
     const [[{ totalBookings }]] = await connection.execute(`SELECT COUNT(*) as totalBookings FROM bookings ${dateFilterBookings}`);
     const [[{ canceledBookings }]] = await connection.execute(
       `SELECT COUNT(*) as canceledBookings FROM bookings WHERE status = 'canceled' ${dateFilterBookingsAnd}`
@@ -557,7 +557,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       GROUP BY status
     `);
 
-    // 12. Aircraft average pricing
+    
     const [aircraftStats] = await connection.execute(`
       SELECT aircraft_type as name, COALESCE(AVG(price), 0) as price
       FROM flights
@@ -565,7 +565,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       HAVING price > 0
     `);
 
-    // 13. Company Breakdown
+    
     const [companyBreakdown] = await connection.execute(`
       SELECT 
         c.airline_code,
@@ -636,7 +636,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
   }
 });
 
-// GET pending bookings for a specific airline (strict Data Isolation)
+
 app.get('/api/bookings/pending', async (req, res) => {
   const { airline_id } = req.query;
   
@@ -648,7 +648,7 @@ app.get('/api/bookings/pending', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
     
-    // We enforce data isolation by joining bookings with flights and filtering strictly by the active company's airline_id
+    
     const [rows] = await connection.execute(`
       SELECT b.id_bookings, b.booking_reference, b.booking_date, b.total_passengers, b.base_price, b.extra_total, b.final_price, b.status,
              f.flight_number, f.airline_code, f.airline_id, f.airportOrigin_code, f.airportDestination_code, f.departure_time, f.arrival_time, f.price as flight_price,
@@ -661,7 +661,7 @@ app.get('/api/bookings/pending', async (req, res) => {
       ORDER BY b.booking_date DESC
     `, [airline_id]);
 
-    // Parse the gateway_response to retrieve payment receipt if it exists
+    
     const bookings = rows.map(r => {
       let paymentProof = null;
       let selectedBranchId = null;
@@ -690,7 +690,7 @@ app.get('/api/bookings/pending', async (req, res) => {
   }
 });
 
-// GET dashboard stats for a specific company (strict Data Isolation)
+
 app.get('/api/company/dashboard-stats', async (req, res) => {
   const { airline_code } = req.query;
   
@@ -702,13 +702,13 @@ app.get('/api/company/dashboard-stats', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
     
-    // 1. Total flights count
+    
     const [[{ totalFlights }]] = await connection.execute(
       'SELECT COUNT(*) as totalFlights FROM flights WHERE airline_code = ?',
       [airline_code]
     );
 
-    // 2. Total bookings count (not canceled)
+    
     const [[{ totalBookingsCount }]] = await connection.execute(`
       SELECT COUNT(*) as totalBookingsCount 
       FROM bookings b
@@ -716,7 +716,7 @@ app.get('/api/company/dashboard-stats', async (req, res) => {
       WHERE f.airline_code = ? AND b.status != 'canceled'
     `, [airline_code]);
 
-    // 3. Total revenue sum (successful payments)
+    
     const [[{ totalRevenueSum }]] = await connection.execute(`
       SELECT COALESCE(SUM(p.amount), 0) as totalRevenueSum 
       FROM payments p
@@ -742,7 +742,7 @@ app.get('/api/company/dashboard-stats', async (req, res) => {
 });
 
 
-// GET all bookings for admin
+
 app.get('/api/admin/bookings', async (req, res) => {
   const { date, year, month } = req.query;
   let connection;
@@ -790,8 +790,8 @@ app.get('/api/admin/bookings', async (req, res) => {
   }
 });
 
-// PATCH /api/admin/bookings/:id/status — RESTful
-// POST kept as alias for backward compatibility
+
+
 async function updateBookingStatusHandler(req, res) {
   const { id } = req.params;
   const { status, payment_status } = req.body;
@@ -806,7 +806,7 @@ async function updateBookingStatusHandler(req, res) {
         [status, status === 'canceled' ? new Date() : null, id]
       );
 
-      // Fetch booking reference and lead passenger to notify
+      
       const [[bookingRow]] = await connection.execute(
         'SELECT booking_reference FROM bookings WHERE id_bookings = ?',
         [id]
@@ -870,7 +870,7 @@ async function updateBookingStatusHandler(req, res) {
 app.patch('/api/admin/bookings/:id/status', updateBookingStatusHandler);
 app.post('/api/admin/bookings/:id/status', updateBookingStatusHandler);
 
-// POST /api/auth/company/login — RESTful alias
+
 app.post('/api/auth/company/login', async (req, res) => companyLoginHandler(req, res));
 
 async function companyLoginHandler(req, res) {
@@ -923,8 +923,8 @@ async function companyLoginHandler(req, res) {
 app.post('/api/company-login', companyLoginHandler);
 
 
-// GET /api/bookings?userId= — RESTful route
-// GET /api/my-bookings/:userId — legacy route (kept for compatibility)
+
+
 async function getUserBookingsHandler(req, res) {
   const userId = req.params.userId || req.query.userId;
   let connection;
@@ -969,8 +969,8 @@ async function getUserBookingsHandler(req, res) {
 app.get('/api/bookings', getUserBookingsHandler);
 app.get('/api/my-bookings/:userId', getUserBookingsHandler);
 
-// GET /api/bookings/:id/passengers — RESTful route
-// GET /api/booking-passengers/:bookingId — legacy route
+
+
 async function getBookingPassengersHandler(req, res) {
   const bookingId = req.params.id || req.params.bookingId;
   let connection;
@@ -1002,7 +1002,7 @@ async function getBookingPassengersHandler(req, res) {
 app.get('/api/bookings/:id/passengers', getBookingPassengersHandler);
 app.get('/api/booking-passengers/:bookingId', getBookingPassengersHandler);
 
-// GET /api/bookings/:id/ticket — Generate official PDF ticket
+
 app.get('/api/bookings/:id/ticket', async (req, res) => {
   const { id } = req.params;
   let connection;
@@ -1032,11 +1032,11 @@ app.get('/api/bookings/:id/ticket', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Booking not found' });
     }
 
-    // Format final price, reference and passengers list
+    
     const firstRow = rows[0];
     const passengersMap = new Map();
     rows.forEach(r => {
-      // Ensure unique passengers in case of duplicate joins
+      
       passengersMap.set(r.passenger_name + '_' + r.passport_number, {
         name: r.passenger_name,
         passport_number: r.passport_number || 'N/A',
@@ -1066,10 +1066,10 @@ app.get('/api/bookings/:id/ticket', async (req, res) => {
       passengers: Array.from(passengersMap.values())
     };
 
-    // Generate HTML template
+    
     const htmlContent = generateTicketHtml(booking);
 
-    // Launch puppeteer to generate PDF
+    
     const localHeadlessShell = 'C:\\Users\\ABRAG Soft\\.cache\\puppeteer\\chrome-headless-shell\\win64-150.0.7871.24\\chrome-headless-shell-win64\\chrome-headless-shell.exe';
     const standardChromePaths = [
       localHeadlessShell,
@@ -1307,7 +1307,7 @@ function generateTicketHtml(booking) {
 }
 
 
-// --- NEW FLIGHT MANAGEMENT ENDPOINTS ---
+
 
 app.get('/api/flights', async (req, res) => {
   const { airlineCode, airline_id, date } = req.query;
@@ -1338,7 +1338,7 @@ app.get('/api/flights', async (req, res) => {
   }
 });
 
-// Add new flight
+
 app.post('/api/flights', async (req, res) => {
   const f = req.body;
   let connection;
@@ -1357,7 +1357,7 @@ app.post('/api/flights', async (req, res) => {
   }
 });
 
-// Delete flight
+
 app.delete('/api/flights/:id', async (req, res) => {
   let connection;
   try {
@@ -1370,15 +1370,15 @@ app.delete('/api/flights/:id', async (req, res) => {
     if (connection) await connection.end();
   }
 });
-// GET /api/flights/search — RESTful route
-// GET /api/search-flights — legacy route
+
+
 app.get('/api/flights/search', async (req, res) => { return searchFlightsHandler(req, res); });
 app.get('/api/search-flights', async (req, res) => { return searchFlightsHandler(req, res); });
 async function searchFlightsHandler(req, res) {
   let { from, to, date } = req.query;
   let connection;
 
-  // Map common city names/keys to DB codes
+  
   const codeMap = {
     'aden': 'ADE',
     'cairo': 'CAI',
@@ -1401,7 +1401,7 @@ async function searchFlightsHandler(req, res) {
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    // 1. Auto-update: Set past active flights to cancelled
+    
     try {
       await connection.execute(
         "UPDATE flights SET status = 'cancelled' WHERE departure_time < NOW() AND status != 'cancelled'"
@@ -1411,7 +1411,7 @@ async function searchFlightsHandler(req, res) {
     }
 
     console.log(`Search Request: from=${fromCode}, to=${toCode}, date=${date}`);
-    // 2. Fetch only active and future flights
+    
     let query = `
       SELECT f.*, c.company_name AS airline_name 
       FROM flights f 
@@ -1445,7 +1445,7 @@ async function searchFlightsHandler(req, res) {
   }
 }
 
-// PUT/POST /api/flights/:id — RESTful (supports legacy POST and updates status)
+
 const handleFlightUpdate = async (req, res) => {
   const f = req.body;
   const { id } = req.params;
@@ -1468,7 +1468,7 @@ const handleFlightUpdate = async (req, res) => {
 app.put('/api/flights/:id', handleFlightUpdate);
 app.post('/api/flights/:id', handleFlightUpdate);
 
-// Create a new booking
+
 app.post('/api/bookings', async (req, res) => {
   const { flightId, passengers, totalPrice, basePrice, extraBags, selectedServices, extrasTotal, paymentMethod: rawMethod, reference, userId, selectedSeats, seatsSelectionMap } = req.body;
 
@@ -1479,20 +1479,20 @@ app.post('/api/bookings', async (req, res) => {
     'medmeal': { label: 'سيارة إسعاف', price: 12.50 }
   };
 
-  // Map frontend payment method to DB Enum values
+  
   const methodMap = {
     'card': 'credit_card',
     'paypal': 'paypal',
-    'branch': 'bank_transfer', // 'branch_payment' is missing from DB Enum
+    'branch': 'bank_transfer', 
     'transfer': 'bank_transfer'
   };
   const paymentMethod = methodMap[rawMethod] || 'credit_card';
 
-  // Enforce 'Pending' status (temporary in DB) for all bookings for admin review
+  
   const bookingStatus = 'temporary';
   const paymentStatus = (rawMethod === 'branch' || rawMethod === 'transfer') ? 'pending' : 'success';
 
-  // Process and save payment receipt image (base64 or URL/path)
+  
   let proofPath = null;
   if (req.body.paymentProof) {
     try {
@@ -1522,7 +1522,7 @@ app.post('/api/bookings', async (req, res) => {
     }
   }
 
-  // Normalize flightId(s) and selectedSeats/seatsSelectionMap
+  
   const flightIds = Array.isArray(flightId) ? flightId : (req.body.flightIds || [flightId]);
   const seatsMap = seatsSelectionMap || { 0: selectedSeats || [] };
 
@@ -1530,7 +1530,7 @@ app.post('/api/bookings', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    // Check if any of the flights are international and validate passenger passport details
+    
     for (const fId of flightIds) {
       const [flightRows] = await connection.execute(
         'SELECT airportOrigin_code as origin, airportDestination_code as destination FROM flights WHERE id_flights = ?',
@@ -1578,12 +1578,12 @@ app.post('/api/bookings', async (req, res) => {
     for (let fIdx = 0; fIdx < flightIds.length; fIdx++) {
       const currentFlightId = flightIds[fIdx];
 
-      // Segment pricing (split total amounts across all segments evenly)
+      
       const segmentBasePrice = Math.round(basePrice / flightIds.length);
       const segmentExtraPrice = Math.round(extrasTotal / flightIds.length);
       const segmentTotalPrice = Math.round(totalPrice / flightIds.length);
 
-      // 1. Create the booking record
+      
       const [bookingResult] = await connection.execute(
         'INSERT INTO bookings (flight_id, booking_date, total_passengers, base_price, extra_total, final_price, status, booking_reference) VALUES (?, NOW(), ?, ?, ?, ?, ?, ?)',
         [currentFlightId, passengers.length, segmentBasePrice, segmentExtraPrice, segmentTotalPrice, bookingStatus, reference]
@@ -1593,7 +1593,7 @@ app.post('/api/bookings', async (req, res) => {
         firstBookingId = bookingId;
       }
 
-      // 2. Process each passenger
+      
       let passengerIndex = 0;
       for (const p of passengers) {
         const pName = p.name || p.fullName || 'مسافر';
@@ -1625,7 +1625,7 @@ app.post('/api/bookings', async (req, res) => {
         }
         passengerIndex++;
 
-        // 3. Add baggage record (base weight + extra bags)
+        
         const flightSeats = seatsMap[fIdx] || [];
         const seatNumber = flightSeats[passengerIndex - 1] ? String(flightSeats[passengerIndex - 1]) : '';
         const seatRow = parseInt(seatNumber, 10);
@@ -1662,7 +1662,7 @@ app.post('/api/bookings', async (req, res) => {
         );
       }
 
-      // 4. Process Ground Services
+      
       if (selectedServices && Array.isArray(selectedServices)) {
         for (const serviceId of selectedServices) {
           const srv = serviceDataMap[serviceId];
@@ -1680,14 +1680,14 @@ app.post('/api/bookings', async (req, res) => {
         selectedBranchId: req.body.selectedBranchId || null
       });
 
-      // 5. Create payment record
+      
       await connection.execute(
         'INSERT INTO payments (booking_id, amount, payment_method, payment_status, gateway_response, payment_date) VALUES (?, ?, ?, ?, ?, NOW())',
         [bookingId, segmentTotalPrice, paymentMethod, paymentStatus, gatewayResponse]
       );
     }
 
-    // 6. Create notification for lead passenger on the first booking
+    
     if (leadPassengerId && firstBookingId) {
       await connection.execute(
         'INSERT INTO notifications (passenger_id, booking_id, title, message, type, is_read, created_at) VALUES (?, ?, ?, ?, ?, 0, NOW())',
@@ -1712,7 +1712,7 @@ app.post('/api/bookings', async (req, res) => {
   }
 });
 
-// Create Stripe Checkout Session
+
 app.post('/api/create-checkout-session', async (req, res) => {
   const { bookingId, reference, amount, flightNumber, origin, destination } = req.body;
   if (!stripe) {
@@ -1729,7 +1729,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
               name: `حجز رحلة طيران ${flightNumber}`,
               description: `من ${origin} إلى ${destination} (رمز الحجز: ${reference})`,
             },
-            unit_amount: Math.round(amount * 100), // convert to cents
+            unit_amount: Math.round(amount * 100), 
           },
           quantity: 1,
         },
@@ -1746,7 +1746,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
   }
 });
 
-// Confirm Booking Payment status
+
 app.post('/api/bookings/confirm-payment', async (req, res) => {
   const { reference } = req.body;
   let connection;
@@ -1763,13 +1763,13 @@ app.post('/api/bookings/confirm-payment', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Booking not found' });
     }
 
-    // Update all segments under this reference
+    
     await connection.execute(
       "UPDATE bookings SET status = 'certain' WHERE booking_reference = ?",
       [reference]
     );
 
-    // Update all payments linked to these bookings
+    
     await connection.execute(
       "UPDATE payments SET payment_status = 'success' WHERE booking_id IN (SELECT id_bookings FROM bookings WHERE booking_reference = ?)",
       [reference]
@@ -1786,9 +1786,9 @@ app.post('/api/bookings/confirm-payment', async (req, res) => {
   }
 });
 
-// ─── Notifications API ─────────────────────────────────────────────────────
 
-// Get notifications for a user (direct via user_id)
+
+
 app.get('/api/notifications/:userId', async (req, res) => {
   const { userId } = req.params;
   let connection;
@@ -1811,7 +1811,7 @@ app.get('/api/notifications/:userId', async (req, res) => {
   }
 });
 
-// Mark notification as read
+
 app.patch('/api/notifications/:id/read', async (req, res) => {
   const { id } = req.params;
   let connection;
@@ -1826,7 +1826,7 @@ app.patch('/api/notifications/:id/read', async (req, res) => {
   }
 });
 
-// Mark all notifications as read for a user (direct via user_id)
+
 app.patch('/api/notifications/read-all/:userId', async (req, res) => {
   const { userId } = req.params;
   let connection;
@@ -1847,7 +1847,7 @@ app.patch('/api/notifications/read-all/:userId', async (req, res) => {
   }
 });
 
-// Delete a notification
+
 app.delete('/api/notifications/:id', async (req, res) => {
   const { id } = req.params;
   let connection;
@@ -1863,7 +1863,7 @@ app.delete('/api/notifications/:id', async (req, res) => {
 });
 
 
-// --- HELPER TRANSLATION MAPS ---
+
 const arabicCityMap = {
   'ADE': 'عدن',
   'CAI': 'القاهرة',
@@ -1904,9 +1904,9 @@ const arabicWeekdays = {
 };
 
 
-// --- MULTI-TENANT STATISTICS & REPORTING ENDPOINTS ---
 
-// Get analytics stats for company dashboard
+
+
 app.get('/api/company/analytics-stats', async (req, res) => {
   const { airlineCode, airline_id } = req.query;
   if (!airlineCode && !airline_id) {
@@ -1917,7 +1917,7 @@ app.get('/api/company/analytics-stats', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    // 1. Total Revenue
+    
     const [revRow] = await connection.execute(`
       SELECT COALESCE(SUM(p.amount), 0) as totalRevenue
       FROM payments p
@@ -1927,7 +1927,7 @@ app.get('/api/company/analytics-stats', async (req, res) => {
     `, [airlineCode || '', airline_id || 0]);
     const totalRevenue = Number(revRow[0].totalRevenue) || 0;
 
-    // 2. Active Bookings
+    
     const [actRow] = await connection.execute(`
       SELECT COUNT(b.id_bookings) as activeBookings
       FROM bookings b
@@ -1936,7 +1936,7 @@ app.get('/api/company/analytics-stats', async (req, res) => {
     `, [airlineCode || '', airline_id || 0]);
     const activeBookings = Number(actRow[0].activeBookings) || 0;
 
-    // 3. Available Flights
+    
     const [avRow] = await connection.execute(`
       SELECT COUNT(id_flights) as availableFlights
       FROM flights
@@ -1944,7 +1944,7 @@ app.get('/api/company/analytics-stats', async (req, res) => {
     `, [airlineCode || '', airline_id || 0]);
     const availableFlights = Number(avRow[0].availableFlights) || 0;
 
-    // 4. Total Passengers
+    
     const [passRow] = await connection.execute(`
       SELECT COALESCE(SUM(b.total_passengers), 0) as totalPassengers
       FROM bookings b
@@ -1953,7 +1953,7 @@ app.get('/api/company/analytics-stats', async (req, res) => {
     `, [airlineCode || '', airline_id || 0]);
     const totalPassengers = Number(passRow[0].totalPassengers) || 0;
 
-    // 5. Destinations Stats
+    
     const [destRows] = await connection.execute(`
       SELECT f.airportDestination_code as name, COUNT(b.id_bookings) as bookings
       FROM bookings b
@@ -1969,7 +1969,7 @@ app.get('/api/company/analytics-stats', async (req, res) => {
       bookings: Number(r.bookings) || 0
     }));
 
-    // 6. Services Stats
+    
     const [serviceRows] = await connection.execute(`
       SELECT gs.service_name as name, COUNT(*) as value
       FROM ground_services gs
@@ -1984,7 +1984,7 @@ app.get('/api/company/analytics-stats', async (req, res) => {
       value: Number(r.value) || 0
     }));
 
-    // 7. Recent Bookings
+    
     const [recentRows] = await connection.execute(`
       SELECT b.id_bookings, b.booking_reference, b.final_price, b.status,
              f.airportOrigin_code, f.airportDestination_code,
@@ -2005,7 +2005,7 @@ app.get('/api/company/analytics-stats', async (req, res) => {
       badgeColor: r.status === 'certain' ? 'green' : r.status === 'temporary' ? 'yellow' : 'red'
     }));
 
-    // 8. Sparkline Data
+    
     const [sparkRows] = await connection.execute(`
       SELECT SUM(p.amount) as revenue
       FROM payments p
@@ -2040,7 +2040,7 @@ app.get('/api/company/analytics-stats', async (req, res) => {
   }
 });
 
-// Get financial stats for company dashboard
+
 app.get('/api/financial-stats', async (req, res) => {
   const { airlineCode, airline_id } = req.query;
   if (!airlineCode && !airline_id) {
@@ -2051,7 +2051,7 @@ app.get('/api/financial-stats', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    // 1. Total Revenue
+    
     const [revRow] = await connection.execute(`
       SELECT COALESCE(SUM(p.amount), 0) as totalRevenue
       FROM payments p
@@ -2061,7 +2061,7 @@ app.get('/api/financial-stats', async (req, res) => {
     `, [airlineCode || '', airline_id || 0]);
     const totalRevenue = Number(revRow[0].totalRevenue) || 0;
 
-    // 2. Current Month Revenue
+    
     const [currRow] = await connection.execute(`
       SELECT COALESCE(SUM(p.amount), 0) as currentMonthRevenue
       FROM payments p
@@ -2074,7 +2074,7 @@ app.get('/api/financial-stats', async (req, res) => {
     `, [airlineCode || '', airline_id || 0]);
     const currentMonthRevenue = Number(currRow[0].currentMonthRevenue) || 0;
 
-    // 3. Previous Month Revenue
+    
     const [prevRow] = await connection.execute(`
       SELECT COALESCE(SUM(p.amount), 0) as previousMonthRevenue
       FROM payments p
@@ -2087,12 +2087,12 @@ app.get('/api/financial-stats', async (req, res) => {
     `, [airlineCode || '', airline_id || 0]);
     const previousMonthRevenue = Number(prevRow[0].previousMonthRevenue) || 0;
 
-    // 4. Growth
+    
     const revenueGrowth = previousMonthRevenue > 0 
       ? Number(((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue * 100).toFixed(1))
       : 0;
 
-    // 5. Monthly Revenue
+    
     const [monthRows] = await connection.execute(`
       SELECT DATE_FORMAT(b.booking_date, '%m') as monthNum, SUM(p.amount) as revenue
       FROM payments p
@@ -2109,7 +2109,7 @@ app.get('/api/financial-stats', async (req, res) => {
       revenue: Number(r.revenue) || 0
     }));
 
-    // 6. Weekly Revenue
+    
     const [weekRows] = await connection.execute(`
       SELECT DAYOFWEEK(b.booking_date) as dayNum, SUM(p.amount) as revenue
       FROM payments p
@@ -2126,7 +2126,7 @@ app.get('/api/financial-stats', async (req, res) => {
       revenue: Number(r.revenue) || 0
     }));
 
-    // 7. Class Stats
+    
     const [classRows] = await connection.execute(`
       SELECT s.seat_class as name, COUNT(bp.id_bookings_passengers) as value
       FROM bookings_passengers bp
@@ -2142,7 +2142,7 @@ app.get('/api/financial-stats', async (req, res) => {
       value: Number(r.value) || 0
     }));
 
-    // 8. Flight Profits
+    
     const [profitRows] = await connection.execute(`
       SELECT f.flight_number, f.airportOrigin_code, f.airportDestination_code,
              COALESCE(SUM(b.final_price), 0) as revenue
@@ -2188,7 +2188,7 @@ app.get('/api/financial-stats', async (req, res) => {
   }
 });
 
-// Get traffic stats for company dashboard
+
 app.get('/api/traffic-stats', async (req, res) => {
   const { airlineCode, airline_id } = req.query;
   if (!airlineCode && !airline_id) {
@@ -2199,7 +2199,7 @@ app.get('/api/traffic-stats', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    // 1. Top Destinations
+    
     const [destRows] = await connection.execute(`
       SELECT f.airportDestination_code as name, COUNT(b.id_bookings) as bookings
       FROM bookings b
@@ -2215,7 +2215,7 @@ app.get('/api/traffic-stats', async (req, res) => {
       bookings: Number(r.bookings) || 0
     }));
 
-    // 2. Occupancy Rates
+    
     const [occRows] = await connection.execute(`
       SELECT flight_number, airportOrigin_code, airportDestination_code, total_seats, available_seats
       FROM flights
@@ -2253,7 +2253,7 @@ app.get('/api/traffic-stats', async (req, res) => {
   }
 });
 
-// Get medical services stats for company dashboard
+
 app.get('/api/medical-services', async (req, res) => {
   const { airlineCode, airline_id } = req.query;
   if (!airlineCode && !airline_id) {
@@ -2264,7 +2264,7 @@ app.get('/api/medical-services', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    // 1. Services Stats
+    
     const [serviceRows] = await connection.execute(`
       SELECT gs.service_name as name, COUNT(*) as value
       FROM ground_services gs
@@ -2279,7 +2279,7 @@ app.get('/api/medical-services', async (req, res) => {
       value: Number(r.value) || 0
     }));
 
-    // 2. Critical Flights
+    
     const [critRows] = await connection.execute(`
       SELECT f.flight_number, f.airportOrigin_code, f.airportDestination_code,
              COUNT(gs.id_Ground_services) as criticalCount,
@@ -2327,7 +2327,7 @@ app.get('/api/medical-services', async (req, res) => {
   }
 });
 
-// Get passenger stats for company dashboard
+
 app.get('/api/passenger-stats', async (req, res) => {
   const { airlineCode, airline_id } = req.query;
   if (!airlineCode && !airline_id) {
@@ -2338,7 +2338,7 @@ app.get('/api/passenger-stats', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    // 1. Status Distribution
+    
     const [statusRows] = await connection.execute(`
       SELECT b.status, COUNT(*) as value
       FROM bookings b
@@ -2358,7 +2358,7 @@ app.get('/api/passenger-stats', async (req, res) => {
       value: Number(r.value) || 0
     }));
 
-    // 2. Peak Times
+    
     const [dayRows] = await connection.execute(`
       SELECT DAYOFWEEK(b.booking_date) as dayNum, COUNT(b.id_bookings) as count
       FROM bookings b
@@ -2391,7 +2391,7 @@ app.get('/api/passenger-stats', async (req, res) => {
   }
 });
 
-// Get flights by day for drill-down reporting
+
 app.get('/api/flights-by-day/:day', async (req, res) => {
   const { day } = req.params;
   const { airlineCode, airline_id } = req.query;
@@ -2447,7 +2447,7 @@ app.get('/api/flights-by-day/:day', async (req, res) => {
   }
 });
 
-// Get passenger details for a specific flight
+
 app.get('/api/flight-passengers/:flightNumber', async (req, res) => {
   const { flightNumber } = req.params;
   let connection;
@@ -2504,14 +2504,14 @@ app.get('/api/flight-passengers/:flightNumber', async (req, res) => {
   }
 });
 
-// Get seat map status and details for a specific flight
+
 app.get('/api/flight-details/:flightNumber', async (req, res) => {
   const { flightNumber } = req.params;
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
     
-    // Fetch the flight
+    
     const [flights] = await connection.execute(
       'SELECT id_flights as id, flight_number as flightNumber, airportOrigin_code as origin, airportDestination_code as destination, aircraft_type as aircraftType, departure_time as departureTime, arrival_time as arrivalTime FROM flights WHERE REPLACE(flight_number, " ", "") = ?',
       [flightNumber.replace(/\s+/g, '')]
@@ -2523,7 +2523,7 @@ app.get('/api/flight-details/:flightNumber', async (req, res) => {
     
     const flight = flights[0];
     
-    // Fetch the booked seats
+    
     const [bookedRows] = await connection.execute(`
       SELECT s.seat_number as seatNumber, s.seat_class as seatClass, p.name as passengerName,
              p.passport_number as passportNumber, p.nationality, p.gander as gender,
@@ -2559,7 +2559,7 @@ app.get('/api/flight-details/:flightNumber', async (req, res) => {
       services: servicesMap[r.bookingId] || []
     }));
     
-    // Calculate stats
+    
     const businessOccupied = bookedSeats.filter(s => s.seatClass === 'business').length;
     const economyOccupied = bookedSeats.filter(s => s.seatClass === 'economy').length;
     
@@ -2602,9 +2602,9 @@ app.get('/api/flight-details/:flightNumber', async (req, res) => {
 });
 
 
-// --- COMPANY MANAGEMENT ENDPOINTS ---
 
-// Get all companies (admins with role = 'company' joined with companies table)
+
+
 app.get('/api/admin/companies', async (req, res) => {
   let connection;
   try {
@@ -2634,20 +2634,20 @@ app.get('/api/admin/companies', async (req, res) => {
   }
 });
 
-// Create a new company
+
 app.post('/api/admin/companies', async (req, res) => {
   const { username, password, airline_code, company_name, employee_id, department } = req.body;
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
     
-    // Check if username already exists
+    
     const [existing] = await connection.execute('SELECT id_admin FROM admins WHERE email = ?', [username]);
     if (existing.length > 0) {
       return res.status(400).json({ success: false, error: 'اسم المستخدم مسجل بالفعل' });
     }
 
-    // 1. Insert or update company in companies table
+    
     if (airline_code && company_name) {
       await connection.execute(
         `INSERT INTO companies (company_name, airline_code) 
@@ -2657,13 +2657,13 @@ app.post('/api/admin/companies', async (req, res) => {
       );
     }
 
-    // 2. Get next auto-increment id
+    
     const [maxIdRows] = await connection.execute('SELECT COALESCE(MAX(id_admin), 0) + 1 as nextId FROM admins');
     const nextId = maxIdRows[0].nextId;
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 3. Insert admin account
+    
     await connection.execute(
       `INSERT INTO admins (id_admin, email, password, role, airline_code, employee_id, department, created_at) 
        VALUES (?, ?, ?, 'company', ?, ?, ?, NOW())`,
@@ -2678,7 +2678,7 @@ app.post('/api/admin/companies', async (req, res) => {
   }
 });
 
-// Update a company
+
 app.put('/api/admin/companies/:id', async (req, res) => {
   const { id } = req.params;
   const { username, password, airline_code, company_name, employee_id, department } = req.body;
@@ -2686,13 +2686,13 @@ app.put('/api/admin/companies/:id', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    // Check if username already exists for another user
+    
     const [existing] = await connection.execute('SELECT id_admin FROM admins WHERE email = ? AND id_admin != ?', [username, id]);
     if (existing.length > 0) {
       return res.status(400).json({ success: false, error: 'اسم المستخدم مسجل بمستخدم آخر' });
     }
 
-    // 1. Insert or update company if provided
+    
     if (airline_code && company_name) {
       await connection.execute(
         `INSERT INTO companies (company_name, airline_code) 
@@ -2702,7 +2702,7 @@ app.put('/api/admin/companies/:id', async (req, res) => {
       );
     }
 
-    // 2. Update admin account
+    
     if (password && password.trim() !== '') {
       const hashedPassword = await bcrypt.hash(password, 10);
       await connection.execute(
@@ -2728,7 +2728,7 @@ app.put('/api/admin/companies/:id', async (req, res) => {
   }
 });
 
-// Delete a company
+
 app.delete('/api/admin/companies/:id', async (req, res) => {
   const { id } = req.params;
   let connection;
@@ -2744,7 +2744,7 @@ app.delete('/api/admin/companies/:id', async (req, res) => {
 });
 
 
-// Seed default admin account
+
 const seedAdmin = async () => {
   let connection;
   try {
@@ -2766,8 +2766,8 @@ const seedAdmin = async () => {
     if (connection) await connection.end();
   }
 };
-// PATCH /api/bookings/:id/cancel — RESTful route
-// POST /api/bookings/cancel — legacy route (kept for compatibility)
+
+
 async function cancelBookingHandler(req, res) {
   const bookingId = req.params.id || req.body.bookingId;
   let connection;
@@ -2775,7 +2775,7 @@ async function cancelBookingHandler(req, res) {
     connection = await mysql.createConnection(getDbConfig());
     await connection.beginTransaction();
 
-    // Find the booking reference for the bookingId to cancel all segments
+    
     const [bookingRows] = await connection.execute(
       'SELECT booking_reference FROM bookings WHERE id_bookings = ?',
       [bookingId]
@@ -2809,9 +2809,9 @@ app.patch('/api/bookings/:id/cancel', cancelBookingHandler);
 app.post('/api/bookings/cancel', cancelBookingHandler);
 
 
-// ─── Chat / Support API ──────────────────────────────────────────────────────
 
-// GET /api/chat/sessions — Admin: get all chat sessions
+
+
 app.get('/api/chat/sessions', async (req, res) => {
   let connection;
   try {
@@ -2834,13 +2834,13 @@ app.get('/api/chat/sessions', async (req, res) => {
   }
 });
 
-// GET /api/chat/sessions/:key/messages — get messages for a session
+
 app.get('/api/chat/sessions/:key/messages', async (req, res) => {
   const { key } = req.params;
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
-    // Mark messages as read
+    
     await connection.execute(
       `UPDATE chat_messages cm JOIN chat_sessions cs ON cm.session_id = cs.id SET cm.is_read = 1 WHERE cs.session_key = ? AND cm.sender = 'user'`,
       [key]
@@ -2860,7 +2860,7 @@ app.get('/api/chat/sessions/:key/messages', async (req, res) => {
   }
 });
 
-// POST /api/chat/send — user sends a message
+
 app.post('/api/chat/send', async (req, res) => {
   const { session_key, text, sender, user_name, user_email } = req.body;
   if (!session_key || !text || !sender) {
@@ -2870,24 +2870,24 @@ app.post('/api/chat/send', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    // Upsert session
+    
     await connection.execute(`
       INSERT INTO chat_sessions (session_key, user_name, user_email, status, created_at, updated_at)
       VALUES (?, ?, ?, 'open', NOW(), NOW())
       ON DUPLICATE KEY UPDATE updated_at = NOW(), user_name = COALESCE(?, user_name), user_email = COALESCE(?, user_email)
     `, [session_key, user_name || 'زائر', user_email || null, user_name || null, user_email || null]);
 
-    // Get session id
+    
     const [[session]] = await connection.execute('SELECT id FROM chat_sessions WHERE session_key = ?', [session_key]);
     const session_id = session.id;
 
-    // Insert message
+    
     const [result] = await connection.execute(
       'INSERT INTO chat_messages (session_id, sender, text, is_read, created_at) VALUES (?, ?, ?, ?, NOW())',
       [session_id, sender, text, sender === 'admin' ? 1 : 0]
     );
 
-    // Update session updated_at
+    
     await connection.execute('UPDATE chat_sessions SET updated_at = NOW(), status = ? WHERE id = ?', [
       sender === 'admin' ? 'replied' : 'open', session_id
     ]);
@@ -2901,10 +2901,10 @@ app.post('/api/chat/send', async (req, res) => {
   }
 });
 
-// GET /api/chat/poll/:key — long-poll for new messages after a given id
+
 app.get('/api/chat/poll/:key', async (req, res) => {
   const { key } = req.params;
-  const { after } = req.query; // message id to poll after
+  const { after } = req.query; 
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
@@ -2922,7 +2922,7 @@ app.get('/api/chat/poll/:key', async (req, res) => {
   }
 });
 
-// PATCH /api/chat/sessions/:key/close — Admin closes a session
+
 app.patch('/api/chat/sessions/:key/close', async (req, res) => {
   const { key } = req.params;
   let connection;
@@ -2937,7 +2937,7 @@ app.patch('/api/chat/sessions/:key/close', async (req, res) => {
   }
 });
 
-// ─── Auto-create settings table if not exist ────────────────────────────────
+
 const ensureSettingsTable = async () => {
   let connection;
   try {
@@ -2949,7 +2949,7 @@ const ensureSettingsTable = async () => {
       )
     `);
     
-    // Seed default settings if they don't exist
+    
     await connection.execute(`
       INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES 
       ('markup_rate', '5'),
@@ -2964,7 +2964,7 @@ const ensureSettingsTable = async () => {
   }
 };
 
-// GET /api/admin/settings — Get system settings
+
 app.get('/api/admin/settings', async (req, res) => {
   let connection;
   try {
@@ -2983,7 +2983,7 @@ app.get('/api/admin/settings', async (req, res) => {
   }
 });
 
-// POST /api/admin/settings — Save/Update system settings
+
 app.post('/api/admin/settings', async (req, res) => {
   const { markup_rate, exchange_rate, support_email } = req.body;
   let connection;
@@ -3012,13 +3012,13 @@ app.post('/api/admin/settings', async (req, res) => {
   }
 });
 
-// ─── Auto-create chat tables if not exist ────────────────────────────────────
+
 const ensureChatTables = async () => {
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
     
-    // Check if chat_messages exists and whether it has id_chat column
+    
     let hasIdChat = false;
     try {
       const [columns] = await connection.execute("SHOW COLUMNS FROM chat_messages LIKE 'id_chat'");
@@ -3026,10 +3026,10 @@ const ensureChatTables = async () => {
         hasIdChat = true;
       }
     } catch (e) {
-      // Table might not exist yet
+      
     }
 
-    // If table exists but lacks id_chat, drop it to resolve collision
+    
     if (!hasIdChat) {
       try {
         const [tables] = await connection.execute("SHOW TABLES LIKE 'chat_messages'");
@@ -3076,7 +3076,7 @@ const ensureChatTables = async () => {
   }
 };
 
-// ─── Serve Frontend (React/Vite dist) ────────────────────────────────────────
+
 app.use(express.static(path.join(__dirname, 'dist')));
 
 app.get('*splat', (req, res) => {

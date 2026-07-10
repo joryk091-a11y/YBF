@@ -1,18 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-/**
- * ScrollReveal Component
- * Animates children elements when they enter the viewport using IntersectionObserver.
- * 
- * Props:
- * @param {React.ReactNode} children - Elements to animate
- * @param {string} animation - Animation type ('fade-up', 'fade-down', 'fade-left', 'fade-right', 'scale-up', 'zoom-in')
- * @param {number} duration - Transition duration in ms (default: 750)
- * @param {number} delay - Transition delay in ms (default: 0)
- * @param {number} threshold - Intersection observer threshold (default: 0.1)
- * @param {string} className - Custom classes for the outer div
- * @param {boolean} once - If true, animation only runs once (default: true)
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
 export default function ScrollReveal({
   children,
   animation = 'fade-up',
@@ -39,7 +39,7 @@ export default function ScrollReveal({
       },
       {
         threshold,
-        // Trigger slightly before/as the element hits the bottom of the viewport
+        
         rootMargin: '0px 0px -50px 0px',
       }
     );
@@ -56,7 +56,7 @@ export default function ScrollReveal({
     };
   }, [threshold, once]);
 
-  // Determine transition classes based on intersection state
+  
   const getAnimationClasses = () => {
     const transitions = {
       'fade-up': {

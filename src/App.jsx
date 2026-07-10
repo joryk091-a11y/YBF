@@ -31,7 +31,7 @@ import { SearchProvider } from './utils/SearchContext.jsx'
 import { ThemeProvider } from './utils/ThemeContext.jsx'
 import { AuthProvider } from './utils/AuthContext.jsx'
 
-// مكون حماية مسار الشركات
+
 const CompanyProtectedRoute = ({ children }) => {
     const token = localStorage.getItem('companyToken');
     if (!token) {
@@ -40,7 +40,7 @@ const CompanyProtectedRoute = ({ children }) => {
     return children;
 };
 
-// مكون حماية مسار المدير
+
 const AdminProtectedRoute = ({ children }) => {
     const adminToken = localStorage.getItem('adminToken');
     const userRole = localStorage.getItem('userRole');
@@ -50,7 +50,7 @@ const AdminProtectedRoute = ({ children }) => {
     return children;
 };
 
-// مكون إعادة التمرير لأعلى الصفحة عند التنقل
+
 const ScrollToTop = () => {
     const { pathname } = useLocation();
 
@@ -67,10 +67,10 @@ function App() {
     if (params.get('debug') === 'true') {
       localStorage.setItem('ybf_debug', 'true');
       const newUrl = window.location.pathname + window.location.hash;
-      window.location.replace(newUrl); // إعادة توجيه لتنظيف الرابط وتفعيل الـ localStorage
+      window.location.replace(newUrl); 
     } else if (params.get('debug') === 'false') {
       localStorage.removeItem('ybf_debug');
-      // عند إلغاء تفعيل وضع التطوير، قم أيضاً بتصفير الحساب الوهمي
+      
       localStorage.removeItem('ybf_mock_user');
       const newUrl = window.location.pathname + window.location.hash;
       window.location.replace(newUrl);
@@ -87,12 +87,12 @@ function App() {
             <ScrollToTop />
 
             <Routes>
-              {/* ===== مسار تسجيل دخول المدير (عام) ===== */}
+              {}
               <Route path="/admin/login" element={<AdminLogin />} />
-            {/* ===== مسار تسجيل دخول الشركات (عام) ===== */}
+            {}
             <Route path="/company/login" element={<CompanyLogin />} />
 
-            {/* ===== مسارات لوحة تحكم الشركات (محمية) ===== */}
+            {}
             <Route
               path="/company/dashboard"
               element={
@@ -186,7 +186,7 @@ function App() {
               }
             />
 
-            {/* ===== مسارات لوحة تحكم المدير (محمية) ===== */}
+            {}
             <Route
               path="/admin/dashboard"
               element={
@@ -238,7 +238,7 @@ function App() {
             <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
 
 
-            {/* ===== المسارات العامة مع MainLayout ===== */}
+            {}
             <Route element={<MainLayout />}>
               <Route path="/" element={<HomePage />} />
               <Route path="/search" element={<SearchPage />} />

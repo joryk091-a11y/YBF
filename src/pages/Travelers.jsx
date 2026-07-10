@@ -85,7 +85,7 @@ function TravelersPage() {
     Array.from({ length: initialPassengerCount }, (_, index) => createPassenger(index + 1)),
   )
 
-  // Sync passengers list if count changes globally
+  
   useEffect(() => {
     const currentCount = Number(searchCriteria?.passengerCount) || 1
     if (passengers.length !== currentCount) {
@@ -165,7 +165,7 @@ function TravelersPage() {
     setPassengerToDelete(null);
   };
 
-  // Pre-fill first passenger from logged-in user
+  
   useEffect(() => {
     const userData = localStorage.getItem('user')
     if (userData && passengers.length > 0 && !passengers[0].fullName) {
@@ -348,7 +348,7 @@ function TravelersPage() {
 
   return (
     <main className="min-h-[100svh] bg-[#f3f4f6] pb-20 pt-24 sm:pt-28" dir="rtl">
-      {/* Sticky Stepper Bar */}
+      {}
       <div className="sticky top-16 z-40 w-full border-b border-slate-200 bg-white/90 py-4 backdrop-blur-xl sm:top-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <BookingStepper current="travelers" />
@@ -468,7 +468,7 @@ function TravelersPage() {
                   <div className={`grid transition-all duration-500 ease-in-out ${isActive ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
                     <div className="overflow-hidden">
                       <div className="border-t border-slate-50 p-6 sm:p-8">
-                        {/* Gender Selector */}
+                        {}
                         <div className="mb-6">
                           <div className="grid grid-cols-2 gap-3 w-full">
                             <button
@@ -573,7 +573,7 @@ function TravelersPage() {
             })}
           </div>
 
-          {/* ═══════════════ جدول الأمتعة ═══════════════ */}
+          {}
           <section className="mt-8 overflow-hidden rounded-[2.2rem] border border-slate-200 bg-white shadow-sm">
             <div className="flex items-center gap-3 border-b border-slate-100 bg-white px-6 py-5">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-blue/10 text-brand-blue">
@@ -650,7 +650,7 @@ function TravelersPage() {
           </div>
           </section>
 
-          {/* ═══════════════ جدول الخدمات الصحية ═══════════════ */}
+          {}
           <section className="mt-6 overflow-hidden rounded-[2.2rem] border border-slate-200 bg-white shadow-sm">
             <div className="flex items-center gap-3 border-b border-slate-100 bg-white px-6 py-5">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500/10 text-orange-600">
@@ -686,7 +686,7 @@ function TravelersPage() {
                           ${srv.price} / للخدمة
                         </span>
                         
-                        {/* Counter controls */}
+                        {}
                         <div className="flex items-center gap-2 rounded-lg p-0.5 border border-slate-200 bg-white">
                           <button
                             type="button"
@@ -720,7 +720,7 @@ function TravelersPage() {
             )}
           </section>
 
-          {/* Navigation Buttons */}
+          {}
           <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
             <Link
               to="/search"
@@ -738,10 +738,10 @@ function TravelersPage() {
           </div>
         </section>
 
-        {/* Premium Sidebar Summary */}
+        {}
         <aside className="sticky top-40 w-full" dir="rtl">
           <div className="space-y-6">
-            {/* Flight Card (Boarding Pass style) */}
+            {}
             <section className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_20px_50px_rgba(15,23,42,0.04)]">
               <div className="bg-gradient-to-br from-brand-blue to-indigo-900 p-6 text-white">
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-200">ملخص الرحلة المختارة</p>
@@ -780,7 +780,7 @@ function TravelersPage() {
                   <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showFullDetails ? 'rotate-180' : ''}`} />
                 </button>
 
-                {/* Expanded Details */}
+                {}
                 <div className={`grid transition-all duration-500 ease-in-out ${showFullDetails ? 'grid-rows-[1fr] mt-6 opacity-100' : 'grid-rows-[0fr] mt-0 opacity-0'}`}>
                   <div className="overflow-hidden space-y-5">
                     <div className="rounded-2xl bg-transparent p-4 border border-slate-100">
@@ -798,7 +798,7 @@ function TravelersPage() {
                       </div>
 
                       <div className="space-y-4 relative">
-                        {/* Timeline Line */}
+                        {}
                         <div className="absolute right-[15px] top-2 bottom-2 w-0.5 bg-slate-200" />
 
                         <div className="relative flex items-start gap-4 pr-8">
@@ -834,7 +834,7 @@ function TravelersPage() {
                       </div>
                     </div>
 
-                    {/* Extra Bags Summary */}
+                    {}
                     {Object.values(extraBags).some(n => n > 0) && (
                       <div className="rounded-2xl border border-brand-blue/20 bg-brand-blue/5 p-4">
                         <div className="flex items-center gap-2 mb-3">
@@ -856,18 +856,18 @@ function TravelersPage() {
               </div>
             </section>
 
-            {/* Price Breakdown */}
+            {}
             <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_20px_50px_rgba(15,23,42,0.04)]">
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <h2 className="text-base font-black text-slate-900">تفاصيل السعر المفصلة</h2>
                 <span className="rounded-full bg-blue-50 px-3 py-1 text-[10px] font-black text-blue-600 uppercase tracking-wider">السعر النهائي</span>
               </div>
 
-              {/* Fares & Taxes Section */}
+              {}
               <div className="mt-5 space-y-4 border-b border-slate-100 pb-5">
                 <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">تعرفة تذاكر الطيران</p>
 
-                {/* Adults Economy */}
+                {}
                 {economyAdults > 0 && (
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-sm">
@@ -881,7 +881,7 @@ function TravelersPage() {
                   </div>
                 )}
 
-                {/* Adults Business */}
+                {}
                 {businessAdults > 0 && (
                   <div className="space-y-1 mt-3">
                     <div className="flex items-center justify-between text-sm">
@@ -895,7 +895,7 @@ function TravelersPage() {
                   </div>
                 )}
 
-                {/* Children Economy */}
+                {}
                 {economyChildren > 0 && (
                   <div className="space-y-1 mt-3">
                     <div className="flex items-center justify-between text-sm">
@@ -909,7 +909,7 @@ function TravelersPage() {
                   </div>
                 )}
 
-                {/* Children Business */}
+                {}
                 {businessChildren > 0 && (
                   <div className="space-y-1 mt-3">
                     <div className="flex items-center justify-between text-sm">
@@ -923,7 +923,7 @@ function TravelersPage() {
                   </div>
                 )}
 
-                {/* Infants Economy */}
+                {}
                 {economyInfants > 0 && (
                   <div className="space-y-1 mt-3">
                     <div className="flex items-center justify-between text-sm">
@@ -938,12 +938,12 @@ function TravelersPage() {
                 )}
               </div>
 
-              {/* Extra Bags & Services Section */}
+              {}
               {(bagsTotal > 0 || servicesTotal > 0) && (
                 <div className="mt-5 space-y-3 border-b border-slate-100 pb-5">
                   <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">الخدمات والوزن الإضافي</p>
 
-                  {/* Extra Bags */}
+                  {}
                   {bagsTotal > 0 && (
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2 text-slate-600">
@@ -954,7 +954,7 @@ function TravelersPage() {
                     </div>
                   )}
 
-                  {/* Special Services */}
+                  {}
                   {SERVICES.filter(s => selectedServices[s.id] > 0).map(srv => {
                     const Icon = srv.icon
                     const qty = selectedServices[srv.id]
@@ -969,7 +969,7 @@ function TravelersPage() {
                     )
                   })}
 
-                  {/* Admin Markup Fee */}
+                  {}
                   <div className="flex items-center justify-between text-sm pt-3 border-t border-slate-100">
                     <div className="flex items-center gap-2 text-slate-600">
                       <ShieldCheck className="h-4 w-4 text-brand-blue" />
@@ -980,7 +980,7 @@ function TravelersPage() {
                 </div>
               )}
 
-              {/* Final Sum */}
+              {}
               <div className="mt-5 flex items-center justify-between">
                 <div>
                   <span className="text-base font-black text-slate-900 block">الإجمالي النهائي</span>
@@ -990,7 +990,7 @@ function TravelersPage() {
               </div>
             </section>
 
-            {/* Travel Guidelines */}
+            {}
             <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-sm transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)]">
               <h3 className="mb-5 text-[11px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 border-b border-slate-100 pb-3 justify-start" dir="rtl">
                 <AlertCircle className="h-4 w-4 text-brand-blue" />
@@ -998,7 +998,7 @@ function TravelersPage() {
               </h3>
 
               <div className="space-y-4">
-                {/* Guideline 1: Name match */}
+                {}
                 <div className="group flex items-start gap-3.5 p-3 rounded-2xl border border-transparent hover:border-slate-100 hover:bg-slate-50/50 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-blue/5 text-brand-blue transition-all duration-300 group-hover:bg-brand-blue group-hover:text-white group-hover:shadow-[0_4px_12px_rgba(73,116,249,0.2)] shadow-sm">
                     <BadgeCheck className="h-5 w-5" />
@@ -1011,7 +1011,7 @@ function TravelersPage() {
                   </div>
                 </div>
 
-                {/* Guideline 2: Passport Validity */}
+                {}
                 <div className="group flex items-start gap-3.5 p-3 rounded-2xl border border-transparent hover:border-slate-100 hover:bg-slate-50/50 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-blue/5 text-brand-blue transition-all duration-300 group-hover:bg-brand-blue group-hover:text-white group-hover:shadow-[0_4px_12px_rgba(73,116,249,0.2)] shadow-sm">
                     <ShieldCheck className="h-5 w-5" />
@@ -1024,7 +1024,7 @@ function TravelersPage() {
                   </div>
                 </div>
 
-                {/* Guideline 3: Airport Arrival */}
+                {}
                 <div className="group flex items-start gap-3.5 p-3 rounded-2xl border border-transparent hover:border-slate-100 hover:bg-slate-50/50 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-blue/5 text-brand-blue transition-all duration-300 group-hover:bg-brand-blue group-hover:text-white group-hover:shadow-[0_4px_12px_rgba(73,116,249,0.2)] shadow-sm">
                     <Clock className="h-5 w-5" />
@@ -1037,7 +1037,7 @@ function TravelersPage() {
                   </div>
                 </div>
 
-                {/* Guideline 4: Baggage Policy */}
+                {}
                 <div className="group flex items-start gap-3.5 p-3 rounded-2xl border border-transparent hover:border-slate-100 hover:bg-slate-50/50 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-blue/5 text-brand-blue transition-all duration-300 group-hover:bg-brand-blue group-hover:text-white group-hover:shadow-[0_4px_12px_rgba(73,116,249,0.2)] shadow-sm">
                     <Luggage className="h-5 w-5" />
@@ -1054,7 +1054,7 @@ function TravelersPage() {
           </div>
         </aside>
       </div>
-      {/* Confirmation Modal for Deletion */}
+      {}
       {passengerToDelete !== null && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm shadow-2xl" dir="rtl">
           <div className="relative w-full max-w-sm overflow-hidden rounded-[2.2rem] bg-white p-6 shadow-2xl border border-slate-100/50 text-center animate-in fade-in zoom-in-95 duration-200">
@@ -1085,7 +1085,7 @@ function TravelersPage() {
         </div>
       )}
 
-      {/* Validation Error Modal */}
+      {}
       {validationError !== null && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm shadow-2xl" dir="rtl">
           <div className="relative w-full max-w-sm overflow-hidden rounded-[2.2rem] bg-white p-6 shadow-2xl border border-slate-100/50 text-center animate-in fade-in zoom-in-95 duration-200">

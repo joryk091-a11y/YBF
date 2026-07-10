@@ -211,7 +211,7 @@ function HomePage() {
   }, [])
 
   const stepMockups = [
-    // Step 1: Flight Search Mockup
+    
     <div key="step-1" className="flex flex-col gap-4 bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-md border border-slate-100 dark:border-slate-800 w-full max-w-sm mx-auto">
       <div className="flex items-center justify-between border-b border-slate-50 dark:border-slate-800 pb-3">
         <span className="text-xs font-black text-slate-800 dark:text-white">البحث عن رحلة</span>
@@ -242,7 +242,7 @@ function HomePage() {
       </div>
     </div>,
 
-    // Step 2: Seat Selection Mockup
+    
     <div key="step-2" className="flex flex-col gap-4 bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-md border border-slate-100 dark:border-slate-800 w-full max-w-sm mx-auto">
       <div className="flex items-center justify-between border-b border-slate-50 dark:border-slate-800 pb-3">
         <span className="text-xs font-black text-slate-800 dark:text-white">اختيار المقعد</span>
@@ -274,7 +274,7 @@ function HomePage() {
       </div>
     </div>,
 
-    // Step 3: Traveler Details Mockup
+    
     <div key="step-3" className="flex flex-col gap-4 bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-md border border-slate-100 dark:border-slate-800 w-full max-w-sm mx-auto">
       <div className="flex items-center justify-between border-b border-slate-50 dark:border-slate-800 pb-3">
         <span className="text-xs font-black text-slate-800 dark:text-white">معلومات المسافر الرئيسي</span>
@@ -306,9 +306,9 @@ function HomePage() {
       </div>
     </div>,
 
-    // Step 4: Booking & Ticket Mockup
+    
     <div key="step-4" className="relative overflow-hidden bg-gradient-to-br from-indigo-900 to-slate-900 rounded-3xl p-5 text-white w-full max-w-sm mx-auto shadow-xl border border-indigo-950">
-      {/* Flight info */}
+      {}
       <div className="relative z-10 flex justify-between items-start mb-6">
         <div>
           <span className="text-[10px] font-bold text-indigo-250 block">رقم الرحلة</span>
@@ -320,7 +320,7 @@ function HomePage() {
         </div>
       </div>
 
-      {/* Flight locations details */}
+      {}
       <div className="relative z-10 flex justify-between items-center bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 mb-5">
         <div>
           <span className="text-lg font-black block tracking-wider">ADE</span>
@@ -339,14 +339,14 @@ function HomePage() {
         </div>
       </div>
 
-      {/* QR Code mock */}
+      {}
       <div className="relative z-10 flex items-center justify-between border-t border-white/10 pt-4">
         <div className="space-y-1">
           <span className="text-[8px] text-white/60 block">اسم الراكب</span>
           <span className="text-xs font-black block">Ahmed Mohamed</span>
         </div>
         <div className="bg-white p-1 rounded-xl shadow-lg border border-slate-100/10 flex items-center justify-center shrink-0">
-          {/* Detailed Premium QR Code */}
+          {}
           <div className="grid grid-cols-10 gap-[1px] w-12 h-12 bg-white p-[2px] rounded-lg select-none">
             {qrGrid.map((cell, idx) => (
               <div
@@ -362,7 +362,7 @@ function HomePage() {
 
   return (
     <main>
-      {/* Hero: Desktop only */}
+      {}
       <section className="relative hidden sm:block min-h-[100svh] overflow-hidden bg-[#e9edf6]">
         <img
           src={heroPlane}
@@ -399,11 +399,11 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Search Panel */}
-      {/* On mobile: appears directly at top with padding for navbar + subtle bg */}
-      {/* On desktop: overlaps bottom of hero */}
+      {}
+      {}
+      {}
       <div id="search-panel" className="relative z-30 pt-24 sm:pt-0 sm:-mt-80 pb-12 sm:pb-16 bg-gradient-to-b from-[#dde4f5] via-[#e9edf6] to-transparent sm:bg-none">
-        {/* Mobile-only hero heading */}
+        {}
         <div className="sm:hidden text-center px-5 pb-5 pt-1" dir="rtl">
           <h1
             className={`text-[2rem] font-black leading-[1.15] text-slate-900 transition-all duration-700 ${showHeroText ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
@@ -423,7 +423,7 @@ function HomePage() {
           </div>
         </ScrollReveal>
 
-        {/* الوجهات الأكثر طلباً */}
+        {}
         <section id="popular-destinations" className="mx-auto mt-10 sm:mt-16 max-w-7xl px-4 sm:px-6 lg:px-8 relative overflow-hidden" dir="rtl">
           <ScrollReveal animation="fade-down" duration={700}>
             <div className="text-center mb-16 relative flex flex-col items-center">
@@ -456,27 +456,27 @@ function HomePage() {
                   onClick={() => handleDestinationSelect(dest.id)}
                   className="group relative h-[280px] sm:h-[380px] overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] bg-white border border-slate-100 dark:border-slate-800/80 shadow-[0_15px_45px_rgba(0,0,0,0.02)] hover:shadow-[0_30px_60px_rgba(73,116,249,0.12)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer"
                 >
-                  {/* Image background with scale effect */}
+                  {}
                   <img
                     src={dest.image}
                     alt={dest.city}
                     className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                   />
 
-                  {/* Dark gradient overlay */}
+                  {}
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent opacity-90 transition-opacity group-hover:opacity-95" />
 
-                  {/* Card Glow Effect */}
+                  {}
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-[radial-gradient(circle_at_bottom,rgba(59,130,246,0.15)_0%,transparent_70%)]" />
 
-                  {/* Top Tag */}
+                  {}
                   <div className="absolute left-6 top-6 z-10">
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 backdrop-blur-md px-3 py-1 text-[10px] font-black text-white uppercase tracking-wider">
                       {dest.tag}
                     </span>
                   </div>
 
-                  {/* Bottom Content Container */}
+                  {}
                   <div className="absolute inset-x-0 bottom-0 p-6 flex flex-col justify-end h-1/2 z-10 text-right">
                     <span className="text-[10px] font-bold text-blue-300 mb-1">{dest.country}</span>
                     <h3 className="text-2xl font-black text-white mb-1 group-hover:text-blue-200 transition-colors">
@@ -487,10 +487,10 @@ function HomePage() {
                       {dest.airport}
                     </p>
 
-                    {/* Divider */}
+                    {}
                     <div className="h-px bg-white/10 my-3 transition-all duration-500 group-hover:bg-white/20" />
 
-                    {/* Price and Action Button */}
+                    {}
                     <div className="flex items-center justify-between mt-1">
                       <div className="flex flex-col text-right">
                         <span className="text-[9px] font-bold text-white/50">تبدأ من</span>
@@ -514,7 +514,7 @@ function HomePage() {
           </div>
         </section>
 
-        {/* Services Bento Grid Section */}
+        {}
         <section id="services" className="mx-auto mt-14 sm:mt-20 max-w-7xl px-4 sm:px-6 lg:px-8 relative overflow-hidden" dir="rtl">
           <ScrollReveal animation="fade-down" duration={700}>
             <div className="text-center mb-16 relative flex flex-col items-center">
@@ -550,7 +550,7 @@ function HomePage() {
                   <div
                     className="group relative h-full rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-8 shadow-[0_15px_45px_rgba(0,0,0,0.02)] hover:shadow-[0_30px_60px_rgba(73,116,249,0.06)] hover:-translate-y-1.5 transition-all duration-300 overflow-hidden flex flex-col justify-between"
                   >
-                    {/* Color Glow Indicator behind card */}
+                    {}
                     <div
                       className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
                       style={{
@@ -559,7 +559,7 @@ function HomePage() {
                     />
 
                     <div>
-                      {/* Top Header of Card */}
+                      {}
                       <div className="flex justify-between items-start mb-6">
                         <div className={`p-4 rounded-2xl bg-gradient-to-br ${service.gradient} text-white shadow-md`}>
                           <Icon className="h-6 w-6" />
@@ -571,7 +571,7 @@ function HomePage() {
                         )}
                       </div>
 
-                      {/* Title and Description */}
+                      {}
                       <h3 className="text-xl font-black text-slate-800 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                         {service.title}
                       </h3>
@@ -580,7 +580,7 @@ function HomePage() {
                       </p>
                     </div>
 
-                    {/* Features List and Interactive Mockups (Split-view for featured cards) */}
+                    {}
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-t border-slate-50 dark:border-slate-800/60 pt-6">
                       <ul className="space-y-2.5">
                         {service.features.map((feat, idx) => (
@@ -591,7 +591,7 @@ function HomePage() {
                         ))}
                       </ul>
 
-                      {/* Mockup for Flight Service */}
+                      {}
                       {isFeatured && service.title === 'حجز وإصدار التذاكر الرقمية' && (
                         <div className="hidden md:flex flex-col bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-5 text-white w-64 shrink-0 shadow-lg relative overflow-hidden group/pass translate-y-2">
                           <div className="absolute right-0 top-0 h-16 w-16 bg-white/5 rounded-full blur-xl" />
@@ -634,7 +634,7 @@ function HomePage() {
                         </div>
                       )}
 
-                      {/* Mockup for Support Service */}
+                      {}
                       {isFeatured && service.title === 'دعم وحل مشكلات الحجوزات 24/7' && (
                         <div className="hidden md:flex flex-col bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-3xl p-4 w-64 shrink-0 shadow-sm translate-y-2">
                           <div className="flex items-center gap-2.5 mb-3">
@@ -662,7 +662,7 @@ function HomePage() {
           </div>
         </section>
 
-        {/* Interactive Split-Screen 'Flight Journey' Section */}
+        {}
         <section id="how-it-works" className="mx-auto mt-20 max-w-7xl px-4 sm:px-6 lg:px-8 relative overflow-hidden" dir="rtl">
           <ScrollReveal animation="fade-down" duration={700}>
             <div className="relative mb-20 text-center flex flex-col items-center">
@@ -684,13 +684,13 @@ function HomePage() {
           </ScrollReveal>
 
           <div className="grid gap-8 lg:grid-cols-12 items-center">
-            {/* Steps Left Interactive Showcase (5 Columns) */}
+            {}
             <ScrollReveal
               animation="fade-right"
               duration={850}
               className="lg:col-span-5 flex justify-center items-center relative min-h-[380px] order-last lg:order-first"
             >
-              {/* Radial glow tailored to step color */}
+              {}
               <div
                 className="absolute inset-0 rounded-[3rem] blur-3xl opacity-15 pointer-events-none transition-all duration-500 scale-90"
                 style={{
@@ -698,13 +698,13 @@ function HomePage() {
                 }}
               />
 
-              {/* Frameless glass envelope for the mockup */}
+              {}
               <div className="relative w-full max-w-sm rounded-[3rem] bg-white/20 dark:bg-slate-900/30 backdrop-blur-xl border border-white/40 dark:border-slate-800/40 p-8 shadow-2xl transition-all duration-500">
                 {stepMockups[activeStep]}
               </div>
             </ScrollReveal>
 
-            {/* Steps List Right Panel (7 Columns) */}
+            {}
             <div className="lg:col-span-7 space-y-4">
               {steps.map((step, index) => {
                 const Icon = step.icon;
@@ -724,13 +724,13 @@ function HomePage() {
                         : 'bg-white/40 dark:bg-slate-950/20 border-slate-100 dark:border-slate-900/50 hover:bg-white/60 dark:hover:bg-slate-900/40'
                         }`}
                     >
-                      {/* Step Icon Container */}
+                      {}
                       <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr ${isActive ? 'from-blue-600 to-indigo-650 text-white' : 'from-slate-100 to-slate-200 text-slate-500 dark:from-slate-800 dark:to-slate-900 dark:text-slate-400'
                         } shadow-sm transition-all duration-500`}>
                         <Icon className="h-6 w-6" />
                       </div>
 
-                      {/* Text details */}
+                      {}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
                           <h3 className={`text-lg font-black transition-colors ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-800 dark:text-slate-350'
@@ -755,7 +755,7 @@ function HomePage() {
           </div>
         </section>
 
-        {/* Modernized FAQ Section */}
+        {}
         <section id="faq" className="mx-auto mt-20 max-w-4xl px-4 pb-20 sm:px-6 lg:px-8 overflow-hidden" dir="rtl">
           <ScrollReveal animation="fade-down" duration={700}>
             <div className="relative mb-24 text-center flex flex-col items-center">
@@ -792,7 +792,7 @@ function HomePage() {
                       : 'border-slate-100 dark:border-slate-800/80 hover:border-slate-350 dark:hover:border-slate-700 shadow-sm'
                       }`}
                   >
-                    {/* Question Summary (Trigger) */}
+                    {}
                     <button
                       onClick={() => setOpenFaq(isOpen ? null : index)}
                       className="w-full flex items-center justify-between gap-4 p-6 text-right text-base font-black text-slate-800 dark:text-white focus:outline-none"
@@ -807,14 +807,14 @@ function HomePage() {
                         <span className={`transition-colors ${isOpen ? 'text-blue-600 dark:text-blue-400' : 'text-slate-800 dark:text-slate-200'}`}>{item.q}</span>
                       </div>
 
-                      {/* Plus/Minus Animated Icon */}
+                      {}
                       <div className="relative h-5 w-5 shrink-0 flex items-center justify-center">
                         <div className={`absolute h-0.5 w-4 bg-slate-450 transition-transform duration-300 ${isOpen ? 'rotate-180 bg-blue-500' : ''}`} />
                         <div className={`absolute h-4 w-0.5 bg-slate-455 transition-transform duration-300 ${isOpen ? 'rotate-90 scale-0 bg-blue-500' : ''}`} />
                       </div>
                     </button>
 
-                    {/* Answer Body (Smooth Height Transition) */}
+                    {}
                     <div className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
                       <div className="overflow-hidden">
                         <div className="border-t border-slate-50 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/30 p-8">
@@ -822,7 +822,7 @@ function HomePage() {
                             {item.a}
                           </p>
 
-                          {/* Feedback Buttons */}
+                          {}
                           <div className="mt-6 flex items-center gap-3">
                             <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">هل كان هذا مفيداً؟</span>
                             <button className="rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-1 text-[10px] font-black text-slate-650 dark:text-slate-350 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 dark:hover:text-emerald-450 hover:border-emerald-250 dark:hover:border-emerald-900 transition-colors">نعم</button>

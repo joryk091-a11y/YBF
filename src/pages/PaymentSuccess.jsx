@@ -78,11 +78,11 @@ function PaymentSuccessPage() {
     <main className="min-h-[85vh] bg-[#f8fafc] pb-20 pt-24 sm:pt-32" dir="rtl">
       <div className="mx-auto max-w-xl px-4 sm:px-6">
         <div className="overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white p-10 text-center shadow-[0_24px_70px_rgba(0,0,0,0.03)] relative">
-          {/* Glowing blur effects */}
+          {}
           <div className="absolute -left-20 -top-20 h-48 w-48 rounded-full bg-emerald-500/5 blur-3xl pointer-events-none" />
           <div className="absolute -right-20 -bottom-20 h-48 w-48 rounded-full bg-brand-blue/5 blur-3xl pointer-events-none" />
 
-          {/* Success Checkmark with Ring */}
+          {}
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500 text-white shadow-xl shadow-emerald-500/20 mb-8 transition-transform duration-300 hover:scale-105">
             <CheckCircle2 className="h-10 w-10 stroke-[2.5]" />
           </div>
@@ -92,9 +92,9 @@ function PaymentSuccessPage() {
             تهانينا، تم تأكيد حجزك وإصدار تذاكر الصعود الإلكترونية بنجاح. لقد أرسلنا تفاصيل الحجز إلى بريدك الإلكتروني.
           </p>
 
-          {/* Receipt Card Container */}
+          {}
           <div className="mt-8 rounded-3xl bg-slate-50 border border-slate-100 p-6 text-right relative overflow-hidden">
-            {/* Left and Right half-circle notches to look like a premium ticket/receipt */}
+            {}
             <div className="absolute top-1/2 -left-3 h-6 w-6 -translate-y-1/2 rounded-full bg-white border border-slate-100 pointer-events-none hidden sm:block" />
             <div className="absolute top-1/2 -right-3 h-6 w-6 -translate-y-1/2 rounded-full bg-white border border-slate-100 pointer-events-none hidden sm:block" />
 
@@ -132,7 +132,7 @@ function PaymentSuccessPage() {
             </div>
           </div>
 
-          {/* Action Buttons */}
+          {}
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center items-center">
             <button
               onClick={() => navigate('/my-bookings')}

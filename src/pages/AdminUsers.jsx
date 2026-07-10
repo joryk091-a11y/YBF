@@ -43,7 +43,7 @@ const AdminUsers = () => {
 
         fetchUsers();
 
-        // Polling users list every 20 seconds for live database updates
+        
         const interval = setInterval(() => {
             fetchUsers();
         }, 20000);
@@ -76,7 +76,7 @@ const AdminUsers = () => {
         <div className="min-h-screen bg-[#f8f9fc] dark:bg-[#0b1120] text-slate-900 dark:text-white transition-colors duration-300 relative overflow-hidden" dir="rtl">
             <Sidebar />
             
-            {/* Header */}
+            {}
             <header className={`sticky top-0 z-50 w-full transition-all duration-500 md:pr-72 ${scrolled ? 'border-b border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-[#0b1120]/70 backdrop-blur-2xl py-3' : 'bg-transparent py-6'}`}>
                 <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 sm:px-10">
                     <div className="flex items-center gap-5">
@@ -99,7 +99,7 @@ const AdminUsers = () => {
             </header>
 
             <main className="mx-auto max-w-[1400px] px-6 py-10 sm:px-10 md:mr-72">
-                {/* Stats & Search */}
+                {}
                 <div className="mb-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex items-center gap-4">
                         <div className="relative flex-1 lg:w-96">
@@ -132,7 +132,7 @@ const AdminUsers = () => {
                     </div>
                 </div>
 
-                {/* Users Table */}
+                {}
                 <div className="rounded-[40px] border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 p-8 shadow-sm backdrop-blur-xl overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-right">

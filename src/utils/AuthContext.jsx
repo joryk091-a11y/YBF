@@ -3,10 +3,10 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  // كائن حالة المستخدم الوهمي مع الحقول المطلوبة
-  // كائن حالة المستخدم مع الحقول المطلوبة (الافتراضي هو مستخدم عادي)
+  
+  
   const [user, setUser] = useState(() => {
-    // 1. التحقق من حالة تسجيل الدخول الفعلي الحقيقي أولاً لمنع مسح جلسة المسؤولين الحقيقيين عند التحديث
+    
     const currentRole = localStorage.getItem('userRole');
     if (currentRole === 'admin') {
       return {
@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
       };
     }
 
-    // 2. التحقق من حالة المطور المخزنة (فقط في حال تفعيل وضع debug)
+    
     const debugActive = localStorage.getItem('ybf_debug') === 'true';
     if (debugActive) {
       const saved = localStorage.getItem('ybf_mock_user');
@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
       }
     }
 
-    // 3. الوضع الافتراضي لزائر الموقع العادي (بدون صلاحيات)
+    
     return {
       role: 'user',
       airline_name: null,
@@ -47,7 +47,7 @@ export const AuthProvider = ({ children }) => {
     };
   });
 
-  // حالة الحجوزات المشتركة (Shared Global Bookings State) لتخزين حجوزات المسافرين
+  
   const [bookings, setBookings] = useState(() => {
     const saved = localStorage.getItem('ybf_mock_bookings');
     if (saved) {
@@ -92,12 +92,12 @@ export const AuthProvider = ({ children }) => {
     ];
   });
 
-  // مزامنة الحجوزات مع localStorage
+  
   useEffect(() => {
     localStorage.setItem('ybf_mock_bookings', JSON.stringify(bookings));
   }, [bookings]);
 
-  // مزامنة حالة المستخدم مع الذاكرة المحلية (localStorage) لتأمين المسارات وحمايتها
+  
   useEffect(() => {
     localStorage.setItem('ybf_mock_user', JSON.stringify(user));
 
@@ -107,7 +107,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('adminToken', 'mock-admin-token-value');
       }
       
-      // مسح قيم الشركة لتجنب التداخل
+      
       localStorage.removeItem('companyToken');
       localStorage.removeItem('companyId');
       localStorage.removeItem('companyName');
@@ -127,10 +127,10 @@ if (user.logo_url) {
         localStorage.setItem('airlineCode', user.airline_id === 1 ? 'IY' : user.airline_id === 2 ? 'BS' : user.airline_id === 5 ? 'DH' : user.airline_id === 7 ? 'QA' : 'QY');
       }
       
-      // مسح قيم المدير لتجنب التداخل
+      
       localStorage.removeItem('adminToken');
     } else {
-      // للمستخدم العادي: مسح كافة قيم لوحة التحكم والإدارة لمنع الدخول غير المصرح به
+      
       localStorage.removeItem('userRole');
       localStorage.removeItem('adminToken');
       localStorage.removeItem('companyToken');
@@ -140,19 +140,19 @@ if (user.logo_url) {
     }
   }, [user]);
 
-  // إضافة حجز جديد
+  
   const addBooking = (newBooking) => {
     setBookings((prev) => [newBooking, ...prev]);
   };
 
-  // تغيير الدور برمجياً
+  
   const setRole = (newRole) => {
     if (newRole === 'super_admin' || newRole === 'company_admin') {
       setUser((prev) => ({ ...prev, role: newRole }));
     }
   };
 
-  // تبديل الدور بشكل تبادلي
+  
   const toggleRole = () => {
     setUser((prev) => ({
       ...prev,
@@ -160,7 +160,7 @@ if (user.logo_url) {
     }));
   };
 
-  // تسجيل الخروج المركزي
+  
   const logout = () => {
     localStorage.clear();
     setUser({

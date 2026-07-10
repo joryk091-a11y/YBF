@@ -13,7 +13,7 @@ const AdminLogin = () => {
     const { setUser } = useAuth();
     const navigate = useNavigate();
 
-    // If already logged in, redirect to dashboard
+    
     useEffect(() => {
         const role = localStorage.getItem('userRole');
         const adminToken = localStorage.getItem('adminToken');
@@ -63,17 +63,17 @@ const AdminLogin = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-[#f8faff] dark:bg-[#070b13] text-slate-800 dark:text-slate-100 p-6 relative overflow-hidden" dir="rtl">
-            {/* Premium Mesh Background and Glowing Aura Blobs */}
+            {}
             <div className="absolute inset-0 pointer-events-none z-0">
                 <div className="absolute top-[-10%] right-[-10%] h-[600px] w-[600px] rounded-full bg-blue-500/5 dark:bg-blue-500/10 blur-[120px]" />
                 <div className="absolute bottom-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-[120px]" />
                 <div className="absolute top-[30%] left-[40%] h-[400px] w-[400px] rounded-full bg-sky-500/5 blur-[100px]" />
                 
-                {/* Tech Grid Pattern */}
+                {}
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:20px_20px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_80%,transparent_100%)]" />
             </div>
 
-            {/* Back to Home floating action */}
+            {}
             <Link 
                 to="/" 
                 className="absolute top-6 right-6 flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-blue-600 transition-all duration-300 bg-white/70 dark:bg-slate-900/70 border border-slate-200/50 dark:border-slate-800/50 py-2.5 px-4 rounded-xl shadow-sm hover:shadow backdrop-blur-md cursor-pointer"
@@ -83,12 +83,12 @@ const AdminLogin = () => {
             </Link>
 
             <div className="relative z-10 w-full max-w-md">
-                {/* Glassmorphism Card */}
+                {}
                 <div className="bg-white/80 dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-10 shadow-2xl shadow-blue-900/5 backdrop-blur-xl relative overflow-hidden">
                     
-                    {/* Header */}
+                    {}
                     <div className="text-center mb-8">
-                        {/* Premium Badge */}
+                        {}
                         <div className="relative mx-auto mb-5 w-16 h-16 bg-gradient-to-tr from-blue-600 to-[#3a5fd4] text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/25">
                             <Shield size={28} />
                         </div>
@@ -96,7 +96,7 @@ const AdminLogin = () => {
                         <p className="text-[11px] text-slate-400 dark:text-slate-500 font-bold mt-2">أدخل البيانات المعتمدة للوصول إلى لوحة التحكم (Admin)</p>
                     </div>
 
-                    {/* Error Alerts */}
+                    {}
                     {error && (
                         <div className="mb-6 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
                             <ShieldAlert size={18} className="text-rose-600 shrink-0 mt-0.5" />
@@ -104,10 +104,10 @@ const AdminLogin = () => {
                         </div>
                     )}
 
-                    {/* Form */}
+                    {}
                     <form onSubmit={handleSubmit} className="space-y-5">
                         
-                        {/* Username Input */}
+                        {}
                         <div className="space-y-1.5">
                             <label className="block text-[10px] font-black text-slate-450 dark:text-slate-500 uppercase tracking-widest" htmlFor="username">
                                 اسم المستخدم للمسؤول
@@ -134,7 +134,7 @@ const AdminLogin = () => {
                             </div>
                         </div>
 
-                        {/* Password Input */}
+                        {}
                         <div className="space-y-1.5">
                             <label className="block text-[10px] font-black text-slate-450 dark:text-slate-500 uppercase tracking-widest" htmlFor="password">
                                 كلمة المرور
@@ -167,7 +167,7 @@ const AdminLogin = () => {
                             </div>
                         </div>
 
-                        {/* Submit Button */}
+                        {}
                         <button
                             type="submit"
                             className={`w-full h-14 flex items-center justify-center rounded-2xl bg-blue-600 text-white font-black text-sm shadow-lg shadow-blue-500/20 hover:bg-blue-700 hover:shadow-xl hover:shadow-blue-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 cursor-pointer border-0 ${

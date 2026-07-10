@@ -149,7 +149,7 @@ function HeroSearchPanel() {
       <div className="relative rounded-[24px] sm:rounded-[32px] border border-slate-200/60 bg-white/90 backdrop-blur-md px-4 pb-5 pt-6 shadow-[0_30px_80px_rgba(0,0,0,0.08)] sm:px-8 sm:pb-6 sm:pt-8">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
 
-          {/* Path switcher container */}
+          {}
           <div className="inline-flex items-center gap-1 p-1 rounded-2xl bg-slate-50 border border-slate-200/60 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] overflow-x-auto max-w-full flex-shrink-0">
             {tabs.map((tab) => {
               const Icon = tab.icon

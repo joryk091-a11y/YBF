@@ -80,7 +80,7 @@ function RegisterPage() {
 
             const data = await response.json()
             if (data.success) {
-                // Automatically log in the user after registration
+                
                 const userInfo = {
                     id: data.userId,
                     fullName,
@@ -104,16 +104,16 @@ function RegisterPage() {
 
     return (
         <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-blue-100 to-blue-200 px-4 py-8 pt-24 sm:pt-36 md:pt-40 relative overflow-hidden" dir="rtl">
-            {/* Modern subtle ambient glows within brand blue identity */}
+            {}
             <div className="absolute inset-0 pointer-events-none opacity-70 z-0">
                 <div className="absolute -top-20 -right-20 h-[600px] w-[600px] rounded-full bg-blue-350/40 blur-[120px]" />
                 <div className="absolute -bottom-20 -left-20 h-[600px] w-[600px] rounded-full bg-indigo-300/30 blur-[120px]" />
             </div>
 
-            {/* Split Screen Layout Container */}
+            {}
             <div className="relative z-10 w-full max-w-6xl flex flex-col lg:grid gap-8 lg:grid-cols-[0.7fr_1.3fr] items-center">
                 
-                {/* Right side: Welcome Text (Visible on lg screens) */}
+                {}
                 <div className={`hidden lg:flex flex-col text-right text-slate-800 space-y-6 pr-0 lg:pl-12 self-start pt-10 transition-all duration-1000 delay-100 ease-out transform ${mounted ? 'translate-x-0 opacity-100' : 'translate-x-12 opacity-0'}`}>
                     <h2 className="text-5xl lg:text-6xl font-black leading-[1.2] bg-gradient-to-b from-brand-blue to-[#13287a] bg-clip-text text-transparent tracking-tight">
                         <span className="whitespace-nowrap">اكتشف طريقة</span> <br />
@@ -127,9 +127,9 @@ function RegisterPage() {
                     </p>
                 </div>
 
-                {/* Left side: Register Form Card */}
+                {}
                 <div className={`w-full max-w-[580px] mx-auto lg:mr-4 lg:ml-auto bg-white rounded-[2.5rem] border border-slate-200/50 p-6 sm:p-10 shadow-[0_20px_50px_rgba(15,23,42,0.08)] transition-all duration-1000 delay-300 ease-out transform ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
-                {/* Logo & Header */}
+                {}
                 <div className="flex flex-col items-center mb-8">
                     <div className="relative mb-4 flex items-center justify-center h-16 w-16">
                         <div className="absolute inset-0 rounded-full bg-brand-blue/20 blur-md animate-pulse" />
@@ -149,7 +149,7 @@ function RegisterPage() {
                         </div>
                     )}
 
-                    {/* Full name */}
+                    {}
                     <div className="space-y-2">
                         <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400">الاسم الكامل</label>
                         <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'name' ? 'border-brand-blue bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
@@ -166,7 +166,7 @@ function RegisterPage() {
                         </div>
                     </div>
 
-                    {/* Email + Phone */}
+                    {}
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
                             <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400">البريد الإلكتروني</label>
@@ -214,7 +214,7 @@ function RegisterPage() {
                         </div>
                     </div>
 
-                    {/* Password */}
+                    {}
                     <div className="space-y-2">
                         <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400">كلمة المرور</label>
                         <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'pass' ? 'border-brand-blue bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
@@ -238,7 +238,7 @@ function RegisterPage() {
                             </button>
                         </div>
 
-                        {/* Strength meter */}
+                        {}
                         {password.length > 0 && (
                             <div className="mt-2 space-y-1.5">
                                 <div className="flex h-1.5 gap-1 overflow-hidden rounded-full bg-slate-100">
@@ -256,7 +256,7 @@ function RegisterPage() {
                         )}
                     </div>
 
-                    {/* Confirm password */}
+                    {}
                     <div className="space-y-2">
                         <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400">تأكيد كلمة المرور</label>
                         <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focused === 'confirm' ? 'border-brand-blue bg-white shadow-[0_0_0_4px_rgba(73,116,249,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
@@ -283,7 +283,7 @@ function RegisterPage() {
 
 
 
-                    {/* Submit */}
+                    {}
                     <button
                         type="submit"
                         disabled={loading}
@@ -299,14 +299,14 @@ function RegisterPage() {
                         )}
                     </button>
 
-                    {/* Divider */}
+                    {}
                     <div className="flex items-center gap-4 py-1">
                         <div className="h-px flex-1 bg-slate-100" />
                         <span className="text-[11px] font-black text-slate-400">أو</span>
                         <div className="h-px flex-1 bg-slate-100" />
                     </div>
 
-                    {/* Login link */}
+                    {}
                     <p className="text-center text-xs sm:text-sm font-bold text-slate-500">
                         لديك حساب بالفعل؟{' '}
                         <Link to="/login" state={location.state} className="font-black text-brand-blue transition hover:text-brand-blue-hover">
@@ -317,11 +317,11 @@ function RegisterPage() {
                 </div>
             </div>
 
-            {/* Terms Modal */}
+            {}
             {isTermsOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" dir="rtl">
                     <div className="relative w-full max-w-lg overflow-hidden rounded-[32px] bg-white shadow-2xl">
-                        {/* Modal header */}
+                        {}
                         <div className="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-5">
                             <div className="flex items-center gap-3">
                                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-blue/10">
@@ -337,7 +337,7 @@ function RegisterPage() {
                             </button>
                         </div>
 
-                        {/* Modal body */}
+                        {}
                         <div className="max-h-[55vh] overflow-y-auto px-6 py-6">
                             <div className="space-y-5 text-right">
                                 {[
@@ -354,7 +354,7 @@ function RegisterPage() {
                             </div>
                         </div>
 
-                        {/* Modal footer */}
+                        {}
                         <div className="border-t border-slate-100 bg-slate-50 px-6 py-4">
                             <button
                                 onClick={() => { setAgreed(true); setIsTermsOpen(false) }}

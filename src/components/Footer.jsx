@@ -27,7 +27,7 @@ const Footer = () => {
 
     return (
         <footer className="relative bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800/60 text-slate-600 dark:text-slate-400 py-8 overflow-hidden" dir="rtl">
-            {/* ─── Premium Background Ambient Glows ───────────────────── */}
+            {}
             <div className="absolute inset-0 pointer-events-none opacity-40">
                 <div className="absolute -top-40 right-10 h-[300px] w-[300px] rounded-full bg-blue-500/5 blur-[80px]" />
                 <div className="absolute -bottom-40 left-10 h-[350px] w-[350px] rounded-full bg-sky-400/5 blur-[90px]" />
@@ -36,7 +36,7 @@ const Footer = () => {
             <div className="max-w-7xl mx-auto px-6 relative z-10">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-10">
                     
-                    {/* Brand Column */}
+                    {}
                     <div className="space-y-6">
                         <div className="flex items-center gap-3">
                             <img src={logo} alt="Logo" className="h-12 w-12 object-contain brightness-0 dark:invert" />
@@ -61,7 +61,7 @@ const Footer = () => {
                         </div>
                     </div>
 
-                    {/* Quick Navigation Links */}
+                    {}
                     <div>
                         <h4 className="text-slate-900 dark:text-slate-100 font-black mb-8 text-sm uppercase tracking-wider flex items-center gap-2">
                             روابط سريعة
@@ -98,7 +98,7 @@ const Footer = () => {
                         </ul>
                     </div>
 
-                    {/* Terms & Policies Links */}
+                    {}
                     <div>
                         <h4 className="text-slate-900 dark:text-slate-100 font-black mb-8 text-sm uppercase tracking-wider flex items-center gap-2">
                             الشروط والسياسات
@@ -126,7 +126,7 @@ const Footer = () => {
                     </div>
                 </div>
 
-                {/* Footer Bottom copyright */}
+                {}
                 <div className="pt-6 border-t border-slate-100 dark:border-slate-800/60 flex justify-center text-center">
                     <p className="text-xs font-bold text-slate-400 dark:text-slate-500 text-center w-full">
                         جميع الحقوق محفوظة © {new Date().getFullYear()} <span className="text-slate-800 dark:text-slate-200 font-black">Yemen Booking Flight</span>

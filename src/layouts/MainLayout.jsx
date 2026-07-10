@@ -15,7 +15,7 @@ function MainLayout() {
   const isHomePage = location.pathname === '/' || location.pathname === '/home';
   const loggedInUser = JSON.parse(localStorage.getItem('user') || 'null');
 
-  // Get active chat user details
+  
   const getChatUser = () => {
     const loggedIn = JSON.parse(localStorage.getItem('user') || 'null');
     if (loggedIn) {
@@ -41,14 +41,14 @@ function MainLayout() {
     }
   };
 
-  // Auto-scroll to bottom of chat
+  
   useEffect(() => {
     if (chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isOpen]);
 
-  // Polling for new messages
+  
   useEffect(() => {
     let intervalId;
     if (isOpen) {
@@ -77,7 +77,7 @@ function MainLayout() {
     const text = inputText.trim();
     setInputText('');
 
-    // Optimistic UI update
+    
     const tempMessage = {
       id_chat: Date.now(),
       user_id: chatUser.id,
@@ -116,12 +116,12 @@ function MainLayout() {
       <Outlet />
       <Footer />
 
-      {/* Floating Chat Widget - Rendered only on Home Page */}
+      {}
       {isHomePage && (
         <div className="fixed bottom-6 right-6 z-[999] flex flex-col items-end font-sans">
           {isOpen && (
             <div className="relative mb-4 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-3xl bg-white border border-slate-100 shadow-2xl flex flex-col h-[420px] animate-in fade-in slide-in-from-bottom-5 duration-300">
-              {/* Chat Header */}
+              {}
               <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-5 py-4">
                 <div className="flex items-center gap-3">
                   <div className="relative">
@@ -138,7 +138,7 @@ function MainLayout() {
               </div>
 
               {!loggedInUser ? (
-                /* Unauthenticated view */
+                
                 <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-slate-50/20 select-none">
                   <div className="h-14 w-14 bg-blue-50/60 dark:bg-blue-900/10 rounded-2xl flex items-center justify-center text-[#4974f9] mb-4 shadow-sm border border-blue-100/40">
                     <MessageSquare size={24} />
@@ -158,9 +158,9 @@ function MainLayout() {
                   </button>
                 </div>
               ) : (
-                /* Authenticated user chat view */
+                
                 <>
-                  {/* Chat Messages Area */}
+                  {}
                   <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/20">
                     {messages.map((msg, index) => (
                       <div 
@@ -184,7 +184,7 @@ function MainLayout() {
                     <div ref={chatEndRef} />
                   </div>
 
-                  {/* Chat Input Bar */}
+                  {}
                   <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-100 flex items-center gap-2 bg-white">
                     <input 
                       type="text" 
@@ -204,7 +204,7 @@ function MainLayout() {
                 </>
               )}
 
-              {/* Quick Contact Footer */}
+              {}
               <div className="px-5 py-2.5 border-t border-slate-50 bg-slate-50/10 flex items-center justify-center text-[9px] text-slate-400 font-bold">
                 <span className="flex items-center gap-1.5">
                   <Sparkles size={10} className="text-amber-500 animate-pulse" />

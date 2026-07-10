@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Lock, User, Eye, EyeOff, ShieldAlert, ArrowLeft, Shield, CheckCircle } from 'lucide-react';
+import { useAuth } from '../utils/AuthContext';
 
 const AdminLogin = () => {
     const [username, setUsername] = useState('');
@@ -9,6 +10,7 @@ const AdminLogin = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [focusedField, setFocusedField] = useState(null);
+    const { setUser } = useAuth();
     const navigate = useNavigate();
 
     // If already logged in, redirect to dashboard
@@ -39,6 +41,11 @@ const AdminLogin = () => {
                     localStorage.setItem('userRole', 'admin');
                     localStorage.setItem('adminToken', 'admin-token-' + data.id);
                     localStorage.setItem('adminUsername', data.username || username);
+                    setUser({
+                        role: 'super_admin',
+                        airline_name: 'Yemenia',
+                        airline_id: 1,
+                    });
                     navigate('/admin/dashboard');
                 } else {
                     setError('هذا الحساب ليس له صلاحيات مدير النظام.');

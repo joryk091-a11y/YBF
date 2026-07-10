@@ -45,8 +45,8 @@ const airlineConfig = {
     IY: { name: 'اليمنية للطيران', color: 'from-blue-800 to-indigo-950', logo: logoY },
     BS: { name: 'طيران بلقيس', color: 'from-blue-600 to-blue-900', logo: logoB },
     QY: { name: 'فلاي عدن', color: 'from-sky-500 to-sky-700', logo: logoF },
-    DH: { name: 'طيران القطيبي (عدن)', color: 'from-sky-500 to-sky-700', logo: logoF },
-    QTB: { name: 'طيران القطيبي (عدن)', color: 'from-sky-500 to-sky-700', logo: logoF },
+    DH: { name: 'فلاي عدن', color: 'from-sky-500 to-sky-700', logo: logoF },
+    QTB: { name: 'فلاي عدن', color: 'from-sky-500 to-sky-700', logo: logoF },
 };
 const airportNamesConfig = {
     ADE: { city: 'عدن', airport: 'مطار عدن الدولي' },

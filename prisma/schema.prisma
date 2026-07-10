@@ -200,13 +200,14 @@ model Payment {
 model Seat {
   id_seats            Int                @id @default(autoincrement())
   flight_id           Int
-  seat_number         String             @unique @db.VarChar(15)
+  seat_number         String             @db.VarChar(15)
   seat_class          SeatClass?
   is_available        Int?               @default(1) @db.TinyInt
   seat_price          Decimal?           @db.Decimal(10, 2)
   bookings_passengers BookingPassenger[]
   flight              Flight             @relation(fields: [flight_id], references: [id_flights])
 
+  @@unique([flight_id, seat_number])
   @@index([flight_id], map: "seats_flight_id_fkey")
   @@map("seats")
 }

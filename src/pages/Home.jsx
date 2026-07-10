@@ -123,45 +123,6 @@ const steps = [
   },
 ]
 
-const popularDestinations = [
-  {
-    id: 'cairo',
-    city: 'القاهرة',
-    country: 'جمهورية مصر العربية',
-    airport: 'مطار القاهرة الدولي',
-    image: cairoImg,
-    price: '180',
-    tag: 'الأكثر زيارة',
-  },
-  {
-    id: 'dubai',
-    city: 'دبي',
-    country: 'الإمارات العربية المتحدة',
-    airport: 'مطار دبي الدولي',
-    image: dubaiImg,
-    price: '220',
-    tag: 'طلب مرتفع',
-  },
-  {
-    id: 'riyadh',
-    city: 'الرياض',
-    country: 'المملكة العربية السعودية',
-    airport: 'مطار الملك خالد الدولي',
-    image: riyadhImg,
-    price: '250',
-    tag: 'شعبية كبيرة',
-  },
-  {
-    id: 'amman',
-    city: 'عمّان',
-    country: 'المملكة الأردنية الهاشمية',
-    airport: 'مطار الملكة علياء الدولي',
-    image: ammanImg,
-    price: '190',
-    tag: 'أفضل قيمة',
-  },
-]
-
 const qrGrid = [
   1, 1, 1, 0, 1, 0, 0, 1, 1, 1,
   1, 0, 1, 0, 0, 1, 0, 1, 0, 1,
@@ -190,6 +151,83 @@ function HomePage() {
   const [openFaq, setOpenFaq] = useState(0)
   const navigate = useNavigate()
   const { updateSearchCriteria } = useSearch()
+
+  const [prices, setPrices] = useState({
+    cairo: 180,
+    dubai: 220,
+    riyadh: 250,
+    amman: 190
+  })
+
+  useEffect(() => {
+    const fetchStartingPrices = async () => {
+      try {
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080'
+        const response = await fetch(`${baseUrl}/api/flights/starting-prices`)
+        const data = await response.json()
+        if (data.success && data.prices) {
+          const codeToId = {
+            'CAI': 'cairo',
+            'DXB': 'dubai',
+            'RUH': 'riyadh',
+            'AMM': 'amman'
+          }
+          setPrices(prev => {
+            const next = { ...prev }
+            Object.entries(data.prices).forEach(([code, price]) => {
+              const id = codeToId[code]
+              if (id && price > 0) {
+                next[id] = price
+              }
+            })
+            return next
+          })
+        }
+      } catch (err) {
+        console.error('Error fetching popular destination prices:', err)
+      }
+    }
+    fetchStartingPrices()
+  }, [])
+
+  const popularDestinations = [
+    {
+      id: 'cairo',
+      city: 'القاهرة',
+      country: 'جمهورية مصر العربية',
+      airport: 'مطار القاهرة الدولي',
+      image: cairoImg,
+      price: String(prices.cairo),
+      tag: 'الأكثر زيارة',
+    },
+    {
+      id: 'dubai',
+      city: 'دبي',
+      country: 'الإمارات العربية المتحدة',
+      airport: 'مطار دبي الدولي',
+      image: dubaiImg,
+      price: String(prices.dubai),
+      tag: 'طلب مرتفع',
+    },
+    {
+      id: 'riyadh',
+      city: 'الرياض',
+      country: 'المملكة العربية السعودية',
+      airport: 'مطار الملك خالد الدولي',
+      image: riyadhImg,
+      price: String(prices.riyadh),
+      tag: 'شعبية كبيرة',
+    },
+    {
+      id: 'amman',
+      city: 'عمّان',
+      country: 'المملكة الأردنية الهاشمية',
+      airport: 'مطار الملكة علياء الدولي',
+      image: ammanImg,
+      price: String(prices.amman),
+      tag: 'أفضل قيمة',
+    },
+  ]
 
   const handleDestinationSelect = (destId) => {
     updateSearchCriteria({ toCity: destId })

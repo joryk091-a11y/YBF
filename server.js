@@ -1338,6 +1338,25 @@ app.get('/api/flights', async (req, res) => {
   }
 });
 
+app.get('/api/flights/starting-prices', async (req, res) => {
+  let connection;
+  try {
+    connection = await mysql.createConnection(getDbConfig());
+    const [rows] = await connection.execute(
+      "SELECT airportDestination_code AS destination, MIN(price) AS minPrice FROM flights WHERE status = 'active' AND departure_time >= NOW() GROUP BY airportDestination_code"
+    );
+    const prices = {};
+    for (const r of rows) {
+      prices[r.destination.toUpperCase()] = parseFloat(r.minPrice) || 0;
+    }
+    res.json({ success: true, prices });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
 
 app.post('/api/flights', async (req, res) => {
   const f = req.body;

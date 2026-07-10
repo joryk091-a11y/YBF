@@ -7,8 +7,29 @@ import logoF from '../assets/F.png';
 import {
     Plane, Ticket, CheckCircle, XCircle, Clock,
     ChevronDown, Search, PackageX, LogIn, Users,
-    Hash, CalendarDays, Banknote, CreditCard, BadgeCheck, Calendar, Download, MapPin, Trash2
+    Hash, CalendarDays, Banknote, CreditCard, BadgeCheck, Calendar, Download, MapPin, Trash2,
+    Bell, CheckCheck, Printer
 } from 'lucide-react';
+
+const typeConfig = {
+    booking: { color: 'bg-blue-500', label: 'حجز', icon: Plane },
+    reminder: { color: 'bg-amber-500', label: 'تذكير', icon: Clock },
+    payment: { color: 'bg-emerald-500', label: 'دفع', icon: CreditCard },
+    cancellation: { color: 'bg-red-500', label: 'إلغاء', icon: XCircle },
+    general: { color: 'bg-slate-400', label: 'عام', icon: Bell },
+};
+
+const formatRelativeTime = (ts) => {
+    if (!ts) return '';
+    const d = new Date(ts);
+    const now = new Date();
+    const diff = Math.floor((now - d) / 1000);
+    if (diff < 60) return 'الآن';
+    if (diff < 3600) return `منذ ${Math.floor(diff / 60)} د`;
+    if (diff < 86400) return `منذ ${Math.floor(diff / 3600)} س`;
+    return d.toLocaleDateString('ar-EG-u-nu-latn', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+};
+
 
 const statusConfig = {
     certain: { label: 'مؤكد', bg: 'bg-blue-500/10', text: 'text-blue-700', dot: 'bg-blue-500', icon: CheckCircle },
@@ -328,7 +349,7 @@ function BoardingPass({ passenger, booking, index }) {
                 {[
                     { label: 'تاريخ السفر / Date', value: formatDate(booking.departure_time) },
                     { label: 'طريقة الدفع / Payment', value: paymentMethodLabel[booking.payment_method] || booking.payment_method || '—' },
-                    { label: 'سعر التذكرة / Fare', value: `$${ticketPrice.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}` },
+                    { label: 'سعر التذكرة / Fare', value: `$${ticketPrice.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}` },
                 ].map(({ label, value }) => (
                     <div key={label} className="bg-slate-50/50 px-3 py-2.5 text-center">
                         <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">{label}</p>
@@ -337,35 +358,16 @@ function BoardingPass({ passenger, booking, index }) {
                 ))}
             </div>
 
-            {/* Download PDF button bar */}
+            {/* Print button bar */}
             <div className="bg-slate-50 px-5 py-3.5 flex justify-between items-center border-t border-slate-150 download-bar-pdf" data-html2canvas-ignore="true">
                 <span className="text-[10px] font-bold text-slate-400">تذكرة صعود جاهزة للطباعة أو الحفظ</span>
                 <div className="flex gap-2">
-                    {booking.status === 'certain' && (
-                        <button
-                            onClick={handleDownloadItinerary}
-                            disabled={downloadingItinerary}
-                            className="flex items-center gap-1.5 px-4.5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl text-xs font-black shadow-md shadow-emerald-600/20 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
-                        >
-                            {downloadingItinerary ? (
-                                <>
-                                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                                    <span>جاري التوليد...</span>
-                                </>
-                            ) : (
-                                <>
-                                    <Download size={14} />
-                                    <span>تحميل التذكرة الإلكترونية</span>
-                                </>
-                            )}
-                        </button>
-                    )}
                     <button
                         onClick={handleDownloadPdf}
                         className="flex items-center gap-1.5 px-4.5 py-2 bg-[#4974f9] hover:bg-[#3a5fd4] text-white rounded-xl text-xs font-black shadow-md shadow-[#4974f9]/20 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
                     >
-                        <Download size={14} />
-                        <span>تحميل التذكرة PDF</span>
+                        <Printer size={14} />
+                        <span>طباعة التذكرة</span>
                     </button>
                 </div>
             </div>
@@ -617,6 +619,10 @@ export default function MyBookings() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [activeFilter, setActiveFilter] = useState('all');
+    
+    const [activeSection, setActiveSection] = useState('bookings'); // 'bookings' or 'notifications'
+    const [notifications, setNotifications] = useState([]);
+    const [notifLoading, setNotifLoading] = useState(true);
 
     const user = JSON.parse(localStorage.getItem('user') || 'null');
 
@@ -629,7 +635,52 @@ export default function MyBookings() {
             .finally(() => setLoading(false));
     }, [user?.id]);
 
-    useEffect(() => { fetchBookings(); }, [fetchBookings]);
+    const fetchNotifications = useCallback(() => {
+        if (!user?.id) { setNotifLoading(false); return; }
+        setNotifLoading(true);
+        fetch(`http://localhost:8080/api/notifications/${user.id}`)
+            .then(r => r.json())
+            .then(d => { if (d.success) setNotifications(d.notifications); })
+            .catch(console.error)
+            .finally(() => setNotifLoading(false));
+    }, [user?.id]);
+
+    useEffect(() => {
+        fetchBookings();
+        fetchNotifications();
+    }, [fetchBookings, fetchNotifications]);
+
+    const markNotificationAsRead = async (id) => {
+        try {
+            await fetch(`http://localhost:8080/api/notifications/${id}/read`, { method: 'PATCH' });
+            setNotifications(prev => prev.map(n => n.id_notifications === id ? { ...n, is_read: 1 } : n));
+        } catch (error) {
+            console.error('Error marking notification as read:', error);
+        }
+    };
+
+    const deleteNotification = async (id) => {
+        const confirmDelete = window.confirm("هل أنت متأكد من رغبتك في حذف هذا الإشعار؟");
+        if (!confirmDelete) return;
+        try {
+            await fetch(`http://localhost:8080/api/notifications/${id}`, { method: 'DELETE' });
+            setNotifications(prev => prev.filter(n => n.id_notifications !== id));
+        } catch (error) {
+            console.error('Error deleting notification:', error);
+        }
+    };
+
+    const markAllNotificationsAsRead = async () => {
+        if (!user?.id) return;
+        try {
+            await fetch(`http://localhost:8080/api/notifications/read-all/${user.id}`, { method: 'PATCH' });
+            setNotifications(prev => prev.map(n => ({ ...n, is_read: 1 })));
+        } catch (error) {
+            console.error('Error marking all notifications as read:', error);
+        }
+    };
+
+    const unreadCount = notifications.filter(n => !n.is_read).length;
 
     const filtered = bookings.filter(b => {
         const q = search.toLowerCase();
@@ -642,12 +693,18 @@ export default function MyBookings() {
         return matchSearch && b.status === activeFilter;
     });
 
+    const filteredNotifs = notifications.filter(n => {
+        const q = search.toLowerCase();
+        return n.title?.toLowerCase().includes(q) || n.message?.toLowerCase().includes(q);
+    });
+
     const filters = [
         { id: 'all', label: 'الكل', count: bookings.length, icon: Ticket },
         { id: 'certain', label: 'مؤكدة', count: bookings.filter(b => b.status === 'certain').length, icon: CheckCircle },
         { id: 'temporary', label: 'مؤقتة', count: bookings.filter(b => b.status === 'temporary').length, icon: Clock },
         { id: 'cancelled', label: 'ملغية', count: bookings.filter(b => b.status === 'cancelled').length, icon: XCircle },
     ];
+
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-[#f4f7fc] via-[#f8fafc] to-[#f4f7fc]" dir="rtl">
@@ -669,13 +726,13 @@ export default function MyBookings() {
                 </div>
 
                 {/* Filter tabs */}
-                {bookings.length > 0 && (
-                    <div className="flex gap-2 mb-6 flex-wrap">
+                {activeSection === 'bookings' && bookings.length > 0 && (
+                    <div className="flex gap-2 mb-6 flex-wrap animate-in fade-in slide-in-from-top-1 duration-200">
                         {filters.map(({ id, label, count, icon: Icon }) => (
                             <button
                                 key={id}
                                 onClick={() => setActiveFilter(id)}
-                                className={`flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-black transition-all duration-200 border ${activeFilter === id
+                                className={`flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-black transition-all duration-200 border cursor-pointer ${activeFilter === id
                                     ? 'bg-brand-blue text-white border-brand-blue shadow-md shadow-brand-blue/20'
                                     : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
                                     }`}
@@ -707,15 +764,49 @@ export default function MyBookings() {
                 {/* Logged-in content */}
                 {user && (
                     <>
-                        {loading ? (
-                            <div className="flex flex-col items-center justify-center py-28 gap-5">
-                                <div className="relative">
-                                    <div className="h-16 w-16 animate-spin rounded-2xl border-4 border-brand-blue border-t-transparent" />
-                                    <Plane size={20} className="absolute inset-0 m-auto text-brand-blue" />
-                                </div>
-                                <p className="text-slate-500 font-black">جاري تحميل تذاكرك...</p>
-                            </div>
-                        ) : (
+                        {/* Section Selection Tabs */}
+                        <div className="flex border-b border-slate-200/80 mb-6 gap-6 relative" dir="rtl">
+                            <button
+                                onClick={() => { setActiveSection('bookings'); setSearch(''); }}
+                                className={`pb-3 text-base font-black relative transition-all duration-200 flex items-center gap-2 cursor-pointer ${
+                                    activeSection === 'bookings' ? 'text-brand-blue' : 'text-slate-450 hover:text-slate-800'
+                                }`}
+                            >
+                                <Ticket size={18} />
+                                <span>حجوزاتي</span>
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${
+                                    activeSection === 'bookings' ? 'bg-brand-blue/10 text-brand-blue' : 'bg-slate-100 text-slate-500'
+                                }`}>
+                                    {bookings.length}
+                                </span>
+                                {activeSection === 'bookings' && (
+                                    <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-brand-blue rounded-t-full" />
+                                )}
+                            </button>
+                            <button
+                                onClick={() => { setActiveSection('notifications'); setSearch(''); }}
+                                className={`pb-3 text-base font-black relative transition-all duration-200 flex items-center gap-2 cursor-pointer ${
+                                    activeSection === 'notifications' ? 'text-brand-blue' : 'text-slate-450 hover:text-slate-800'
+                                }`}
+                            >
+                                <Bell size={18} />
+                                <span>الإشعارات</span>
+                                {unreadCount > 0 ? (
+                                    <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-black animate-pulse">
+                                        {unreadCount}
+                                    </span>
+                                ) : (
+                                    <span className="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-black">
+                                        {notifications.length}
+                                    </span>
+                                )}
+                                {activeSection === 'notifications' && (
+                                    <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-brand-blue rounded-t-full" />
+                                )}
+                            </button>
+                        </div>
+
+                        {activeSection === 'bookings' ? (
                             <>
                                 {bookings.length > 0 && (
                                     <div className="relative mb-6">
@@ -729,32 +820,176 @@ export default function MyBookings() {
                                     </div>
                                 )}
 
-                                <div className="space-y-4">
-                                    {filtered.length > 0 ? (
-                                        filtered.map(b => <BookingGroup key={b.id_bookings} booking={b} />)
-                                    ) : (
-                                        <div className="flex flex-col items-center text-center py-28 bg-white rounded-3xl border border-slate-200/60 shadow-sm">
-                                            <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-slate-50 mb-6">
-                                                <PackageX size={40} className="text-slate-300" />
+                                {loading ? (
+                                    <div className="flex flex-col items-center justify-center py-28 gap-5">
+                                        <div className="relative">
+                                            <div className="h-16 w-16 animate-spin rounded-2xl border-4 border-brand-blue border-t-transparent" />
+                                            <Plane size={20} className="absolute inset-0 m-auto text-brand-blue" />
+                                        </div>
+                                        <p className="text-slate-500 font-black">جاري تحميل تذاكرك...</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {filtered.length > 0 ? (
+                                            filtered.map(b => <BookingGroup key={b.id_bookings} booking={b} />)
+                                        ) : (
+                                            <div className="flex flex-col items-center text-center py-28 bg-white rounded-3xl border border-slate-200/60 shadow-sm">
+                                                <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-slate-50 mb-6">
+                                                    <PackageX size={40} className="text-slate-300" />
+                                                </div>
+                                                <h2 className="text-xl font-black text-slate-900 mb-2">
+                                                    {search || activeFilter !== 'all' ? 'لا توجد نتائج مطابقة' : 'لا يوجد حجوزات بعد'}
+                                                </h2>
+                                                <p className="text-slate-400 font-bold mb-8">
+                                                    {search || activeFilter !== 'all' ? 'جرّب تغيير كلمة البحث أو التصنيف' : 'ابدأ رحلتك الأولى معنا الآن'}
+                                                </p>
+                                                {!search && activeFilter === 'all' && (
+                                                    <button onClick={() => navigate('/')} className="inline-flex items-center gap-2 rounded-2xl bg-brand-blue px-8 py-3.5 text-sm font-black text-white shadow-xl shadow-brand-blue/30 hover:scale-105 transition-all">
+                                                        <Plane size={18} /> احجز رحلتك الأولى
+                                                    </button>
+                                                )}
                                             </div>
-                                            <h2 className="text-xl font-black text-slate-900 mb-2">
-                                                {search || activeFilter !== 'all' ? 'لا توجد نتائج مطابقة' : 'لا يوجد حجوزات بعد'}
-                                            </h2>
-                                            <p className="text-slate-400 font-bold mb-8">
-                                                {search || activeFilter !== 'all' ? 'جرّب تغيير كلمة البحث أو التصنيف' : 'ابدأ رحلتك الأولى معنا الآن'}
-                                            </p>
-                                            {!search && activeFilter === 'all' && (
-                                                <button onClick={() => navigate('/')} className="inline-flex items-center gap-2 rounded-2xl bg-brand-blue px-8 py-3.5 text-sm font-black text-white shadow-xl shadow-brand-blue/30 hover:scale-105 transition-all">
-                                                    <Plane size={18} /> احجز رحلتك الأولى
-                                                </button>
+                                        )}
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <>
+                                {notifications.length > 0 && (
+                                    <div className="relative mb-6">
+                                        <Search className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                        <input
+                                            type="text" value={search}
+                                            onChange={e => setSearch(e.target.value)}
+                                            placeholder="بحث في الإشعارات..."
+                                            className="w-full bg-white border border-slate-200 rounded-2xl py-4 pr-12 pl-4 text-sm font-bold outline-none focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/10 transition-all shadow-sm"
+                                        />
+                                    </div>
+                                )}
+
+                                {notifLoading ? (
+                                    <div className="flex flex-col items-center justify-center py-28 gap-5">
+                                        <div className="relative">
+                                            <div className="h-16 w-16 animate-spin rounded-2xl border-4 border-brand-blue border-t-transparent" />
+                                            <Bell size={20} className="absolute inset-0 m-auto text-brand-blue animate-pulse" />
+                                        </div>
+                                        <p className="text-slate-500 font-black">جاري تحميل إشعاراتك...</p>
+                                    </div>
+                                ) : (
+                                    <>
+                                        {notifications.length > 0 && (
+                                            <div className="flex justify-between items-center mb-4 px-2">
+                                                <span className="text-xs font-bold text-slate-500">
+                                                    لديك {unreadCount} إشعار غير مقروء من أصل {notifications.length}
+                                                </span>
+                                                {unreadCount > 0 && (
+                                                    <button
+                                                        onClick={markAllNotificationsAsRead}
+                                                        className="flex items-center gap-1.5 text-xs font-black text-brand-blue hover:underline cursor-pointer"
+                                                    >
+                                                        <CheckCheck size={14} />
+                                                        تحديد الكل كمقروء
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        <div className="space-y-4">
+                                            {filteredNotifs.length > 0 ? (
+                                                filteredNotifs.map(n => {
+                                                    const tc = typeConfig[n.type] || typeConfig.general;
+                                                    const IconComp = tc.icon;
+                                                    return (
+                                                        <div
+                                                            key={n.id_notifications}
+                                                            onClick={() => !n.is_read && markNotificationAsRead(n.id_notifications)}
+                                                            className={`group relative border rounded-[2rem] p-6 transition-all duration-300 bg-white shadow-sm border-slate-200/60 hover:shadow-md hover:border-slate-350 cursor-pointer ${
+                                                                !n.is_read ? 'bg-blue-500/[0.015] border-blue-500/10' : ''
+                                                            }`}
+                                                        >
+                                                            {/* Left indicator for unread */}
+                                                            {!n.is_read && (
+                                                                <div className="absolute top-0 right-0 bottom-0 w-1.5 bg-brand-blue" />
+                                                            )}
+
+                                                            <div className="flex gap-4 items-start">
+                                                                {/* Notification Icon */}
+                                                                <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${tc.color} text-white shadow-md`}>
+                                                                    <IconComp size={20} />
+                                                                </div>
+
+                                                                {/* Content */}
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5 text-right">
+                                                                        <h3 className={`text-base leading-snug ${!n.is_read ? 'font-black text-slate-900' : 'font-bold text-slate-700'}`}>
+                                                                            {n.title}
+                                                                        </h3>
+                                                                        <div className="flex items-center gap-3">
+                                                                            <span className="text-[11px] font-bold text-slate-400 flex items-center gap-1">
+                                                                                <Clock size={12} />
+                                                                                {formatRelativeTime(n.created_at)}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <p className="text-slate-500 text-xs font-bold leading-relaxed whitespace-pre-line text-right">
+                                                                        {n.message}
+                                                                    </p>
+                                                                    
+                                                                    {/* Actions row inside notification */}
+                                                                    <div className="mt-3 flex justify-between items-center" dir="rtl">
+                                                                        {!n.is_read ? (
+                                                                            <button
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    markNotificationAsRead(n.id_notifications);
+                                                                                }}
+                                                                                className="text-[10px] font-black text-brand-blue hover:underline bg-brand-blue/5 px-2.5 py-1 rounded-lg border border-brand-blue/10 cursor-pointer"
+                                                                            >
+                                                                                تحديد كمقروء
+                                                                            </button>
+                                                                        ) : (
+                                                                            <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
+                                                                                مقروء
+                                                                            </span>
+                                                                        )}
+
+                                                                        <button
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                deleteNotification(n.id_notifications);
+                                                                            }}
+                                                                            className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-650 transition-colors cursor-pointer border border-red-100/50"
+                                                                            title="حذف الإشعار"
+                                                                        >
+                                                                            <Trash2 size={13} />
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })
+                                            ) : (
+                                                <div className="flex flex-col items-center text-center py-24 bg-white rounded-3xl border border-slate-200/60 shadow-sm">
+                                                    <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-slate-50 mb-6">
+                                                        <PackageX size={36} className="text-slate-300" />
+                                                    </div>
+                                                    <h2 className="text-lg font-black text-slate-900 mb-2">
+                                                        {search ? 'لا توجد نتائج مطابقة' : 'لا توجد إشعارات'}
+                                                    </h2>
+                                                    <p className="text-slate-400 font-bold max-w-xs leading-relaxed">
+                                                        {search ? 'جرّب كتابة كلمة بحث أخرى للبحث في الإشعارات' : 'سنقوم بإخطارك فور تلقي تحديثات جديدة بخصوص حجوزاتك'}
+                                                    </p>
+                                                </div>
                                             )}
                                         </div>
-                                    )}
-                                </div>
+                                    </>
+                                )}
                             </>
                         )}
                     </>
                 )}
+
             </main>
         </div>
     );

@@ -1071,6 +1071,21 @@ app.get('/api/bookings/:id/ticket', async (req, res) => {
 
     // Launch puppeteer to generate PDF
     const localHeadlessShell = 'C:\\Users\\ABRAG Soft\\.cache\\puppeteer\\chrome-headless-shell\\win64-150.0.7871.24\\chrome-headless-shell-win64\\chrome-headless-shell.exe';
+    const standardChromePaths = [
+      localHeadlessShell,
+      path.join(process.env.USERPROFILE || 'C:\\Users\\PC', 'AppData', 'Local', 'Google', 'Chrome', 'Application', 'chrome.exe'),
+      'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+      'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'
+    ];
+
+    let chosenPath = null;
+    for (const p of standardChromePaths) {
+      if (fs.existsSync(p)) {
+        chosenPath = p;
+        break;
+      }
+    }
+
     const launchOptions = {
       headless: 'new',
       args: [
@@ -1081,8 +1096,8 @@ app.get('/api/bookings/:id/ticket', async (req, res) => {
         '--no-zygote'
       ]
     };
-    if (fs.existsSync(localHeadlessShell)) {
-      launchOptions.executablePath = localHeadlessShell;
+    if (chosenPath) {
+      launchOptions.executablePath = chosenPath;
     }
     const browser = await puppeteer.launch(launchOptions);
     const page = await browser.newPage();

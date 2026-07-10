@@ -21,7 +21,7 @@ model User {
 
 model Admin {
   id_admin     Int         @id @default(autoincrement())
-  username     String      @unique @db.VarChar(100)
+  username     String?     @unique @db.VarChar(100)
   password     String      @db.VarChar(255)
   role         AdminRole   @default(company)
   airline_code String?     @db.VarChar(10)

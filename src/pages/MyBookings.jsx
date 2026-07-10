@@ -112,8 +112,38 @@ function BoardingPass({ passenger, booking, index }) {
     }, [qrData]);
 
     const handleDownloadPdf = () => {
-        const ticketElement = document.getElementById(`ticket-${passenger.id_passengers || index}`);
-        if (!ticketElement) return;
+        const dateObj = new Date(booking.departure_time);
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        const month = dateObj.toLocaleDateString('en-US', { month: 'short' });
+        const year = dateObj.getFullYear();
+        const formattedDate = `${day}.${month}.${year}`;
+
+        const depTimeStr = new Date(booking.departure_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+        const arrTimeStr = new Date(booking.arrival_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+        const engAirports = {
+            ADE: { city: 'ADEN', airport: 'Aden Intl Airport' },
+            CAI: { city: 'CAIRO', airport: 'Cairo Intl Airport' },
+            RUH: { city: 'RIYADH', airport: 'King Khalid Intl Airport' },
+            JED: { city: 'JEDDAH', airport: 'King Abdulaziz Intl Airport' },
+            RIY: { city: 'RIYAN', airport: 'Riyan Intl Airport' },
+            GXF: { city: 'SEIYUN', airport: 'Seiyun Intl Airport' },
+            SCT: { city: 'SOCOTRA', airport: 'Socotra Intl Airport' },
+            AMM: { city: 'AMMAN', airport: 'Queen Alia Intl Airport' },
+            KWI: { city: 'KUWAIT', airport: 'Kuwait Intl Airport' },
+            JIB: { city: 'DJIBOUTI', airport: 'Djibouti Intl Airport' },
+            ADD: { city: 'ADDIS ABABA', airport: 'Bole Intl Airport' }
+        };
+
+        const orgEng = engAirports[booking.airportOrigin_code] || { city: booking.airportOrigin_code, airport: booking.airportOrigin_code };
+        const destEng = engAirports[booking.airportDestination_code] || { city: booking.airportDestination_code, airport: booking.airportDestination_code };
+
+        const ticketNo = `635 2412${String(booking.id_bookings || index).padStart(6, '0')}`;
+        const bookingRef = booking.booking_reference.toUpperCase();
+        
+        const fareUSD = ticketPrice.toFixed(2);
+        const taxUSD = (ticketPrice * 0.1).toFixed(2);
+        const totalUSD = (ticketPrice * 1.1).toFixed(2);
 
         const iframe = document.createElement('iframe');
         iframe.style.position = 'fixed';
@@ -126,45 +156,229 @@ function BoardingPass({ passenger, booking, index }) {
         document.body.appendChild(iframe);
 
         const doc = iframe.contentDocument || iframe.contentWindow.document;
-        
-        let stylesHtml = '';
-        document.querySelectorAll('style, link[rel="stylesheet"]').forEach(el => {
-            stylesHtml += el.outerHTML;
-        });
 
         doc.write(`
-            <html dir="rtl">
+            <html>
                 <head>
-                    <title>Ticket-${booking.booking_reference}-${passenger.name}</title>
-                    ${stylesHtml}
+                    <title>Itinerary Receipt - ${bookingRef}</title>
                     <style>
                         body {
-                            margin: 0;
-                            padding: 20px;
-                            background: white;
-                            display: flex;
-                            justify-content: center;
-                            align-items: center;
-                            min-height: 100vh;
-                            font-family: inherit;
+                            font-family: Arial, sans-serif;
+                            color: #000;
+                            background-color: #fff;
+                            font-size: 11px;
+                            line-height: 1.4;
+                            margin: 20px;
+                            direction: ltr !important;
+                            text-align: left !important;
                         }
                         * {
-                            -webkit-print-color-adjust: exact !important;
-                            print-color-adjust: exact !important;
+                            box-sizing: border-box;
+                        }
+                        .header-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-bottom: 15px;
+                        }
+                        .logo-img {
+                            height: 55px;
+                            object-contain: fit;
+                        }
+                        .title-bar {
+                            text-align: center;
+                            font-weight: bold;
+                            font-size: 13px;
+                            margin: 15px 0;
+                            border-top: 1px solid #ccc;
+                            border-bottom: 1px solid #ccc;
+                            padding: 6px 0;
+                            letter-spacing: 1px;
+                        }
+                        .info-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-bottom: 20px;
+                        }
+                        .info-table td {
+                            padding: 3px 0;
+                            vertical-align: top;
+                        }
+                        .info-label {
+                            font-weight: bold;
+                            width: 200px;
+                            color: #333;
+                        }
+                        .info-value {
+                            color: #000;
+                        }
+                        .coupon-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-bottom: 20px;
+                        }
+                        .coupon-table th {
+                            border-top: 1px solid #000;
+                            border-bottom: 1px solid #000;
+                            padding: 6px 4px;
+                            text-align: left;
+                            font-weight: bold;
+                            font-size: 10px;
+                            color: #333;
+                        }
+                        .coupon-table td {
+                            padding: 8px 4px;
+                            border-bottom: 1px solid #eee;
+                            font-size: 10px;
+                        }
+                        .financial-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 15px;
+                            border-top: 1px solid #ccc;
+                            padding-top: 10px;
+                        }
+                        .financial-table td {
+                            padding: 3px 0;
+                        }
+                        .disclaimer {
+                            margin-top: 30px;
+                            border-top: 1px solid #000;
+                            padding-top: 8px;
+                            font-size: 9px;
+                            color: #555;
+                            text-align: center;
                         }
                         @page {
-                            size: letter landscape;
-                            margin: 0;
-                        }
-                        .download-bar-pdf, [data-html2canvas-ignore="true"] {
-                            display: none !important;
+                            size: portrait;
+                            margin: 15mm;
                         }
                     </style>
                 </head>
                 <body>
-                    <div style="width: 100%; max-width: 900px;">
-                        ${ticketElement.outerHTML}
+                    <!-- Header -->
+                    <table class="header-table">
+                        <tr>
+                            <td style="width: 50%;">
+                                <img src="${airline.logo}" class="logo-img" alt="${airline.name}" />
+                                <div style="font-size: 12px; font-weight: bold; margin-top: 5px;">${airline.name}</div>
+                            </td>
+                            <td style="text-align: right; width: 50%; vertical-align: top;">
+                                <img src="https://bwipjs-api.metafloor.com/?bcid=code128&text=${bookingRef}&scale=2&rotate=N&includetext=false" style="height: 35px;" />
+                                <div style="font-weight: bold; font-size: 11px; margin-top: 4px; letter-spacing: 1px;">${bookingRef}</div>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div class="title-bar">PASSENGER ITINERARY RECEIPT</div>
+
+                    <!-- Passenger & Ticket details -->
+                    <table class="info-table">
+                        <tr>
+                            <td class="info-label">PASSENGER NAME</td>
+                            <td class="info-value">: ${passenger.name.toUpperCase()}</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">PASSENGER PASSPORT NO</td>
+                            <td class="info-value">: ${passenger.passport_number.toUpperCase()}</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">BOOKING REF.</td>
+                            <td class="info-value" style="font-weight: bold;">: ${bookingRef}</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">TICKET NUMBER</td>
+                            <td class="info-value">: ${ticketNo}</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">ISSUED BY</td>
+                            <td class="info-value">: ${airline.name.toUpperCase()}</td>
+                        </tr>
+                    </table>
+
+                    <!-- Coupons Table -->
+                    <table class="coupon-table">
+                        <thead>
+                            <tr>
+                                <th>COUPON NO</th>
+                                <th>ROUTE</th>
+                                <th>AIRLINE</th>
+                                <th>FLIGHT</th>
+                                <th>CLASS</th>
+                                <th>DATE</th>
+                                <th>DEP. TIME</th>
+                                <th>ARR. TIME</th>
+                                <th>STATUS</th>
+                                <th>BAGGAGE</th>
+                                <th>SEAT</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>${orgEng.city} / ${destEng.city}</td>
+                                <td>${booking.airline_code}</td>
+                                <td>${booking.flight_number}</td>
+                                <td>${booking.class_name || 'Q'}</td>
+                                <td>${formattedDate}</td>
+                                <td>${depTimeStr}</td>
+                                <td>${arrTimeStr}</td>
+                                <td>OK</td>
+                                <td>30 KG</td>
+                                <td>—</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Financial Details -->
+                    <table class="info-table" style="margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 10px;">
+                        <tr>
+                            <td class="info-label">ENDORSEMENT/RESTRICTION</td>
+                            <td class="info-value">: ST</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">TICKET BASE FARE</td>
+                            <td class="info-value">: USD ${fareUSD}</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">TAX</td>
+                            <td class="info-value">: USD ${taxUSD}</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">TOTAL FARE PAID</td>
+                            <td class="info-value" style="font-weight: bold;">: USD ${totalUSD}</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">PAYMENT METHOD</td>
+                            <td class="info-value">: ${(paymentMethodLabel[booking.payment_method] || booking.payment_method || 'CASH').toUpperCase()}</td>
+                        </tr>
+                    </table>
+
+                    <!-- Inflight Services Table -->
+                    <div style="font-weight: bold; margin-top: 25px; margin-bottom: 6px; font-size: 10px; border-bottom: 1px solid #000; padding-bottom: 3px;">INFLIGHT SERVICES & BAG ALLOWANCE</div>
+                    <table class="coupon-table">
+                        <thead>
+                            <tr>
+                                <th>COUPON NO</th>
+                                <th>FLIGHT NOTES</th>
+                                <th>BAG ALLOWANCE</th>
+                                <th>SERVICES</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>SECURE FLIGHT INFO - T</td>
+                                <td>${airline.name.toUpperCase()} 30 KG</td>
+                                <td>STANDARD MEAL / SECURE FLIGHT</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Disclaimer -->
+                    <div class="disclaimer">
+                        In case passenger intended to Rebook or Refund the Ticket there is a Penalty. For more information, please visit ${airline.name} point of Sales.
                     </div>
+
                     <script>
                         window.onload = () => {
                             setTimeout(() => {
@@ -172,7 +386,7 @@ function BoardingPass({ passenger, booking, index }) {
                                 setTimeout(() => {
                                     window.frameElement.remove();
                                 }, 1000);
-                            }, 500);
+                            }, 800);
                         };
                     </script>
                 </body>

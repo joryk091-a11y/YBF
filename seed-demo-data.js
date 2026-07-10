@@ -100,20 +100,21 @@ async function seed() {
     console.log('Database transaction tables cleared successfully.\n');
 
     
-    const [companies] = await connection.query('SELECT id_airline, airline_code, airline_name FROM airline_companies');
+    const [companies] = await connection.query('SELECT id_company, airline_code, company_name FROM companies');
     if (companies.length === 0) {
-      console.log('No companies found in airline_companies table! Seeding default companies...');
+      console.log('No companies found in companies table! Seeding default companies...');
       await connection.query(`
-        INSERT INTO airline_companies (id_airline, airline_name, airline_code, country, status, created_at)
+        INSERT INTO companies (id_company, company_name, airline_code)
         VALUES 
-        (1, 'خطوط طيران اليمنية', 'IY', 'Yemen', 'active', NOW()),
-        (2, 'مصر للطيران', 'MS', 'Egypt', 'active', NOW())
+        (1, 'الخطوط الجوية اليمنية', 'IY'),
+        (2, 'طيران بلقيس', 'BS'),
+        (3, 'طيران فلاي عدن', 'QY')
       `);
       
-      const [reFetched] = await connection.query('SELECT id_airline, airline_code, airline_name FROM airline_companies');
+      const [reFetched] = await connection.query('SELECT id_company, airline_code, company_name FROM companies');
       companies.push(...reFetched);
     }
-    console.log(`Found ${companies.length} airline companies:`, companies.map(c => c.airline_name).join(', '));
+    console.log(`Found ${companies.length} companies:`, companies.map(c => c.company_name).join(', '));
 
     
     const now = new Date();
@@ -163,7 +164,7 @@ async function seed() {
         flightRecords.push({
           flight_number: flightNumber,
           airline_code: company.airline_code,
-          airline_id: company.id_airline,
+          airline_id: company.id_company,
           airportOrigin_code: origin,
           airportDestination_code: dest,
           departure_time: departureTime,
@@ -183,9 +184,9 @@ async function seed() {
     
     for (const f of flightRecords) {
       const [result] = await connection.execute(
-        `INSERT INTO flights (flight_number, airline_code, airline_id, airportOrigin_code, airportDestination_code, departure_time, arrival_time, duration, aircraft_type, total_seats, available_seats, status, price, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, NOW())`,
-        [f.flight_number, f.airline_code, f.airline_id, f.airportOrigin_code, f.airportDestination_code, f.departure_time, f.arrival_time, f.duration, f.aircraft_type, f.total_seats, f.available_seats, f.price]
+        `INSERT INTO flights (flight_number, airline_code, airportOrigin_code, airportDestination_code, departure_time, arrival_time, duration, aircraft_type, total_seats, available_seats, status, price, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, NOW())`,
+        [f.flight_number, f.airline_code, f.airportOrigin_code, f.airportDestination_code, f.departure_time, f.arrival_time, f.duration, f.aircraft_type, f.total_seats, f.available_seats, f.price]
       );
       
       const flightId = result.insertId;

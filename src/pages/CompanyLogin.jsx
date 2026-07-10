@@ -26,7 +26,7 @@ const CompanyLogin = () => {
         } else if (role === 'company' && companyToken && companyId) {
             navigate('/company/dashboard');
         } else if (role === 'company' && companyToken && !companyId) {
-            
+
             localStorage.clear();
         }
     }, [navigate]);
@@ -87,11 +87,11 @@ const CompanyLogin = () => {
 
     return (
         <div className="min-h-screen flex bg-[#f8faff] overflow-hidden" dir="rtl">
-            {}
+            { }
             <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 sm:p-12 relative z-10 bg-white lg:rounded-l-[60px] shadow-2xl">
                 <div className="w-full max-w-md">
 
-                    {}
+                    { }
                     <div className="mb-10">
                         <div className="flex items-center gap-3 mb-6">
                             <Link to="/" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-600/20">
@@ -103,7 +103,7 @@ const CompanyLogin = () => {
                         <p className="text-slate-500 font-bold">أدخل بريدك الإلكتروني وكلمة المرور للوصول إلى لوحة التحكم.</p>
                     </div>
 
-                    {}
+                    { }
                     {error && (
                         <div className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-100 flex items-center gap-3">
                             <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 shrink-0">
@@ -114,7 +114,7 @@ const CompanyLogin = () => {
                     )}
 
                     <form onSubmit={handleSubmit} className="space-y-5">
-                        {}
+                        { }
                         <div className="space-y-2">
                             <label className="block text-xs font-black text-slate-450 dark:text-slate-500 uppercase tracking-widest" htmlFor="username">
                                 اسم المستخدم
@@ -136,7 +136,7 @@ const CompanyLogin = () => {
                             </div>
                         </div>
 
-                        {}
+                        { }
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">
                                 <label className="block text-xs font-black text-slate-400 uppercase tracking-widest" htmlFor="password">
@@ -193,7 +193,7 @@ const CompanyLogin = () => {
                         </button>
                     </form>
 
-                    {}
+                    { }
                     <div className="mt-10 pt-8 border-t border-slate-100 flex justify-center">
                         <a href="mailto:ybf.support@gmail.com" className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-blue-600 transition-colors">
                             <Mail size={16} />
@@ -203,7 +203,7 @@ const CompanyLogin = () => {
                 </div>
             </div>
 
-            {}
+            { }
             <div className="relative hidden lg:flex lg:w-1/2 flex-col justify-center items-center p-12 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-white to-indigo-600/10 z-0" />
                 <div className="absolute top-[-10%] right-[-10%] h-[500px] w-[500px] rounded-full bg-blue-500/5 blur-[100px] animate-pulse" />
@@ -225,7 +225,7 @@ const CompanyLogin = () => {
                     style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, #4974f9 0%, transparent 50%)' }} />
             </div>
 
-            {}
+            { }
             {showForgotModal && (
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
                     <div className="relative w-full max-w-md overflow-hidden rounded-[2.5rem] bg-white border border-slate-100 p-8 shadow-2xl animate-in scale-in duration-300">

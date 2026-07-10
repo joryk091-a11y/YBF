@@ -8,29 +8,32 @@ datasource db {
 }
 
 model User {
-  id_users   Int         @id @default(autoincrement())
-  full_name  String      @db.VarChar(100)
-  phone      String      @db.VarChar(20)
-  email      String      @unique @db.VarChar(100)
-  password   String      @db.VarChar(255)
-  created_at DateTime?   @default(now()) @db.Timestamp(0)
-  passengers Passenger[]
+  id_users      Int            @id @default(autoincrement())
+  full_name     String         @db.VarChar(100)
+  phone         String         @db.VarChar(20)
+  email         String         @unique @db.VarChar(100)
+  password      String         @db.VarChar(255)
+  created_at    DateTime?      @default(now()) @db.Timestamp(0)
+  passengers    Passenger[]
+  chat_sessions ChatSession[]
 
   @@map("users")
 }
 
 model Admin {
-  id_admin     Int         @id @default(autoincrement())
-  username     String?     @unique @db.VarChar(100)
-  password     String      @db.VarChar(255)
-  role         AdminRole   @default(company)
-  airline_code String?     @db.VarChar(10)
-  employee_id  String?     @db.VarChar(50)
-  department   String?     @db.VarChar(45)
-  last_login   DateTime?   @db.Timestamp(0)
-  created_at   DateTime?   @default(now()) @db.Timestamp(0)
-  flights_logs FlightLog[]
-  company      Company?    @relation(fields: [airline_code], references: [airline_code])
+  id_admin         Int              @id @default(autoincrement())
+  username         String?          @unique @db.VarChar(100)
+  password         String           @db.VarChar(255)
+  role             AdminRole        @default(company)
+  airline_code     String?          @db.VarChar(10)
+  employee_id      String?          @db.VarChar(50)
+  department       String?          @db.VarChar(45)
+  last_login       DateTime?        @db.Timestamp(0)
+  created_at       DateTime?        @default(now()) @db.Timestamp(0)
+  flights_logs     FlightLog[]
+  chat_messages    ChatMessage[]
+  system_settings  SystemSetting[]
+  company          Company?         @relation(fields: [airline_code], references: [airline_code])
 
   @@map("admins")
 }
@@ -281,28 +284,36 @@ model Company {
 }
 
 model SystemSetting {
-  setting_key   String @id @db.VarChar(64)
-  setting_value String @db.VarChar(255)
+  setting_key   String    @id @db.VarChar(64)
+  setting_value String    @db.VarChar(255)
+  updated_by    Int?      // رقم المشرف الذي أجرى آخر تعديل
+  updated_at    DateTime? @db.Timestamp(0)
+  admin         Admin?    @relation(fields: [updated_by], references: [id_admin])
 
+  @@index([updated_by], map: "system_settings_updated_by_fkey")
   @@map("system_settings")
 }
 
 model ChatSession {
   id           Int           @id @default(autoincrement())
   session_key  String        @unique @db.VarChar(64)
+  user_id      Int?          // المستخدم المسجل (null إذا كان زائراً)
   user_name    String?       @default("زائر") @db.VarChar(100)
   user_email   String?       @db.VarChar(150)
   status       ChatStatus?   @default(open)
   created_at   DateTime?     @default(now()) @db.DateTime(0)
   updated_at   DateTime?     @default(now()) @db.DateTime(0)
   messages     ChatMessage[]
+  user         User?         @relation(fields: [user_id], references: [id_users])
 
+  @@index([user_id], map: "chat_sessions_user_id_fkey")
   @@map("chat_sessions")
 }
 
 model ChatMessage {
   id_chat      Int          @id @default(autoincrement())
   session_id   Int?
+  admin_id     Int?         // المشرف الذي أرسل الرد (null إذا كان المرسل مستخدماً)
   sender       ChatSender
   sender_name  String?      @db.VarChar(100)
   sender_email String?      @db.VarChar(150)
@@ -311,8 +322,10 @@ model ChatMessage {
   is_read      Int?         @default(0) @db.TinyInt
   created_at   DateTime?    @default(now()) @db.DateTime(0)
   session      ChatSession? @relation(fields: [session_id], references: [id], onDelete: Cascade)
+  admin        Admin?       @relation(fields: [admin_id], references: [id_admin])
 
   @@index([session_id], map: "chat_messages_session_id_fkey")
+  @@index([admin_id], map: "chat_messages_admin_id_fkey")
   @@map("chat_messages")
 }
 

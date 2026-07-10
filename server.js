@@ -27,7 +27,7 @@ app.use(express.static('public'));
 const getDbConfig = () => {
   const url = process.env.DATABASE_URL;
   if (!url) {
-    
+
     return {
       host: '127.0.0.1',
       user: 'root',
@@ -60,7 +60,7 @@ app.post('/api/passengers', async (req, res) => {
       const birthDate = p.birthDate || null;
       const passportExpiry = p.passportExpiry || null;
 
-      
+
       const [existing] = await connection.execute(
         'SELECT id_passengers FROM passengers WHERE passport_number = ?',
         [p.passportNumber]
@@ -181,8 +181,8 @@ app.post('/api/admin/users', async (req, res) => {
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
-    
-    
+
+
     const [existing] = await connection.execute('SELECT id_users FROM users WHERE email = ?', [email]);
     if (existing.length > 0) {
       return res.status(400).json({ success: false, error: 'البريد الإلكتروني مسجل بالفعل' });
@@ -209,7 +209,7 @@ app.put('/api/admin/users/:id', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    
+
     const [existing] = await connection.execute('SELECT id_users FROM users WHERE email = ? AND id_users != ?', [email, id]);
     if (existing.length > 0) {
       return res.status(400).json({ success: false, error: 'البريد الإلكتروني مسجل بمستخدم آخر' });
@@ -385,7 +385,7 @@ app.delete('/api/admin/chat/conversations', async (req, res) => {
 
 
 app.get('/api/admin/dashboard-stats', async (req, res) => {
-  const { period, date, year, month, flightNumber } = req.query; 
+  const { period, date, year, month, flightNumber } = req.query;
   const isCurrentMonth = period === 'current_month';
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   const isCustomDate = date && dateRegex.test(date);
@@ -393,7 +393,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    
+
     let dateFilterBookings;
     let dateFilterPayments;
     let dateFilterBookingsAnd;
@@ -408,7 +408,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
         dateFilterPayments = `AND DATE_FORMAT(payment_date, '%Y-%m') = '${targetYearMonth}'`;
         dateFilterBookingsAnd = `AND DATE_FORMAT(booking_date, '%Y-%m') = '${targetYearMonth}'`;
         dateFilterBookingsWhereAlias = `WHERE DATE_FORMAT(b.booking_date, '%Y-%m') = '${targetYearMonth}'`;
-        
+
         dateFilterSubqueryBookings = `AND DATE_FORMAT(b.booking_date, '%Y-%m') = '${targetYearMonth}'`;
         dateFilterSubqueryPayments = `AND DATE_FORMAT(p.payment_date, '%Y-%m') = '${targetYearMonth}'`;
       } else {
@@ -416,7 +416,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
         dateFilterPayments = `AND DATE_FORMAT(payment_date, '%Y') = '${year}'`;
         dateFilterBookingsAnd = `AND DATE_FORMAT(booking_date, '%Y') = '${year}'`;
         dateFilterBookingsWhereAlias = `WHERE DATE_FORMAT(b.booking_date, '%Y') = '${year}'`;
-        
+
         dateFilterSubqueryBookings = `AND DATE_FORMAT(b.booking_date, '%Y') = '${year}'`;
         dateFilterSubqueryPayments = `AND DATE_FORMAT(p.payment_date, '%Y') = '${year}'`;
       }
@@ -425,54 +425,54 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       dateFilterPayments = `AND DATE(payment_date) = '${date}'`;
       dateFilterBookingsAnd = `AND DATE(booking_date) = '${date}'`;
       dateFilterBookingsWhereAlias = `WHERE DATE(b.booking_date) = '${date}'`;
-      
+
       dateFilterSubqueryBookings = `AND DATE(b.booking_date) = '${date}'`;
       dateFilterSubqueryPayments = `AND DATE(p.payment_date) = '${date}'`;
     } else {
-      dateFilterBookings = isCurrentMonth 
-        ? "WHERE DATE_FORMAT(booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')" 
+      dateFilterBookings = isCurrentMonth
+        ? "WHERE DATE_FORMAT(booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')"
         : "WHERE DATE_FORMAT(booking_date, '%Y') = DATE_FORMAT(NOW(), '%Y')";
-        
-      dateFilterPayments = isCurrentMonth 
-        ? "AND DATE_FORMAT(payment_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')" 
+
+      dateFilterPayments = isCurrentMonth
+        ? "AND DATE_FORMAT(payment_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')"
         : "AND DATE_FORMAT(payment_date, '%Y') = DATE_FORMAT(NOW(), '%Y')";
-        
-      dateFilterBookingsAnd = isCurrentMonth 
-        ? "AND DATE_FORMAT(booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')" 
+
+      dateFilterBookingsAnd = isCurrentMonth
+        ? "AND DATE_FORMAT(booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')"
         : "AND DATE_FORMAT(booking_date, '%Y') = DATE_FORMAT(NOW(), '%Y')";
 
       dateFilterBookingsWhereAlias = isCurrentMonth
         ? "WHERE DATE_FORMAT(b.booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')"
         : "WHERE DATE_FORMAT(b.booking_date, '%Y') = DATE_FORMAT(NOW(), '%Y')";
-        
+
       dateFilterSubqueryBookings = isCurrentMonth
         ? "AND DATE_FORMAT(b.booking_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')"
         : "AND DATE_FORMAT(b.booking_date, '%Y') = DATE_FORMAT(NOW(), '%Y')";
-        
+
       dateFilterSubqueryPayments = isCurrentMonth
         ? "AND DATE_FORMAT(p.payment_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')"
         : "AND DATE_FORMAT(p.payment_date, '%Y') = DATE_FORMAT(NOW(), '%Y')";
     }
 
-    
+
     const [[{ totalTickets }]] = await connection.execute(
       `SELECT COALESCE(SUM(total_passengers), 0) as totalTickets FROM bookings ${dateFilterBookings}`
     );
 
-    
+
     const [[{ totalRevenue }]] = await connection.execute(
       `SELECT COALESCE(SUM(amount), 0) as totalRevenue FROM payments WHERE payment_status = 'success' ${dateFilterPayments}`
     );
 
-    
+
     const [[{ pendingPayments }]] = await connection.execute(
       `SELECT COUNT(*) as pendingPayments FROM bookings WHERE status = 'temporary' ${dateFilterBookingsAnd}`
     );
 
-    
+
     const [[{ totalUsers }]] = await connection.execute('SELECT COUNT(*) as totalUsers FROM users');
 
-    
+
     let flightFilter = '';
     const recentParams = [];
     if (flightNumber && flightNumber.trim() !== '') {
@@ -490,7 +490,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       LIMIT 100
     `, recentParams);
 
-    
+
     const [destinationsStats] = await connection.execute(`
       SELECT f.airportDestination_code as destination, COALESCE(SUM(b.total_passengers), 0) as count 
       FROM bookings b
@@ -501,7 +501,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       LIMIT 5
     `);
 
-    
+
     const [monthlySales] = await connection.execute(`
       SELECT DATE_FORMAT(booking_date, '%Y-%m') as month, COALESCE(SUM(final_price), 0) as sales, COALESCE(SUM(total_passengers), 0) as passengers
       FROM bookings
@@ -510,7 +510,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       LIMIT 6
     `);
 
-    
+
     const [dailySales] = await connection.execute(`
       SELECT DATE_FORMAT(booking_date, '%Y-%m-%d') as day, COALESCE(SUM(final_price), 0) as sales, COALESCE(SUM(total_passengers), 0) as passengers
       FROM bookings
@@ -519,7 +519,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       ORDER BY day ASC
     `);
 
-    
+
     const [airlineStats] = await connection.execute(`
       SELECT f.airline_code as name, COUNT(b.id_bookings) as value
       FROM bookings b
@@ -528,7 +528,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       GROUP BY f.airline_code
     `);
 
-    
+
     const [classStats] = await connection.execute(`
       SELECT s.seat_class as name, COUNT(bp.id_bookings_passengers) as value
       FROM bookings_passengers bp
@@ -538,12 +538,12 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       GROUP BY s.seat_class
     `);
 
-    
+
     const [[{ activePassengers }]] = await connection.execute(
       `SELECT COUNT(DISTINCT bp.passenger_id) as activePassengers FROM bookings_passengers bp JOIN bookings b ON bp.booking_id = b.id_bookings ${dateFilterBookingsWhereAlias}`
     );
 
-    
+
     const [[{ totalBookings }]] = await connection.execute(`SELECT COUNT(*) as totalBookings FROM bookings ${dateFilterBookings}`);
     const [[{ canceledBookings }]] = await connection.execute(
       `SELECT COUNT(*) as canceledBookings FROM bookings WHERE status = 'canceled' ${dateFilterBookingsAnd}`
@@ -557,7 +557,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       GROUP BY status
     `);
 
-    
+
     const [aircraftStats] = await connection.execute(`
       SELECT aircraft_type as name, COALESCE(AVG(price), 0) as price
       FROM flights
@@ -565,7 +565,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       HAVING price > 0
     `);
 
-    
+
     const [companyBreakdown] = await connection.execute(`
       SELECT 
         c.airline_code,
@@ -613,15 +613,15 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
           revenue: Number(c.revenue) || 0,
           cancelled_bookings: Number(c.cancelled_bookings) || 0
         })),
-        classStats: classStats.length > 0 
-          ? classStats.map(c => ({ ...c, value: Number(c.value) || 0 })) 
+        classStats: classStats.length > 0
+          ? classStats.map(c => ({ ...c, value: Number(c.value) || 0 }))
           : [
             { name: 'economy', value: totalTickets ? Math.round(Number(totalTickets) * 0.7) : 0 },
             { name: 'business', value: totalTickets ? Math.round(Number(totalTickets) * 0.2) : 0 },
             { name: 'first', value: totalTickets ? Math.round(Number(totalTickets) * 0.1) : 0 }
           ],
-        aircraftStats: aircraftStats.length > 0 
-          ? aircraftStats.map(a => ({ ...a, price: Number(a.price) || 0 })) 
+        aircraftStats: aircraftStats.length > 0
+          ? aircraftStats.map(a => ({ ...a, price: Number(a.price) || 0 }))
           : [
             { name: 'Boeing 787', price: 548 },
             { name: 'Airbus A350', price: 620 }
@@ -639,7 +639,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
 
 app.get('/api/bookings/pending', async (req, res) => {
   const { airline_id } = req.query;
-  
+
   if (!airline_id || airline_id === 'undefined' || airline_id === 'null' || airline_id.toString().trim() === '') {
     return res.status(400).json({ success: false, error: 'airline_id query parameter is required for data isolation.' });
   }
@@ -647,21 +647,25 @@ app.get('/api/bookings/pending', async (req, res) => {
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
-    
+
+
+    // Resolve airline_id to airline_code
+    const [companies] = await connection.execute('SELECT airline_code FROM companies WHERE id_company = ?', [airline_id]);
+    const airlineCode = companies.length > 0 ? companies[0].airline_code : '';
     
     const [rows] = await connection.execute(`
       SELECT b.id_bookings, b.booking_reference, b.booking_date, b.total_passengers, b.base_price, b.extra_total, b.final_price, b.status,
-             f.flight_number, f.airline_code, f.airline_id, f.airportOrigin_code, f.airportDestination_code, f.departure_time, f.arrival_time, f.price as flight_price,
+             f.flight_number, f.airline_code, f.airportOrigin_code, f.airportDestination_code, f.departure_time, f.arrival_time, f.price as flight_price,
              p.payment_method, p.payment_status, p.tansaction_id, p.payment_date, p.gateway_response,
              (SELECT GROUP_CONCAT(name SEPARATOR ', ') FROM bookings_passengers bp JOIN passengers pass ON bp.passenger_id = pass.id_passengers WHERE bp.booking_id = b.id_bookings) as passengers
       FROM bookings b
       JOIN flights f ON b.flight_id = f.id_flights
       LEFT JOIN payments p ON p.booking_id = b.id_bookings
-      WHERE b.status = 'temporary' AND f.airline_id = ?
+      WHERE b.status = 'temporary' AND f.airline_code = ?
       ORDER BY b.booking_date DESC
-    `, [airline_id]);
+    `, [airlineCode]);
 
-    
+
     const bookings = rows.map(r => {
       let paymentProof = null;
       let selectedBranchId = null;
@@ -693,7 +697,7 @@ app.get('/api/bookings/pending', async (req, res) => {
 
 app.get('/api/company/dashboard-stats', async (req, res) => {
   const { airline_code } = req.query;
-  
+
   if (!airline_code || airline_code === 'undefined' || airline_code === 'null' || airline_code.toString().trim() === '') {
     return res.status(400).json({ success: false, error: 'airline_code query parameter is required for data isolation.' });
   }
@@ -701,14 +705,14 @@ app.get('/api/company/dashboard-stats', async (req, res) => {
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
-    
-    
+
+
     const [[{ totalFlights }]] = await connection.execute(
       'SELECT COUNT(*) as totalFlights FROM flights WHERE airline_code = ?',
       [airline_code]
     );
 
-    
+
     const [[{ totalBookingsCount }]] = await connection.execute(`
       SELECT COUNT(*) as totalBookingsCount 
       FROM bookings b
@@ -716,7 +720,7 @@ app.get('/api/company/dashboard-stats', async (req, res) => {
       WHERE f.airline_code = ? AND b.status != 'canceled'
     `, [airline_code]);
 
-    
+
     const [[{ totalRevenueSum }]] = await connection.execute(`
       SELECT COALESCE(SUM(p.amount), 0) as totalRevenueSum 
       FROM payments p
@@ -806,7 +810,7 @@ async function updateBookingStatusHandler(req, res) {
         [status, status === 'canceled' ? new Date() : null, id]
       );
 
-      
+
       const [[bookingRow]] = await connection.execute(
         'SELECT booking_reference FROM bookings WHERE id_bookings = ?',
         [id]
@@ -820,11 +824,11 @@ async function updateBookingStatusHandler(req, res) {
       if (passengersRows.length > 0) {
         const passengerId = passengersRows[0].passenger_id;
         const title = status === 'certain' ? 'تم تأكيد حجزك بنجاح' : 'تم إلغاء حجزك';
-        const message = status === 'certain' 
-          ? `تهانينا! تم تأكيد حجزك برقم المرجع ${reference} بنجاح.` 
+        const message = status === 'certain'
+          ? `تهانينا! تم تأكيد حجزك برقم المرجع ${reference} بنجاح.`
           : `نأسف، تم رفض طلب حجزك برقم المرجع ${reference} وإلغاء الحجز.`;
         const type = status === 'certain' ? 'payment' : 'cancellation';
-        
+
         await connection.execute(
           'INSERT INTO notifications (passenger_id, booking_id, title, message, type, is_read, created_at) VALUES (?, ?, ?, ?, ?, 0, NOW())',
           [passengerId, id, title, message, type]
@@ -883,7 +887,7 @@ async function companyLoginHandler(req, res) {
       `SELECT a.*, c.company_name AS airline_name, NULL AS logo_url, c.id_company AS id_airline
        FROM admins a
        LEFT JOIN companies c ON a.airline_code = c.airline_code
-       WHERE a.email = ?`,
+       WHERE a.username = ?`,
       [username]
     );
     if (rows.length > 0) {
@@ -905,7 +909,7 @@ async function companyLoginHandler(req, res) {
           airline_name: admin.airline_name,
           logo_url: admin.logo_url,
           id: admin.id_admin,
-          username: admin.email,
+          username: admin.username,
         });
       } else {
         res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
@@ -1032,11 +1036,11 @@ app.get('/api/bookings/:id/ticket', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Booking not found' });
     }
 
-    
+
     const firstRow = rows[0];
     const passengersMap = new Map();
     rows.forEach(r => {
-      
+
       passengersMap.set(r.passenger_name + '_' + r.passport_number, {
         name: r.passenger_name,
         passport_number: r.passport_number || 'N/A',
@@ -1066,10 +1070,10 @@ app.get('/api/bookings/:id/ticket', async (req, res) => {
       passengers: Array.from(passengersMap.values())
     };
 
-    
+
     const htmlContent = generateTicketHtml(booking);
 
-    
+
     const localHeadlessShell = 'C:\\Users\\ABRAG Soft\\.cache\\puppeteer\\chrome-headless-shell\\win64-150.0.7871.24\\chrome-headless-shell-win64\\chrome-headless-shell.exe';
     const standardChromePaths = [
       localHeadlessShell,
@@ -1328,7 +1332,7 @@ app.get('/api/flights', async (req, res) => {
       params.push(date);
     }
     query += ' ORDER BY departure_time DESC';
-    
+
     const [rows] = await connection.execute(query, params);
     res.json({ success: true, flights: rows });
   } catch (error) {
@@ -1397,7 +1401,7 @@ async function searchFlightsHandler(req, res) {
   let { from, to, date } = req.query;
   let connection;
 
-  
+
   const codeMap = {
     'aden': 'ADE',
     'cairo': 'CAI',
@@ -1420,7 +1424,7 @@ async function searchFlightsHandler(req, res) {
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    
+
     try {
       await connection.execute(
         "UPDATE flights SET status = 'cancelled' WHERE departure_time < NOW() AND status != 'cancelled'"
@@ -1430,7 +1434,7 @@ async function searchFlightsHandler(req, res) {
     }
 
     console.log(`Search Request: from=${fromCode}, to=${toCode}, date=${date}`);
-    
+
     let query = `
       SELECT f.*, c.company_name AS airline_name 
       FROM flights f 
@@ -1498,20 +1502,20 @@ app.post('/api/bookings', async (req, res) => {
     'medmeal': { label: 'سيارة إسعاف', price: 12.50 }
   };
 
-  
+
   const methodMap = {
     'card': 'credit_card',
     'paypal': 'paypal',
-    'branch': 'bank_transfer', 
+    'branch': 'bank_transfer',
     'transfer': 'bank_transfer'
   };
   const paymentMethod = methodMap[rawMethod] || 'credit_card';
 
-  
+
   const bookingStatus = 'temporary';
   const paymentStatus = (rawMethod === 'branch' || rawMethod === 'transfer') ? 'pending' : 'success';
 
-  
+
   let proofPath = null;
   if (req.body.paymentProof) {
     try {
@@ -1523,7 +1527,7 @@ app.post('/api/bookings', async (req, res) => {
           const extension = matches[1];
           const base64Data = matches[2];
           const buffer = Buffer.from(base64Data, 'base64');
-          
+
           const allowedExtensions = ['png', 'jpg', 'jpeg', 'webp'];
           if (allowedExtensions.includes(extension.toLowerCase())) {
             const uploadDir = path.join(process.cwd(), 'public', 'receipts');
@@ -1541,7 +1545,7 @@ app.post('/api/bookings', async (req, res) => {
     }
   }
 
-  
+
   const flightIds = Array.isArray(flightId) ? flightId : (req.body.flightIds || [flightId]);
   const seatsMap = seatsSelectionMap || { 0: selectedSeats || [] };
 
@@ -1549,7 +1553,7 @@ app.post('/api/bookings', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    
+
     for (const fId of flightIds) {
       const [flightRows] = await connection.execute(
         'SELECT airportOrigin_code as origin, airportDestination_code as destination FROM flights WHERE id_flights = ?',
@@ -1560,8 +1564,8 @@ app.post('/api/bookings', async (req, res) => {
         const origin = flightRows[0].origin;
         const destination = flightRows[0].destination;
         const YEMEN_AIRPORTS = ['ADE', 'RIY', 'GXF', 'SCT', 'AAY', 'ATQ'];
-        const isInternational = !YEMEN_AIRPORTS.includes(String(origin).toUpperCase().trim()) || 
-                                !YEMEN_AIRPORTS.includes(String(destination).toUpperCase().trim());
+        const isInternational = !YEMEN_AIRPORTS.includes(String(origin).toUpperCase().trim()) ||
+          !YEMEN_AIRPORTS.includes(String(destination).toUpperCase().trim());
 
         if (isInternational) {
           const limitDate = new Date();
@@ -1571,17 +1575,17 @@ app.post('/api/bookings', async (req, res) => {
           for (const p of passengers) {
             const pExpiry = p.passportExpiry || p.passport_expiry || null;
             if (!pExpiry) {
-              return res.status(400).json({ 
-                success: false, 
-                error: `يرجى تحديد تاريخ انتهاء الجواز للمسافر (${p.fullName || p.name}) لأن الرحلة دولية.` 
+              return res.status(400).json({
+                success: false,
+                error: `يرجى تحديد تاريخ انتهاء الجواز للمسافر (${p.fullName || p.name}) لأن الرحلة دولية.`
               });
             }
 
             const expiryDate = new Date(pExpiry);
             if (expiryDate < limitDate) {
-              return res.status(400).json({ 
-                success: false, 
-                error: `يجب أن يكون جواز سفر المسافر (${p.fullName || p.name}) صالحاً لمدة 6 أشهر على الأقل للسفر الدولي. أقل تاريخ انتهاء مقبول هو: ${limitDate.toISOString().split('T')[0]}` 
+              return res.status(400).json({
+                success: false,
+                error: `يجب أن يكون جواز سفر المسافر (${p.fullName || p.name}) صالحاً لمدة 6 أشهر على الأقل للسفر الدولي. أقل تاريخ انتهاء مقبول هو: ${limitDate.toISOString().split('T')[0]}`
               });
             }
           }
@@ -1597,12 +1601,12 @@ app.post('/api/bookings', async (req, res) => {
     for (let fIdx = 0; fIdx < flightIds.length; fIdx++) {
       const currentFlightId = flightIds[fIdx];
 
-      
+
       const segmentBasePrice = Math.round(basePrice / flightIds.length);
       const segmentExtraPrice = Math.round(extrasTotal / flightIds.length);
       const segmentTotalPrice = Math.round(totalPrice / flightIds.length);
 
-      
+
       const [bookingResult] = await connection.execute(
         'INSERT INTO bookings (flight_id, booking_date, total_passengers, base_price, extra_total, final_price, status, booking_reference) VALUES (?, NOW(), ?, ?, ?, ?, ?, ?)',
         [currentFlightId, passengers.length, segmentBasePrice, segmentExtraPrice, segmentTotalPrice, bookingStatus, reference]
@@ -1612,7 +1616,7 @@ app.post('/api/bookings', async (req, res) => {
         firstBookingId = bookingId;
       }
 
-      
+
       let passengerIndex = 0;
       for (const p of passengers) {
         const pName = p.name || p.fullName || 'مسافر';
@@ -1638,13 +1642,13 @@ app.post('/api/bookings', async (req, res) => {
           );
           passengerId = passResult.insertId;
         }
-        
+
         if (fIdx === 0 && passengerIndex === 0) {
           leadPassengerId = passengerId;
         }
         passengerIndex++;
 
-        
+
         const flightSeats = seatsMap[fIdx] || [];
         const seatNumber = flightSeats[passengerIndex - 1] ? String(flightSeats[passengerIndex - 1]) : '';
         const seatRow = parseInt(seatNumber, 10);
@@ -1653,7 +1657,7 @@ app.post('/api/bookings', async (req, res) => {
 
         let baseWeight = 30.0;
         const pCode = p.passengerCode || '';
-        
+
         if (pCode === 'INF') {
           baseWeight = 10.0;
         } else if (seatClass === 'Business') {
@@ -1681,7 +1685,7 @@ app.post('/api/bookings', async (req, res) => {
         );
       }
 
-      
+
       if (selectedServices && Array.isArray(selectedServices)) {
         for (const serviceId of selectedServices) {
           const srv = serviceDataMap[serviceId];
@@ -1699,14 +1703,14 @@ app.post('/api/bookings', async (req, res) => {
         selectedBranchId: req.body.selectedBranchId || null
       });
 
-      
+
       await connection.execute(
         'INSERT INTO payments (booking_id, amount, payment_method, payment_status, gateway_response, payment_date) VALUES (?, ?, ?, ?, ?, NOW())',
         [bookingId, segmentTotalPrice, paymentMethod, paymentStatus, gatewayResponse]
       );
     }
 
-    
+
     if (leadPassengerId && firstBookingId) {
       await connection.execute(
         'INSERT INTO notifications (passenger_id, booking_id, title, message, type, is_read, created_at) VALUES (?, ?, ?, ?, ?, 0, NOW())',
@@ -1748,7 +1752,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
               name: `حجز رحلة طيران ${flightNumber}`,
               description: `من ${origin} إلى ${destination} (رمز الحجز: ${reference})`,
             },
-            unit_amount: Math.round(amount * 100), 
+            unit_amount: Math.round(amount * 100),
           },
           quantity: 1,
         },
@@ -1782,13 +1786,13 @@ app.post('/api/bookings/confirm-payment', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Booking not found' });
     }
 
-    
+
     await connection.execute(
       "UPDATE bookings SET status = 'certain' WHERE booking_reference = ?",
       [reference]
     );
 
-    
+
     await connection.execute(
       "UPDATE payments SET payment_status = 'success' WHERE booking_id IN (SELECT id_bookings FROM bookings WHERE booking_reference = ?)",
       [reference]
@@ -1936,48 +1940,48 @@ app.get('/api/company/analytics-stats', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    
+
     const [revRow] = await connection.execute(`
       SELECT COALESCE(SUM(p.amount), 0) as totalRevenue
       FROM payments p
       JOIN bookings b ON p.booking_id = b.id_bookings
       JOIN flights f ON b.flight_id = f.id_flights
-      WHERE p.payment_status = 'success' AND (f.airline_code = ? OR f.airline_id = ?)
+      WHERE p.payment_status = 'success' AND (f.airline_code = ? OR f.airline_code = (SELECT airline_code FROM companies WHERE id_company = ?))
     `, [airlineCode || '', airline_id || 0]);
     const totalRevenue = Number(revRow[0].totalRevenue) || 0;
 
-    
+
     const [actRow] = await connection.execute(`
       SELECT COUNT(b.id_bookings) as activeBookings
       FROM bookings b
       JOIN flights f ON b.flight_id = f.id_flights
-      WHERE b.status = 'certain' AND (f.airline_code = ? OR f.airline_id = ?)
+      WHERE b.status = 'certain' AND (f.airline_code = ? OR f.airline_code = (SELECT airline_code FROM companies WHERE id_company = ?))
     `, [airlineCode || '', airline_id || 0]);
     const activeBookings = Number(actRow[0].activeBookings) || 0;
 
-    
+
     const [avRow] = await connection.execute(`
       SELECT COUNT(id_flights) as availableFlights
       FROM flights
-      WHERE status = 'active' AND (airline_code = ? OR airline_id = ?)
+      WHERE status = 'active' AND (airline_code = ? OR airline_code = (SELECT airline_code FROM companies WHERE id_company = ?))
     `, [airlineCode || '', airline_id || 0]);
     const availableFlights = Number(avRow[0].availableFlights) || 0;
 
-    
+
     const [passRow] = await connection.execute(`
       SELECT COALESCE(SUM(b.total_passengers), 0) as totalPassengers
       FROM bookings b
       JOIN flights f ON b.flight_id = f.id_flights
-      WHERE b.status = 'certain' AND (f.airline_code = ? OR f.airline_id = ?)
+      WHERE b.status = 'certain' AND (f.airline_code = ? OR f.airline_code = (SELECT airline_code FROM companies WHERE id_company = ?))
     `, [airlineCode || '', airline_id || 0]);
     const totalPassengers = Number(passRow[0].totalPassengers) || 0;
 
-    
+
     const [destRows] = await connection.execute(`
       SELECT f.airportDestination_code as name, COUNT(b.id_bookings) as bookings
       FROM bookings b
       JOIN flights f ON b.flight_id = f.id_flights
-      WHERE (f.airline_code = ? OR f.airline_id = ?)
+      WHERE (f.airline_code = ? OR f.airline_code = (SELECT airline_code FROM companies WHERE id_company = ?))
       GROUP BY f.airportDestination_code
       ORDER BY bookings DESC
       LIMIT 5
@@ -1988,13 +1992,13 @@ app.get('/api/company/analytics-stats', async (req, res) => {
       bookings: Number(r.bookings) || 0
     }));
 
-    
+
     const [serviceRows] = await connection.execute(`
       SELECT gs.service_name as name, COUNT(*) as value
       FROM ground_services gs
       JOIN bookings b ON gs.booking_id = b.id_bookings
       JOIN flights f ON b.flight_id = f.id_flights
-      WHERE gs.is_active = 1 AND (f.airline_code = ? OR f.airline_id = ?)
+      WHERE gs.is_active = 1 AND (f.airline_code = ? OR f.airline_code = (SELECT airline_code FROM companies WHERE id_company = ?))
       GROUP BY gs.service_name
     `, [airlineCode || '', airline_id || 0]);
 
@@ -2003,14 +2007,14 @@ app.get('/api/company/analytics-stats', async (req, res) => {
       value: Number(r.value) || 0
     }));
 
-    
+
     const [recentRows] = await connection.execute(`
       SELECT b.id_bookings, b.booking_reference, b.final_price, b.status,
              f.airportOrigin_code, f.airportDestination_code,
              (SELECT p.name FROM bookings_passengers bp JOIN passengers p ON bp.passenger_id = p.id_passengers WHERE bp.booking_id = b.id_bookings LIMIT 1) as passenger
       FROM bookings b
       JOIN flights f ON b.flight_id = f.id_flights
-      WHERE (f.airline_code = ? OR f.airline_id = ?)
+      WHERE (f.airline_code = ? OR f.airline_code = (SELECT airline_code FROM companies WHERE id_company = ?))
       ORDER BY b.booking_date DESC
       LIMIT 5
     `, [airlineCode || '', airline_id || 0]);
@@ -2024,13 +2028,13 @@ app.get('/api/company/analytics-stats', async (req, res) => {
       badgeColor: r.status === 'certain' ? 'green' : r.status === 'temporary' ? 'yellow' : 'red'
     }));
 
-    
+
     const [sparkRows] = await connection.execute(`
       SELECT SUM(p.amount) as revenue
       FROM payments p
       JOIN bookings b ON p.booking_id = b.id_bookings
       JOIN flights f ON b.flight_id = f.id_flights
-      WHERE p.payment_status = 'success' AND (f.airline_code = ? OR f.airline_id = ?)
+      WHERE p.payment_status = 'success' AND (f.airline_code = ? OR f.airline_code = (SELECT airline_code FROM companies WHERE id_company = ?))
       GROUP BY DATE_FORMAT(b.booking_date, '%Y-%m')
       ORDER BY DATE_FORMAT(b.booking_date, '%Y-%m') ASC
       LIMIT 7
@@ -2070,17 +2074,17 @@ app.get('/api/financial-stats', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    
+
     const [revRow] = await connection.execute(`
       SELECT COALESCE(SUM(p.amount), 0) as totalRevenue
       FROM payments p
       JOIN bookings b ON p.booking_id = b.id_bookings
       JOIN flights f ON b.flight_id = f.id_flights
-      WHERE p.payment_status = 'success' AND (f.airline_code = ? OR f.airline_id = ?)
+      WHERE p.payment_status = 'success' AND (f.airline_code = ? OR f.airline_code = (SELECT airline_code FROM companies WHERE id_company = ?))
     `, [airlineCode || '', airline_id || 0]);
     const totalRevenue = Number(revRow[0].totalRevenue) || 0;
 
-    
+
     const [currRow] = await connection.execute(`
       SELECT COALESCE(SUM(p.amount), 0) as currentMonthRevenue
       FROM payments p
@@ -2089,11 +2093,11 @@ app.get('/api/financial-stats', async (req, res) => {
       WHERE p.payment_status = 'success' 
         AND MONTH(b.booking_date) = MONTH(CURRENT_DATE())
         AND YEAR(b.booking_date) = YEAR(CURRENT_DATE())
-        AND (f.airline_code = ? OR f.airline_id = ?)
+        AND (f.airline_code = ? OR f.airline_code = (SELECT airline_code FROM companies WHERE id_company = ?))
     `, [airlineCode || '', airline_id || 0]);
     const currentMonthRevenue = Number(currRow[0].currentMonthRevenue) || 0;
 
-    
+
     const [prevRow] = await connection.execute(`
       SELECT COALESCE(SUM(p.amount), 0) as previousMonthRevenue
       FROM payments p
@@ -2102,22 +2106,22 @@ app.get('/api/financial-stats', async (req, res) => {
       WHERE p.payment_status = 'success' 
         AND b.booking_date >= DATE_SUB(DATE_FORMAT(CURRENT_DATE(), '%Y-%m-01'), INTERVAL 1 MONTH)
         AND b.booking_date < DATE_FORMAT(CURRENT_DATE(), '%Y-%m-01')
-        AND (f.airline_code = ? OR f.airline_id = ?)
+        AND (f.airline_code = ? OR f.airline_code = (SELECT airline_code FROM companies WHERE id_company = ?))
     `, [airlineCode || '', airline_id || 0]);
     const previousMonthRevenue = Number(prevRow[0].previousMonthRevenue) || 0;
 
-    
-    const revenueGrowth = previousMonthRevenue > 0 
+
+    const revenueGrowth = previousMonthRevenue > 0
       ? Number(((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue * 100).toFixed(1))
       : 0;
 
-    
+
     const [monthRows] = await connection.execute(`
       SELECT DATE_FORMAT(b.booking_date, '%m') as monthNum, SUM(p.amount) as revenue
       FROM payments p
       JOIN bookings b ON p.booking_id = b.id_bookings
       JOIN flights f ON b.flight_id = f.id_flights
-      WHERE p.payment_status = 'success' AND (f.airline_code = ? OR f.airline_id = ?)
+      WHERE p.payment_status = 'success' AND (f.airline_code = ? OR f.airline_code = (SELECT airline_code FROM companies WHERE id_company = ?))
       GROUP BY monthNum
       ORDER BY monthNum ASC
       LIMIT 6
@@ -2128,13 +2132,13 @@ app.get('/api/financial-stats', async (req, res) => {
       revenue: Number(r.revenue) || 0
     }));
 
-    
+
     const [weekRows] = await connection.execute(`
       SELECT DAYOFWEEK(b.booking_date) as dayNum, SUM(p.amount) as revenue
       FROM payments p
       JOIN bookings b ON p.booking_id = b.id_bookings
       JOIN flights f ON b.flight_id = f.id_flights
-      WHERE p.payment_status = 'success' AND (f.airline_code = ? OR f.airline_id = ?)
+      WHERE p.payment_status = 'success' AND (f.airline_code = ? OR f.airline_code = (SELECT airline_code FROM companies WHERE id_company = ?))
         AND b.booking_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
       GROUP BY dayNum
       ORDER BY dayNum ASC
@@ -2145,14 +2149,14 @@ app.get('/api/financial-stats', async (req, res) => {
       revenue: Number(r.revenue) || 0
     }));
 
-    
+
     const [classRows] = await connection.execute(`
       SELECT s.seat_class as name, COUNT(bp.id_bookings_passengers) as value
       FROM bookings_passengers bp
       JOIN seats s ON bp.seat_id = s.id_seats
       JOIN bookings b ON bp.booking_id = b.id_bookings
       JOIN flights f ON b.flight_id = f.id_flights
-      WHERE (f.airline_code = ? OR f.airline_id = ?)
+      WHERE (f.airline_code = ? OR f.airline_code = (SELECT airline_code FROM companies WHERE id_company = ?))
       GROUP BY s.seat_class
     `, [airlineCode || '', airline_id || 0]);
 
@@ -2161,13 +2165,13 @@ app.get('/api/financial-stats', async (req, res) => {
       value: Number(r.value) || 0
     }));
 
-    
+
     const [profitRows] = await connection.execute(`
       SELECT f.flight_number, f.airportOrigin_code, f.airportDestination_code,
              COALESCE(SUM(b.final_price), 0) as revenue
       FROM flights f
       LEFT JOIN bookings b ON b.flight_id = f.id_flights AND b.status = 'certain'
-      WHERE (f.airline_code = ? OR f.airline_id = ?)
+      WHERE (f.airline_code = ? OR f.airline_code = (SELECT airline_code FROM companies WHERE id_company = ?))
       GROUP BY f.id_flights
       ORDER BY revenue DESC
       LIMIT 5
@@ -2218,12 +2222,12 @@ app.get('/api/traffic-stats', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    
+
     const [destRows] = await connection.execute(`
       SELECT f.airportDestination_code as name, COUNT(b.id_bookings) as bookings
       FROM bookings b
       JOIN flights f ON b.flight_id = f.id_flights
-      WHERE b.status = 'certain' AND (f.airline_code = ? OR f.airline_id = ?)
+      WHERE b.status = 'certain' AND (f.airline_code = ? OR f.airline_code = (SELECT airline_code FROM companies WHERE id_company = ?))
       GROUP BY f.airportDestination_code
       ORDER BY bookings DESC
       LIMIT 5
@@ -2234,11 +2238,11 @@ app.get('/api/traffic-stats', async (req, res) => {
       bookings: Number(r.bookings) || 0
     }));
 
-    
+
     const [occRows] = await connection.execute(`
       SELECT flight_number, airportOrigin_code, airportDestination_code, total_seats, available_seats
       FROM flights
-      WHERE (airline_code = ? OR airline_id = ?)
+      WHERE (airline_code = ? OR airline_code = (SELECT airline_code FROM companies WHERE id_company = ?))
       ORDER BY departure_time DESC
       LIMIT 10
     `, [airlineCode || '', airline_id || 0]);
@@ -2283,13 +2287,13 @@ app.get('/api/medical-services', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    
+
     const [serviceRows] = await connection.execute(`
       SELECT gs.service_name as name, COUNT(*) as value
       FROM ground_services gs
       JOIN bookings b ON gs.booking_id = b.id_bookings
       JOIN flights f ON b.flight_id = f.id_flights
-      WHERE gs.is_active = 1 AND (f.airline_code = ? OR f.airline_id = ?)
+      WHERE gs.is_active = 1 AND (f.airline_code = ? OR f.airline_code = (SELECT airline_code FROM companies WHERE id_company = ?))
       GROUP BY gs.service_name
     `, [airlineCode || '', airline_id || 0]);
 
@@ -2298,7 +2302,7 @@ app.get('/api/medical-services', async (req, res) => {
       value: Number(r.value) || 0
     }));
 
-    
+
     const [critRows] = await connection.execute(`
       SELECT f.flight_number, f.airportOrigin_code, f.airportDestination_code,
              COUNT(gs.id_Ground_services) as criticalCount,
@@ -2306,7 +2310,7 @@ app.get('/api/medical-services', async (req, res) => {
       FROM ground_services gs
       JOIN bookings b ON gs.booking_id = b.id_bookings
       JOIN flights f ON b.flight_id = f.id_flights
-      WHERE gs.is_active = 1 AND (f.airline_code = ? OR f.airline_id = ?)
+      WHERE gs.is_active = 1 AND (f.airline_code = ? OR f.airline_code = (SELECT airline_code FROM companies WHERE id_company = ?))
       GROUP BY f.id_flights
       ORDER BY criticalCount DESC
       LIMIT 10
@@ -2357,12 +2361,12 @@ app.get('/api/passenger-stats', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    
+
     const [statusRows] = await connection.execute(`
       SELECT b.status, COUNT(*) as value
       FROM bookings b
       JOIN flights f ON b.flight_id = f.id_flights
-      WHERE (f.airline_code = ? OR f.airline_id = ?)
+      WHERE (f.airline_code = ? OR f.airline_code = (SELECT airline_code FROM companies WHERE id_company = ?))
       GROUP BY b.status
     `, [airlineCode || '', airline_id || 0]);
 
@@ -2377,12 +2381,12 @@ app.get('/api/passenger-stats', async (req, res) => {
       value: Number(r.value) || 0
     }));
 
-    
+
     const [dayRows] = await connection.execute(`
       SELECT DAYOFWEEK(b.booking_date) as dayNum, COUNT(b.id_bookings) as count
       FROM bookings b
       JOIN flights f ON b.flight_id = f.id_flights
-      WHERE (f.airline_code = ? OR f.airline_id = ?)
+      WHERE (f.airline_code = ? OR f.airline_code = (SELECT airline_code FROM companies WHERE id_company = ?))
       GROUP BY dayNum
     `, [airlineCode || '', airline_id || 0]);
 
@@ -2446,7 +2450,7 @@ app.get('/api/flights-by-day/:day', async (req, res) => {
                WHERE b.flight_id = f.id_flights AND b.status = 'certain'
              ), 0) as totalPassengers
       FROM flights f
-      WHERE DAYOFWEEK(f.departure_time) = ? AND (f.airline_code = ? OR f.airline_id = ?)
+      WHERE DAYOFWEEK(f.departure_time) = ? AND (f.airline_code = ? OR f.airline_code = (SELECT airline_code FROM companies WHERE id_company = ?))
     `, [dayIndex, airlineCode || '', airline_id || 0]);
 
     const flights = rows.map(r => ({
@@ -2529,20 +2533,20 @@ app.get('/api/flight-details/:flightNumber', async (req, res) => {
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
-    
-    
+
+
     const [flights] = await connection.execute(
       'SELECT id_flights as id, flight_number as flightNumber, airportOrigin_code as origin, airportDestination_code as destination, aircraft_type as aircraftType, departure_time as departureTime, arrival_time as arrivalTime FROM flights WHERE REPLACE(flight_number, " ", "") = ?',
       [flightNumber.replace(/\s+/g, '')]
     );
-    
+
     if (flights.length === 0) {
       return res.status(404).json({ success: false, error: 'الرحلة غير موجودة' });
     }
-    
+
     const flight = flights[0];
-    
-    
+
+
     const [bookedRows] = await connection.execute(`
       SELECT s.seat_number as seatNumber, s.seat_class as seatClass, p.name as passengerName,
              p.passport_number as passportNumber, p.nationality, p.gander as gender,
@@ -2553,7 +2557,7 @@ app.get('/api/flight-details/:flightNumber', async (req, res) => {
       JOIN seats s ON bp.seat_id = s.id_seats
       WHERE b.flight_id = ? AND b.status = 'certain'
     `, [flight.id]);
-    
+
     const bookingIds = [...new Set(bookedRows.map(r => r.bookingId))];
     let servicesMap = {};
     if (bookingIds.length > 0) {
@@ -2566,7 +2570,7 @@ app.get('/api/flight-details/:flightNumber', async (req, res) => {
         servicesMap[sr.booking_id].push(serviceMap[sr.service_name] || sr.service_name);
       });
     }
-    
+
     const bookedSeats = bookedRows.map(r => ({
       seatNumber: r.seatNumber,
       seatClass: (r.seatClass || '').trim().toLowerCase() === 'economy' ? 'economy' : 'business',
@@ -2577,11 +2581,11 @@ app.get('/api/flight-details/:flightNumber', async (req, res) => {
       bookingReference: r.bookingReference,
       services: servicesMap[r.bookingId] || []
     }));
-    
-    
+
+
     const businessOccupied = bookedSeats.filter(s => s.seatClass === 'business').length;
     const economyOccupied = bookedSeats.filter(s => s.seatClass === 'economy').length;
-    
+
     res.json({
       success: true,
       flight: {
@@ -2659,14 +2663,14 @@ app.post('/api/admin/companies', async (req, res) => {
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
-    
-    
+
+
     const [existing] = await connection.execute('SELECT id_admin FROM admins WHERE email = ?', [username]);
     if (existing.length > 0) {
       return res.status(400).json({ success: false, error: 'اسم المستخدم مسجل بالفعل' });
     }
 
-    
+
     if (airline_code && company_name) {
       await connection.execute(
         `INSERT INTO companies (company_name, airline_code) 
@@ -2676,13 +2680,13 @@ app.post('/api/admin/companies', async (req, res) => {
       );
     }
 
-    
+
     const [maxIdRows] = await connection.execute('SELECT COALESCE(MAX(id_admin), 0) + 1 as nextId FROM admins');
     const nextId = maxIdRows[0].nextId;
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    
+
     await connection.execute(
       `INSERT INTO admins (id_admin, email, password, role, airline_code, employee_id, department, created_at) 
        VALUES (?, ?, ?, 'company', ?, ?, ?, NOW())`,
@@ -2705,13 +2709,13 @@ app.put('/api/admin/companies/:id', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    
+
     const [existing] = await connection.execute('SELECT id_admin FROM admins WHERE email = ? AND id_admin != ?', [username, id]);
     if (existing.length > 0) {
       return res.status(400).json({ success: false, error: 'اسم المستخدم مسجل بمستخدم آخر' });
     }
 
-    
+
     if (airline_code && company_name) {
       await connection.execute(
         `INSERT INTO companies (company_name, airline_code) 
@@ -2721,7 +2725,7 @@ app.put('/api/admin/companies/:id', async (req, res) => {
       );
     }
 
-    
+
     if (password && password.trim() !== '') {
       const hashedPassword = await bcrypt.hash(password, 10);
       await connection.execute(
@@ -2768,14 +2772,14 @@ const seedAdmin = async () => {
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
-    const [rows] = await connection.execute('SELECT id_admin FROM admins WHERE email = ?', ['admin@gmail.com']);
+    const [rows] = await connection.execute('SELECT id_admin FROM admins WHERE username = ?', ['admin']);
     if (rows.length === 0) {
       const [maxIdRows] = await connection.execute('SELECT COALESCE(MAX(id_admin), 0) + 1 as nextId FROM admins');
       const nextId = maxIdRows[0].nextId;
       const hashedPassword = await bcrypt.hash('ADMIN123', 10);
       await connection.execute(
-        'INSERT INTO admins (id_admin, email, password, role, created_at) VALUES (?, ?, ?, ?, NOW())',
-        [nextId, 'admin@gmail.com', hashedPassword, 'admin']
+        'INSERT INTO admins (id_admin, username, password, role, created_at) VALUES (?, ?, ?, ?, NOW())',
+        [nextId, 'admin', hashedPassword, 'admin']
       );
       console.log('Seeded default admin account successfully.');
     }
@@ -2794,7 +2798,7 @@ async function cancelBookingHandler(req, res) {
     connection = await mysql.createConnection(getDbConfig());
     await connection.beginTransaction();
 
-    
+
     const [bookingRows] = await connection.execute(
       'SELECT booking_reference FROM bookings WHERE id_bookings = ?',
       [bookingId]
@@ -2859,7 +2863,7 @@ app.get('/api/chat/sessions/:key/messages', async (req, res) => {
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
-    
+
     await connection.execute(
       `UPDATE chat_messages cm JOIN chat_sessions cs ON cm.session_id = cs.id SET cm.is_read = 1 WHERE cs.session_key = ? AND cm.sender = 'user'`,
       [key]
@@ -2889,24 +2893,24 @@ app.post('/api/chat/send', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
 
-    
+
     await connection.execute(`
       INSERT INTO chat_sessions (session_key, user_name, user_email, status, created_at, updated_at)
       VALUES (?, ?, ?, 'open', NOW(), NOW())
       ON DUPLICATE KEY UPDATE updated_at = NOW(), user_name = COALESCE(?, user_name), user_email = COALESCE(?, user_email)
     `, [session_key, user_name || 'زائر', user_email || null, user_name || null, user_email || null]);
 
-    
+
     const [[session]] = await connection.execute('SELECT id FROM chat_sessions WHERE session_key = ?', [session_key]);
     const session_id = session.id;
 
-    
+
     const [result] = await connection.execute(
       'INSERT INTO chat_messages (session_id, sender, text, is_read, created_at) VALUES (?, ?, ?, ?, NOW())',
       [session_id, sender, text, sender === 'admin' ? 1 : 0]
     );
 
-    
+
     await connection.execute('UPDATE chat_sessions SET updated_at = NOW(), status = ? WHERE id = ?', [
       sender === 'admin' ? 'replied' : 'open', session_id
     ]);
@@ -2923,7 +2927,7 @@ app.post('/api/chat/send', async (req, res) => {
 
 app.get('/api/chat/poll/:key', async (req, res) => {
   const { key } = req.params;
-  const { after } = req.query; 
+  const { after } = req.query;
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
@@ -2967,8 +2971,8 @@ const ensureSettingsTable = async () => {
         setting_value VARCHAR(255) NOT NULL
       )
     `);
-    
-    
+
+
     await connection.execute(`
       INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES 
       ('markup_rate', '5'),
@@ -3008,7 +3012,7 @@ app.post('/api/admin/settings', async (req, res) => {
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
-    
+
     await connection.execute(
       'INSERT INTO system_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = ?',
       ['markup_rate', String(markup_rate), String(markup_rate)]
@@ -3021,7 +3025,7 @@ app.post('/api/admin/settings', async (req, res) => {
       'INSERT INTO system_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = ?',
       ['support_email', String(support_email), String(support_email)]
     );
-    
+
     res.json({ success: true, message: 'Settings updated successfully' });
   } catch (error) {
     console.error('Error updating settings:', error);
@@ -3036,8 +3040,8 @@ const ensureChatTables = async () => {
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
-    
-    
+
+
     let hasIdChat = false;
     try {
       const [columns] = await connection.execute("SHOW COLUMNS FROM chat_messages LIKE 'id_chat'");
@@ -3045,10 +3049,10 @@ const ensureChatTables = async () => {
         hasIdChat = true;
       }
     } catch (e) {
-      
+
     }
 
-    
+
     if (!hasIdChat) {
       try {
         const [tables] = await connection.execute("SHOW TABLES LIKE 'chat_messages'");

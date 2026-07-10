@@ -78,7 +78,7 @@ export default function Sidebar() {
     document.documentElement.style.setProperty('--sidebar-width', `${sidebarWidth}px`);
   }, [sidebarWidth]);
 
-  
+
   const companyId = localStorage.getItem('companyId') || user?.airline_id || '';
   useEffect(() => {
     if ((user.role === 'company_admin' || user.role === 'company') && companyId) {
@@ -94,13 +94,13 @@ export default function Sidebar() {
       };
 
       getCount();
-      
+
       const interval = setInterval(getCount, 30000);
       return () => clearInterval(interval);
     }
   }, [user.role, companyId]);
 
-  
+
   const reportLinks = [
     {
       label: 'تحليلات الشركة',
@@ -119,12 +119,12 @@ export default function Sidebar() {
       path: '/medical-services',
     },
     {
-      label: 'الحالة والركاب',
+      label: 'حالة الركاب',
       path: '/passenger-status',
     },
   ];
 
-  
+
   const [isReportsOpen, setIsReportsOpen] = useState(
     location.pathname === '/company-analytics' ||
     location.pathname === '/company/analytics' ||
@@ -134,13 +134,13 @@ export default function Sidebar() {
     location.pathname === '/passenger-status'
   );
 
-  
+
   const getCompanyLogo = () => {
     if (user.role === 'super_admin') {
       return logo;
     }
 
-    
+
     let logoPath = user.logo_url;
 
     if (!logoPath) {
@@ -152,7 +152,7 @@ export default function Sidebar() {
       else logoPath = logo;
     }
 
-    
+
     if (logoError && !logoOnlineError) {
       const id = user.airline_id;
       const code = localStorage.getItem('airlineCode') || (id === 1 ? 'IY' : id === 2 ? 'BS' : 'FA');
@@ -169,7 +169,7 @@ export default function Sidebar() {
     navigate('/company/login');
   };
 
-  
+
   const adminLinks = [
     {
       label: 'لوحة التحكم للمنصة',
@@ -210,16 +210,6 @@ export default function Sidebar() {
       icon: Plane,
     },
     {
-      label: 'قائمة ركاب الرحلات',
-      path: '/company/passengers',
-      icon: ClipboardList,
-    },
-    {
-      label: 'الخدمات الطبية والأرضية',
-      path: '/company/services',
-      icon: HeartPulse,
-    },
-    {
       label: 'طلبات الحجز المعلقة',
       path: '/company/notifications',
       icon: Bell,
@@ -234,7 +224,7 @@ export default function Sidebar() {
       style={{ width: `${sidebarWidth}px` }}
       dir="rtl"
     >
-      {}
+      { }
       <div
         onMouseDown={startResizing}
         className="absolute top-0 left-0 w-1.5 h-full cursor-col-resize hover:bg-blue-500/20 active:bg-blue-600/40 transition-colors z-50 group"
@@ -242,7 +232,7 @@ export default function Sidebar() {
         <div className="w-[1px] h-full bg-slate-200/60 dark:bg-slate-800/60 group-hover:bg-blue-500/40 group-active:bg-blue-600/60 mx-auto" />
       </div>
 
-      {}
+      { }
       <div className="relative flex flex-col items-center gap-3 border-b border-slate-100 dark:border-slate-900 p-6">
 
         <div className="relative flex h-16 w-16 items-center justify-center">
@@ -264,7 +254,7 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {}
+      { }
       <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1.5 scrollbar-thin">
         {currentLinks.map((link) => {
           const Icon = link.icon;
@@ -298,7 +288,7 @@ export default function Sidebar() {
           );
         })}
 
-        {}
+        { }
         {user.role !== 'super_admin' && (
           <div className="space-y-1">
             <button
@@ -352,10 +342,10 @@ export default function Sidebar() {
         )}
       </nav>
 
-      {}
+      { }
       <div className="border-t border-slate-100/70 dark:border-slate-900/50 p-4 space-y-3">
 
-        {}
+        { }
         {user.role === 'super_admin' && (
           <div className="flex items-center rounded-2xl bg-gradient-to-r from-slate-50/50 to-slate-50/20 dark:from-slate-900/30 dark:to-slate-900/10 p-3 border border-slate-150/50 dark:border-slate-800/40">
             <div className="flex items-center gap-3 min-w-0">
@@ -374,7 +364,7 @@ export default function Sidebar() {
           </div>
         )}
 
-        {}
+        { }
         {(user.role === 'company_admin' || user.role === 'company') && (
           <div className="flex items-center rounded-2xl bg-gradient-to-r from-slate-50/50 to-slate-50/20 dark:from-slate-900/30 dark:to-slate-900/10 p-3 border border-slate-150/50 dark:border-slate-800/40 shadow-sm">
             <div className="flex items-center gap-3 min-w-0">
@@ -393,7 +383,7 @@ export default function Sidebar() {
           </div>
         )}
 
-        {}
+        { }
         <button
           onClick={handleLogout}
           className="group flex w-full h-10 items-center justify-center gap-2 rounded-xl bg-slate-50 dark:bg-slate-900/30 text-slate-500 dark:text-slate-400 border border-blue-500/40 dark:border-blue-500/25 hover:bg-blue-50 dark:hover:bg-blue-550/10 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-500/60 dark:hover:border-blue-500/40 px-4 text-xs font-bold transition-all duration-300 cursor-pointer"

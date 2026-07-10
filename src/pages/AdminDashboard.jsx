@@ -25,7 +25,6 @@ const AdminDashboard = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const adminUsername = localStorage.getItem('adminUsername') || 'admin';
-    const adminInitials = adminUsername.slice(0, 2).toUpperCase();
     const token = localStorage.getItem('adminToken');
     const role = localStorage.getItem('userRole');
 
@@ -142,13 +141,24 @@ const AdminDashboard = () => {
         } catch (error) {
             console.error('Error fetching settings:', error);
         }
-    }, []);
+    }, []); // 💡 مصفوفة فارغة هنا تعني أن الدالة ستُحفظ في الذاكرة ولن تتكرر أبداً
 
     useEffect(() => {
-        if (token && role === 'admin') {
-            fetchSettings();
-        }
-    }, [token, role, fetchSettings]);
+        // eslint-disable-next-line no-unused-vars
+        let isMounted = true;
+
+        const loadAdminSettings = async () => {
+            if (token && role === 'admin') {
+                await fetchSettings();
+            }
+        };
+
+        loadAdminSettings();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [token, role, fetchSettings]); 
 
     // Automatic logout when leaving the admin dashboard page or closing the tab
     useEffect(() => {
@@ -678,7 +688,7 @@ const AdminDashboard = () => {
             'EK': 'الإماراتية',
             'WY': 'العمانية',
             'GF': 'الخليج',
-            'DH': 'القطيبي'
+            'DH': 'فلاي عدن'
         };
         return airlines[code] ? `${airlines[code]} (${code})` : code;
     };

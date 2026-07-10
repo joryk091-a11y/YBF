@@ -883,7 +883,7 @@ async function companyLoginHandler(req, res) {
       `SELECT a.*, c.company_name AS airline_name, NULL AS logo_url, c.id_company AS id_airline
        FROM admins a
        LEFT JOIN companies c ON a.airline_code = c.airline_code
-       WHERE a.username = ?`,
+       WHERE a.email = ?`,
       [username]
     );
     if (rows.length > 0) {
@@ -905,7 +905,7 @@ async function companyLoginHandler(req, res) {
           airline_name: admin.airline_name,
           logo_url: admin.logo_url,
           id: admin.id_admin,
-          username: admin.username,
+          username: admin.email,
         });
       } else {
         res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
@@ -2612,7 +2612,7 @@ app.get('/api/admin/companies', async (req, res) => {
     const [rows] = await connection.execute(
       `SELECT 
          a.id_admin, 
-         a.username, 
+         a.email AS username, 
          a.password, 
          a.role, 
          a.airline_code, 
@@ -2642,7 +2642,7 @@ app.post('/api/admin/companies', async (req, res) => {
     connection = await mysql.createConnection(getDbConfig());
     
     // Check if username already exists
-    const [existing] = await connection.execute('SELECT id_admin FROM admins WHERE username = ?', [username]);
+    const [existing] = await connection.execute('SELECT id_admin FROM admins WHERE email = ?', [username]);
     if (existing.length > 0) {
       return res.status(400).json({ success: false, error: 'اسم المستخدم مسجل بالفعل' });
     }
@@ -2665,7 +2665,7 @@ app.post('/api/admin/companies', async (req, res) => {
 
     // 3. Insert admin account
     await connection.execute(
-      `INSERT INTO admins (id_admin, username, password, role, airline_code, employee_id, department, created_at) 
+      `INSERT INTO admins (id_admin, email, password, role, airline_code, employee_id, department, created_at) 
        VALUES (?, ?, ?, 'company', ?, ?, ?, NOW())`,
       [nextId, username, hashedPassword, airline_code || null, employee_id || null, department || null]
     );
@@ -2687,7 +2687,7 @@ app.put('/api/admin/companies/:id', async (req, res) => {
     connection = await mysql.createConnection(getDbConfig());
 
     // Check if username already exists for another user
-    const [existing] = await connection.execute('SELECT id_admin FROM admins WHERE username = ? AND id_admin != ?', [username, id]);
+    const [existing] = await connection.execute('SELECT id_admin FROM admins WHERE email = ? AND id_admin != ?', [username, id]);
     if (existing.length > 0) {
       return res.status(400).json({ success: false, error: 'اسم المستخدم مسجل بمستخدم آخر' });
     }
@@ -2749,16 +2749,16 @@ const seedAdmin = async () => {
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
-    const [rows] = await connection.execute('SELECT id_admin FROM admins WHERE username = ?', ['admin']);
+    const [rows] = await connection.execute('SELECT id_admin FROM admins WHERE email = ?', ['admin@gmail.com']);
     if (rows.length === 0) {
       const [maxIdRows] = await connection.execute('SELECT COALESCE(MAX(id_admin), 0) + 1 as nextId FROM admins');
       const nextId = maxIdRows[0].nextId;
       const hashedPassword = await bcrypt.hash('ADMIN123', 10);
       await connection.execute(
-        'INSERT INTO admins (id_admin, username, password, role, created_at) VALUES (?, ?, ?, ?, NOW())',
-        [nextId, 'admin', hashedPassword, 'admin']
+        'INSERT INTO admins (id_admin, email, password, role, created_at) VALUES (?, ?, ?, ?, NOW())',
+        [nextId, 'admin@gmail.com', hashedPassword, 'admin']
       );
-      console.log('Seeded default admin account (admin) successfully.');
+      console.log('Seeded default admin account successfully.');
     }
   } catch (error) {
     console.error('Error seeding admin account:', error);

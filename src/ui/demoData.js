@@ -1,6 +1,6 @@
 const AIRLINES = [
   { code: 'YEM', name: 'اليمنية', office: 'عدن' },
-  { code: 'QTB', name: 'القطيبي', office: 'صنعاء' },
+  { code: 'QTB', name: 'فلاي عدن', office: 'صنعاء' },
   { code: 'SBA', name: 'سبأ', office: 'سيئون' },
 ]
 

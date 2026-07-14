@@ -303,7 +303,7 @@ export default function Notifications() {
               {}
               <div className="bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden max-h-[400px] flex items-center justify-center p-2 mb-6">
                 <img
-                  src={selectedReceipt.paymentProof.startsWith('http')
+                  src={selectedReceipt.paymentProof.startsWith('http') || selectedReceipt.paymentProof.startsWith('data:image/')
                     ? selectedReceipt.paymentProof
                     : `http://localhost:8080${selectedReceipt.paymentProof.startsWith('/') ? '' : '/'}${selectedReceipt.paymentProof}`
                   }

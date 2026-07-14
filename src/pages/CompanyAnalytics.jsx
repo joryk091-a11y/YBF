@@ -145,6 +145,32 @@ export default function CompanyAnalytics() {
 
   return (
     <div className="flex min-h-screen bg-[#f8faff] dark:bg-[#080d19] text-slate-900 dark:text-slate-100 transition-colors duration-300 relative overflow-hidden" dir="rtl">
+      <style>{`
+        @media print {
+          /* Hide sidebar and any print-hidden items */
+          aside, .print-hidden {
+            display: none !important;
+          }
+          /* Make main content occupy full print width */
+          main {
+            margin-right: 0 !important;
+            padding: 10px !important;
+            width: 100% !important;
+            min-height: auto !important;
+          }
+          /* Avoid breaking cards across pages */
+          .print-avoid-break {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+            margin-bottom: 20px !important;
+          }
+          /* Ensure charts are sized appropriately and do not collapse */
+          .recharts-responsive-container {
+            width: 100% !important;
+            height: 280px !important;
+          }
+        }
+      `}</style>
       {}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-blue-500/5 dark:bg-blue-500/10 blur-[120px] transition-all" />
@@ -155,7 +181,7 @@ export default function CompanyAnalytics() {
       <Sidebar />
 
       {}
-      <main className="flex-1 mr-72 p-8 relative z-10 min-h-screen">
+      <main className="flex-1 mr-72 p-8 print:mr-0 print:p-4 relative z-10 min-h-screen">
 
         {}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 print:hidden animate-in fade-in slide-in-from-top-4 duration-500">
@@ -257,7 +283,7 @@ export default function CompanyAnalytics() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
 
           {}
-          <div className="lg:col-span-2 group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-8 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl">
+          <div className="lg:col-span-2 group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-8 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl print-avoid-break">
             <h3 className="text-xs font-black tracking-widest text-slate-400 dark:text-slate-500 mb-6 uppercase">
               الطلب على الوجهات (عدد الحجوزات)
             </h3>
@@ -276,6 +302,7 @@ export default function CompanyAnalytics() {
                     axisLine={false}
                     tickLine={false}
                     tick={{ fontSize: 11, fontWeight: 900, fill: labelColor }}
+                    interval={0}
                     dy={10}
                   />
                   <YAxis
@@ -307,7 +334,7 @@ export default function CompanyAnalytics() {
           </div>
 
           {}
-          <div className="group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-8 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl flex flex-col justify-between">
+          <div className="group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-8 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl flex flex-col justify-between print-avoid-break">
             <div>
               <h3 className="text-xs font-black tracking-widest text-slate-400 dark:text-slate-500 mb-6 uppercase">
                 تفاصيل الخدمات الأرضية الخاصة
@@ -369,7 +396,7 @@ export default function CompanyAnalytics() {
         </div>
 
         {}
-        <div className="group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl">
+        <div className="group rounded-3xl bg-white/60 dark:bg-slate-900/40 p-6 border border-slate-150/70 dark:border-slate-800/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-xl print-avoid-break">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xs font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase">
               آخر الحجوزات عالية القيمة

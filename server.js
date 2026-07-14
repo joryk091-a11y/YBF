@@ -1521,24 +1521,29 @@ app.post('/api/bookings', async (req, res) => {
     try {
       if (typeof req.body.paymentProof === 'string' && (req.body.paymentProof.startsWith('http') || req.body.paymentProof.startsWith('/'))) {
         proofPath = req.body.paymentProof;
-      } else {
-        const matches = req.body.paymentProof.match(/^data:image\/([a-zA-Z+]+);base64,(.+)$/);
-        if (matches && matches.length === 3) {
-          const extension = matches[1];
-          const base64Data = matches[2];
-          const buffer = Buffer.from(base64Data, 'base64');
-
-          const allowedExtensions = ['png', 'jpg', 'jpeg', 'webp'];
-          if (allowedExtensions.includes(extension.toLowerCase())) {
-            const uploadDir = path.join(process.cwd(), 'public', 'receipts');
-            if (!fs.existsSync(uploadDir)) {
-              fs.mkdirSync(uploadDir, { recursive: true });
+      } else if (typeof req.body.paymentProof === 'string' && req.body.paymentProof.startsWith('data:image/')) {
+        const parts = req.body.paymentProof.split(',');
+        if (parts.length === 2) {
+          const header = parts[0];
+          const base64Data = parts[1];
+          const matches = header.match(/data:image\/([a-zA-Z+]+);base64/);
+          if (matches && matches.length === 2) {
+            const extension = matches[1];
+            const buffer = Buffer.from(base64Data, 'base64');
+            const allowedExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
+            if (allowedExtensions.includes(extension.toLowerCase())) {
+              const uploadDir = path.join(__dirname, 'public', 'receipts');
+              if (!fs.existsSync(uploadDir)) {
+                fs.mkdirSync(uploadDir, { recursive: true });
+              }
+              const fileName = `proof-${reference}-${Date.now()}.${extension}`;
+              fs.writeFileSync(path.join(uploadDir, fileName), buffer);
+              proofPath = `/receipts/${fileName}`;
             }
-            const fileName = `proof-${reference}-${Date.now()}.${extension}`;
-            fs.writeFileSync(path.join(uploadDir, fileName), buffer);
-            proofPath = `/receipts/${fileName}`;
           }
         }
+      } else {
+        proofPath = req.body.paymentProof;
       }
     } catch (err) {
       console.error('Error processing payment proof:', err);
@@ -1674,8 +1679,8 @@ app.post('/api/bookings', async (req, res) => {
         const extraBaggagePrice = extraBagsCount * 2.0;
 
         const [baggageResult] = await connection.execute(
-          'INSERT INTO baggage (booking_id, passenger_id, weight, base_price, extra_price, total_price) VALUES (?, ?, ?, ?, ?, ?)',
-          [bookingId, passengerId, totalBaggageWeight, 0.0, extraBaggagePrice, extraBaggagePrice]
+          'INSERT INTO baggage (booking_id, passenger_id, weight, base_price, extra_price) VALUES (?, ?, ?, ?, ?)',
+          [bookingId, passengerId, totalBaggageWeight, 0.0, extraBaggagePrice]
         );
         const baggageId = baggageResult.insertId;
 
@@ -2772,13 +2777,13 @@ const seedAdmin = async () => {
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
-    const [rows] = await connection.execute('SELECT id_admin FROM admins WHERE username = ?', ['admin']);
+    const [rows] = await connection.execute('SELECT id_admin FROM admins WHERE email = ?', ['admin']);
     if (rows.length === 0) {
       const [maxIdRows] = await connection.execute('SELECT COALESCE(MAX(id_admin), 0) + 1 as nextId FROM admins');
       const nextId = maxIdRows[0].nextId;
       const hashedPassword = await bcrypt.hash('ADMIN123', 10);
       await connection.execute(
-        'INSERT INTO admins (id_admin, username, password, role, created_at) VALUES (?, ?, ?, ?, NOW())',
+        'INSERT INTO admins (id_admin, email, password, role, created_at) VALUES (?, ?, ?, ?, NOW())',
         [nextId, 'admin', hashedPassword, 'admin']
       );
       console.log('Seeded default admin account successfully.');

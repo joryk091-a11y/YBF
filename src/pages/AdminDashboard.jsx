@@ -8,7 +8,7 @@ import {
     LogOut, Users, Ticket, DollarSign, TrendingUp,
     Calendar, CheckCircle, Clock, XCircle, Plane, ArrowUpRight, Search, Activity, Layers, BarChart3, MapPin,
     Globe, Bell, Settings, User, MoreHorizontal, ArrowLeft, Filter,
-    Moon, Sun, Shield, Wallet, BookOpen, Plus, Trash2, Pencil, Check, X, CreditCard, ChevronRight, Info,
+    Moon, Sun, Shield, Wallet, BookOpen, Plus, Trash2, Pencil, Check, X, CreditCard, ChevronRight, ChevronLeft, Info,
     UserCheck, Mail, Phone, Building2, Printer, RefreshCw
 } from 'lucide-react';
 import Messages from './Messages.jsx';
@@ -70,6 +70,9 @@ const AdminDashboard = () => {
     const [bookingsList, setBookingsList] = useState([]);
     const [loadingBookings, setLoadingBookings] = useState(false);
     const [bookingSearchQuery, setBookingSearchQuery] = useState('');
+    const [bookingPage, setBookingPage] = useState(1);
+    const [bookingTotal, setBookingTotal] = useState(0);
+    const [bookingTotalPages, setBookingTotalPages] = useState(1);
     const [updatingBookingId, setUpdatingBookingId] = useState(null);
     const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
     const [isEditingCompany, setIsEditingCompany] = useState(false);
@@ -315,21 +318,36 @@ const AdminDashboard = () => {
     }, [token, role]);
 
     
-    const fetchBookings = useCallback(async () => {
+    const fetchBookings = useCallback(async (page = bookingPage, search = bookingSearchQuery) => {
         if (!token || role !== 'admin') return;
         setLoadingBookings(true);
         try {
-            const res = await fetch(getApiUrl('/api/admin/bookings'));
+            const url = getApiUrl(`/api/admin/bookings?page=${page}&limit=10&search=${encodeURIComponent(search)}`);
+            const res = await fetch(url);
             const data = await res.json();
             if (data.success) {
-                setBookingsList(data.bookings);
+                setBookingsList(data.bookings || []);
+                setBookingTotal(data.total || 0);
+                setBookingTotalPages(data.totalPages || 1);
             }
         } catch (error) {
             console.error('Error fetching bookings:', error);
         } finally {
             setLoadingBookings(false);
         }
-    }, [token, role]);
+    }, [token, role, bookingPage, bookingSearchQuery]);
+
+    useEffect(() => {
+        setBookingPage(1);
+    }, [bookingSearchQuery]);
+
+    useEffect(() => {
+        if (activeTab !== 'bookings') return;
+        const delayDebounceId = setTimeout(() => {
+            fetchBookings(bookingPage, bookingSearchQuery);
+        }, 300);
+        return () => clearTimeout(delayDebounceId);
+    }, [bookingPage, bookingSearchQuery, activeTab, fetchBookings]);
 
     
     const handleUpdateBookingStatus = async (bookingId, status, paymentStatus) => {
@@ -494,8 +512,6 @@ const AdminDashboard = () => {
                 fetchUsers();
             } else if (activeTab === 'companies') {
                 fetchCompanies();
-            } else if (activeTab === 'bookings') {
-                fetchBookings();
             }
         }, 0);
         return () => clearTimeout(timer);
@@ -748,16 +764,7 @@ const AdminDashboard = () => {
         (c.airline_code && c.airline_code.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
-    const filteredBookings = bookingsList.filter(b => {
-        const query = bookingSearchQuery.toLowerCase().trim();
-        if (!query) return true;
-        
-        const refMatch = b.booking_reference?.toLowerCase().includes(query);
-        const flightMatch = b.flight_number?.toLowerCase().includes(query);
-        const passengerMatch = b.passengers?.toLowerCase().includes(query);
-        
-        return refMatch || flightMatch || passengerMatch;
-    });
+    const filteredBookings = bookingsList;
 
     const chartColors = ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'];
 
@@ -2214,7 +2221,7 @@ const AdminDashboard = () => {
                                                     </thead>
                                                     <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
                                                         {filteredCompanies.length > 0 ? (
-                                                            filteredCompanies.map((company) => (
+                                                            filteredCompanies.map((company, index) => (
                                                                 <tr key={company.id_admin} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                                                                     <td className="py-5 px-4 font-black text-slate-900 dark:text-white">
                                                                         <div className="flex items-center gap-3">
@@ -2223,7 +2230,7 @@ const AdminDashboard = () => {
                                                                             </div>
                                                                             <div>
                                                                                 <p className="font-black text-slate-800 dark:text-white">{company.username}</p>
-                                                                                <p className="text-[10px] text-slate-400">ID: #{company.id_admin}</p>
+                                                                                <p className="text-[10px] text-slate-400">ID: #{index + 1}</p>
                                                                             </div>
                                                                         </div>
                                                                     </td>
@@ -2374,7 +2381,7 @@ const AdminDashboard = () => {
 
                                         {loadingBookings ? (
                                             <div className="py-20 text-center text-slate-400 font-bold">جاري تحميل قائمة الحجوزات...</div>
-                                        ) : (
+                                        ) : (<>
                                             <div className="overflow-x-auto">
                                                 <table className="w-full text-right text-xs">
                                                     <thead>
@@ -2532,7 +2539,55 @@ const AdminDashboard = () => {
                                                     </tbody>
                                                 </table>
                                             </div>
-                                        )}
+
+                                            {/* Pagination Controls */}
+                                            {bookingTotalPages > 1 && (
+                                                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t border-slate-100 dark:border-slate-800/80">
+                                                    <span className="text-xs font-bold text-slate-400">
+                                                        عرض {filteredBookings.length} من أصل {bookingTotal} حجز
+                                                    </span>
+                                                    <div className="flex items-center gap-1.5" dir="rtl">
+                                                        <button
+                                                            disabled={bookingPage === 1}
+                                                            onClick={() => setBookingPage(prev => Math.max(prev - 1, 1))}
+                                                            className="h-8 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800/50 disabled:opacity-50 disabled:pointer-events-none transition-all flex items-center justify-center gap-1"
+                                                        >
+                                                            <ChevronRight size={14} className="ml-1" />
+                                                            <span>السابق</span>
+                                                        </button>
+                                                        
+                                                        {Array.from({ length: bookingTotalPages }, (_, i) => i + 1)
+                                                            .filter(page => page === 1 || page === bookingTotalPages || Math.abs(page - bookingPage) <= 1)
+                                                            .map((page, index, array) => (
+                                                                <React.Fragment key={page}>
+                                                                    {index > 0 && array[index - 1] !== page - 1 && (
+                                                                        <span className="text-slate-450 px-1 text-xs">...</span>
+                                                                    )}
+                                                                    <button
+                                                                        onClick={() => setBookingPage(page)}
+                                                                        className={`h-8 w-8 rounded-xl text-xs font-black transition-all flex items-center justify-center ${
+                                                                            bookingPage === page
+                                                                                ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                                                                                : 'border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                                                                        }`}
+                                                                    >
+                                                                        {page}
+                                                                    </button>
+                                                                </React.Fragment>
+                                                            ))}
+                                                        
+                                                        <button
+                                                            disabled={bookingPage === bookingTotalPages}
+                                                            onClick={() => setBookingPage(prev => Math.min(prev + 1, bookingTotalPages))}
+                                                            className="h-8 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800/50 disabled:opacity-50 disabled:pointer-events-none transition-all flex items-center justify-center gap-1"
+                                                        >
+                                                            <span>التالي</span>
+                                                            <ChevronLeft size={14} className="mr-1" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </>)}
                                     </div>
                                 </div>
                             )}

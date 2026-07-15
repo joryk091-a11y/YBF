@@ -194,6 +194,8 @@ const CompanyDashboard = () => {
     const [showAddForm, setShowAddForm] = useState(false);
     const [showEditForm, setShowEditForm] = useState(false);
     const [editingFlight, setEditingFlight] = useState(null);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [flightToDelete, setFlightToDelete] = useState(null);
     const [newFlight, setNewFlight] = useState({
         flightNumber: '',
         originCode: '',
@@ -255,20 +257,26 @@ const CompanyDashboard = () => {
         }
     };
 
-    const handleDeleteFlight = async (id) => {
-        if (window.confirm('هل أنت متأكد من حذف هذه الرحلة؟')) {
-            try {
-                const response = await fetch(`http://localhost:8080/api/flights/${id}`, {
-                    method: 'DELETE'
-                });
-                const data = await response.json();
-                if (data.success) {
-                    setFlights(prev => prev.filter(f => (f.id_flights || f.id) !== id));
-                    setStats(prev => ({ ...prev, totalFlights: prev.totalFlights - 1 }));
-                }
-            } catch (error) {
-                console.error('Error deleting flight:', error);
+    const handleDeleteFlight = (id) => {
+        setFlightToDelete(id);
+        setDeleteConfirmOpen(true);
+    };
+
+    const confirmDeleteFlight = async (id) => {
+        try {
+            const response = await fetch(`http://localhost:8080/api/flights/${id}`, {
+                method: 'DELETE'
+            });
+            const data = await response.json();
+            if (data.success) {
+                setFlights(prev => prev.filter(f => (f.id_flights || f.id) !== id));
+                setStats(prev => ({ ...prev, totalFlights: prev.totalFlights - 1 }));
             }
+        } catch (error) {
+            console.error('Error deleting flight:', error);
+        } finally {
+            setDeleteConfirmOpen(false);
+            setFlightToDelete(null);
         }
     };
 
@@ -740,6 +748,45 @@ const CompanyDashboard = () => {
                                 <button type="submit" className="flex-[2] h-14 rounded-2xl bg-blue-600 text-white font-black text-sm shadow-xl shadow-blue-600/25 hover:shadow-2xl transition-all">تحديث البيانات</button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {deleteConfirmOpen && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 backdrop-blur-md bg-slate-900/40 dark:bg-slate-950/60 animate-in fade-in duration-300">
+                    <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-[30px] shadow-2xl border border-slate-100 dark:border-slate-800/60 overflow-hidden p-8 animate-in zoom-in-95 duration-300" dir="rtl">
+                        <div className="flex flex-col items-center text-center">
+                            <div className="h-16 w-16 rounded-full bg-red-50 dark:bg-red-950/30 flex items-center justify-center text-red-600 dark:text-red-400 border border-red-500/10 mb-6">
+                                <Trash2 size={32} />
+                            </div>
+                            <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">تأكيد حذف الرحلة</h3>
+                            <p className="text-slate-500 dark:text-slate-400 text-xs font-bold leading-relaxed mb-8">
+                                هل أنت متأكد من رغبتك في حذف هذه الرحلة نهائياً؟ هذا الإجراء سيقوم بإزالة الرحلة وبياناتها من المنصة بشكل كامل ولا يمكن التراجع عنه.
+                            </p>
+                        </div>
+                        <div className="flex gap-4 w-full">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setDeleteConfirmOpen(false);
+                                    setFlightToDelete(null);
+                                }}
+                                className="flex-1 h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-650 dark:text-slate-350 font-black text-xs hover:bg-slate-100 dark:hover:bg-slate-700 transition-all border border-slate-150/70 dark:border-slate-750"
+                            >
+                                إلغاء التراجع
+                            </button>
+                            <button
+                                type="button"
+                                onClick={async () => {
+                                    if (flightToDelete) {
+                                        await confirmDeleteFlight(flightToDelete);
+                                    }
+                                }}
+                                className="flex-1 h-14 rounded-2xl bg-red-600 hover:bg-red-750 text-white font-black text-xs shadow-lg shadow-red-600/20 transition-all"
+                            >
+                                نعم، احذف الرحلة
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

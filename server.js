@@ -286,8 +286,8 @@ app.post('/api/chat/messages', async (req, res) => {
   try {
     connection = await mysql.createConnection(getDbConfig());
     const [result] = await connection.execute(
-      'INSERT INTO chat_messages (user_id, sender, sender_name, sender_email, message, is_read) VALUES (?, ?, ?, ?, ?, ?)',
-      [user_id || null, sender, sender_name, sender_email, message, sender === 'admin' ? 1 : 0]
+      'INSERT INTO chat_messages (sender, sender_name, sender_email, message, is_read) VALUES (?, ?, ?, ?, ?)',
+      [sender, sender_name, sender_email, message, sender === 'admin' ? 1 : 0]
     );
     res.json({ success: true, id_chat: result.insertId });
   } catch (error) {
@@ -314,9 +314,14 @@ app.get('/api/admin/chat/conversations', async (req, res) => {
             ORDER BY id_chat DESC 
             LIMIT 1
           ),
-          c.sender_name
+          (
+            SELECT full_name 
+            FROM users 
+            WHERE email = c.sender_email 
+            LIMIT 1
+          ),
+          c.sender_email
         ) AS sender_name,
-        c.user_id,
         c.message AS last_message,
         c.created_at AS last_message_time,
         (
@@ -748,19 +753,14 @@ app.get('/api/company/dashboard-stats', async (req, res) => {
 
 
 app.get('/api/admin/bookings', async (req, res) => {
-  const { date, year, month } = req.query;
+  const { date, year, month, page, limit, search } = req.query;
+  const pageNum = parseInt(page) || 1;
+  const limitNum = parseInt(limit) || 10;
+  const offset = (pageNum - 1) * limitNum;
+
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
-    let query = `
-      SELECT b.id_bookings, b.booking_reference, b.booking_date, b.total_passengers, b.base_price, b.extra_total, b.final_price, b.status,
-             f.flight_number, f.airline_code, f.airportOrigin_code, f.airportDestination_code, f.departure_time, f.arrival_time, f.price as flight_price,
-             p.payment_method, p.payment_status, p.tansaction_id, p.payment_date,
-             (SELECT GROUP_CONCAT(name SEPARATOR ', ') FROM bookings_passengers bp JOIN passengers pass ON bp.passenger_id = pass.id_passengers WHERE bp.booking_id = b.id_bookings) as passengers
-      FROM bookings b
-      JOIN flights f ON b.flight_id = f.id_flights
-      LEFT JOIN payments p ON p.booking_id = b.id_bookings
-    `;
     const params = [];
     const conditions = [];
 
@@ -778,14 +778,57 @@ app.get('/api/admin/bookings', async (req, res) => {
       params.push(month);
     }
 
-    if (conditions.length > 0) {
-      query += ` WHERE ` + conditions.join(' AND ');
+    if (search && search.trim() !== '') {
+      const searchWildcard = `%${search.trim()}%`;
+      conditions.push(`(
+        b.booking_reference LIKE ? OR 
+        f.flight_number LIKE ? OR 
+        EXISTS (
+          SELECT 1 FROM bookings_passengers bp 
+          JOIN passengers pass ON bp.passenger_id = pass.id_passengers 
+          WHERE bp.booking_id = b.id_bookings AND pass.name LIKE ?
+        )
+      )`);
+      params.push(searchWildcard, searchWildcard, searchWildcard);
     }
 
-    query += ` ORDER BY b.booking_date DESC`;
+    let whereClause = '';
+    if (conditions.length > 0) {
+      whereClause = ` WHERE ` + conditions.join(' AND ');
+    }
+
+    // 1. Get total count
+    const countQuery = `
+      SELECT COUNT(DISTINCT b.id_bookings) as total
+      FROM bookings b
+      JOIN flights f ON b.flight_id = f.id_flights
+      LEFT JOIN payments p ON p.booking_id = b.id_bookings
+      ${whereClause}
+    `;
+    const [[{ total }]] = await connection.execute(countQuery, params);
+
+    // 2. Get paginated rows
+    let query = `
+      SELECT b.id_bookings, b.booking_reference, b.booking_date, b.total_passengers, b.base_price, b.extra_total, b.final_price, b.status,
+             f.flight_number, f.airline_code, f.airportOrigin_code, f.airportDestination_code, f.departure_time, f.arrival_time, f.price as flight_price,
+             p.payment_method, p.payment_status, p.tansaction_id, p.payment_date,
+             (SELECT GROUP_CONCAT(name SEPARATOR ', ') FROM bookings_passengers bp JOIN passengers pass ON bp.passenger_id = pass.id_passengers WHERE bp.booking_id = b.id_bookings) as passengers
+      FROM bookings b
+      JOIN flights f ON b.flight_id = f.id_flights
+      LEFT JOIN payments p ON p.booking_id = b.id_bookings
+      ${whereClause}
+      ORDER BY b.booking_date DESC
+      LIMIT ${limitNum} OFFSET ${offset}
+    `;
 
     const [rows] = await connection.execute(query, params);
-    res.json({ success: true, bookings: rows });
+    res.json({ 
+      success: true, 
+      bookings: rows,
+      total,
+      totalPages: Math.ceil(total / limitNum),
+      currentPage: pageNum
+    });
   } catch (error) {
     console.error('Error fetching bookings:', error);
     res.status(500).json({ success: false, error: error.message });
@@ -1684,9 +1727,26 @@ app.post('/api/bookings', async (req, res) => {
         );
         const baggageId = baggageResult.insertId;
 
+        let seatId = null;
+        if (seatNumber) {
+          const [seatRows] = await connection.execute(
+            'SELECT id_seats FROM seats WHERE flight_id = ? AND seat_number = ?',
+            [currentFlightId, seatNumber]
+          );
+          if (seatRows.length > 0) {
+            seatId = seatRows[0].id_seats;
+          } else {
+            const [insertSeatResult] = await connection.execute(
+              'INSERT INTO seats (flight_id, seat_number, seat_class, is_occupied) VALUES (?, ?, ?, 1)',
+              [currentFlightId, seatNumber, seatClass]
+            );
+            seatId = insertSeatResult.insertId;
+          }
+        }
+
         await connection.execute(
-          'INSERT INTO bookings_passengers (booking_id, passenger_id, baggage_id) VALUES (?, ?, ?)',
-          [bookingId, passengerId, baggageId]
+          'INSERT INTO bookings_passengers (booking_id, passenger_id, seat_id, baggage_id) VALUES (?, ?, ?, ?)',
+          [bookingId, passengerId, seatId, baggageId]
         );
       }
 
@@ -2640,7 +2700,7 @@ app.get('/api/admin/companies', async (req, res) => {
     const [rows] = await connection.execute(
       `SELECT 
          a.id_admin, 
-         a.email AS username, 
+         a.username AS username, 
          a.password, 
          a.role, 
          a.airline_code, 
@@ -2652,7 +2712,7 @@ app.get('/api/admin/companies', async (req, res) => {
        FROM admins a
        LEFT JOIN companies c ON a.airline_code = c.airline_code
        WHERE a.role = 'company' 
-       ORDER BY a.created_at DESC`
+       ORDER BY a.id_admin ASC`
     );
     res.json({ success: true, companies: rows });
   } catch (error) {
@@ -2670,7 +2730,7 @@ app.post('/api/admin/companies', async (req, res) => {
     connection = await mysql.createConnection(getDbConfig());
 
 
-    const [existing] = await connection.execute('SELECT id_admin FROM admins WHERE email = ?', [username]);
+    const [existing] = await connection.execute('SELECT id_admin FROM admins WHERE username = ?', [username]);
     if (existing.length > 0) {
       return res.status(400).json({ success: false, error: 'اسم المستخدم مسجل بالفعل' });
     }
@@ -2693,7 +2753,7 @@ app.post('/api/admin/companies', async (req, res) => {
 
 
     await connection.execute(
-      `INSERT INTO admins (id_admin, email, password, role, airline_code, employee_id, department, created_at) 
+      `INSERT INTO admins (id_admin, username, password, role, airline_code, employee_id, department, created_at) 
        VALUES (?, ?, ?, 'company', ?, ?, ?, NOW())`,
       [nextId, username, hashedPassword, airline_code || null, employee_id || null, department || null]
     );
@@ -2715,7 +2775,7 @@ app.put('/api/admin/companies/:id', async (req, res) => {
     connection = await mysql.createConnection(getDbConfig());
 
 
-    const [existing] = await connection.execute('SELECT id_admin FROM admins WHERE email = ? AND id_admin != ?', [username, id]);
+    const [existing] = await connection.execute('SELECT id_admin FROM admins WHERE username = ? AND id_admin != ?', [username, id]);
     if (existing.length > 0) {
       return res.status(400).json({ success: false, error: 'اسم المستخدم مسجل بمستخدم آخر' });
     }
@@ -2777,13 +2837,13 @@ const seedAdmin = async () => {
   let connection;
   try {
     connection = await mysql.createConnection(getDbConfig());
-    const [rows] = await connection.execute('SELECT id_admin FROM admins WHERE email = ?', ['admin']);
+    const [rows] = await connection.execute('SELECT id_admin FROM admins WHERE username = ?', ['admin']);
     if (rows.length === 0) {
       const [maxIdRows] = await connection.execute('SELECT COALESCE(MAX(id_admin), 0) + 1 as nextId FROM admins');
       const nextId = maxIdRows[0].nextId;
       const hashedPassword = await bcrypt.hash('ADMIN123', 10);
       await connection.execute(
-        'INSERT INTO admins (id_admin, email, password, role, created_at) VALUES (?, ?, ?, ?, NOW())',
+        'INSERT INTO admins (id_admin, username, password, role, created_at) VALUES (?, ?, ?, ?, NOW())',
         [nextId, 'admin', hashedPassword, 'admin']
       );
       console.log('Seeded default admin account successfully.');

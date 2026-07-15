@@ -11,6 +11,7 @@ const Messages = ({ token, showToast }) => {
     const [replyText, setReplyText] = useState('');
     const [loadingConversations, setLoadingConversations] = useState(true);
     const [loadingMessages, setLoadingMessages] = useState(false);
+    const [conversationToDelete, setConversationToDelete] = useState(null);
 
     const chatEndRef = useRef(null);
 
@@ -122,8 +123,10 @@ const Messages = ({ token, showToast }) => {
     };
 
     
-    const handleDeleteConversation = async (email) => {
-        if (!window.confirm('هل أنت متأكد من رغبتك في حذف هذه المحادثة نهائياً؟')) return;
+    const confirmDeleteConversation = async () => {
+        if (!conversationToDelete) return;
+        const email = conversationToDelete;
+        setConversationToDelete(null);
         try {
             const res = await fetch(`http://localhost:8080/api/admin/chat/conversations?email=${encodeURIComponent(email)}`, {
                 method: 'DELETE'
@@ -301,7 +304,7 @@ const Messages = ({ token, showToast }) => {
                                 </div>
                             </div>
                             <button
-                                onClick={() => handleDeleteConversation(activeConversation.sender_email)}
+                                onClick={() => setConversationToDelete(activeConversation.sender_email)}
                                 className="p-2.5 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer"
                                 title="حذف المحادثة نهائياً"
                             >
@@ -377,6 +380,36 @@ const Messages = ({ token, showToast }) => {
                     </div>
                 )}
             </div>
+
+            {conversationToDelete !== null && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/15 p-4 backdrop-blur-md shadow-2xl" dir="rtl">
+                    <div className="relative w-full max-w-sm overflow-hidden rounded-[2.2rem] bg-white dark:bg-slate-950 p-6 shadow-2xl border border-slate-100 dark:border-slate-800/80 text-center animate-in fade-in zoom-in-95 duration-200">
+                        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 dark:bg-rose-950/50 text-rose-500 dark:text-rose-400">
+                            <Trash2 className="h-6 w-6" />
+                        </div>
+                        <h3 className="text-base font-black text-slate-900 dark:text-white mb-2">تأكيد حذف المحادثة</h3>
+                        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 leading-relaxed mb-6 px-2">
+                            هل أنت متأكد من رغبتك في حذف هذه المحادثة نهائياً؟ لا يمكن التراجع عن هذا الإجراء وسيتم مسح كافة الرسائل الخاصة بها.
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                onClick={confirmDeleteConversation}
+                                className="flex-1 h-11 flex items-center justify-center rounded-xl bg-rose-500 hover:bg-rose-600 text-xs font-black text-white transition-all cursor-pointer shadow-md shadow-rose-500/10 active:scale-98"
+                            >
+                                تأكيد الحذف
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setConversationToDelete(null)}
+                                className="flex-1 h-11 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-150 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-black text-slate-700 dark:text-slate-200 transition-all cursor-pointer active:scale-98"
+                            >
+                                إلغاء
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

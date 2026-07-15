@@ -46,7 +46,7 @@ const serviceOptions = [
 ];
 
 
-const airportCodes = ["ADE", "CAI", "JED", "RUH", "DXB"];
+const airportCodes = ["ADE", "RIY", "GXF", "SCT", "ATQ", "CAI", "DXB", "RUH", "JED", "AMM", "KWI", "DOH"];
 const aircraftTypes = ["Airbus A320", "Boeing 737", "Airbus A330"];
 
 
@@ -125,7 +125,7 @@ async function seed() {
     const flightRecords = [];
     let flightCounter = 1;
 
-    for (const company of companies) {
+    for (const company of companies.filter(c => c.airline_code !== 'SA')) {
       for (let i = 0; i < 6; i++) {
         const isNextMonth = i >= 3;
         
@@ -146,14 +146,15 @@ async function seed() {
         const arrivalTime = new Date(departureTime.getTime() + duration * 60000);
 
         
-        const originIndex = Math.floor(Math.random() * airportCodes.length);
-        let destIndex = Math.floor(Math.random() * airportCodes.length);
-        while (destIndex === originIndex) {
-          destIndex = Math.floor(Math.random() * airportCodes.length);
+        const yemeniAirports = ["ADE", "RIY", "GXF", "SCT", "ATQ"];
+        const yemeni = yemeniAirports[Math.floor(Math.random() * yemeniAirports.length)];
+        let other = airportCodes[Math.floor(Math.random() * airportCodes.length)];
+        while (other === yemeni) {
+          other = airportCodes[Math.floor(Math.random() * airportCodes.length)];
         }
-
-        const origin = airportCodes[originIndex];
-        const dest = airportCodes[destIndex];
+        
+        const origin = Math.random() < 0.5 ? yemeni : other;
+        const dest = origin === yemeni ? other : yemeni;
 
         const aircraft = aircraftTypes[Math.floor(Math.random() * aircraftTypes.length)];
         const basePrice = 200 + Math.floor(Math.random() * 8) * 50; 
@@ -249,10 +250,9 @@ async function seed() {
       
       let targetOccupied;
       if (isFullyBooked) {
-        targetOccupied = flight.total_seats; 
+        targetOccupied = 4; 
       } else {
-        const percentage = 40 + Math.floor(Math.random() * 11); 
-        targetOccupied = Math.round((percentage / 100) * flight.total_seats);
+        targetOccupied = 1 + Math.floor(Math.random() * 2);
       }
 
       let occupiedCount = 0;
@@ -416,8 +416,8 @@ async function seed() {
     console.log('      DATABASE SEEDING DEMO DATA REPORT            ');
     console.log('===================================================');
     console.log(` Flights Created:          ${seededFlights.length} flights`);
-    console.log(`   - Fully Booked (100%):  ${fullyBookedFlights.length} flights`);
-    console.log(`   - Partially (40-50%):   ${partiallyBookedFlights.length} flights`);
+    console.log(`   - High Occupancy:       ${fullyBookedFlights.length} flights`);
+    console.log(`   - Low Occupancy:        ${partiallyBookedFlights.length} flights`);
     console.log(` Bookings Simulated:       ${totalBookings} bookings`);
     console.log(` Passengers Generated:     ${totalPassengers} passengers`);
     console.log(` Ground Services Assigned: ${totalGroundServices} passengers (~${Math.round((totalGroundServices/totalPassengers)*100)}%)`);

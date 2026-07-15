@@ -82,7 +82,7 @@ function TravelersPage() {
   const initialPassengerCount = Math.min(Math.max(Number(searchCriteria?.passengerCount) || 1, 1), 9)
 
   const [passengers, setPassengers] = useState(() =>
-    Array.from({ length: initialPassengerCount }, (_, index) => createPassenger(index + 1)),
+    location.state?.passengers || Array.from({ length: initialPassengerCount }, (_, index) => createPassenger(index + 1))
   )
 
   
@@ -104,17 +104,35 @@ function TravelersPage() {
     }
     const newCount = passengers.length + 1;
     const newPassenger = createPassenger(newCount);
-    
-    setPassengers(prev => [...prev, newPassenger]);
+    const updatedPassengers = [...passengers, newPassenger];
 
     if (setPassengerCount) {
       setPassengerCount(newCount);
     }
-    if (searchCriteria) {
-      searchCriteria.passengerCount = newCount;
-    }
-    
-    setActivePassengerId(newCount);
+
+    const updatedSearchCriteria = {
+      ...searchCriteria,
+      passengerCount: newCount
+    };
+
+    const updatedExtraBags = {
+      ...extraBags,
+      [newCount]: 0
+    };
+
+    navigate('/seats', {
+      state: {
+        selectedFlight,
+        selectedFlights,
+        seatsSelectionMap,
+        searchCriteria: updatedSearchCriteria,
+        passengers: updatedPassengers,
+        extraBags: updatedExtraBags,
+        selectedServices,
+        extrasTotal,
+        selectedSeats
+      }
+    });
   };
 
   const triggerRemovePassenger = (index) => {
@@ -217,10 +235,10 @@ function TravelersPage() {
   }
 
   const [extraBags, setExtraBags] = useState(() =>
-    Object.fromEntries(Array.from({ length: initialPassengerCount }, (_, i) => [i + 1, 0]))
+    location.state?.extraBags || Object.fromEntries(Array.from({ length: initialPassengerCount }, (_, i) => [i + 1, 0]))
   )
   const [selectedServices, setSelectedServices] = useState(() =>
-    Object.fromEntries(SERVICES.map(s => [s.id, 0]))
+    location.state?.selectedServices || Object.fromEntries(SERVICES.map(s => [s.id, 0]))
   )
 
   const changeServiceQty = (id, delta) => {
@@ -340,6 +358,15 @@ function TravelersPage() {
             return
           }
         }
+      }
+    }
+
+    // Validate seat selection for all passengers on all flights
+    for (let fIdx = 0; fIdx < selectedFlights.length; fIdx++) {
+      const flightSeats = seatsSelectionMap[fIdx] || [];
+      if (flightSeats.length < passengers.length) {
+        setValidationError(`يرجى تحديد مقاعد لجميع المسافرين. تم اختيار ${flightSeats.length} من أصل ${passengers.length} مقاعد للرحلة رقم ${fIdx + 1}.`)
+        return
       }
     }
 
@@ -722,12 +749,25 @@ function TravelersPage() {
 
           {}
           <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <Link
-              to="/search"
-              className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-200 bg-white px-6 text-xs font-black text-slate-500 hover:text-slate-800 transition hover:bg-slate-50"
+            <button
+              type="button"
+              onClick={() => navigate('/seats', {
+                state: {
+                  selectedFlight,
+                  selectedFlights,
+                  seatsSelectionMap,
+                  searchCriteria,
+                  passengers,
+                  extraBags,
+                  selectedServices,
+                  extrasTotal,
+                  selectedSeats
+                }
+              })}
+              className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-200 bg-white px-6 text-xs font-black text-slate-500 hover:text-slate-800 transition hover:bg-slate-50 cursor-pointer"
             >
-              رجوع وتغيير الرحلة
-            </Link>
+              رجوع وتعديل المقاعد
+            </button>
             <button
               onClick={handleProceedToPayment}
               className="inline-flex h-12 min-w-[200px] items-center justify-center gap-1.5 rounded-xl bg-brand-blue px-8 text-xs font-black text-white shadow-[0_12px_24px_rgba(73,116,249,0.2)] hover:bg-brand-blue-hover transition active:scale-[0.98]"
@@ -833,6 +873,26 @@ function TravelersPage() {
                         </p>
                       </div>
                     </div>
+
+                    <button
+                      type="button"
+                      onClick={() => navigate('/seats', {
+                        state: {
+                          selectedFlight,
+                          selectedFlights,
+                          seatsSelectionMap,
+                          searchCriteria,
+                          passengers,
+                          extraBags,
+                          selectedServices,
+                          extrasTotal,
+                          selectedSeats
+                        }
+                      })}
+                      className="mt-3 w-full text-center text-xs font-black text-brand-blue hover:underline cursor-pointer"
+                    >
+                      تعديل المقاعد المحددة
+                    </button>
 
                     {}
                     {Object.values(extraBags).some(n => n > 0) && (

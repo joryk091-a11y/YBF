@@ -52,8 +52,8 @@ function SeatsPage() {
     const passengerCount = Number(searchCriteria?.passengerCount) || 1
 
     const [activeFlightIdx, setActiveFlightIdx] = useState(0)
-    const [seatsSelectionMap, setSeatsSelectionMap] = useState({})
-    const [selectedSeats, setSelectedSeats] = useState([])
+    const [seatsSelectionMap, setSeatsSelectionMap] = useState(() => location.state?.seatsSelectionMap || {})
+    const [selectedSeats, setSelectedSeats] = useState(() => seatsSelectionMap[activeFlightIdx] || location.state?.selectedSeats || [])
     const [hoveredSeat, setHoveredSeat] = useState(null)
 
     const activeFlight = selectedFlights[activeFlightIdx] || selectedFlight || {}
@@ -224,7 +224,11 @@ function SeatsPage() {
                         selectedFlights,
                         seatsSelectionMap: nextMap,
                         searchCriteria,
-                        selectedSeats: nextMap[0] || []
+                        selectedSeats: nextMap[0] || [],
+                        passengers: location.state?.passengers,
+                        extraBags: location.state?.extraBags,
+                        selectedServices: location.state?.selectedServices,
+                        extrasTotal: location.state?.extrasTotal
                     }
                 })
             }

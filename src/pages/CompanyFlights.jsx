@@ -61,6 +61,8 @@ export default function CompanyFlights() {
   const [toast, setToast] = useState(null);
   const [loading, setLoading] = useState(true);
   const [pendingCount, setPendingCount] = useState(0);
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
+  const [flightToCancel, setFlightToCancel] = useState(null);
 
   
   const companyName = user?.airline_name || localStorage.getItem('companyName') || 'الشركة';
@@ -354,42 +356,48 @@ export default function CompanyFlights() {
   };
 
   
-  const handleCancelFlight = async (flight) => {
-    if (window.confirm('هل أنت متأكد من إلغاء هذه الرحلة؟')) {
-      try {
-        const flightPayload = {
-          flight_number: flight.flight_number,
-          airline_code: airlineCode,
-          airline_id: user?.airline_id || 1,
-          airportOrigin_code: flight.origin,
-          airportDestination_code: flight.destination,
-          departure_time: flight.departure_time,
-          arrival_time: flight.arrival_time || flight.departure_time,
-          aircraft_type: flight.aircraft_type,
-          total_seats: flight.total_seats,
-          available_seats: flight.available_seats,
-          status: 'cancelled',
-          price: flight.price
-        };
+  const handleCancelFlight = (flight) => {
+    setFlightToCancel(flight);
+    setCancelConfirmOpen(true);
+  };
 
-        const res = await fetch(`http://localhost:8080/api/flights/${flight.id}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(flightPayload)
-        });
-        const data = await res.json();
-        if (data.success) {
-          setToast({ type: 'success', message: 'تم إلغاء الرحلة بنجاح وتحديث إحصائيات هذا الشهر.' });
-          fetchFlights();
-        } else {
-          setToast({ type: 'error', message: 'فشل إلغاء الرحلة: ' + data.error });
-        }
-      } catch (error) {
-        console.error('Error cancelling flight:', error);
-        setToast({ type: 'error', message: 'خطأ في الاتصال بالخادم!' });
+  const confirmCancelFlight = async (flight) => {
+    try {
+      const flightPayload = {
+        flight_number: flight.flight_number,
+        airline_code: airlineCode,
+        airline_id: user?.airline_id || 1,
+        airportOrigin_code: flight.origin,
+        airportDestination_code: flight.destination,
+        departure_time: flight.departure_time,
+        arrival_time: flight.arrival_time || flight.departure_time,
+        aircraft_type: flight.aircraft_type,
+        total_seats: flight.total_seats,
+        available_seats: flight.available_seats,
+        status: 'cancelled',
+        price: flight.price
+      };
+
+      const res = await fetch(`http://localhost:8080/api/flights/${flight.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(flightPayload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        setToast({ type: 'success', message: 'تم إلغاء الرحلة بنجاح وتحديث إحصائيات هذا الشهر.' });
+        fetchFlights();
+      } else {
+        setToast({ type: 'error', message: 'فشل إلغاء الرحلة: ' + data.error });
       }
-      setTimeout(() => setToast(null), 3000);
+    } catch (error) {
+      console.error('Error cancelling flight:', error);
+      setToast({ type: 'error', message: 'خطأ في الاتصال بالخادم!' });
+    } finally {
+      setCancelConfirmOpen(false);
+      setFlightToCancel(null);
     }
+    setTimeout(() => setToast(null), 3000);
   };
 
   
@@ -609,7 +617,7 @@ export default function CompanyFlights() {
                 <Activity size={18} />
               </div>
               <div>
-                <h3 className="text-lg font-black text-slate-900 dark:text-white">جدول الرحلات الملغاه</h3>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">جدول الرحلات</h3>
               </div>
             </div>
 
@@ -1070,6 +1078,45 @@ export default function CompanyFlights() {
           >
             {toast.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
             <span className="text-xs font-black">{toast.message}</span>
+          </div>
+        )}
+
+        {cancelConfirmOpen && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 backdrop-blur-md bg-slate-900/40 dark:bg-slate-950/60 animate-in fade-in duration-300">
+            <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-[30px] shadow-2xl border border-slate-150/70 dark:border-slate-800/60 overflow-hidden p-8 animate-in zoom-in-95 duration-300" dir="rtl">
+              <div className="flex flex-col items-center text-center">
+                <div className="h-16 w-16 rounded-full bg-red-50 dark:bg-red-950/30 flex items-center justify-center text-red-600 dark:text-red-400 border border-red-500/10 mb-6">
+                  <AlertCircle size={32} />
+                </div>
+                <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">تأكيد إلغاء الرحلة</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-xs font-bold leading-relaxed mb-8">
+                  هل أنت متأكد من رغبتك في إلغاء هذه الرحلة؟ سيتم تغيير حالة الرحلة إلى "ملغاة" وسيتم إعلام الركاب المرتبطين بها بهذا التحديث.
+                </p>
+              </div>
+              <div className="flex gap-4 w-full">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCancelConfirmOpen(false);
+                    setFlightToCancel(null);
+                  }}
+                  className="flex-1 h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-650 dark:text-slate-350 font-black text-xs hover:bg-slate-100 dark:hover:bg-slate-700 transition-all border border-slate-150/70 dark:border-slate-750"
+                >
+                  إلغاء التراجع
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (flightToCancel) {
+                      await confirmCancelFlight(flightToCancel);
+                    }
+                  }}
+                  className="flex-1 h-14 rounded-2xl bg-red-650 hover:bg-red-750 text-white font-black text-xs shadow-lg shadow-red-600/20 transition-all"
+                >
+                  نعم، ألغِ الرحلة
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

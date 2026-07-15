@@ -117,10 +117,10 @@ const CompanyLogin = () => {
                         { }
                         <div className="space-y-2">
                             <label className="block text-xs font-black text-slate-450 dark:text-slate-500 uppercase tracking-widest" htmlFor="username">
-                                اسم المستخدم
+                                البريد الإلكتروني
                             </label>
                             <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focusedField === 'username' ? 'border-blue-500 bg-white shadow-[0_0_0_4px_rgba(59,130,246,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
-                                <User className="pointer-events-none absolute right-4 h-4 w-4 text-slate-400" />
+                                <Mail className="pointer-events-none absolute right-4 h-4 w-4 text-slate-400" />
                                 <input
                                     type="text"
                                     id="username"
@@ -129,7 +129,7 @@ const CompanyLogin = () => {
                                     onFocus={() => setFocusedField('username')}
                                     onBlur={() => setFocusedField(null)}
                                     className="w-full bg-transparent py-5 pr-12 pl-4 text-base font-bold text-slate-900 placeholder:text-slate-350 outline-none"
-                                    placeholder=""
+                                    placeholder="partner@gmail.com"
                                     required
                                     dir="ltr"
                                 />

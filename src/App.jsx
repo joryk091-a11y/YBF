@@ -169,11 +169,7 @@ function App() {
               path="/company/services"
               element={
                 <CompanyProtectedRoute>
-                  <PlaceholderPage
-                    title="الخدمات الطبية والأرضية"
-                    description="تنسيق وتوفير الخدمات الخاصة مثل الكراسي المتحركة أو الخدمات الطبية للركاب."
-                    icon={HeartPulse}
-                  />
+                  <MedicalServicesReport />
                 </CompanyProtectedRoute>
               }
             />

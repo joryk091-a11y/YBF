@@ -63,9 +63,9 @@ async function seed() {
     console.log('Inserting Admins...');
     const admins = [
       [1, 'admin', 'ADMIN123', 'admin', null, '1', 'الادارة'],
-      [2, 'yemenia', 'YEMENIA123', 'company', 'IY', '2', 'اليمنية'],
-      [3, 'balqis', 'BALQIS123', 'company', 'BS', '3', 'بلقيس'],
-      [4, 'aden', 'ADEN123', 'company', 'QY', '4', 'عدن']
+      [2, 'yemenia@gmail.com', 'YEMENIA123', 'company', 'IY', '2', 'اليمنية'],
+      [3, 'balqis@gmail.com', 'BALQIS123', 'company', 'BS', '3', 'بلقيس'],
+      [4, 'aden@gmail.com', 'ADEN123', 'company', 'QY', '4', 'عدن']
     ];
     for (const admin of admins) {
       const hashedPassword = await bcrypt.hash(admin[2], 10);

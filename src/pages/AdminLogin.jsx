@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Lock, User, Mail, Eye, EyeOff, ShieldAlert, ArrowLeft, Shield, CheckCircle } from 'lucide-react';
+import { Lock, User, Eye, EyeOff, ShieldAlert, ArrowLeft, Shield, CheckCircle } from 'lucide-react';
 import { useAuth } from '../utils/AuthContext';
 
 const AdminLogin = () => {

@@ -5,7 +5,7 @@ import logo from '../assets/logo.png';
 import { useAuth } from '../utils/AuthContext';
 
 const CompanyLogin = () => {
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [showForgotModal, setShowForgotModal] = useState(false);
@@ -40,7 +40,7 @@ const CompanyLogin = () => {
             const response = await fetch('http://localhost:8080/api/company-login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
+                body: JSON.stringify({ username: email, password })
             });
 
             const data = await response.json();
@@ -49,7 +49,7 @@ const CompanyLogin = () => {
                 if (data.role === 'admin') {
                     localStorage.setItem('userRole', 'admin');
                     localStorage.setItem('adminToken', 'admin-token-' + data.id);
-                    localStorage.setItem('adminUsername', data.username || username);
+                    localStorage.setItem('adminUsername', data.username || email);
                     setUser({
                         role: 'super_admin',
                         airline_name: 'Yemenia',
@@ -75,7 +75,7 @@ const CompanyLogin = () => {
                     navigate('/company/dashboard');
                 }
             } else {
-                setError(data.error || 'اسم المستخدم أو كلمة المرور غير صحيحة.');
+                setError(data.error || 'البريد الإلكتروني أو كلمة المرور غير صحيحة.');
             }
         } catch (error) {
             console.error('Company login error:', error);
@@ -116,20 +116,20 @@ const CompanyLogin = () => {
                     <form onSubmit={handleSubmit} className="space-y-5">
                         { }
                         <div className="space-y-2">
-                            <label className="block text-xs font-black text-slate-450 dark:text-slate-500 uppercase tracking-widest" htmlFor="username">
+                            <label className="block text-xs font-black text-slate-450 dark:text-slate-500 uppercase tracking-widest" htmlFor="email">
                                 البريد الإلكتروني
                             </label>
-                            <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focusedField === 'username' ? 'border-blue-500 bg-white shadow-[0_0_0_4px_rgba(59,130,246,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
+                            <div className={`relative flex items-center rounded-2xl border bg-slate-50/50 transition-all duration-200 ${focusedField === 'email' ? 'border-blue-500 bg-white shadow-[0_0_0_4px_rgba(59,130,246,0.08)]' : 'border-slate-200 hover:border-slate-300'}`}>
                                 <Mail className="pointer-events-none absolute right-4 h-4 w-4 text-slate-400" />
                                 <input
-                                    type="text"
-                                    id="username"
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
-                                    onFocus={() => setFocusedField('username')}
+                                    type="email"
+                                    id="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    onFocus={() => setFocusedField('email')}
                                     onBlur={() => setFocusedField(null)}
                                     className="w-full bg-transparent py-5 pr-12 pl-4 text-base font-bold text-slate-900 placeholder:text-slate-350 outline-none"
-                                    placeholder="partner@gmail.com"
+                                    placeholder="example@gmail.com"
                                     required
                                     dir="ltr"
                                 />

@@ -6,8 +6,7 @@ import { useTheme } from '../utils/ThemeContext';
 
 import {
     Plane, Calendar, Users, DollarSign, LogOut, MapPin, Trash2, Plus,
-    ArrowUpRight, Search, Bell, Activity, Ticket, X, Pencil, Clock,
-    Sun, Moon
+    ArrowUpRight, Search, Bell, Activity, Ticket, X, Pencil, Clock
 } from 'lucide-react';
 import logo from '../assets/logo.png';
 import yemeniaLogo from '../assets/Y.png';

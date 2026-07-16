@@ -301,13 +301,15 @@ export default function Sidebar() {
             </div>
 
             {/* Theme Toggle Button */}
-            <button
-              onClick={toggleDarkMode}
-              className="h-8 w-8 flex items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-150/50 dark:border-slate-800 text-slate-400 hover:text-blue-500 hover:border-blue-500/20 dark:hover:text-blue-400 dark:hover:border-blue-400/20 transition-all shadow-sm"
-              title="تبديل المظهر"
-            >
-              {isDarkMode ? <Sun size={14} /> : <Moon size={14} />}
-            </button>
+            {user?.role === 'super_admin' && (
+              <button
+                onClick={toggleDarkMode}
+                className="h-8 w-8 flex items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-150/50 dark:border-slate-800 text-slate-400 hover:text-blue-500 hover:border-blue-500/20 dark:hover:text-blue-400 dark:hover:border-blue-400/20 transition-all shadow-sm"
+                title="تبديل المظهر"
+              >
+                {isDarkMode ? <Sun size={14} /> : <Moon size={14} />}
+              </button>
+            )}
           </div>
         )}
 
